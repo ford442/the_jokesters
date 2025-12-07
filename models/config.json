@@ -1,0 +1,12 @@
+{
+  "base_chunk_size": 512,
+  "chunk_compress_factor": 6,
+  "latent_dim": 24,
+  "model_type": "supertonic",
+  "sampling_rate": 44100,
+  "style_dim": 128,
+  "transformers.js_config": {
+    "dtype": "fp32",
+    "use_external_data_format": true
+  }
+}

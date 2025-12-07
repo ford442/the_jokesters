@@ -44,8 +44,8 @@ export class AudioEngine {
         };
     }
 
-    public async init(modelPath: string) {
-        this.worker.postMessage({ type: 'init', modelPath } as WorkerMessage);
+    public async init(modelPath: string, tokenizerPath?: string) {
+        this.worker.postMessage({ type: 'init', modelPath, tokenizerPath } as WorkerMessage);
         // TODO: Wait for ready signal? For now we just fire and forget init, 
         // real app might want to await a specific handshake.
     }

@@ -4,6 +4,9 @@ import type { Agent } from './GroupChatManager'
 import { SceneManager } from './SceneManager'
 import * as webllm from '@mlc-ai/web-llm'
 
+import { AudioEngine } from './audio/AudioEngine'
+import { SpeechQueue } from './audio/SpeechQueue'
+
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m) => m.model_id))
 
@@ -41,7 +44,7 @@ const agents: Agent[] = [
 // Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
-  
+
   app.innerHTML = `
     <div class="container">
       <h1>The Jokesters</h1>
@@ -86,13 +89,31 @@ async function initApp() {
   // Initialize managers
   const groupChatManager = new GroupChatManager(agents)
   const sceneManager = new SceneManager(canvas)
+  const audioEngine = new AudioEngine()
+  const speechQueue = new SpeechQueue(audioEngine)
+
+  // Lip Sync / Mouth Events
+  speechQueue.onMouthMove = (amplitude: number) => {
+    if (amplitude > 0.05) {
+      // console.log("Mouth Open", amplitude);
+      // TODO: Map to 3D mesh
+    } else {
+      // console.log("Mouth Closed");
+    }
+  }
 
   // Add agents to scene
   sceneManager.addAgents(agents)
   sceneManager.animate()
 
   try {
-    // Initialize the chat manager with progress callback
+    // 1. Initialize Audio Engine (in background or parallel)
+    // Assuming models are at /models/supertonic/ (quantized)
+    statusText.textContent = "Initializing Audio Engine..."
+    await audioEngine.init('/models/supertonic/generator_quantized.onnx', '/models/supertonic/tokenizer.json');
+
+    // 2. Initialize the chat manager with progress callback
+    statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
       const percentage = Math.round(progress.progress * 100)
       progressBar.style.width = `${percentage}%`
@@ -104,9 +125,12 @@ async function initApp() {
     chatContainer.style.display = 'flex'
 
     // Update next agent info
-    const nextAgent = groupChatManager.getCurrentAgent()
-    nextAgentSpan.textContent = nextAgent.name
-    nextAgentSpan.style.color = nextAgent.color
+    const updateNextAgentUI = () => {
+      const nextAgent = groupChatManager.getCurrentAgent()
+      nextAgentSpan.textContent = nextAgent.name
+      nextAgentSpan.style.color = nextAgent.color
+    }
+    updateNextAgentUI()
 
     // Add message to chat log
     const addMessage = (sender: string, message: string, color: string) => {
@@ -117,6 +141,16 @@ async function initApp() {
       `
       chatLog.appendChild(messageDiv)
       chatLog.scrollTop = chatLog.scrollHeight
+    }
+
+    // Helper to speak and animate
+    const speakAndVisualize = async (text: string, agentId: string) => {
+      try {
+        const audioData = await audioEngine.synthesize(text, agentId);
+        speechQueue.add(audioData);
+      } catch (e) {
+        console.error("Speech synthesis failed", e);
+      }
     }
 
     // Handle send message
@@ -132,22 +166,51 @@ async function initApp() {
       addMessage('You', message, '#ffffff')
 
       try {
-        // Get response from current agent
-        const result = await groupChatManager.chat(message)
+        // Get response from current agent with streaming
+        // We buffer the response for log, but speak sentence by sentence
+        let currentAgentId = groupChatManager.getCurrentAgent().id;
+        const agent = agents.find(a => a.id === currentAgentId)!;
+
+        // Start a fresh response line in chat log? 
+        // For simplicity, we'll append chunks or just update one message.
+        // Or wait for full response to add to log? 
+        // Prompt says "When the LLM emits a sentence, pass it to AudioEngine".
+        // Let's create a placeholder message and update it, OR just add message at the end.
+        // Let's add the message header first.
+
+        let fullResponse = "";
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
+        chatLog.appendChild(messageDiv);
+        const contentSpan = messageDiv.querySelector('.content')!;
 
         // Make agent jump
-        sceneManager.makeAgentJump(result.agentId)
+        sceneManager.makeAgentJump(currentAgentId)
 
-        // Find agent info
-        const agent = agents.find((a) => a.id === result.agentId)!
+        await groupChatManager.chat(message, (sentence) => {
+          // New sentence received
+          console.log(`[${agent.name} speaks]: ${sentence}`);
+          speakAndVisualize(sentence, agent.id);
 
-        // Add agent response to log
-        addMessage(agent.name, result.response, agent.color)
+          // Update UI with partial text (optional, or just append)
+          // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
+          // But the chat() implementation we wrote accumulates internal buffer.
+          // For now, let's just let chat() finish for the full text return or update span incrementally.
+          // Since we get 'sentence', it's easier to append sentences.
+          // But we missed the punctuation in the sentence callback (GroupChatManager logic: "We keep the delimiter").
+          // So we can visually append the sentence.
+          if (!fullResponse) contentSpan.textContent = ""; // clear ...
+          fullResponse += sentence + " ";
+          contentSpan.textContent = fullResponse;
+          chatLog.scrollTop = chatLog.scrollHeight;
+        });
 
-        // Update next agent info
-        const nextAgent = groupChatManager.getCurrentAgent()
-        nextAgentSpan.textContent = nextAgent.name
-        nextAgentSpan.style.color = nextAgent.color
+        // Wait for audio to finish playing this turn
+        await speechQueue.waitUntilFinished();
+
+        updateNextAgentUI();
+
       } catch (error) {
         console.error('Error:', error)
         addMessage('System', 'Error generating response', '#ff0000')
@@ -167,7 +230,7 @@ async function initApp() {
 
     userInput.focus()
   } catch (error) {
-    statusText.textContent = 'Error initializing WebLLM. Please check console.'
+    statusText.textContent = 'Error initializing App. Please check console.'
     console.error('Initialization error:', error)
   }
 }
