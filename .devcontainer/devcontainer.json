@@ -1,0 +1,14 @@
+{
+  "name": "Gemini Enabled Codespace",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Google.geminicodeassist"
+      ],
+      "settings": {
+        "geminicodeassist.agentYoloMode": true
+      }
+    }
+  }
+}
