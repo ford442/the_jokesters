@@ -6,44 +6,19 @@ export class SpeechQueue {
     private isPlaying = false;
     private audioContext: AudioContext;
     private currentSource: AudioBufferSourceNode | null = null;
-    private analyser: AnalyserNode;
-
-    // Event callbacks
-    public onMouthMove?: (amplitude: number) => void;
+    private destinationNode: AudioNode;
 
     constructor(_audioEngine: AudioEngine) {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        this.analyser = this.audioContext.createAnalyser();
-        this.analyser.fftSize = 256;
-        this.analyser.connect(this.audioContext.destination);
-
-        // Start animation loop for mouth movement
-        this.monitorAmplitude();
+        this.destinationNode = this.audioContext.destination;
     }
 
-    private monitorAmplitude() {
-        const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    public getAudioContext(): AudioContext {
+        return this.audioContext;
+    }
 
-        const update = () => {
-            if (this.isPlaying && this.onMouthMove) {
-                this.analyser.getByteFrequencyData(dataArray);
-
-                // Calculate average amplitude
-                let sum = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                    sum += dataArray[i];
-                }
-                const average = sum / dataArray.length;
-
-                // Normalize 0-255 to 0-1
-                this.onMouthMove(average / 255);
-            } else if (this.onMouthMove) {
-                this.onMouthMove(0);
-            }
-
-            requestAnimationFrame(update);
-        };
-        update();
+    public setDestination(node: AudioNode) {
+        this.destinationNode = node;
     }
 
     public add(audioData: Float32Array) {
@@ -67,7 +42,7 @@ export class SpeechQueue {
 
         const source = this.audioContext.createBufferSource();
         source.buffer = buffer;
-        source.connect(this.analyser); // Connect to analyser instead of destination directly
+        source.connect(this.destinationNode);
 
         source.onended = () => {
             this.isPlaying = false;
@@ -85,5 +60,20 @@ export class SpeechQueue {
         }
         this.queue = [];
         this.isPlaying = false;
+    }
+
+    public async waitUntilFinished(): Promise<void> {
+        if (!this.isPlaying && this.queue.length === 0) return;
+
+        return new Promise<void>((resolve) => {
+            const check = () => {
+                if (!this.isPlaying && this.queue.length === 0) {
+                    resolve();
+                } else {
+                    setTimeout(check, 100);
+                }
+            };
+            check();
+        });
     }
 }

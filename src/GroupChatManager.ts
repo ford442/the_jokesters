@@ -44,7 +44,10 @@ export class GroupChatManager {
     }
   }
 
-  async chat(userMessage: string): Promise<{ agentId: string; response: string }> {
+  async chat(
+    userMessage: string,
+    onSentence?: (sentence: string) => void
+  ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
     }
@@ -66,19 +69,48 @@ export class GroupChatManager {
 
     try {
       // Generate response with agent-specific sampling parameters
-      const response = await this.engine.chat.completions.create({
+      const completion = await this.engine.chat.completions.create({
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
         max_tokens: 256,
+        stream: true, // Enable streaming
       })
 
-      const agentResponse = response.choices[0]?.message?.content || ''
+      let fullResponse = ''
+      let buffer = ''
+
+      // Iterate over the stream
+      for await (const chunk of completion) {
+        const content = chunk.choices[0]?.delta?.content || ''
+        if (content) {
+          fullResponse += content
+          buffer += content
+
+          // Simple sentence splitting logic
+          // Split by [.!?] followed by space or end of string
+          // We keep the delimiter with the sentence
+          let match
+          while ((match = buffer.match(/([.!?])\s/))) {
+            const endIdx = match.index! + 1
+            const sentence = buffer.substring(0, endIdx).trim()
+            if (sentence) {
+              onSentence?.(sentence)
+            }
+            buffer = buffer.substring(endIdx + 1) // +1 for the space we matched
+          }
+        }
+      }
+
+      // Emit remaining buffer as sentence if any
+      if (buffer.trim()) {
+        onSentence?.(buffer.trim())
+      }
 
       // Add agent response to history
       this.conversationHistory.push({
         role: 'assistant',
-        content: agentResponse,
+        content: fullResponse,
       })
 
       // Move to next agent for next turn
@@ -86,7 +118,7 @@ export class GroupChatManager {
 
       return {
         agentId: currentAgent.id,
-        response: agentResponse,
+        response: fullResponse,
       }
     } catch (error) {
       console.error('Error generating response:', error)

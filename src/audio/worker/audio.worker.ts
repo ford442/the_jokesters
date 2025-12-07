@@ -1,9 +1,8 @@
-
 import * as ort from 'onnxruntime-web';
 
 // Define message types
 export type WorkerMessage =
-    | { type: 'init'; modelPath: string }
+    | { type: 'init'; modelPath: string; tokenizerPath?: string }
     | { type: 'synthesize'; text: string; speakerId: string; requestId: string };
 
 export type WorkerResponse =
@@ -13,12 +12,35 @@ export type WorkerResponse =
     | { type: 'synthesis-error'; error: string; requestId: string };
 
 let session: ort.InferenceSession | null = null;
+let tokenizerMap: Record<string, number> | null = null;
+
+async function loadTokenizer(url: string) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to load tokenizer: ${response.statusText}`);
+        tokenizerMap = await response.json();
+        console.log('Audio Worker: Tokenizer loaded');
+    } catch (e) {
+        console.warn('Audio Worker: Could not load tokenizer, using fallback/dummy', e);
+    }
+}
+
+export function tokenize(text: string): BigInt64Array {
+    if (!tokenizerMap) {
+        // Fallback: simple ascii or zeros
+        return new BigInt64Array(text.length).fill(0n);
+    }
+    const ids: bigint[] = [];
+    for (const char of text) {
+        // loose matching
+        const id = tokenizerMap[char] || tokenizerMap[char.toLowerCase()] || 0;
+        ids.push(BigInt(id));
+    }
+    return new BigInt64Array(ids);
+}
 
 // Initialize ONNX Runtime
-// We might need to configure env for WASM paths, but usually it works if files are hosted correctly.
-// For now, minimal configuration.
-ort.env.wasm.numThreads = 1; // Prevent hogging CPU/GPU if multithreaded
-// ort.env.wasm.wasmPaths = '/assets/'; // This might be needed if vite puts wasm in a subfolder
+ort.env.wasm.numThreads = 1;
 
 self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
     const msg = e.data;
@@ -27,7 +49,11 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
         case 'init':
             try {
                 console.log('Audio Worker: Initializing model from', msg.modelPath);
-                // Using WebGPU provider if possible, fallback to wasm
+
+                if (msg.tokenizerPath) {
+                    await loadTokenizer(msg.tokenizerPath);
+                }
+
                 const options: ort.InferenceSession.SessionOptions = {
                     executionProviders: ['webgpu', 'wasm'],
                     graphOptimizationLevel: 'all',
@@ -54,36 +80,21 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
             try {
                 const { text, speakerId: _speakerId, requestId } = msg;
 
-                // TODO: Preprocessing text to input tensors
-                // This part heavily depends on the specific Supertonic-TTS model input signature.
-                // Assuming typical inputs like 'text' (int64 array) and 'speaker_id' (int64) or similar.
-                // Since we don't have the tokenizer logic here, we'll assume the inputs are pre-tokenized or 
-                // the model takes raw strings (unlikely for ONNX).
-
-                // PLACEHOLDER: For scaffolding, we will simulate synthesis or assume a minimal interface.
-                // In a real scenario, we need a Tokenizer here (e.g., from a JSON file).
-
-                // For now, let's just return a dummy buffer to prove the pipeline works,
-                // OR if the user provided context implies we have the logic, we'd use it.
-                // The user said "We have the WebLLM logic. Now we need to add... Supertonic-TTS".
-                // They didn't give me the tokenizer. I will put a TODO and return silence/noise.
-
                 console.log('Audio Worker: Synthesizing', text);
 
-                // Dummy inference call structure
-                // const feeds = { ... }; 
-                // const results = await session.run(feeds);
-                // const output = results['output'].data;
+                // MOCK / PLACEHOLDER for real inference
+                // In real app: const inputIds = tokenize(text); ... session.run(...)
 
                 // Simulation delay
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 500 + text.length * 10));
 
-                // Create dummy float32 audio (1 second of silence/sine)
-                const sampleRate = 24000; // Typical TTS
-                const duration = 2;
-                const audioData = new Float32Array(sampleRate * duration);
+                // Create dummy float32 audio
+                const sampleRate = 24000;
+                // Generate enough audio for the text duration
+                const duration = 1.0 + text.length * 0.05;
+                const audioData = new Float32Array(Math.floor(sampleRate * duration));
                 for (let i = 0; i < audioData.length; i++) {
-                    audioData[i] = Math.sin(i * 0.05) * 0.1;
+                    audioData[i] = Math.sin(i * 0.1) * 0.1;
                 }
 
                 self.postMessage({
