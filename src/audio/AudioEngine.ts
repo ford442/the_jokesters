@@ -10,7 +10,7 @@ export class AudioEngine {
     private speakerEmbeddings: any = null;
     private isReady = false;
 
-    public async init(modelId: string = 'supertonic', tokenizerPath?: string): Promise<void> {
+    public async init(modelId: string = 'supertonic'): Promise<void> {
         try {
             console.log(`AudioEngine: Initializing pipeline for ${modelId}...`);
 
