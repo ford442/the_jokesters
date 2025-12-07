@@ -96,12 +96,13 @@ async function initApp() {
     const speechQueue = new SpeechQueue(audioEngine)
 
     // Check for WebGL support explicitly before initializing Three.js
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: true }) || canvas.getContext('experimental-webgl', { alpha: true, antialias: true });
     if (!gl) {
       throw new Error('WebGL is not supported or is disabled in this environment.');
     }
 
-    const stage = new Stage(canvas)
+    const stage = new Stage(canvas, gl as WebGLRenderingContext)
     const lipSync = new LipSync(speechQueue.getAudioContext())
 
     // Wire up Audio -> Visuals
