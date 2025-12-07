@@ -1,91 +1,58 @@
+import { pipeline, env } from '@huggingface/transformers';
 
-import type { WorkerMessage, WorkerResponse } from './worker/audio.worker';
-import AudioWorker from './worker/audio.worker?worker'; // Vite worker import
+// Configure to load models locally from your /public/models/ folder
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
+env.localModelPath = '/models/'; // Root path for local models
 
 export class AudioEngine {
-    private worker: Worker;
-    private pendingRequests = new Map<string, {
-        resolve: (data: Float32Array) => void;
-        reject: (reason: any) => void;
-    }>();
+    private synthesizer: any = null;
+    private speakerEmbeddings: any = null;
     private isReady = false;
 
-    private resolveInit: (() => void) | null = null;
-    private rejectInit: ((reason?: any) => void) | null = null;
+    public async init(modelId: string = 'supertonic', tokenizerPath?: string): Promise<void> {
+        try {
+            console.log(`AudioEngine: Initializing pipeline for ${modelId}...`);
 
-    constructor() {
-        this.worker = new AudioWorker();
-        this.setupWorkerHandlers();
+            // This will look for /models/supertonic/config.json, model.onnx (or split files), etc.
+            this.synthesizer = await pipeline('text-to-speech', modelId, {
+                device: 'webgpu', // Use WebGPU for performance
+                dtype: 'fp32',    // Supertonic quantization is handled internally
+            });
+
+            // Load the speaker embedding (Voice ID)
+            // We fetch this manually since it's a raw binary file, not part of the standard pipeline config
+            const response = await fetch('/models/supertonic/voices/F1.bin');
+            if (!response.ok) throw new Error('Failed to load speaker embedding F1.bin');
+            const buffer = await response.arrayBuffer();
+            this.speakerEmbeddings = new Float32Array(buffer);
+
+            this.isReady = true;
+            console.log('AudioEngine: Ready');
+        } catch (e) {
+            console.error('AudioEngine Init Failed:', e);
+            throw e;
+        }
     }
 
-    private setupWorkerHandlers() {
-        this.worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
-            const msg = event.data;
-            switch (msg.type) {
-                case 'init-success':
-                    this.isReady = true;
-                    console.log('AudioEngine: Ready');
-                    if (this.resolveInit) {
-                        this.resolveInit();
-                        this.resolveInit = null;
-                        this.rejectInit = null;
-                    }
-                    break;
-                case 'init-error':
-                    console.error('AudioEngine: Initialization failed', msg.error);
-                    if (this.rejectInit) {
-                        this.rejectInit(new Error(msg.error));
-                        this.resolveInit = null;
-                        this.rejectInit = null;
-                    }
-                    break;
-                case 'synthesis-success':
-                    const resolver = this.pendingRequests.get(msg.requestId);
-                    if (resolver) {
-                        resolver.resolve(msg.audioData);
-                        this.pendingRequests.delete(msg.requestId);
-                    }
-                    break;
-                case 'synthesis-error':
-                    const rejector = this.pendingRequests.get(msg.requestId);
-                    if (rejector) {
-                        rejector.reject(new Error(msg.error));
-                        this.pendingRequests.delete(msg.requestId);
-                    }
-                    break;
-            }
-        };
-    }
-
-    public async init(modelPath: string, tokenizerPath?: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.resolveInit = resolve;
-            this.rejectInit = reject;
-            this.worker.postMessage({ type: 'init', modelPath, tokenizerPath } as WorkerMessage);
-        });
-    }
-
-    public async synthesize(text: string, speakerId: string): Promise<Float32Array> {
-        if (!this.isReady) {
-            console.warn('AudioEngine: Worker not ready, waiting...');
-            // In a real app, might want to queue this or wait for init.
-            // For now, proceeding and hoping it inits fast or queuing in worker (which we didn't implement there).
+    public async synthesize(text: string, _speakerId: string): Promise<Float32Array> {
+        if (!this.isReady || !this.synthesizer) {
+            throw new Error('AudioEngine not ready');
         }
 
-        const requestId = crypto.randomUUID();
-
-        return new Promise((resolve, reject) => {
-            this.pendingRequests.set(requestId, { resolve, reject });
-            this.worker.postMessage({
-                type: 'synthesize',
-                text,
-                speakerId,
-                requestId
-            } as WorkerMessage);
+        // Run inference
+        // The pipeline handles tokenization -> encoder -> denoiser -> decoder automatically
+        const output = await this.synthesizer(text, {
+            speaker_embeddings: this.speakerEmbeddings,
         });
+
+        // output.audio is the Float32Array we need
+        return output.audio;
     }
 
     public dispose() {
-        this.worker.terminate();
+        // Transformers.js manages its own cleanup mostly, 
+        // but you can nullify references
+        this.synthesizer = null;
     }
 }
