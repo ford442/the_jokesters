@@ -33,7 +33,7 @@ export class GroupChatManager {
     try {
       // Initialize the MLC engine with Llama-3 model
       // Using a smaller quantized model for faster loading
-      this.engine = await webllm.CreateMLCEngine('mlc-ai/Qwen3-4B-q4f16_0-MLC', {
+      this.engine = await webllm.CreateMLCEngine('Qwen3-4B-q4f16_0-MLC', {
         initProgressCallback: onProgress,
       })
       this.isInitialized = true
