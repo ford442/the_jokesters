@@ -25,7 +25,10 @@ export class Style {
 }
 
 export class UnicodeProcessor {
-    constructor(private indexer: number[]) { }
+    private indexer: number[];
+    constructor(indexer: number[]) {
+        this.indexer = indexer;
+    }
 
     preprocessText(text: string): string {
         // Basic normalization matching the reference implementation
