@@ -4,6 +4,9 @@ import type { Agent } from './GroupChatManager'
 import { SceneManager } from './SceneManager'
 import * as webllm from '@mlc-ai/web-llm'
 
+// Log available models on startup
+console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m) => m.model_id))
+
 // Define our agents with different personalities and sampling parameters
 const agents: Agent[] = [
   {
