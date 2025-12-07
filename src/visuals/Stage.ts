@@ -11,14 +11,14 @@ export class Stage {
     private activeActorId: string | null = null;
     private lipSync: LipSync | null = null;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, context?: WebGLRenderingContext) {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a1a2e); // Dark blueish
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, 2, 5);
 
-        this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        this.renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
 
