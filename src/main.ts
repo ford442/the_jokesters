@@ -1,7 +1,9 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent } from './GroupChatManager'
-import { SceneManager } from './SceneManager'
+import { Stage } from './visuals/Stage'
+import { LipSync } from './visuals/LipSync'
+// import { SceneManager } from './SceneManager'
 import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
@@ -88,23 +90,21 @@ async function initApp() {
 
   // Initialize managers
   const groupChatManager = new GroupChatManager(agents)
-  const sceneManager = new SceneManager(canvas)
+
   const audioEngine = new AudioEngine()
   const speechQueue = new SpeechQueue(audioEngine)
 
-  // Lip Sync / Mouth Events
-  speechQueue.onMouthMove = (amplitude: number) => {
-    if (amplitude > 0.05) {
-      // console.log("Mouth Open", amplitude);
-      // TODO: Map to 3D mesh
-    } else {
-      // console.log("Mouth Closed");
-    }
-  }
+  const stage = new Stage(canvas)
+  const lipSync = new LipSync(speechQueue.getAudioContext())
 
-  // Add agents to scene
-  sceneManager.addAgents(agents)
-  sceneManager.animate()
+  // Wire up Audio -> Visuals
+  // SpeechQueue -> LipSync -> Destination
+  speechQueue.setDestination(lipSync.analyser)
+  lipSync.analyser.connect(speechQueue.getAudioContext().destination)
+
+  stage.setLipSync(lipSync)
+  stage.render()
+
 
   try {
     // 1. Initialize Audio Engine (in background or parallel)
@@ -146,6 +146,7 @@ async function initApp() {
     // Helper to speak and animate
     const speakAndVisualize = async (text: string, agentId: string) => {
       try {
+        stage.setActiveActor(agentId);
         const audioData = await audioEngine.synthesize(text, agentId);
         speechQueue.add(audioData);
       } catch (e) {
@@ -185,8 +186,8 @@ async function initApp() {
         chatLog.appendChild(messageDiv);
         const contentSpan = messageDiv.querySelector('.content')!;
 
-        // Make agent jump
-        sceneManager.makeAgentJump(currentAgentId)
+        // Make agent jump (Removed, handled by speakAndVisualize active actor)
+        stage.setActiveActor(currentAgentId);
 
         await groupChatManager.chat(message, (sentence) => {
           // New sentence received

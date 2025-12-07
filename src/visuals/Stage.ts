@@ -83,7 +83,7 @@ export class Stage {
         });
     }
 
-    public makeActorJump(id: string) {
+    public makeActorJump(_id: string) {
         // Optional: keep legacy jump capability if needed, or implement via Actor
         // For now, ignoring or basic impl
     }
