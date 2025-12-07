@@ -114,9 +114,8 @@ async function initApp() {
     stage.render()
 
     // 1. Initialize Audio Engine (in background or parallel)
-    // Assuming models are at /models/supertonic/ (quantized)
     statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('supertonic');
+    await audioEngine.init('/assets/onnx');
     // 2. Initialize the chat manager with progress callback
     statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
