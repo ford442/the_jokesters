@@ -10,7 +10,7 @@ import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 
 // Log available models on startup
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m) => m.model_id))
+console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
 // Define our agents with different personalities and sampling parameters
 const agents: Agent[] = [
@@ -115,7 +115,7 @@ async function initApp() {
 
     // 1. Initialize Audio Engine (in background or parallel)
     statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('/assets/onnx');
+    await audioEngine.init('./assets/onnx');
     // 2. Initialize the chat manager with progress callback
     statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
