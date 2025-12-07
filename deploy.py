@@ -19,6 +19,7 @@ def upload_directory(sftp_client, local_path, remote_path):
     """
     Recursively uploads a directory and its contents to the remote server.
     """
+    
     print(f"Creating remote directory: {remote_path}")
     try:
         # Create the target directory on the server if it doesn't exist.
@@ -30,7 +31,10 @@ def upload_directory(sftp_client, local_path, remote_path):
     for item in os.listdir(local_path):
         local_item_path = os.path.join(local_path, item)
         remote_item_path = f"{remote_path}/{item}"
-
+        if item == '.git':
+            print(f"Skipping .git directory: {os.path.join(local_path, item)}")
+            continue
+            
         if os.path.isfile(local_item_path):
             print(f"Uploading file: {local_item_path} -> {remote_item_path}")
             sftp_client.put(local_item_path, remote_item_path)
