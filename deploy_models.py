@@ -13,7 +13,7 @@ USERNAME = "ford442"
 # The local directory to upload from.
 LOCAL_DIRECTORY = "models/onnx"
 # The directory on the server where the files should go (e.g., 'public_html/wasm-game').
-REMOTE_DIRECTORY = "test.1ink.us/the-jokesters/models/supertonic/"
+REMOTE_DIRECTORY = "test.1ink.us/the-jokesters/models/supertonic"
 
 def upload_directory(sftp_client, local_path, remote_path):
     """
