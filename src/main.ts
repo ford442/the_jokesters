@@ -88,25 +88,24 @@ async function initApp() {
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
 
-  // Initialize managers
-  const groupChatManager = new GroupChatManager(agents)
-
-  const audioEngine = new AudioEngine()
-  const speechQueue = new SpeechQueue(audioEngine)
-
-  const stage = new Stage(canvas)
-  const lipSync = new LipSync(speechQueue.getAudioContext())
-
-  // Wire up Audio -> Visuals
-  // SpeechQueue -> LipSync -> Destination
-  speechQueue.setDestination(lipSync.analyser)
-  lipSync.analyser.connect(speechQueue.getAudioContext().destination)
-
-  stage.setLipSync(lipSync)
-  stage.render()
-
-
   try {
+    // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
+    const groupChatManager = new GroupChatManager(agents)
+
+    const audioEngine = new AudioEngine()
+    const speechQueue = new SpeechQueue(audioEngine)
+
+    const stage = new Stage(canvas)
+    const lipSync = new LipSync(speechQueue.getAudioContext())
+
+    // Wire up Audio -> Visuals
+    // SpeechQueue -> LipSync -> Destination
+    speechQueue.setDestination(lipSync.analyser)
+    lipSync.analyser.connect(speechQueue.getAudioContext().destination)
+
+    stage.setLipSync(lipSync)
+    stage.render()
+
     // 1. Initialize Audio Engine (in background or parallel)
     // Assuming models are at /models/supertonic/ (quantized)
     statusText.textContent = "Initializing Audio Engine..."
@@ -230,9 +229,18 @@ async function initApp() {
     })
 
     userInput.focus()
-  } catch (error) {
-    statusText.textContent = 'Error initializing App. Please check console.'
+  } catch (error: any) {
     console.error('Initialization error:', error)
+
+    let errorMessage = 'Error initializing App. Please check console.'
+    const errorStr = String(error)
+
+    if (errorStr.includes('WebGL') || errorStr.includes('GPU') || errorStr.includes('gl_')) {
+      errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
+    }
+
+    statusText.textContent = errorMessage
+    statusText.style.color = '#ff6b6b'
   }
 }
 
