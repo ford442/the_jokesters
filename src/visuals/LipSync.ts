@@ -10,7 +10,7 @@ export class LipSync {
     }
 
     getVolume(): number {
-        this.analyser.getByteFrequencyData(this.dataArray);
+        this.analyser.getByteFrequencyData(this.dataArray as any);
 
         let sum = 0;
         for (let i = 0; i < this.dataArray.length; i++) {
