@@ -16,7 +16,12 @@ export interface SupertonicConfig {
 }
 
 export class Style {
-    constructor(public ttl: ort.Tensor, public dp: ort.Tensor) { }
+    public ttl: ort.Tensor;
+    public dp: ort.Tensor;
+    constructor(ttl: ort.Tensor, dp: ort.Tensor) {
+        this.ttl = ttl;
+        this.dp = dp;
+    }
 }
 
 export class UnicodeProcessor {

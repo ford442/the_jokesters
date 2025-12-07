@@ -7,12 +7,20 @@ export interface TTSConfig {
 }
 
 export class Style {
-    constructor(public ttl: ort.Tensor, public dp: ort.Tensor) { }
+    public ttl: ort.Tensor;
+    public dp: ort.Tensor;
+    constructor(ttl: ort.Tensor, dp: ort.Tensor) {
+        this.ttl = ttl;
+        this.dp = dp;
+    }
 }
 
 // --- Text Processor (Unicode Normalization) ---
 export class UnicodeProcessor {
-    constructor(private indexer: number[]) { }
+    private indexer: number[];
+    constructor(indexer: number[]) {
+        this.indexer = indexer;
+    }
 
     call(textList: string[]) {
         const processed = textList.map(t => this.preprocess(t));
@@ -51,14 +59,27 @@ export class UnicodeProcessor {
 
 // --- The Main TTS Class ---
 export class SupertonicTTS {
+    private cfgs: TTSConfig;
+    private processor: UnicodeProcessor;
+    private sessionDp: ort.InferenceSession;
+    private sessionEnc: ort.InferenceSession;
+    private sessionVec: ort.InferenceSession;
+    private sessionVoc: ort.InferenceSession;
     constructor(
-        private cfgs: TTSConfig,
-        private processor: UnicodeProcessor,
-        private sessionDp: ort.InferenceSession,
-        private sessionEnc: ort.InferenceSession,
-        private sessionVec: ort.InferenceSession,
-        private sessionVoc: ort.InferenceSession
-    ) { }
+        cfgs: TTSConfig,
+        processor: UnicodeProcessor,
+        sessionDp: ort.InferenceSession,
+        sessionEnc: ort.InferenceSession,
+        sessionVec: ort.InferenceSession,
+        sessionVoc: ort.InferenceSession
+    ) {
+        this.cfgs = cfgs;
+        this.processor = processor;
+        this.sessionDp = sessionDp;
+        this.sessionEnc = sessionEnc;
+        this.sessionVec = sessionVec;
+        this.sessionVoc = sessionVoc;
+    }
 
     async generate(text: string, style: Style, steps = 5, speed = 1.0): Promise<Float32Array> {
         // 1. Process Text
