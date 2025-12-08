@@ -93,13 +93,16 @@ export class GroupChatManager {
     ]
 
     try {
-      // Generate response with agent-specific sampling parameters
+      // Generate response with stricter sampling to prevent repetition
       const completion = await this.engine.chat.completions.create({
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
         max_tokens: 256,
-        stream: true, // Enable streaming
+        stream: true,
+        // @ts-ignore - WebLLM supports this even if types might complain
+        repetition_penalty: 1.15, // Increased from 1.01 to stop loops
+        presence_penalty: 0.6, // Encourage new topics
       })
 
       let fullResponse = ''
@@ -118,7 +121,13 @@ export class GroupChatManager {
           let match
           while ((match = buffer.match(/([.!?])\s/))) {
             const endIdx = match.index! + 1
-            const sentence = buffer.substring(0, endIdx).trim()
+            let sentence = buffer.substring(0, endIdx).trim()
+
+            // CLEANUP: Remove "Agent Name:" from the start of sentences
+            // This fixes the issue where they say their own name
+            const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+            sentence = sentence.replace(namePrefixRegex, '')
+
             if (sentence) {
               onSentence?.(sentence)
             }
@@ -129,13 +138,23 @@ export class GroupChatManager {
 
       // Emit remaining buffer as sentence if any
       if (buffer.trim()) {
-        onSentence?.(buffer.trim())
+        let cleanBuffer = buffer.trim()
+        // Clean name from the final chunk too
+        const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+        cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
+
+        onSentence?.(cleanBuffer)
       }
 
-      // Add agent response to history
+      // CLEANUP: Ensure the history doesn't contain the name prefix either
+      // (This prevents the model from learning to copy the pattern in the next turn)
+      const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+      const cleanFullResponse = fullResponse.replace(namePrefixRegex, '')
+
+      // Add cleaned response to history
       this.conversationHistory.push({
         role: 'assistant',
-        content: fullResponse,
+        content: cleanFullResponse,
       })
 
       // Move to next agent for next turn
