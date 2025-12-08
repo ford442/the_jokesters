@@ -12,11 +12,9 @@
     "typescript": "~5.9.3",
     "vite": "^7.2.4"
   },
-  "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.80",
-    "@types/three": "^0.181.0",
-    "onnxruntime-web": "^1.17.0",
-    "three": "^0.181.2",
-    "vite-plugin-static-copy": "^3.1.4"
-  }
+  "@mlc-ai/web-llm": "^0.2.80",
+  "@types/three": "^0.181.0",
+  "onnxruntime-web": "^1.23.2",
+  "three": "^0.181.2",
+  "vite-plugin-static-copy": "^3.1.4"
 }
