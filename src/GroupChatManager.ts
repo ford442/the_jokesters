@@ -34,7 +34,6 @@ export class GroupChatManager {
       // Initialize the MLC engine with Llama-3 model
       // Using a smaller quantized model for faster loading
 
-      DeepSeek - R1 - Distill - Qwen - 7B
       // mlc-ai/Phi-4-mini-instruct-q4f32_1-MLC
 
 
