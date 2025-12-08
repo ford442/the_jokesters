@@ -85,17 +85,16 @@ export class SupertonicPipeline {
         this.ort = await import('onnxruntime-web');
 
         // 2. CONFIGURE FLAGS
-        // Disable threading and proxy to prevent looking for .mjs worker files
+        // The other project disables proxy/threads to avoid worker issues
         this.ort.env.wasm.numThreads = 1;
         this.ort.env.wasm.proxy = false;
-        this.ort.env.wasm.simd = true; // Optional: Enable SIMD if available
 
-        // 3. SET PATHS
-        // Point specifically to where we copied the .wasm files in vite.config.ts
-        const baseUrl = import.meta.env.BASE_URL || '/';
-        this.ort.env.wasm.wasmPaths = `${baseUrl}assets/ort/`;
+        // 3. SET ABSOLUTE WASM PATH (Fixes the assets/assets/ 404 error)
+        // We use document.baseURI to ensure we are relative to the HTML page, not the JS script
+        const wasmPath = new URL('assets/ort/', document.baseURI || window.location.href).href;
+        this.ort.env.wasm.wasmPaths = wasmPath;
 
-        console.log(`[Supertonic] Initializing ONNX (WASM Only)...`);
+        console.log(`[Supertonic] Initializing ONNX. Wasm Path: ${wasmPath}`);
 
         // 4. Load Configs
         try {
