@@ -57,7 +57,7 @@ export class GroupChatManager {
           initProgressCallback: onProgress
         }, // engineConfig
         {
-          repetition_penalty: 1.01
+          repetition_penalty: 1.15
         } // chatOpts (optional)
       );
 
@@ -72,7 +72,7 @@ export class GroupChatManager {
   async chat(
     userMessage: string,
     onSentence?: (sentence: string) => void,
-    options: { maxTokens?: number } = {}
+    options: { maxTokens?: number; seed?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -102,6 +102,10 @@ export class GroupChatManager {
         // Use the override if provided, otherwise default to 256
         max_tokens: options.maxTokens || 256,
         stream: true,
+        // Stop sequences to prevent the model from injecting new paragraphs or framing text
+        stop: ["\n", "User:", "Director:"],
+        // @ts-ignore - optional seed not on all runtime types
+        seed: options.seed,
         // @ts-ignore - WebLLM supports this even if types might complain
         repetition_penalty: 1.15, // Increased from 1.01 to stop loops
         presence_penalty: 0.6, // Encourage new topics
@@ -127,7 +131,7 @@ export class GroupChatManager {
 
             // CLEANUP: Remove "Agent Name:" from the start of sentences
             // This fixes the issue where they say their own name
-            const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
             sentence = sentence.replace(namePrefixRegex, '')
 
             if (sentence) {
@@ -142,7 +146,7 @@ export class GroupChatManager {
       if (buffer.trim()) {
         let cleanBuffer = buffer.trim()
         // Clean name from the final chunk too
-        const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
         cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
 
         onSentence?.(cleanBuffer)
@@ -150,7 +154,7 @@ export class GroupChatManager {
 
       // CLEANUP: Ensure the history doesn't contain the name prefix either
       // (This prevents the model from learning to copy the pattern in the next turn)
-      const namePrefixRegex = new RegExp(`^${currentAgent.name}:\\s*`, 'i')
+      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
       const cleanFullResponse = fullResponse.replace(namePrefixRegex, '')
 
       // Add cleaned response to history

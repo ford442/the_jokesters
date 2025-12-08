@@ -19,9 +19,9 @@ const agents: Agent[] = [
   {
     id: 'comedian',
     name: 'The Comedian',
-    // Prompt Focus: Casual, conversational, strictly humor over analysis
+    // Female + Fast + Farcical
     systemPrompt:
-      'You are a casual, funny guy hanging out with friends. Speak naturally, use slang, and keep it loose. Your goal is to make people laugh, not to analyze. Do not be poetic. Be brief, punchy, and a little bit silly.',
+      'You are a frantic, high-energy female comedian who talks incredibly fast. You are aware that you ramble at high speed and sometimes apologize for it. You mix highbrow references with lowbrow physical humor. DO NOT start sentences with your name.',
     temperature: 0.95,
     top_p: 0.95,
     color: '#ff6b6b',
@@ -29,20 +29,20 @@ const agents: Agent[] = [
   {
     id: 'philosopher',
     name: 'The Philosopher',
-    // Prompt Focus: Wry wit, observational comedy
+    // Slow + Pretentious
     systemPrompt:
-      'You are a cynical observer with a dry wit. Speak like a normal person, but one who is tired of everyone\'s nonsense. Make fun of the situation directly. Do not give long speeches. Be sarcastic and quick.',
-    temperature: 0.8,
+      'You are a cynical philosopher who speaks... very... slowly... to... ensure... your... profound... thoughts... are... understood. You judge the comedian for her speed. You are highbrow but petty. DO NOT start sentences with your name.',
+    temperature: 0.75,
     top_p: 0.9,
     color: '#4ecdc4',
   },
   {
     id: 'scientist',
     name: 'The Scientist',
-    // Prompt Focus: Deadpan delivery
+    // The "Literalist"
     systemPrompt:
-      'You are a nerd, but a casual one. You take things literally for comedic effect. Speak in short, factual sentences that accidentally kill the mood. Be deadpan.',
-    temperature: 0.7,
+      'You are a scientist who treats every joke as a serious hypothesis. You are dry and devoid of humor, which makes you unintentionally funny. You analyze crass jokes with mathematical precision. DO NOT use your name.',
+    temperature: 0.6,
     top_p: 0.85,
     color: '#45b7d1',
   },
@@ -65,6 +65,24 @@ async function initApp() {
       <div id="chat-container" class="chat-container" style="display: none;">
         <canvas id="scene"></canvas>
         <div class="controls">
+          <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
+              <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
+              <span id="tts-steps-val" style="color: #4ecdc4; font-size: 0.8em; width: 20px;">10</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Director Chaos</label>
+              <input type="range" id="director-chaos" min="0" max="100" value="30" style="flex: 1;">
+              <span id="director-chaos-val" style="color: #ff6b6b; font-size: 0.8em; width: 20px;">30%</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
+              <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
+            </div>
+          </div>
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
             <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
@@ -123,6 +141,11 @@ async function initApp() {
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
+  const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
+  const ttsStepsVal = document.getElementById('tts-steps-val')!
+  const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
+  const chaosVal = document.getElementById('director-chaos-val')!
+  const seedInput = document.getElementById('global-seed') as HTMLInputElement
 
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
@@ -167,6 +190,10 @@ async function initApp() {
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
 
+    // UI listeners
+    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
+    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
+
     // Update next agent info
     const updateNextAgentUI = () => {
       const nextAgent = groupChatManager.getCurrentAgent()
@@ -186,11 +213,11 @@ async function initApp() {
       chatLog.scrollTop = chatLog.scrollHeight
     }
 
-    // Helper to speak and animate (accept steps for TTS quality)
-    const speakAndVisualize = async (text: string, agentId: string, steps: number) => {
+    // Helper to speak and animate with options (steps + seed)
+    const speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
       try {
         stage.setActiveActor(agentId);
-        const audioData = await audioEngine.synthesize(text, agentId, steps);
+        const audioData = await audioEngine.synthesize(text, agentId, { steps: options.steps, seed: options.seed });
         speechQueue.add(audioData);
       } catch (e) {
         console.error("Speech synthesis failed", e);
@@ -232,10 +259,19 @@ async function initApp() {
         // Make agent jump (Removed, handled by speakAndVisualize active actor)
         stage.setActiveActor(currentAgentId);
 
+        // derive optional seed for reproducibility in chat mode
+        const baseUserSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const baseTurnSeed = baseUserSeed !== undefined ? baseUserSeed + groupChatManager.getHistoryLength() : undefined
         await groupChatManager.chat(message, (sentence) => {
           // New sentence received
           console.log(`[${agent.name} speaks]: ${sentence}`);
-          speakAndVisualize(sentence, agent.id, 10);
+          // Apply character-specific speed
+          const characterSpeeds: Record<string, number> = {
+            'comedian': 1.5,
+            'philosopher': 0.6,
+            'scientist': 1.0
+          }
+          speakAndVisualize(sentence, agent.id, { steps: parseInt(ttsStepsSlider.value || '10'), speed: characterSpeeds[agent.id] || 1.0, seed: baseTurnSeed });
 
           // Update UI with partial text (optional, or just append)
           // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
@@ -248,7 +284,7 @@ async function initApp() {
           fullResponse += sentence + " ";
           contentSpan.textContent = fullResponse;
           chatLog.scrollTop = chatLog.scrollHeight;
-        });
+        }, { seed: baseTurnSeed });
 
         // Wait for audio to finish playing this turn
         await speechQueue.waitUntilFinished();
@@ -302,26 +338,31 @@ async function initApp() {
     // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
     const calculatePacing = () => {
       const roll = Math.random();
+      // 30% Chance: "The One-Liner"
       if (roll > 0.7) {
         return {
           type: 'punchline',
-          maxTokens: 40,
-          ttsSteps: 15,
-          promptSuffix: ' (Make a quick one-liner joke)'
+          // SAFETY NET ONLY: Allow enough space for a full sentence
+          maxTokens: 60,
+          ttsSteps: 25,
+          // THE REAL FIX: Explicit instruction for brevity
+          promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
         }
+      // 50% Chance: "The Standard"
       } else if (roll > 0.2) {
         return {
           type: 'standard',
-          maxTokens: 100,
-          ttsSteps: 6,
-          promptSuffix: ' (Keep the conversation flowing casually)'
+          maxTokens: 150,
+          ttsSteps: 16,
+          promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
         }
+      // 20% Chance: "The Rant"
       } else {
         return {
           type: 'rant',
-          maxTokens: 200,
-          ttsSteps: 4,
-          promptSuffix: ' (Go on a short, funny rant)'
+          maxTokens: 256,
+          ttsSteps: 8,
+          promptSuffix: ' (Go on a funny, passionate rant. Be expressive!)'
         }
       }
     }
@@ -370,7 +411,18 @@ async function initApp() {
         while (isImprovRunning) {
           await new Promise(r => setTimeout(r, 800))
           if (!isImprovRunning) break
-          await processTurn('(Reply naturally to the last thing said)')
+
+          // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
+          const turnCount = groupChatManager.getHistoryLength()
+          const chaosLevel = parseInt(chaosSlider.value)
+          let prompt = '(Reply naturally to the last thing said)'
+          if (turnCount % 3 === 0 && Math.random() * 100 < chaosLevel) {
+            prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)'
+          } else if (turnCount % 4 === 0 && Math.random() * 100 < chaosLevel) {
+            prompt = '(Make a highbrow reference to history that completely misses the point.)'
+          }
+
+          await processTurn(prompt)
         }
 
         // Wait for final audio to finish
@@ -418,15 +470,25 @@ async function initApp() {
         const contentSpan = messageDiv.querySelector('.content')!
 
         // 2. Pass maxTokens to chat and append pacing prompt to the hidden prompt
+        // Compute the per-turn deterministic seed if user provided a seed
+        const userSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const turnSeed = userSeed !== undefined ? userSeed + groupChatManager.getHistoryLength() : undefined
         const effectivePrompt = inputText + pacing.promptSuffix
+
+        // Character-specific speeds
+        const characterSpeeds: Record<string, number> = {
+          'comedian': 1.5,
+          'philosopher': 0.6,
+          'scientist': 1.0
+        }
 
         await groupChatManager.chat(effectivePrompt, (sentence) => {
           // 3. Pass ttsSteps to speak
-          speakAndVisualize(sentence, agent.id, pacing.ttsSteps)
+          speakAndVisualize(sentence, agent.id, { steps: pacing.ttsSteps, speed: characterSpeeds[agent.id] || 1.0, seed: turnSeed })
 
           contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
           chatLog.scrollTop = chatLog.scrollHeight
-        }, { maxTokens: pacing.maxTokens })
+        }, { maxTokens: pacing.maxTokens, seed: turnSeed })
 
         await speechQueue.waitUntilFinished()
         updateNextAgentUI()

@@ -1,4 +1,5 @@
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
+import { RNG } from '../utils/RNG';
 
 // Note: We do NOT import 'onnxruntime-web' at the top level. 
 // This prevents Vite from pre-bundling the worker logic that looks for .mjs files.
@@ -161,7 +162,7 @@ export class SupertonicPipeline {
         return new Style(ttlTensor, dpTensor);
     }
 
-    async generate(text: string, style: Style, totalStep: number = 10, speed: number = 1.0): Promise<{ wav: Float32Array, duration: number }> {
+    async generate(text: string, style: Style, totalStep: number = 10, speed: number = 1.0, seed?: number): Promise<{ wav: Float32Array, duration: number }> {
         if (!this.isReady) throw new Error("Pipeline not initialized");
 
         const bsz = 1;
@@ -192,8 +193,9 @@ export class SupertonicPipeline {
         });
         const textEmb = textEncOut.text_emb;
 
-        // Sample Noisy Latent
-        const { xt, latentMaskTensor } = this.sampleNoisyLatent(duration[0]);
+        // Sample Noisy Latent using seeded RNG if provided
+        const rng = seed !== undefined ? new RNG(seed) : undefined;
+        const { xt, latentMaskTensor } = this.sampleNoisyLatent(duration[0], rng);
 
         // Diffusion Loop
         let currentXt = xt;
@@ -223,7 +225,7 @@ export class SupertonicPipeline {
         return { wav, duration: duration[0] };
     }
 
-    private sampleNoisyLatent(duration: number) {
+    private sampleNoisyLatent(duration: number, rng?: RNG) {
         const sr = this.sampleRate;
         const wavLen = Math.floor(duration * sr);
         const chunkSize = this.cfgs.ae.base_chunk_size * this.cfgs.ttl.chunk_compress_factor;
@@ -234,8 +236,8 @@ export class SupertonicPipeline {
         const data = new Float32Array(size);
 
         for (let i = 0; i < size; i++) {
-            const u1 = Math.max(0.0001, Math.random());
-            const u2 = Math.random();
+            const u1 = Math.max(0.0001, rng ? rng.next() : Math.random());
+            const u2 = rng ? rng.next() : Math.random();
             data[i] = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
         }
 

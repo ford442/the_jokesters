@@ -1,8 +1,9 @@
 import { SupertonicPipeline, Style } from './SupertonicPipeline';
 
-export interface SpeechOptions {
+export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
     steps?: number;  // Diffusion steps for quality (default: 10)
+    seed?: number;   // Optional deterministic seed
 }
 
 export class AudioEngine {
@@ -13,10 +14,10 @@ export class AudioEngine {
 
     // Define the mapping: Agent ID -> Filename (without .json)
     private voiceMap: Record<string, string> = {
-        'comedian': 'F2',    // Female voice 2
-        'philosopher': 'M2', // Male voice 2
-        'scientist': 'F1',   // Female voice 1
-        'default': 'M1'      // Default male voice
+        'comedian': 'F1',    // Female Voice for Comedian
+        'philosopher': 'M2', // Deep/Slow Male Voice
+        'scientist': 'M1',   // Standard Male Voice
+        'default': 'F1'
     };
 
     constructor() {
@@ -81,7 +82,7 @@ export class AudioEngine {
     public async synthesize(
         text: string,
         speakerId: string = 'comedian',  // Agent ID
-        steps: number = 10
+        options: SynthesisOptions = {}
     ): Promise<Float32Array> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
@@ -99,8 +100,10 @@ export class AudioEngine {
 
         console.log(`AudioEngine: Synthesizing for '${speakerId}' using voice '${realVoiceId}'`);
 
-        // 2. Resolve Options
-        const speed = 1.30; // Keep a sensible default speed
+        // 2. Resolve Options + safety clamping
+        const safeSpeed = Math.max(0.5, Math.min(options.speed ?? 1.3, 2.0));
+        const safeSteps = Math.max(1, Math.min(options.steps ?? 10, 50));
+        const seed = options.seed;
 
         // 3. Get Voice Style (only valid voice IDs: M1, M2, F1, F2)
         const style = await this.getStyle(realVoiceId);
@@ -109,8 +112,9 @@ export class AudioEngine {
         const { wav } = await this.pipeline.generate(
             text,
             style,
-            steps,
-            speed
+            safeSteps,
+            safeSpeed,
+            seed
         );
 
         return wav;
