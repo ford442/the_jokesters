@@ -13,7 +13,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "@mlc-ai/web-llm": "^0.2.46",
+    "@mlc-ai/web-llm": "^0.2.8",
     "@types/three": "^0.181.0",
     "onnxruntime-web": "^1.17.0",
     "three": "^0.181.2",
