@@ -19,6 +19,16 @@ export default defineConfig({
           // Copy both .wasm and .mjs files
           src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
           dest: 'assets/ort'
+        },
+        {
+          // Copy ONNX model files and configs
+          src: 'models/onnx/*',
+          dest: 'assets/onnx'
+        },
+        {
+          // Copy voice styles
+          src: 'voices/*',
+          dest: 'assets/voice_styles'
         }
       ]
     })
