@@ -37,7 +37,7 @@ export class SpeechQueue {
         this.isPlaying = true;
         const audioData = this.queue.shift()!;
 
-        const buffer = this.audioContext.createBuffer(1, audioData.length, 24000); // Supertonic often 24khz
+        const buffer = this.audioContext.createBuffer(1, audioData.length, 44100); // Supertonic often 24khz
         buffer.copyToChannel(audioData as any, 0);
 
         const source = this.audioContext.createBufferSource();
