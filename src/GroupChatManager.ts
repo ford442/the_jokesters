@@ -45,15 +45,19 @@ export class GroupChatManager {
         use_indexed_db: true,
       };
 
-      this.engine = new webllm.MLCEngine();
-
-      this.engine.setInitProgressCallback(onProgress || ((report) => {
-        console.log(`[${report.text}] ${Math.round(report.progress * 100)}%`);
-      }));
-
       console.log('Loading custom Vicuna model...');
-      // Pass appConfig directly as the second argument as requested
-      await this.engine.reload("ford442/vicuna-7b-q4f32-webllm", appConfig);
+
+      // Follow the official example format
+      this.engine = await webllm.CreateMLCEngine(
+        "ford442/vicuna-7b-q4f32-webllm",
+        {
+          appConfig: appConfig,
+          initProgressCallback: onProgress
+        }, // engineConfig
+        {
+          repetition_penalty: 1.01
+        } // chatOpts (optional)
+      );
 
       this.isInitialized = true
       console.log('GroupChatManager initialized successfully with custom Vicuna model')

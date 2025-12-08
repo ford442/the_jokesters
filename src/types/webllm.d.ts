@@ -25,5 +25,5 @@ declare module '@mlc-ai/web-llm' {
         model_list: Array<{ model_id: string;[key: string]: any }>;
     };
 
-    export function CreateMLCEngine(modelId: string, config?: any): Promise<MLCEngine>;
+    export function CreateMLCEngine(modelId: string, config?: any, chatOpts?: any): Promise<MLCEngine>;
 }
