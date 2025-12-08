@@ -3,6 +3,7 @@ declare module 'onnxruntime-web' {
         export namespace wasm {
             export let numThreads: number;
             export let proxy: boolean;
+            export let wasmPaths: string | Record<string, string>;
         }
     }
 
