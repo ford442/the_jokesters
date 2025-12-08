@@ -49,8 +49,8 @@ export class GroupChatManager {
 
       console.log('Loading custom Vicuna model...');
       await this.engine.reload("vicuna-7b-q4f32-custom", {
-        ...appConfig,
         initProgressCallback: onProgress,
+        appConfig: appConfig,
       });
 
       this.isInitialized = true
