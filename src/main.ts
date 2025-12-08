@@ -19,27 +19,30 @@ const agents: Agent[] = [
   {
     id: 'comedian',
     name: 'The Comedian',
+    // Farcical, Self-Deprecating, Crass, Physical
     systemPrompt:
-      'You are a witty comedian who loves to make jokes and puns. Keep responses brief and humorous.',
-    temperature: 0.9,
+      'You are a farcical, chaotic comedian. Your humor alternates wildly between highbrow satire and lowbrow crassness. You are dry, wry, and deeply self-deprecating. You act out physical comedy in text. Avoid dark or depressing topics; keep it absurd and silly. DO NOT start your response with your name. Just speak.',
+    temperature: 0.95, // High temp for chaos
     top_p: 0.95,
     color: '#ff6b6b',
   },
   {
     id: 'philosopher',
     name: 'The Philosopher',
+    // Satirical, Highbrow, Wry, Judgmental
     systemPrompt:
-      'You are a thoughtful philosopher who provides deep insights. Keep responses brief and profound.',
-    temperature: 0.7,
+      'You are a cynical, satirical philosopher. You analyze everything with dry, wry wit. You look down on lowbrow humor but often accidentally make lowbrow jokes yourself while trying to be highbrow. DO NOT start your response with your name. Just speak.',
+    temperature: 0.8,
     top_p: 0.9,
     color: '#4ecdc4',
   },
   {
     id: 'scientist',
     name: 'The Scientist',
+    // Dry, Literal, Accidental Crassness
     systemPrompt:
-      'You are a logical scientist who explains things clearly and factually. Keep responses brief and precise.',
-    temperature: 0.3,
+      'You are a literal-minded scientist. You are dry and precise but accidentally make crass or satirical remarks without realizing it. You take everything the others say completely seriously, which makes it farcical. DO NOT start your response with your name. Just speak.',
+    temperature: 0.65,
     top_p: 0.85,
     color: '#45b7d1',
   },
@@ -283,12 +286,12 @@ async function initApp() {
       improvModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'none'
-      
+
       // Stop improv if running
       if (improvSceneManager.isSceneRunning()) {
         improvSceneManager.stop()
       }
-      
+
       updateNextAgentUI()
     })
 
@@ -340,10 +343,10 @@ async function initApp() {
             messageDiv.innerHTML = `<strong style="color: ${color}">${agentName}:</strong> <span class="content">...</span>`
             chatLog.appendChild(messageDiv)
             chatLog.scrollTop = chatLog.scrollHeight
-            
+
             // Set active actor for visuals
             stage.setActiveActor(agentId)
-            
+
             return messageDiv
           },
           // onSentence callback - update message and speak
@@ -352,10 +355,10 @@ async function initApp() {
             const currentText = contentSpan.textContent === '...' ? '' : contentSpan.textContent || ''
             contentSpan.textContent = currentText + sentence + ' '
             chatLog.scrollTop = chatLog.scrollHeight
-            
+
             // Synthesize speech
             speakAndVisualize(sentence, agentId)
-            
+
             // Update UI
             updateNextAgentUI()
           },
