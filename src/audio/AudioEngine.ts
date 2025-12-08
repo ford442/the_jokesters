@@ -64,7 +64,7 @@ export class AudioEngine {
 
     public async synthesize(
         text: string,
-        speakerId: string = 'M1',
+        speakerId: string = 'F2',
         options: SpeechOptions = {}
     ): Promise<Float32Array> {
         if (!this.isReady) {
@@ -72,7 +72,7 @@ export class AudioEngine {
         }
 
         // 1. Resolve Options
-        const speed = options.speed ?? 1.0;
+        const speed = options.speed ?? 1.30;
         const steps = options.steps ?? 10;
 
         // 2. Get Voice Style (Cached or New)
