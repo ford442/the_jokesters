@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
-  base: './', // Matches your other project
+  base: './',
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
@@ -16,15 +16,14 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          // Copy only WASM files, just like the other project
-          src: 'node_modules/onnxruntime-web/dist/*.wasm',
+          // Copy both .wasm and .mjs files
+          src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
           dest: 'assets/ort'
         }
       ]
     })
   ],
   optimizeDeps: {
-    // This is crucial! It stops Vite from breaking the ONNX import
     exclude: ['@mlc-ai/web-llm', 'onnxruntime-web']
   },
   worker: {
