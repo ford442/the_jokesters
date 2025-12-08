@@ -168,4 +168,8 @@ export class GroupChatManager {
   getAgents(): Agent[] {
     return this.agents
   }
+
+  getHistoryLength(): number {
+    return this.conversationHistory.length;
+  }
 }
