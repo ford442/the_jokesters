@@ -143,7 +143,7 @@ export class ImprovSceneManager {
         `Scene: "${scene.title}"\n` +
         `Description: ${scene.description}\n` +
         topicsLine +
-        `\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). React naturally to what others say.`
+        `\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). React naturally to what others say. ###`
     }
     
     return `Continue the improv scene. Stay in character and respond naturally to what was just said. Keep it brief and entertaining.`
@@ -162,6 +162,7 @@ export class ImprovSceneManager {
       `You are ${currentAgent.name} talking with ${otherAgents}.\n` +
       `Respond naturally to the previous comment, stay in character, and keep your response brief and entertaining (2-3 sentences).\n` +
       `You can agree, disagree, add humor, or take the scene in a creative direction while staying on theme.`
+      + ' ###'
   }
 
   /**
