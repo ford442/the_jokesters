@@ -1,30 +1,31 @@
-import { defineConfig } from 'vite'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import { defineConfig } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+  base: './', // Matches your other project
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
     },
+    fs: {
+      allow: ['..']
+    }
   },
   plugins: [
     viteStaticCopy({
       targets: [
         {
+          // Copy only WASM files, just like the other project
           src: 'node_modules/onnxruntime-web/dist/*.wasm',
-          dest: './assets'
-        },
-        // Assuming models are in public/models or similar, copy them if needed.
-        // For now, prompt said "node_modules (or a local public/models folder)".
-        // If they are in public/, Vite copies them automatically.
-        // If we need to copy specific onnx files from somewhere else, we add them here.
-        // Adding a placeholder for model setup if they were in node_modules.
+          dest: 'assets/ort'
+        }
       ]
     })
   ],
   optimizeDeps: {
-    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web'],
+    // This is crucial! It stops Vite from breaking the ONNX import
+    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web']
   },
   worker: {
     format: 'es',
@@ -32,4 +33,4 @@ export default defineConfig({
       // If we needed specific worker plugins
     ]
   }
-})
+});

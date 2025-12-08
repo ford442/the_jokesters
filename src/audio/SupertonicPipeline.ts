@@ -1,10 +1,5 @@
 import * as ort from 'onnxruntime-web';
 
-// Configure ONNX Runtime
-ort.env.wasm.numThreads = 1;
-ort.env.wasm.proxy = false;
-ort.env.wasm.wasmPaths = './';
-
 export interface SupertonicConfig {
     ae: {
         sample_rate: number;
@@ -80,34 +75,59 @@ export class SupertonicPipeline {
     public sampleRate: number = 24000; // Default, updated on load
 
     async init(modelPath: string) {
-        // Load Configs
-        const configResp = await fetch(`${modelPath}/tts.json`); // Ensure this file exists
-        this.cfgs = await configResp.json();
-        this.sampleRate = this.cfgs.ae.sample_rate;
+        // 1. CONFIGURE ONNX (Exact settings from your other project)
+        // This prevents the need for extra .mjs worker files
+        ort.env.wasm.numThreads = 1;
+        ort.env.wasm.proxy = false;
 
-        const indexerResp = await fetch(`${modelPath}/unicode_indexer.json`);
-        const indexer = await indexerResp.json();
-        this.textProcessor = new UnicodeProcessor(indexer);
+        // 2. SET WASM PATHS
+        // Tell ONNX where we copied the .wasm files in vite.config.ts
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        ort.env.wasm.wasmPaths = `${baseUrl}assets/ort/`;
 
-        // Load Models
+        console.log(`[Supertonic] Initializing (Threads: 1, Proxy: False)`);
+
+        // 3. Load Configs
+        try {
+            const configResp = await fetch(`${modelPath}/tts.json`);
+            if (!configResp.ok) throw new Error(`Failed to load tts.json from ${modelPath}`);
+            this.cfgs = await configResp.json();
+            this.sampleRate = this.cfgs.ae.sample_rate;
+
+            const indexerResp = await fetch(`${modelPath}/unicode_indexer.json`);
+            if (!indexerResp.ok) throw new Error(`Failed to load unicode_indexer.json`);
+            const indexer = await indexerResp.json();
+            this.textProcessor = new UnicodeProcessor(indexer);
+        } catch (e) {
+            console.error("[Supertonic] Error loading JSON configs:", e);
+            throw e;
+        }
+
+        // 4. Load Models
         const sessionOpts: ort.InferenceSession.SessionOptions = {
-            executionProviders: ['wasm'], // 'webgpu' can be unstable for complex loops, sticking to reference default
+            executionProviders: ['wasm'],
             graphOptimizationLevel: 'all'
         };
 
-        const [dp, enc, vec, voc] = await Promise.all([
-            ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
-        ]);
+        try {
+            const [dp, enc, vec, voc] = await Promise.all([
+                ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
+            ]);
 
-        this.dpOrt = dp;
-        this.textEncOrt = enc;
-        this.vectorEstOrt = vec;
-        this.vocoderOrt = voc;
+            this.dpOrt = dp;
+            this.textEncOrt = enc;
+            this.vectorEstOrt = vec;
+            this.vocoderOrt = voc;
 
-        this.isReady = true;
+            this.isReady = true;
+            console.log("[Supertonic] Pipeline Initialized Successfully");
+        } catch (e) {
+            console.error("[Supertonic] Error loading ONNX models:", e);
+            throw e;
+        }
     }
 
     async loadStyle(stylePath: string): Promise<Style> {
