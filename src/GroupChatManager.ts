@@ -40,7 +40,7 @@ export class GroupChatManager {
       // Hermes-3-Llama-3.2-3B-q4f32_1-MLC
       // Qwen2.5-3B-Instruct-q4f32_1-MLC
       // Qwen3 - 1.7B - q4f32_1 - MLC
-      this.engine = await webllm.CreateMLCEngine('DeepSeek-R1-Distill-Qwen-7B', {
+      this.engine = await webllm.CreateMLCEngine('Phi-4-mini-instruct-q4f32_1-MLC', {
         initProgressCallback: onProgress,
       })
       this.isInitialized = true
