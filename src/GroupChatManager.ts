@@ -31,20 +31,30 @@ export class GroupChatManager {
     if (this.isInitialized) return
 
     try {
-      // Initialize the MLC engine with Llama-3 model
-      // Using a smaller quantized model for faster loading
+      // Define custom Vicuna model configuration
+      const customModel = {
+        model_id: "vicuna-7b-q4f32-custom",
+        model: "https://huggingface.co/ford442/vicuna-7b-q4f32-web/resolve/main/",
+        model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0.2.46/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+        vram_required_MB: 4096,
+        low_resource_required: false,
+      };
 
-      // mlc-ai/Phi-4-mini-instruct-q4f32_1-MLC
+      const appConfig = {
+        model_list: [customModel],
+        use_indexed_db: true,
+      };
 
-      //                                            ford442/vicuna-7b-q4f32-webllm
-      // Hermes-3-Llama-3.2-3B-q4f32_1-MLC
-      // Qwen2.5-3B-Instruct-q4f32_1-MLC
-      // Qwen3 - 1.7B - q4f32_1 - MLC
-      this.engine = await webllm.CreateMLCEngine('ford442/vicuna-7b-q4f32-webllm', {
+      this.engine = new webllm.MLCEngine();
+
+      console.log('Loading custom Vicuna model...');
+      await this.engine.reload("vicuna-7b-q4f32-custom", {
+        ...appConfig,
         initProgressCallback: onProgress,
-      })
+      });
+
       this.isInitialized = true
-      console.log('GroupChatManager initialized successfully')
+      console.log('GroupChatManager initialized successfully with custom Vicuna model')
     } catch (error) {
       console.error('Failed to initialize GroupChatManager:', error)
       throw error
