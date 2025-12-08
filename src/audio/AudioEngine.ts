@@ -1,9 +1,15 @@
 import { SupertonicPipeline, Style } from './SupertonicPipeline';
 
+export interface SpeechOptions {
+    speed?: number;  // Speech rate multiplier (default: 1.0)
+    steps?: number;  // Diffusion steps for quality (default: 10)
+}
+
 export class AudioEngine {
     private pipeline: SupertonicPipeline;
-    private currentStyle: Style | null = null;
+    private styles: Map<string, Style> = new Map();
     private isReady = false;
+    private defaultVoice = 'M1';
 
     constructor() {
         this.pipeline = new SupertonicPipeline();
@@ -11,21 +17,14 @@ export class AudioEngine {
 
     public async init(modelPath: string = './assets/onnx'): Promise<void> {
         try {
-            console.log(`AudioEngine: Initializing manual ONNX pipeline from ${modelPath}...`);
+            console.log(`AudioEngine: Initializing pipeline from ${modelPath}...`);
 
             await this.pipeline.init(modelPath);
-
-            // Load a default voice style
-            // Note: The reference project uses JSON style files, not .bin files.
-            // You should place 'M1.json' or similar in /assets/voice_styles/
-            try {
-                this.currentStyle = await this.pipeline.loadStyle(`./assets/voice_styles/M1.json`);
-                console.log("AudioEngine: Default voice style loaded.");
-            } catch (e) {
-                console.warn("AudioEngine: Could not load default voice style. Please ensure a JSON style file exists.", e);
-            }
-
             this.isReady = true;
+
+            // Pre-load the default voice so the first speech is fast
+            await this.getStyle(this.defaultVoice);
+
             console.log('AudioEngine: Ready');
         } catch (e) {
             console.error('AudioEngine Init Failed:', e);
@@ -33,20 +32,58 @@ export class AudioEngine {
         }
     }
 
-    public async synthesize(text: string, _speakerId: string): Promise<Float32Array> {
+    /**
+     * Retrieves a loaded style or loads it from disk if missing.
+     * Assumes voices are in ./assets/voice_styles/{speakerId}.json
+     */
+    private async getStyle(speakerId: string): Promise<Style> {
+        // 1. Check Cache
+        if (this.styles.has(speakerId)) {
+            return this.styles.get(speakerId)!;
+        }
+
+        // 2. Load from file
+        // We assume your voice files are named exactly like the speakerId (e.g., "M1", "F1")
+        const stylePath = `./assets/voice_styles/${speakerId}.json`;
+
+        try {
+            console.log(`AudioEngine: Loading voice style '${speakerId}'...`);
+            const style = await this.pipeline.loadStyle(stylePath);
+            this.styles.set(speakerId, style);
+            return style;
+        } catch (e) {
+            console.warn(`AudioEngine: Failed to load voice '${speakerId}'. Falling back to default.`, e);
+
+            // 3. Fallback to default if the requested voice fails
+            if (speakerId !== this.defaultVoice) {
+                return this.getStyle(this.defaultVoice);
+            }
+            throw new Error(`Critical: Could not load default voice ${this.defaultVoice}`);
+        }
+    }
+
+    public async synthesize(
+        text: string,
+        speakerId: string = 'M1',
+        options: SpeechOptions = {}
+    ): Promise<Float32Array> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
         }
-        if (!this.currentStyle) {
-            throw new Error('No voice style loaded. Call loadStyle or ensure default style exists.');
-        }
 
-        // Run inference
+        // 1. Resolve Options
+        const speed = options.speed ?? 1.0;
+        const steps = options.steps ?? 10;
+
+        // 2. Get Voice Style (Cached or New)
+        const style = await this.getStyle(speakerId);
+
+        // 3. Run Inference
         const { wav } = await this.pipeline.generate(
             text,
-            this.currentStyle,
-            10,   // steps
-            1.0   // speed
+            style,
+            steps,
+            speed
         );
 
         return wav;
