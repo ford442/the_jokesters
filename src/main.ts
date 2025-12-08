@@ -148,7 +148,7 @@ async function initApp() {
 
     // 1. Initialize Audio Engine (in background or parallel)
     statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('./assets/onnx');
+    await audioEngine.init('./tts/onnx');
     // 2. Initialize the chat manager with progress callback
     statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {

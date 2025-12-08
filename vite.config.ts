@@ -19,14 +19,11 @@ export default defineConfig({
           // Copy both .wasm and .mjs files
           src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
           dest: 'assets/ort'
-        },
-        {
-          // Copy ONNX model files and configs
-          src: 'models/onnx/*',
-          dest: 'assets/onnx'
         }
-        // Note: Voice style JSON files are expected to be hosted at ./tts/voice_styles/
-        // on the deployment server and are not included in the build
+        // Note: TTS model files (tts.json, unicode_indexer.json, *.onnx) are expected
+        // to be hosted at ./tts/onnx/ on the deployment server
+        // Note: Voice style JSON files (F1.json, F2.json, M1.json, M2.json) are expected
+        // to be hosted at ./tts/voice_styles/ on the deployment server
       ]
     })
   ],
