@@ -2,7 +2,6 @@ import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent } from './GroupChatManager'
 import { ImprovSceneManager } from './ImprovSceneManager'
-import type { ImprovScene } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
@@ -15,23 +14,24 @@ import { SpeechQueue } from './audio/SpeechQueue'
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
 // Define our agents with different personalities and sampling parameters
+// --- CASUAL & FUNNY AGENTS ---
 const agents: Agent[] = [
   {
     id: 'comedian',
     name: 'The Comedian',
-    // Farcical, Self-Deprecating, Crass, Physical
+    // Prompt Focus: Casual, conversational, strictly humor over analysis
     systemPrompt:
-      'You are a farcical, chaotic comedian. Your humor alternates wildly between highbrow satire and lowbrow crassness. You are dry, wry, and deeply self-deprecating. You act out physical comedy in text. Avoid dark or depressing topics; keep it absurd and silly. DO NOT start your response with your name. Just speak.',
-    temperature: 0.95, // High temp for chaos
+      'You are a casual, funny guy hanging out with friends. Speak naturally, use slang, and keep it loose. Your goal is to make people laugh, not to analyze. Do not be poetic. Be brief, punchy, and a little bit silly.',
+    temperature: 0.95,
     top_p: 0.95,
     color: '#ff6b6b',
   },
   {
     id: 'philosopher',
     name: 'The Philosopher',
-    // Satirical, Highbrow, Wry, Judgmental
+    // Prompt Focus: Wry wit, observational comedy
     systemPrompt:
-      'You are a cynical, satirical philosopher. You analyze everything with dry, wry wit. You look down on lowbrow humor but often accidentally make lowbrow jokes yourself while trying to be highbrow. DO NOT start your response with your name. Just speak.',
+      'You are a cynical observer with a dry wit. Speak like a normal person, but one who is tired of everyone\'s nonsense. Make fun of the situation directly. Do not give long speeches. Be sarcastic and quick.',
     temperature: 0.8,
     top_p: 0.9,
     color: '#4ecdc4',
@@ -39,10 +39,10 @@ const agents: Agent[] = [
   {
     id: 'scientist',
     name: 'The Scientist',
-    // Dry, Literal, Accidental Crassness
+    // Prompt Focus: Deadpan delivery
     systemPrompt:
-      'You are a literal-minded scientist. You are dry and precise but accidentally make crass or satirical remarks without realizing it. You take everything the others say completely seriously, which makes it farcical. DO NOT start your response with your name. Just speak.',
-    temperature: 0.65,
+      'You are a nerd, but a casual one. You take things literally for comedic effect. Speak in short, factual sentences that accidentally kill the mood. Be deadpan.',
+    temperature: 0.7,
     top_p: 0.85,
     color: '#45b7d1',
   },
@@ -186,14 +186,11 @@ async function initApp() {
       chatLog.scrollTop = chatLog.scrollHeight
     }
 
-    // Helper to speak and animate
-    const speakAndVisualize = async (text: string, agentId: string) => {
+    // Helper to speak and animate (accept steps for TTS quality)
+    const speakAndVisualize = async (text: string, agentId: string, steps: number) => {
       try {
         stage.setActiveActor(agentId);
-        const audioData = await audioEngine.synthesize(text, agentId, {
-          speed: 1.32,   // Faster speech
-          steps: 15     // Higher quality
-        });
+        const audioData = await audioEngine.synthesize(text, agentId, steps);
         speechQueue.add(audioData);
       } catch (e) {
         console.error("Speech synthesis failed", e);
@@ -238,7 +235,7 @@ async function initApp() {
         await groupChatManager.chat(message, (sentence) => {
           // New sentence received
           console.log(`[${agent.name} speaks]: ${sentence}`);
-          speakAndVisualize(sentence, agent.id);
+          speakAndVisualize(sentence, agent.id, 10);
 
           // Update UI with partial text (optional, or just append)
           // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
@@ -302,12 +299,40 @@ async function initApp() {
       improvModeControls.style.display = 'block'
     })
 
+    // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
+    const calculatePacing = () => {
+      const roll = Math.random();
+      if (roll > 0.7) {
+        return {
+          type: 'punchline',
+          maxTokens: 40,
+          ttsSteps: 15,
+          promptSuffix: ' (Make a quick one-liner joke)'
+        }
+      } else if (roll > 0.2) {
+        return {
+          type: 'standard',
+          maxTokens: 100,
+          ttsSteps: 6,
+          promptSuffix: ' (Keep the conversation flowing casually)'
+        }
+      } else {
+        return {
+          type: 'rant',
+          maxTokens: 200,
+          ttsSteps: 4,
+          promptSuffix: ' (Go on a short, funny rant)'
+        }
+      }
+    }
+
     // Improv mode controls
     const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
     const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
     const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
     const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
 
+    let isImprovRunning = false
     const startImprovScene = async () => {
       const title = sceneTitleInput.value.trim()
       const description = sceneDescriptionInput.value.trim()
@@ -317,10 +342,7 @@ async function initApp() {
         return
       }
 
-      const scene: ImprovScene = {
-        title,
-        description
-      }
+      // Build the scene object if necessary (not used directly in Director loop)
 
       // Disable inputs
       sceneTitleInput.disabled = true
@@ -333,44 +355,23 @@ async function initApp() {
       addMessage('System', description, '#4ecdc4')
 
       try {
-        await improvSceneManager.startScene(
-          scene,
-          10, // Max 10 turns
-          // onAgentStartSpeaking - create message element for this agent
-          (agentId: string, agentName: string, color: string): HTMLElement => {
-            const messageDiv = document.createElement('div')
-            messageDiv.className = 'message'
-            messageDiv.innerHTML = `<strong style="color: ${color}">${agentName}:</strong> <span class="content">...</span>`
-            chatLog.appendChild(messageDiv)
-            chatLog.scrollTop = chatLog.scrollHeight
+        // Start our own Director loop rather than using ImprovSceneManager's
+        // Reset conversation history and start with a seed line
+        isImprovRunning = true
+        groupChatManager.resetConversation()
 
-            // Set active actor for visuals
-            stage.setActiveActor(agentId)
+        if (groupChatManager.getHistoryLength() === 0) {
+          const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?'
+          addMessage('Director', `Action! "${seed}"`, '#888')
+          await processTurn(seed)
+        }
 
-            return messageDiv
-          },
-          // onSentence callback - update message and speak
-          (agentId: string, sentence: string, messageElement: HTMLElement) => {
-            const contentSpan = messageElement.querySelector('.content')!
-            const currentText = contentSpan.textContent === '...' ? '' : contentSpan.textContent || ''
-            contentSpan.textContent = currentText + sentence + ' '
-            chatLog.scrollTop = chatLog.scrollHeight
-
-            // Synthesize speech
-            speakAndVisualize(sentence, agentId)
-
-            // Update UI
-            updateNextAgentUI()
-          },
-          // onSceneComplete callback
-          () => {
-            addMessage('System', '🎭 Scene completed!', '#4ecdc4')
-            sceneTitleInput.disabled = false
-            sceneDescriptionInput.disabled = false
-            startImprovBtn.style.display = 'inline-block'
-            stopImprovBtn.style.display = 'none'
-          }
-        )
+        // Continue loop until stopped
+        while (isImprovRunning) {
+          await new Promise(r => setTimeout(r, 800))
+          if (!isImprovRunning) break
+          await processTurn('(Reply naturally to the last thing said)')
+        }
 
         // Wait for final audio to finish
         await speechQueue.waitUntilFinished()
@@ -388,12 +389,53 @@ async function initApp() {
     }
 
     const stopImprovScene = () => {
-      improvSceneManager.stop()
+      isImprovRunning = false
+      // Stop the manager if it's running
+      if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
       addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
       sceneTitleInput.disabled = false
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+    }
+
+    // Director logic: process a single turn with pacing and TTS steps
+    const processTurn = async (inputText: string) => {
+      try {
+        // 1. Calculate Pacing for this specific turn
+        const pacing = calculatePacing()
+        console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`)
+
+        let currentAgentId = groupChatManager.getCurrentAgent().id
+        const agent = agents.find(a => a.id === currentAgentId)!
+
+        stage.setActiveActor(currentAgentId)
+        
+        const messageDiv = document.createElement('div')
+        messageDiv.className = 'message'
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
+        chatLog.appendChild(messageDiv)
+        const contentSpan = messageDiv.querySelector('.content')!
+
+        // 2. Pass maxTokens to chat and append pacing prompt to the hidden prompt
+        const effectivePrompt = inputText + pacing.promptSuffix
+
+        await groupChatManager.chat(effectivePrompt, (sentence) => {
+          // 3. Pass ttsSteps to speak
+          speakAndVisualize(sentence, agent.id, pacing.ttsSteps)
+
+          contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
+          chatLog.scrollTop = chatLog.scrollHeight
+        }, { maxTokens: pacing.maxTokens })
+
+        await speechQueue.waitUntilFinished()
+        updateNextAgentUI()
+
+      } catch (error) {
+        console.error('Turn Error:', error)
+        isImprovRunning = false
+        // stopImprovLoop equivalent
+      }
     }
 
     startImprovBtn.addEventListener('click', startImprovScene)

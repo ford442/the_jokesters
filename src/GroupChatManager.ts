@@ -71,7 +71,8 @@ export class GroupChatManager {
 
   async chat(
     userMessage: string,
-    onSentence?: (sentence: string) => void
+    onSentence?: (sentence: string) => void,
+    options: { maxTokens?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -98,7 +99,8 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        max_tokens: 256,
+        // Use the override if provided, otherwise default to 256
+        max_tokens: options.maxTokens || 256,
         stream: true,
         // @ts-ignore - WebLLM supports this even if types might complain
         repetition_penalty: 1.15, // Increased from 1.01 to stop loops
@@ -177,6 +179,10 @@ export class GroupChatManager {
   getNextAgent(): Agent {
     const nextIndex = (this.currentAgentIndex + 1) % this.agents.length
     return this.agents[nextIndex]
+  }
+
+  getHistoryLength(): number {
+    return this.conversationHistory.length
   }
 
   resetConversation(): void {
