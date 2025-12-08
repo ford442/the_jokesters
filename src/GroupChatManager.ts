@@ -33,7 +33,7 @@ export class GroupChatManager {
     try {
       // Define custom Vicuna model configuration
       const customModel = {
-        model_id: "vicuna-7b-q4f32-webllm",
+        model_id: "ford442/vicuna-7b-q4f32-webllm",
         model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
         model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0.2.46/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
         vram_required_MB: 4096,
@@ -53,7 +53,7 @@ export class GroupChatManager {
 
       console.log('Loading custom Vicuna model...');
       // Pass appConfig directly as the second argument as requested
-      await this.engine.reload("vicuna-7b-q4f32-webllm", appConfig);
+      await this.engine.reload("ford442/vicuna-7b-q4f32-webllm", appConfig);
 
       this.isInitialized = true
       console.log('GroupChatManager initialized successfully with custom Vicuna model')
