@@ -151,7 +151,10 @@ async function initApp() {
     const speakAndVisualize = async (text: string, agentId: string) => {
       try {
         stage.setActiveActor(agentId);
-        const audioData = await audioEngine.synthesize(text, agentId);
+        const audioData = await audioEngine.synthesize(text, agentId, {
+          speed: 1.32,   // Faster speech
+          steps: 15     // Higher quality
+        });
         speechQueue.add(audioData);
       } catch (e) {
         console.error("Speech synthesis failed", e);
