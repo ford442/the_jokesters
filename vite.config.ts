@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
-  base: '/the-jokesters/',
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
