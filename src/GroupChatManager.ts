@@ -99,11 +99,11 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Use the override if provided, otherwise default to 256
-        max_tokens: options.maxTokens || 256,
+        // Use the override if provided, otherwise default to 144
+        max_tokens: options.maxTokens || 144,
         stream: true,
-        // Stop sequences to prevent the model from injecting new paragraphs or framing text
-        stop: ["\n", "User:", "Director:"],
+        // Use a stop token plus fallbacks to catch structural shifts
+        stop: ["###", "Director:", "User:"],
         // @ts-ignore - optional seed not on all runtime types
         seed: options.seed,
         // @ts-ignore - WebLLM supports this even if types might complain
@@ -121,6 +121,27 @@ export class GroupChatManager {
           fullResponse += content
           buffer += content
 
+          // If any stop token was injected, extract and emit remaining buffer
+          const stopTokens = ['###', 'Director:', 'User:']
+          let earliestIdx = -1
+          let matchedToken: string | null = null
+          for (const token of stopTokens) {
+            const idx = buffer.indexOf(token)
+            if (idx >= 0 && (earliestIdx === -1 || idx < earliestIdx)) {
+              earliestIdx = idx
+              matchedToken = token
+            }
+          }
+          if (earliestIdx >= 0 && matchedToken) {
+            const stopIdx = earliestIdx
+            let preStop = buffer.substring(0, stopIdx).trim()
+            // Aggressively clean name and stop token
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            preStop = preStop.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
+            if (preStop) onSentence?.(preStop)
+            buffer = ''
+          }
+
           // Simple sentence splitting logic
           // Split by [.!?] followed by space or end of string
           // We keep the delimiter with the sentence
@@ -129,10 +150,12 @@ export class GroupChatManager {
             const endIdx = match.index! + 1
             let sentence = buffer.substring(0, endIdx).trim()
 
-            // CLEANUP: Remove "Agent Name:" from the start of sentences
+            // CLEANUP: Remove "Agent Name:" and structural role prefixes from the start of sentences
             // This fixes the issue where they say their own name
             const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
             sentence = sentence.replace(namePrefixRegex, '')
+            // Remove explicit stop tokens if the model included them
+            sentence = sentence.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
             if (sentence) {
               onSentence?.(sentence)
@@ -148,6 +171,7 @@ export class GroupChatManager {
         // Clean name from the final chunk too
         const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
         cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
+        cleanBuffer = cleanBuffer.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
         onSentence?.(cleanBuffer)
       }
@@ -155,7 +179,7 @@ export class GroupChatManager {
       // CLEANUP: Ensure the history doesn't contain the name prefix either
       // (This prevents the model from learning to copy the pattern in the next turn)
       const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-      const cleanFullResponse = fullResponse.replace(namePrefixRegex, '')
+      const cleanFullResponse = fullResponse.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
       // Add cleaned response to history
       this.conversationHistory.push({
