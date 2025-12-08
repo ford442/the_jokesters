@@ -1,6 +1,8 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent } from './GroupChatManager'
+import { ImprovSceneManager } from './ImprovSceneManager'
+import type { ImprovScene } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
@@ -60,8 +62,14 @@ async function initApp() {
       <div id="chat-container" class="chat-container" style="display: none;">
         <canvas id="scene"></canvas>
         <div class="controls">
+          <div class="mode-selector">
+            <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
+            <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
+          </div>
           <div id="chat-log" class="chat-log"></div>
-          <div class="input-group">
+          
+          <!-- Chat Mode Controls -->
+          <div id="chat-mode-controls" class="input-group">
             <input 
               type="text" 
               id="user-input" 
@@ -70,6 +78,31 @@ async function initApp() {
             />
             <button id="send-btn">Send</button>
           </div>
+          
+          <!-- Improv Mode Controls -->
+          <div id="improv-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="scene-title" 
+                placeholder="Scene title (e.g., 'At the Coffee Shop')..."
+                autocomplete="off"
+              />
+            </div>
+            <div class="input-group">
+              <textarea 
+                id="scene-description" 
+                placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..."
+                rows="3"
+                autocomplete="off"
+              ></textarea>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-improv-btn" class="primary-btn">Start Scene</button>
+              <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
+            </div>
+          </div>
+          
           <div class="agent-info">
             <p>Next speaker: <span id="next-agent">-</span></p>
           </div>
@@ -123,6 +156,9 @@ async function initApp() {
       progressBar.style.width = `${percentage}%`
       statusText.textContent = progress.text
     })
+
+    // Initialize ImprovSceneManager
+    const improvSceneManager = new ImprovSceneManager(groupChatManager)
 
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
@@ -235,6 +271,130 @@ async function initApp() {
         sendMessage()
       }
     })
+
+    // Mode switching
+    const chatModeBtn = document.getElementById('chat-mode-btn')!
+    const improvModeBtn = document.getElementById('improv-mode-btn')!
+    const chatModeControls = document.getElementById('chat-mode-controls')!
+    const improvModeControls = document.getElementById('improv-mode-controls')!
+
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'none'
+      
+      // Stop improv if running
+      if (improvSceneManager.isSceneRunning()) {
+        improvSceneManager.stop()
+      }
+      
+      updateNextAgentUI()
+    })
+
+    improvModeBtn.addEventListener('click', () => {
+      improvModeBtn.classList.add('active')
+      chatModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'none'
+      improvModeControls.style.display = 'block'
+    })
+
+    // Improv mode controls
+    const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
+    const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
+    const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
+    const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
+
+    const startImprovScene = async () => {
+      const title = sceneTitleInput.value.trim()
+      const description = sceneDescriptionInput.value.trim()
+
+      if (!title || !description) {
+        addMessage('System', 'Please provide both a scene title and description', '#ff6b6b')
+        return
+      }
+
+      const scene: ImprovScene = {
+        title,
+        description
+      }
+
+      // Disable inputs
+      sceneTitleInput.disabled = true
+      sceneDescriptionInput.disabled = true
+      startImprovBtn.style.display = 'none'
+      stopImprovBtn.style.display = 'inline-block'
+
+      // Clear chat log for new scene
+      addMessage('System', `🎭 Starting improv scene: "${title}"`, '#4ecdc4')
+      addMessage('System', description, '#4ecdc4')
+
+      try {
+        await improvSceneManager.startScene(
+          scene,
+          10, // Max 10 turns
+          // onAgentStartSpeaking - create message element for this agent
+          (agentId: string, agentName: string, color: string): HTMLElement => {
+            const messageDiv = document.createElement('div')
+            messageDiv.className = 'message'
+            messageDiv.innerHTML = `<strong style="color: ${color}">${agentName}:</strong> <span class="content">...</span>`
+            chatLog.appendChild(messageDiv)
+            chatLog.scrollTop = chatLog.scrollHeight
+            
+            // Set active actor for visuals
+            stage.setActiveActor(agentId)
+            
+            return messageDiv
+          },
+          // onSentence callback - update message and speak
+          (agentId: string, sentence: string, messageElement: HTMLElement) => {
+            const contentSpan = messageElement.querySelector('.content')!
+            const currentText = contentSpan.textContent === '...' ? '' : contentSpan.textContent || ''
+            contentSpan.textContent = currentText + sentence + ' '
+            chatLog.scrollTop = chatLog.scrollHeight
+            
+            // Synthesize speech
+            speakAndVisualize(sentence, agentId)
+            
+            // Update UI
+            updateNextAgentUI()
+          },
+          // onSceneComplete callback
+          () => {
+            addMessage('System', '🎭 Scene completed!', '#4ecdc4')
+            sceneTitleInput.disabled = false
+            sceneDescriptionInput.disabled = false
+            startImprovBtn.style.display = 'inline-block'
+            stopImprovBtn.style.display = 'none'
+          }
+        )
+
+        // Wait for final audio to finish
+        await speechQueue.waitUntilFinished()
+
+      } catch (error) {
+        console.error('Error running improv scene:', error)
+        addMessage('System', 'Error running improv scene', '#ff0000')
+      }
+
+      // Re-enable inputs
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
+    }
+
+    const stopImprovScene = () => {
+      improvSceneManager.stop()
+      addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
+    }
+
+    startImprovBtn.addEventListener('click', startImprovScene)
+    stopImprovBtn.addEventListener('click', stopImprovScene)
 
     userInput.focus()
   } catch (error: any) {
