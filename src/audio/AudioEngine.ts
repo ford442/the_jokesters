@@ -81,7 +81,7 @@ export class AudioEngine {
     public async synthesize(
         text: string,
         speakerId: string = 'comedian',  // Agent ID
-        options: SpeechOptions = {}
+        steps: number = 10
     ): Promise<Float32Array> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
@@ -100,8 +100,7 @@ export class AudioEngine {
         console.log(`AudioEngine: Synthesizing for '${speakerId}' using voice '${realVoiceId}'`);
 
         // 2. Resolve Options
-        const speed = options.speed ?? 1.30;
-        const steps = options.steps ?? 10;
+        const speed = 1.30; // Keep a sensible default speed
 
         // 3. Get Voice Style (only valid voice IDs: M1, M2, F1, F2)
         const style = await this.getStyle(realVoiceId);
