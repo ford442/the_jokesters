@@ -47,11 +47,13 @@ export class GroupChatManager {
 
       this.engine = new webllm.MLCEngine();
 
+      this.engine.setInitProgressCallback(onProgress || ((report) => {
+        console.log(`[${report.text}] ${Math.round(report.progress * 100)}%`);
+      }));
+
       console.log('Loading custom Vicuna model...');
-      await this.engine.reload("vicuna-7b-q4f32-custom", {
-        initProgressCallback: onProgress,
-        appConfig: appConfig,
-      });
+      // Pass appConfig directly as the second argument as requested
+      await this.engine.reload("vicuna-7b-q4f32-custom", appConfig);
 
       this.isInitialized = true
       console.log('GroupChatManager initialized successfully with custom Vicuna model')
