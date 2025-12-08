@@ -146,7 +146,6 @@ async function initApp() {
 
     // --- IMPROV LOOP LOGIC ---
     let isImprovRunning = false;
-    let improvLoopId: number | null = null;
 
     const processTurn = async (inputText: string) => {
       try {
