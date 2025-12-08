@@ -1,4 +1,5 @@
 import * as ort from 'onnxruntime-web';
+import { RNG } from '../utils/RNG';
 
 // --- Types ---
 export interface TTSConfig {
@@ -81,7 +82,7 @@ export class SupertonicTTS {
         this.sessionVoc = sessionVoc;
     }
 
-    async generate(text: string, style: Style, steps = 5, speed = 1.0): Promise<Float32Array> {
+    async generate(text: string, style: Style, steps = 5, speed = 1.0, seed?: number): Promise<Float32Array> {
         // 1. Process Text
         const { textIds, textMask, maxLen } = this.processor.call([text]);
 
@@ -120,8 +121,14 @@ export class SupertonicTTS {
         // 4. Sample Noisy Latent (Gaussian Noise)
         const latentDim = this.cfgs.ttl.latent_dim * this.cfgs.ttl.chunk_compress_factor; // 24 * 6 = 144
         const noiseSize = 1 * latentDim * latentWidth;
+        const rng = seed !== undefined ? new RNG(seed) : undefined;
         const noise = new Float32Array(noiseSize);
-        for (let i = 0; i < noiseSize; i++) noise[i] = (Math.random() * 2 - 1); // Simple approx or use Box-Muller
+        for (let i = 0; i < noiseSize; i++) {
+            // Using Box-Muller to make gaussian noise
+            const u1 = Math.max(0.0001, rng ? rng.next() : Math.random());
+            const u2 = rng ? rng.next() : Math.random();
+            noise[i] = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        }
 
         let xtTensor = new ort.Tensor('float32', noise, [1, latentDim, latentWidth]);
 
