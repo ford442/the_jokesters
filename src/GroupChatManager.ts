@@ -165,6 +165,10 @@ export class GroupChatManager {
     this.currentAgentIndex = 0
   }
 
+  public getHistoryLength(): number {
+    return this.conversationHistory.length;
+  }
+
   getAgents(): Agent[] {
     return this.agents
   }
