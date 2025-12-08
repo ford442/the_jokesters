@@ -35,7 +35,7 @@ export class GroupChatManager {
       const customModel = {
         model_id: "ford442/vicuna-7b-q4f32-webllm",
         model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
-        model_lib: "./Llama-2-7b-chat-hf-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+        model_lib: "./Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
         vram_required_MB: 4096,
         low_resource_required: false,
       };
