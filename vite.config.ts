@@ -13,7 +13,7 @@ export default defineConfig({
       targets: [
         {
           src: 'node_modules/onnxruntime-web/dist/*.wasm',
-          dest: 'assets'
+          dest: './assets'
         },
         // Assuming models are in public/models or similar, copy them if needed.
         // For now, prompt said "node_modules (or a local public/models folder)".
