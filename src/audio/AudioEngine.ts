@@ -19,7 +19,7 @@ export class AudioEngine {
             // Note: The reference project uses JSON style files, not .bin files.
             // You should place 'M1.json' or similar in /assets/voice_styles/
             try {
-                this.currentStyle = await this.pipeline.loadStyle(`/assets/voice_styles/M1.json`);
+                this.currentStyle = await this.pipeline.loadStyle(`./assets/voice_styles/M1.json`);
                 console.log("AudioEngine: Default voice style loaded.");
             } catch (e) {
                 console.warn("AudioEngine: Could not load default voice style. Please ensure a JSON style file exists.", e);
