@@ -30,8 +30,8 @@ export class AudioEngine {
             await this.pipeline.init(modelPath);
             this.isReady = true;
 
-            // Pre-load all voices we need
-            const voicesToLoad = ['M1', 'M2', 'F1', 'F2']; // All available voice files
+            // Pre-load only the actual voice files (M1, M2, F1, F2)
+            const voicesToLoad = ['M1', 'M2', 'F1', 'F2'];
 
             for (const voice of voicesToLoad) {
                 try {
@@ -51,7 +51,7 @@ export class AudioEngine {
 
     /**
      * Retrieves a loaded style or loads it from disk if missing.
-     * Assumes voices are in ./assets/voice_styles/{speakerId}.json
+     * ONLY accepts actual voice file IDs: M1, M2, F1, F2
      */
     private async getStyle(voiceId: string): Promise<Style> {
         // 1. Check Cache
@@ -59,7 +59,7 @@ export class AudioEngine {
             return this.styles.get(voiceId)!;
         }
 
-        // 2. Load from file
+        // 2. Load from file (only for M1, M2, F1, F2)
         const stylePath = `./assets/voice_styles/${voiceId}.json`;
 
         try {
@@ -80,22 +80,30 @@ export class AudioEngine {
 
     public async synthesize(
         text: string,
-        speakerId: string = 'F2',
+        speakerId: string = 'comedian',  // Agent ID
         options: SpeechOptions = {}
     ): Promise<Float32Array> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
         }
 
-        // 1. Look up the real voice filename from agent ID
-        const realVoiceId = this.voiceMap[speakerId] || this.voiceMap['default'];
+        // 1. Map agent ID to actual voice file ID
+        const validVoices = ['M1', 'M2', 'F1', 'F2'];
+        let realVoiceId = this.voiceMap[speakerId] || speakerId;
+
+        // Validate it's an actual voice file, not an unmapped agent ID
+        if (!validVoices.includes(realVoiceId)) {
+            console.warn(`AudioEngine: Invalid voice '${realVoiceId}' for agent '${speakerId}', using default`);
+            realVoiceId = this.voiceMap['default'];
+        }
+
         console.log(`AudioEngine: Synthesizing for '${speakerId}' using voice '${realVoiceId}'`);
 
         // 2. Resolve Options
         const speed = options.speed ?? 1.30;
         const steps = options.steps ?? 10;
 
-        // 3. Get Voice Style (Cached or New)
+        // 3. Get Voice Style (only valid voice IDs: M1, M2, F1, F2)
         const style = await this.getStyle(realVoiceId);
 
         // 4. Run Inference
