@@ -24,12 +24,9 @@ export default defineConfig({
           // Copy ONNX model files and configs
           src: 'models/onnx/*',
           dest: 'assets/onnx'
-        },
-        {
-          // Copy voice styles
-          src: 'voices/*',
-          dest: 'assets/voice_styles'
         }
+        // Note: Voice style JSON files are expected to be hosted at ./tts/voice_styles/
+        // on the deployment server and are not included in the build
       ]
     })
   ],

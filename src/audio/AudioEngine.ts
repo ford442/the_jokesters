@@ -60,7 +60,7 @@ export class AudioEngine {
         }
 
         // 2. Load from file (only for M1, M2, F1, F2)
-        const stylePath = `./assets/voice_styles/${voiceId}.json`;
+        const stylePath = `./tts/voice_styles/${voiceId}.json`;
 
         try {
             console.log(`AudioEngine: Loading voice style '${voiceId}'...`);
