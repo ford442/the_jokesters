@@ -3,53 +3,54 @@ import { GroupChatManager } from './GroupChatManager'
 import type { Agent } from './GroupChatManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
-import { AudioEngine } from './audio/AudioEngine'
-import { SpeechQueue } from './audio/SpeechQueue'
+// import { SceneManager } from './SceneManager'
 import * as webllm from '@mlc-ai/web-llm'
 
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m) => m.model_id))
+import { AudioEngine } from './audio/AudioEngine'
+import { SpeechQueue } from './audio/SpeechQueue'
 
-// --- ADJUSTED AGENTS FOR SPECIFIC HUMOR ---
+// Log available models on startup
+console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
+
+// Define our agents with different personalities and sampling parameters
 const agents: Agent[] = [
   {
     id: 'comedian',
     name: 'The Comedian',
-    // Highbrow + Lowbrow + Self-Deprecating + Crass (but not dark)
     systemPrompt:
-      'You are a farcical, chaotic comedian. Your humor alternates wildly between highbrow satire and lowbrow crassness. You are dry, wry, and deeply self-deprecating. You act out physical comedy in text. Avoid dark or depressing topics; keep it absurd and silly. Keep responses brief.',
-    temperature: 0.95, // High temp for "Farcical" unpredictability
+      'You are a witty comedian who loves to make jokes and puns. Keep responses brief and humorous.',
+    temperature: 0.9,
     top_p: 0.95,
     color: '#ff6b6b',
   },
   {
     id: 'philosopher',
     name: 'The Philosopher',
-    // Satirical + Highbrow + Dry
     systemPrompt:
-      'You are a cynical, satirical philosopher. You analyze everything with dry, wry wit. You look down on lowbrow humor but often accidentally make lowbrow jokes yourself while trying to be highbrow. Keep responses brief and judgmental.',
-    temperature: 0.75, // Slightly higher for "Satirical" edge
+      'You are a thoughtful philosopher who provides deep insights. Keep responses brief and profound.',
+    temperature: 0.7,
     top_p: 0.9,
     color: '#4ecdc4',
   },
   {
     id: 'scientist',
     name: 'The Scientist',
-    // Dry + Literal (The "Straight Man")
     systemPrompt:
-      'You are a literal-minded scientist who accidentally says crass things without realizing it. You take everything the others say completely seriously, which makes it farcical. You are dry and precise. Keep responses brief.',
-    temperature: 0.6,
+      'You are a logical scientist who explains things clearly and factually. Keep responses brief and precise.',
+    temperature: 0.3,
     top_p: 0.85,
     color: '#45b7d1',
   },
 ]
 
+// Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
   app.innerHTML = `
     <div class="container">
       <h1>The Jokesters</h1>
-      <p class="subtitle">Farcical Multi-Agent Chat (WebGPU)</p>
+      <p class="subtitle">Multi-Agent Chat powered by Llama-3 & WebGPU</p>
       <div id="loading" class="loading">
         <div class="progress-bar">
           <div id="progress" class="progress-fill"></div>
@@ -64,10 +65,10 @@ async function initApp() {
             <input 
               type="text" 
               id="user-input" 
-              placeholder="Give them a topic..."
+              placeholder="Type a message..."
               autocomplete="off"
             />
-            <button id="send-btn">Start Improv</button>
+            <button id="send-btn">Send</button>
           </div>
           <div class="agent-info">
             <p>Next speaker: <span id="next-agent">-</span></p>
@@ -88,10 +89,14 @@ async function initApp() {
   const nextAgentSpan = document.getElementById('next-agent')!
 
   try {
+    // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
     const groupChatManager = new GroupChatManager(agents)
+
     const audioEngine = new AudioEngine()
     const speechQueue = new SpeechQueue(audioEngine)
 
+    // Check for WebGL 2 support explicitly before initializing Three.js
+    // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality
     const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
     if (!gl) {
       throw new Error('WebGL 2 is not supported or is disabled in this environment.');
@@ -100,15 +105,18 @@ async function initApp() {
     const stage = new Stage(canvas, gl as WebGLRenderingContext)
     const lipSync = new LipSync(speechQueue.getAudioContext())
 
+    // Wire up Audio -> Visuals
+    // SpeechQueue -> LipSync -> Destination
     speechQueue.setDestination(lipSync.analyser)
     lipSync.analyser.connect(speechQueue.getAudioContext().destination)
 
     stage.setLipSync(lipSync)
     stage.render()
 
+    // 1. Initialize Audio Engine (in background or parallel)
     statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('assets');
-
+    await audioEngine.init('./assets/onnx');
+    // 2. Initialize the chat manager with progress callback
     statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
       const percentage = Math.round(progress.progress * 100)
@@ -116,9 +124,11 @@ async function initApp() {
       statusText.textContent = progress.text
     })
 
+    // Hide loading, show chat
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
 
+    // Update next agent info
     const updateNextAgentUI = () => {
       const nextAgent = groupChatManager.getCurrentAgent()
       nextAgentSpan.textContent = nextAgent.name
@@ -126,98 +136,118 @@ async function initApp() {
     }
     updateNextAgentUI()
 
+    // Add message to chat log
     const addMessage = (sender: string, message: string, color: string) => {
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
-      messageDiv.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${message}`
+      messageDiv.innerHTML = `
+        <strong style="color: ${color}">${sender}:</strong> ${message}
+      `
       chatLog.appendChild(messageDiv)
       chatLog.scrollTop = chatLog.scrollHeight
     }
 
+    // Helper to speak and animate
     const speakAndVisualize = async (text: string, agentId: string) => {
       try {
         stage.setActiveActor(agentId);
-        const audioData = await audioEngine.synthesize(text, agentId);
+        const audioData = await audioEngine.synthesize(text, agentId, {
+          speed: 1.32,   // Faster speech
+          steps: 15     // Higher quality
+        });
         speechQueue.add(audioData);
       } catch (e) {
         console.error("Speech synthesis failed", e);
       }
     }
 
-    // --- IMPROV LOOP LOGIC ---
-    let isImprovRunning = false;
+    // Handle send message
+    const sendMessage = async () => {
+      const message = userInput.value.trim()
+      if (!message) return
 
-    const processTurn = async (inputText: string) => {
+      userInput.value = ''
+      userInput.disabled = true
+      sendBtn.disabled = true
+
+      // Add user message to log
+      addMessage('You', message, '#ffffff')
+
       try {
+        // Get response from current agent with streaming
+        // We buffer the response for log, but speak sentence by sentence
         let currentAgentId = groupChatManager.getCurrentAgent().id;
         const agent = agents.find(a => a.id === currentAgentId)!;
 
-        stage.setActiveActor(currentAgentId);
+        // Start a fresh response line in chat log? 
+        // For simplicity, we'll append chunks or just update one message.
+        // Or wait for full response to add to log? 
+        // Prompt says "When the LLM emits a sentence, pass it to AudioEngine".
+        // Let's create a placeholder message and update it, OR just add message at the end.
+        // Let's add the message header first.
 
+        let fullResponse = "";
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message';
         messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
         chatLog.appendChild(messageDiv);
         const contentSpan = messageDiv.querySelector('.content')!;
 
-        await groupChatManager.chat(inputText, (sentence) => {
+        // Make agent jump (Removed, handled by speakAndVisualize active actor)
+        stage.setActiveActor(currentAgentId);
+
+        await groupChatManager.chat(message, (sentence) => {
+          // New sentence received
+          console.log(`[${agent.name} speaks]: ${sentence}`);
           speakAndVisualize(sentence, agent.id);
-          contentSpan.textContent = contentSpan.textContent === '...' ? sentence + " " : contentSpan.textContent + sentence + " ";
+
+          // Update UI with partial text (optional, or just append)
+          // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
+          // But the chat() implementation we wrote accumulates internal buffer.
+          // For now, let's just let chat() finish for the full text return or update span incrementally.
+          // Since we get 'sentence', it's easier to append sentences.
+          // But we missed the punctuation in the sentence callback (GroupChatManager logic: "We keep the delimiter").
+          // So we can visually append the sentence.
+          if (!fullResponse) contentSpan.textContent = ""; // clear ...
+          fullResponse += sentence + " ";
+          contentSpan.textContent = fullResponse;
           chatLog.scrollTop = chatLog.scrollHeight;
         });
 
+        // Wait for audio to finish playing this turn
         await speechQueue.waitUntilFinished();
+
         updateNextAgentUI();
 
       } catch (error) {
-        console.error("Turn Error:", error);
-        isImprovRunning = false;
-        stopImprovLoop();
-      }
-    };
-
-    const stopImprovLoop = () => {
-      isImprovRunning = false;
-      sendBtn.textContent = "Start Improv";
-      sendBtn.disabled = false;
-      userInput.disabled = false;
-      sendBtn.onclick = startImprovLoop;
-    };
-
-    const startImprovLoop = async () => {
-      if (isImprovRunning) return;
-      isImprovRunning = true;
-
-      userInput.disabled = true;
-      sendBtn.disabled = false;
-      sendBtn.textContent = "Stop Improv";
-      sendBtn.onclick = stopImprovLoop;
-
-      if (groupChatManager.getHistoryLength() === 0) {
-        const seed = userInput.value.trim() || "The comedians are arguing about a rubber chicken.";
-        addMessage('Director', `Action! "${seed}"`, '#888');
-        await processTurn(seed);
+        console.error('Error:', error)
+        addMessage('System', 'Error generating response', '#ff0000')
       }
 
-      while (isImprovRunning) {
-        await new Promise(r => setTimeout(r, 1000));
-        if (!isImprovRunning) break;
+      userInput.disabled = false
+      sendBtn.disabled = false
+      userInput.focus()
+    }
 
-        // This directional prompt reinforces the humor style every turn
-        await processTurn("(Respond with farcical, dry wit. Be satirical but silly.)");
-      }
-    };
-
-    sendBtn.onclick = startImprovLoop;
+    sendBtn.addEventListener('click', sendMessage)
     userInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') startImprovLoop();
+      if (e.key === 'Enter') {
+        sendMessage()
+      }
     })
 
     userInput.focus()
-
   } catch (error: any) {
     console.error('Initialization error:', error)
-    statusText.textContent = "Error: " + error.message;
+
+    let errorMessage = 'Error initializing App. Please check console.'
+    const errorStr = String(error)
+
+    if (errorStr.includes('WebGL') || errorStr.includes('GPU') || errorStr.includes('gl_')) {
+      errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
+    }
+
+    statusText.textContent = errorMessage
     statusText.style.color = '#ff6b6b'
   }
 }
