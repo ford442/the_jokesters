@@ -9,7 +9,7 @@ export class AudioEngine {
         this.pipeline = new SupertonicPipeline();
     }
 
-    public async init(modelPath: string = '/assets/onnx'): Promise<void> {
+    public async init(modelPath: string = './assets/onnx'): Promise<void> {
         try {
             console.log(`AudioEngine: Initializing manual ONNX pipeline from ${modelPath}...`);
 
