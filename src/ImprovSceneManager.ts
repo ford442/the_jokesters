@@ -135,12 +135,15 @@ export class ImprovSceneManager {
    */
   private createScenePrompt(scene: ImprovScene, isFirst: boolean): string {
     if (isFirst) {
-      return `You are participating in an improv comedy scene with other characters. 
-Scene: "${scene.title}"
-Description: ${scene.description}
-${scene.suggestedTopics ? `Topics to explore: ${scene.suggestedTopics.join(', ')}` : ''}
-
-Start the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). React naturally to what others say.`
+      const topicsLine = scene.suggestedTopics 
+        ? `Topics to explore: ${scene.suggestedTopics.join(', ')}\n` 
+        : ''
+      
+      return `You are participating in an improv comedy scene with other characters.\n` +
+        `Scene: "${scene.title}"\n` +
+        `Description: ${scene.description}\n` +
+        topicsLine +
+        `\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). React naturally to what others say.`
     }
     
     return `Continue the improv scene. Stay in character and respond naturally to what was just said. Keep it brief and entertaining.`
@@ -155,10 +158,10 @@ Start the scene with your character's perspective. Be creative, stay in characte
       .map(a => a.name)
       .join(' and ')
 
-    return `Continue the improv comedy scene about "${scene.title}". 
-You are ${currentAgent.name} talking with ${otherAgents}. 
-Respond naturally to the previous comment, stay in character, and keep your response brief and entertaining (2-3 sentences). 
-You can agree, disagree, add humor, or take the scene in a creative direction while staying on theme.`
+    return `Continue the improv comedy scene about "${scene.title}".\n` +
+      `You are ${currentAgent.name} talking with ${otherAgents}.\n` +
+      `Respond naturally to the previous comment, stay in character, and keep your response brief and entertaining (2-3 sentences).\n` +
+      `You can agree, disagree, add humor, or take the scene in a creative direction while staying on theme.`
   }
 
   /**
