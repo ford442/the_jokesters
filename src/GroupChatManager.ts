@@ -31,6 +31,7 @@ export class GroupChatManager {
     if (this.isInitialized) return
 
     try {
+      /*
       // Define custom Vicuna model configuration
       const customModel = {
         model_id: "ford442/vicuna-7b-q4f32-webllm",
@@ -44,14 +45,15 @@ export class GroupChatManager {
         model_list: [customModel],
         use_indexed_db: true,
       };
+      */
 
-      console.log('Loading custom Vicuna model...');
+      console.log('Loading Hermes-3-Llama-3.2-3B model...');
 
       // Follow the official example format
       this.engine = await webllm.CreateMLCEngine(
-        "ford442/vicuna-7b-q4f32-webllm",
+        "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
         {
-          appConfig: appConfig,
+          // appConfig: appConfig,
           initProgressCallback: onProgress
         }, // engineConfig
         {
