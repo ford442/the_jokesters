@@ -100,15 +100,15 @@ export class GroupChatManager {
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
         // Use the override if provided, otherwise default to 144
-        max_tokens: options.maxTokens || 144,
+        max_tokens: options.maxTokens || 96,
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
         stop: ["###", "Director:", "User:"],
         // @ts-ignore - optional seed not on all runtime types
         seed: options.seed,
         // @ts-ignore - WebLLM supports this even if types might complain
-        repetition_penalty: 1.15, // Increased from 1.01 to stop loops
-        presence_penalty: 0.6, // Encourage new topics
+        repetition_penalty: 0.955, // Increased from 1.01 to stop loops
+        presence_penalty: 0.556, // Encourage new topics
       })
 
       let fullResponse = ''
