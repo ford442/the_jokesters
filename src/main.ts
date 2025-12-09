@@ -412,20 +412,57 @@ async function initApp() {
 
         // Continue loop until stopped
         while (isImprovRunning) {
-          await new Promise(r => setTimeout(r, 800))
+          await new Promise(r => setTimeout(r, 1000))
           if (!isImprovRunning) break
 
           // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
           const turnCount = groupChatManager.getHistoryLength()
           const chaosLevel = parseInt(chaosSlider.value)
-          let prompt = '(Reply naturally to the last thing said)'
-          if (turnCount % 3 === 0 && Math.random() * 100 < chaosLevel) {
-            prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)'
-          } else if (turnCount % 4 === 0 && Math.random() * 100 < chaosLevel) {
-            prompt = '(Make a highbrow reference to history that completely misses the point.)'
+          
+          let critique = ""
+          
+          // 3. Intelligent Director Check
+          // Only judge if scene is underway (turns > 2) and probability matches Chaos slider
+          if (turnCount > 2 && Math.random() * 100 < chaosLevel) {
+             
+             // Visual cue that the Director is "Thinking"
+             const thinkingDiv = document.createElement('div')
+             thinkingDiv.innerHTML = `<em style="color:#666; font-size:0.9em">Director is watching...</em>`
+             chatLog.appendChild(thinkingDiv)
+             chatLog.scrollTop = chatLog.scrollHeight
+
+             // Get judgment
+             const rawCritique = await groupChatManager.getDirectorCritique()
+             
+             // Remove thinking cue
+             chatLog.removeChild(thinkingDiv)
+
+             // Parse format "[STATUS]: Instruction"
+             if (rawCritique.includes(":")) {
+               const parts = rawCritique.split(":")
+               const status = parts[0].trim().toUpperCase() // "FLOWING" or "STAGNANT"
+               critique = parts.slice(1).join(":").trim()
+
+               // Color code the output
+               if (status.includes("FLOWING")) {
+                 // Green/Teal for "Good job, keep going"
+                 addMessage('Director (Note)', `📝 ${critique}`, '#4ecdc4')
+               } else {
+                 // Red/Orange for "Boring, change it!"
+                 addMessage('Director (Action!)', `🎬 ${critique}`, '#ff6b6b')
+               }
+             } else if (rawCritique) {
+               // Fallback if format is weird
+               critique = rawCritique
+               addMessage('Director', `📣 ${critique}`, '#ffd700')
+             }
           }
 
-          await processTurn(prompt)
+          // Default instruction for flow
+          const prompt = '(Reply naturally to the last thing said)'
+
+          // 4. Execute turn with the critique injected invisibly
+          await processTurn(prompt, critique)
         }
 
         // Wait for final audio to finish
@@ -455,7 +492,7 @@ async function initApp() {
     }
 
     // Director logic: process a single turn with pacing and TTS steps
-    const processTurn = async (inputText: string) => {
+    const processTurn = async (inputText: string, silentCritique?: string) => {
       try {
         // 1. Calculate Pacing for this specific turn
         const pacing = calculatePacing()
@@ -491,7 +528,7 @@ async function initApp() {
 
           contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
           chatLog.scrollTop = chatLog.scrollHeight
-        }, { maxTokens: pacing.maxTokens, seed: turnSeed })
+        }, { maxTokens: pacing.maxTokens, seed: turnSeed, hiddenInstruction: silentCritique })
 
         await speechQueue.waitUntilFinished()
         updateNextAgentUI()
