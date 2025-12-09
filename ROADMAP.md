@@ -93,6 +93,18 @@ Track high-level scene beats and callbacks:
 - **Audience reactions** — Simulated laugh track or emoji reactions based on joke quality
 - **Scene templates** — Pre-built scene setups (talk show, courtroom, etc.)
 - **Export scene** — Save completed improv as transcript or video
+- **Character-triggered Sound Effects (SFX)** — Allow characters to trigger sound effects from within their dialogue.
+   - **Trigger format:** Recognize inline tokens (e.g., `[sfx:laugh]`) or JSON-like structured outputs from Director.
+   - **SFX Manager:** Add a new `SfxManager` to preload and play sounds from `public/sfx/`.
+   - **Playback modes:** overlay (play alongside TTS), interrupt (stop/pause TTS), or duck (lower TTS volume while SFX plays).
+   - **Per-agent mapping:** Allow agent-specific SFX mappings (e.g., `comedian` -> `comedian_laugh.ogg`).
+   - **UI:** Add SFX toggle and volume controls in settings, and a button to preview agent SFX.
+   - **Director SFX:** Allow the Director to inject SFX via hidden instruction (e.g., `SFX:explosion`) and map those to audio events.
+   - **Implementation notes:**
+      - Extend `GroupChatManager.chat()` to include `onSfx?: (sfxName: string, agentId?: string)` callback or detect tokens in the existing streaming loop.
+      - Create `src/audio/SfxManager.ts` to manage preloading and playing, and connect it to existing `SpeechQueue` and `AudioEngine` for ducking.
+      - Preload a small core SFX set at init and lazy-load extras on-demand.
+   - **Safety:** Use a whitelist for allowed SFX names to avoid path traversal or arbitrary fetches.
 
 ---
 
