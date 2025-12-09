@@ -1,6 +1,7 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent } from './GroupChatManager'
+import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
@@ -13,31 +14,38 @@ import { SpeechQueue } from './audio/SpeechQueue'
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
 // Define our agents with different personalities and sampling parameters
+// --- CASUAL & FUNNY AGENTS ---
 const agents: Agent[] = [
   {
     id: 'comedian',
     name: 'The Comedian',
+    // Added instruction: End your response with "###"
+    // Female + Fast + Farcical
     systemPrompt:
-      'You are a witty comedian who loves to make jokes and puns. Keep responses brief and humorous.',
-    temperature: 0.9,
+      'You are a frantic, high-energy female comedian who talks incredibly fast. You are aware that you ramble at high speed and sometimes apologize for it. You mix highbrow references with lowbrow physical humor. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.95,
     top_p: 0.95,
     color: '#ff6b6b',
   },
   {
     id: 'philosopher',
     name: 'The Philosopher',
+    // Added instruction: End your response with "###"
+    // Slow + Pretentious
     systemPrompt:
-      'You are a thoughtful philosopher who provides deep insights. Keep responses brief and profound.',
-    temperature: 0.7,
+      'You are a cynical philosopher who speaks... very... slowly... to... ensure... your... profound... thoughts... are... understood. You judge the comedian for her speed. You are highbrow but petty. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.75,
     top_p: 0.9,
     color: '#4ecdc4',
   },
   {
     id: 'scientist',
     name: 'The Scientist',
+    // Added instruction: End your response with "###"
+    // The "Literalist"
     systemPrompt:
-      'You are a logical scientist who explains things clearly and factually. Keep responses brief and precise.',
-    temperature: 0.3,
+      'You are a scientist who treats every joke as a serious hypothesis. You are dry and devoid of humor, which makes you unintentionally funny. You analyze crass jokes with mathematical precision. DO NOT use your name. End your response with "###"',
+    temperature: 0.6,
     top_p: 0.85,
     color: '#45b7d1',
   },
@@ -60,8 +68,32 @@ async function initApp() {
       <div id="chat-container" class="chat-container" style="display: none;">
         <canvas id="scene"></canvas>
         <div class="controls">
+          <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
+              <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
+              <span id="tts-steps-val" style="color: #4ecdc4; font-size: 0.8em; width: 20px;">10</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Director Chaos</label>
+              <input type="range" id="director-chaos" min="0" max="100" value="30" style="flex: 1;">
+              <span id="director-chaos-val" style="color: #ff6b6b; font-size: 0.8em; width: 20px;">30%</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
+              <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
+            </div>
+          </div>
+          <div class="mode-selector">
+            <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
+            <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
+          </div>
           <div id="chat-log" class="chat-log"></div>
-          <div class="input-group">
+          
+          <!-- Chat Mode Controls -->
+          <div id="chat-mode-controls" class="input-group">
             <input 
               type="text" 
               id="user-input" 
@@ -70,6 +102,31 @@ async function initApp() {
             />
             <button id="send-btn">Send</button>
           </div>
+          
+          <!-- Improv Mode Controls -->
+          <div id="improv-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="scene-title" 
+                placeholder="Scene title (e.g., 'At the Coffee Shop')..."
+                autocomplete="off"
+              />
+            </div>
+            <div class="input-group">
+              <textarea 
+                id="scene-description" 
+                placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..."
+                rows="3"
+                autocomplete="off"
+              ></textarea>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-improv-btn" class="primary-btn">Start Scene</button>
+              <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
+            </div>
+          </div>
+          
           <div class="agent-info">
             <p>Next speaker: <span id="next-agent">-</span></p>
           </div>
@@ -87,6 +144,11 @@ async function initApp() {
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
+  const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
+  const ttsStepsVal = document.getElementById('tts-steps-val')!
+  const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
+  const chaosVal = document.getElementById('director-chaos-val')!
+  const seedInput = document.getElementById('global-seed') as HTMLInputElement
 
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
@@ -115,7 +177,7 @@ async function initApp() {
 
     // 1. Initialize Audio Engine (in background or parallel)
     statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('./assets/onnx');
+    await audioEngine.init('./tts/onnx');
     // 2. Initialize the chat manager with progress callback
     statusText.textContent = "Initializing WebLLM..."
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
@@ -124,9 +186,16 @@ async function initApp() {
       statusText.textContent = progress.text
     })
 
+    // Initialize ImprovSceneManager
+    const improvSceneManager = new ImprovSceneManager(groupChatManager)
+
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+
+    // UI listeners
+    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
+    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
 
     // Update next agent info
     const updateNextAgentUI = () => {
@@ -147,14 +216,11 @@ async function initApp() {
       chatLog.scrollTop = chatLog.scrollHeight
     }
 
-    // Helper to speak and animate
-    const speakAndVisualize = async (text: string, agentId: string) => {
+    // Helper to speak and animate with options (steps + seed)
+    const speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
       try {
         stage.setActiveActor(agentId);
-        const audioData = await audioEngine.synthesize(text, agentId, {
-          speed: 1.32,   // Faster speech
-          steps: 15     // Higher quality
-        });
+        const audioData = await audioEngine.synthesize(text, agentId, { steps: options.steps, seed: options.seed });
         speechQueue.add(audioData);
       } catch (e) {
         console.error("Speech synthesis failed", e);
@@ -196,10 +262,19 @@ async function initApp() {
         // Make agent jump (Removed, handled by speakAndVisualize active actor)
         stage.setActiveActor(currentAgentId);
 
-        await groupChatManager.chat(message, (sentence) => {
+        // derive optional seed for reproducibility in chat mode
+        const baseUserSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const baseTurnSeed = baseUserSeed !== undefined ? baseUserSeed + groupChatManager.getHistoryLength() : undefined
+        await groupChatManager.chat(message + ' ###', (sentence) => {
           // New sentence received
           console.log(`[${agent.name} speaks]: ${sentence}`);
-          speakAndVisualize(sentence, agent.id);
+          // Apply character-specific speed
+          const characterSpeeds: Record<string, number> = {
+            'comedian': 1.5,
+            'philosopher': 0.6,
+            'scientist': 1.0
+          }
+          speakAndVisualize(sentence, agent.id, { steps: parseInt(ttsStepsSlider.value || '10'), speed: characterSpeeds[agent.id] || 1.0, seed: baseTurnSeed });
 
           // Update UI with partial text (optional, or just append)
           // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
@@ -212,7 +287,7 @@ async function initApp() {
           fullResponse += sentence + " ";
           contentSpan.textContent = fullResponse;
           chatLog.scrollTop = chatLog.scrollHeight;
-        });
+        }, { seed: baseTurnSeed });
 
         // Wait for audio to finish playing this turn
         await speechQueue.waitUntilFinished();
@@ -235,6 +310,201 @@ async function initApp() {
         sendMessage()
       }
     })
+
+    // Mode switching
+    const chatModeBtn = document.getElementById('chat-mode-btn')!
+    const improvModeBtn = document.getElementById('improv-mode-btn')!
+    const chatModeControls = document.getElementById('chat-mode-controls')!
+    const improvModeControls = document.getElementById('improv-mode-controls')!
+
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'none'
+
+      // Stop improv if running
+      if (improvSceneManager.isSceneRunning()) {
+        improvSceneManager.stop()
+      }
+
+      updateNextAgentUI()
+    })
+
+    improvModeBtn.addEventListener('click', () => {
+      improvModeBtn.classList.add('active')
+      chatModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'none'
+      improvModeControls.style.display = 'block'
+    })
+
+    // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
+    const calculatePacing = () => {
+      const roll = Math.random();
+      // 30% Chance: "The One-Liner"
+      if (roll > 0.7) {
+        return {
+          type: 'punchline',
+          // SAFETY NET ONLY: Allow enough space for a full sentence
+          maxTokens: 60,
+          ttsSteps: 25,
+          // THE REAL FIX: Explicit instruction for brevity
+          promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
+        }
+      // 50% Chance: "The Standard"
+      } else if (roll > 0.2) {
+        return {
+          type: 'standard',
+          maxTokens: 150,
+          ttsSteps: 16,
+          promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
+        }
+      // 20% Chance: "The Rant"
+      } else {
+        return {
+          type: 'rant',
+          maxTokens: 256,
+          ttsSteps: 8,
+          promptSuffix: ' (Go on a funny, passionate rant. Be expressive!)'
+        }
+      }
+    }
+
+    // Improv mode controls
+    const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
+    const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
+    const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
+    const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
+
+    let isImprovRunning = false
+    const startImprovScene = async () => {
+      const title = sceneTitleInput.value.trim()
+      const description = sceneDescriptionInput.value.trim()
+
+      if (!title || !description) {
+        addMessage('System', 'Please provide both a scene title and description', '#ff6b6b')
+        return
+      }
+
+      // Build the scene object if necessary (not used directly in Director loop)
+
+      // Disable inputs
+      sceneTitleInput.disabled = true
+      sceneDescriptionInput.disabled = true
+      startImprovBtn.style.display = 'none'
+      stopImprovBtn.style.display = 'inline-block'
+
+      // Clear chat log for new scene
+      addMessage('System', `🎭 Starting improv scene: "${title}"`, '#4ecdc4')
+      addMessage('System', description, '#4ecdc4')
+
+      try {
+        // Start our own Director loop rather than using ImprovSceneManager's
+        // Reset conversation history and start with a seed line
+        isImprovRunning = true
+        groupChatManager.resetConversation()
+
+        if (groupChatManager.getHistoryLength() === 0) {
+          const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?'
+          addMessage('Director', `Action! "${seed}"`, '#888')
+          await processTurn(seed)
+        }
+
+        // Continue loop until stopped
+        while (isImprovRunning) {
+          await new Promise(r => setTimeout(r, 800))
+          if (!isImprovRunning) break
+
+          // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
+          const turnCount = groupChatManager.getHistoryLength()
+          const chaosLevel = parseInt(chaosSlider.value)
+          let prompt = '(Reply naturally to the last thing said)'
+          if (turnCount % 3 === 0 && Math.random() * 100 < chaosLevel) {
+            prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)'
+          } else if (turnCount % 4 === 0 && Math.random() * 100 < chaosLevel) {
+            prompt = '(Make a highbrow reference to history that completely misses the point.)'
+          }
+
+          await processTurn(prompt)
+        }
+
+        // Wait for final audio to finish
+        await speechQueue.waitUntilFinished()
+
+      } catch (error) {
+        console.error('Error running improv scene:', error)
+        addMessage('System', 'Error running improv scene', '#ff0000')
+      }
+
+      // Re-enable inputs
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
+    }
+
+    const stopImprovScene = () => {
+      isImprovRunning = false
+      // Stop the manager if it's running
+      if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
+      addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
+    }
+
+    // Director logic: process a single turn with pacing and TTS steps
+    const processTurn = async (inputText: string) => {
+      try {
+        // 1. Calculate Pacing for this specific turn
+        const pacing = calculatePacing()
+        console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`)
+
+        let currentAgentId = groupChatManager.getCurrentAgent().id
+        const agent = agents.find(a => a.id === currentAgentId)!
+
+        stage.setActiveActor(currentAgentId)
+        
+        const messageDiv = document.createElement('div')
+        messageDiv.className = 'message'
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
+        chatLog.appendChild(messageDiv)
+        const contentSpan = messageDiv.querySelector('.content')!
+
+        // 2. Pass maxTokens to chat and append pacing prompt to the hidden prompt
+        // Compute the per-turn deterministic seed if user provided a seed
+        const userSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const turnSeed = userSeed !== undefined ? userSeed + groupChatManager.getHistoryLength() : undefined
+        const effectivePrompt = inputText + pacing.promptSuffix + ' ###'
+
+        // Character-specific speeds
+        const characterSpeeds: Record<string, number> = {
+          'comedian': 1.5,
+          'philosopher': 0.6,
+          'scientist': 1.0
+        }
+
+        await groupChatManager.chat(effectivePrompt, (sentence) => {
+          // 3. Pass ttsSteps to speak
+          speakAndVisualize(sentence, agent.id, { steps: pacing.ttsSteps, speed: characterSpeeds[agent.id] || 1.0, seed: turnSeed })
+
+          contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
+          chatLog.scrollTop = chatLog.scrollHeight
+        }, { maxTokens: pacing.maxTokens, seed: turnSeed })
+
+        await speechQueue.waitUntilFinished()
+        updateNextAgentUI()
+
+      } catch (error) {
+        console.error('Turn Error:', error)
+        isImprovRunning = false
+        // stopImprovLoop equivalent
+      }
+    }
+
+    startImprovBtn.addEventListener('click', startImprovScene)
+    stopImprovBtn.addEventListener('click', stopImprovScene)
 
     userInput.focus()
   } catch (error: any) {
