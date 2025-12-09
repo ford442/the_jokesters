@@ -21,6 +21,13 @@ export class GroupChatManager {
   private conversationHistory: Message[] = []
   private isInitialized = false
 
+  // CONFIG: The "Gritty but Safe" Style Guide
+  // This allows swearing for realism but strictly bans sexual/violent content.
+  private readonly STYLE_INSTRUCTION = 
+    `STYLE GUIDE: "Gritty & Real". \n` +
+    `You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion.\n` +
+    `HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`;
+
   constructor(agents: Agent[]) {
     this.agents = agents
   }
@@ -72,7 +79,7 @@ export class GroupChatManager {
   async chat(
     userMessage: string,
     onSentence?: (sentence: string) => void,
-    options: { maxTokens?: number; seed?: number } = {}
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
   ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -87,11 +94,17 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Create messages array with current agent's system prompt
+    // Create messages array with current agent's system prompt and the STYLE_INSTRUCTION
     const messages: Message[] = [
       { role: 'system', content: currentAgent.systemPrompt },
+      { role: 'system', content: this.STYLE_INSTRUCTION },
       ...this.conversationHistory,
     ]
+
+    // If a hiddenInstruction was provided, add it as a transient system message for this request only
+    if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
+      messages.splice(1, 0, { role: 'system', content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` })
+    }
 
     try {
       // Generate response with stricter sampling to prevent repetition
@@ -197,6 +210,48 @@ export class GroupChatManager {
     } catch (error) {
       console.error('Error generating response:', error)
       throw error
+    }
+  }
+
+  /**
+   * DIRECTOR BRAIN: Analyzes the scene to see if it's boring or good.
+   * Returns a critique string like "STAGNANT: Explosion!" or "FLOWING: Whisper."
+   */
+  async getDirectorCritique(): Promise<string> {
+    if (!this.engine || !this.isInitialized) return ""
+
+    // 1. Context: Only look at the last 6 lines to judge current momentum
+    const recentHistory = this.conversationHistory.slice(-6)
+    if (recentHistory.length === 0) return "" 
+
+    const historyText = recentHistory
+      .map(m => `${m.role === 'user' ? 'Prompt' : 'Actor'}: ${m.content}`)
+      .join('\n')
+
+    // 2. The Judgment Prompt
+    const directorSystemPrompt = 
+      `You are an expert Improv Director. Watch the scene below.\n` +
+      `First, judge the scene: is it "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive)?\n` +
+      `Then, provide a ONE-SENTENCE direction to the NEXT actor.\n` +
+      `Rules:\n` +
+      `- If STAGNANT: Intervene! Raise the stakes, add a disaster, or force a topic change.\n` +
+      `- If FLOWING: Coach silently. Give a subtle note (e.g. "Be more suspicious," "Whisper this line").\n` +
+      `Output format: [STATUS]: [INSTRUCTION]`
+
+    try {
+      const completion = await this.engine.chat.completions.create({
+        messages: [
+          { role: "system", content: directorSystemPrompt },
+          { role: "user", content: `RECENT DIALOGUE:\n${historyText}\n\nDIRECTOR DECISION:` }
+        ],
+        temperature: 0.6,
+        max_tokens: 60,
+      })
+
+      return completion.choices[0]?.message?.content?.trim() || ""
+    } catch (e) {
+      console.warn("Director failed to think:", e)
+      return ""
     }
   }
 
