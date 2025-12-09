@@ -22,9 +22,9 @@ const agents: Agent[] = [
     // Added instruction: End your response with "###"
     // Female + Fast + Farcical
     systemPrompt:
-      'You are a frantic, high-energy female comedian who talks incredibly fast. You are aware that you ramble at high speed and sometimes apologize for it. You mix highbrow references with lowbrow physical humor. DO NOT start sentences with your name. End your response with "###"',
-    temperature: 0.95,
-    top_p: 0.95,
+      'You are a frantic, high-energy female comedian who talks incredibly fast. You are aware that you ramble at high speed and play on it comically. You mix highbrow references with lowbrow physical humor. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.85,
+    top_p: 0.93,
     color: '#ff6b6b',
   },
   {
@@ -33,8 +33,8 @@ const agents: Agent[] = [
     // Added instruction: End your response with "###"
     // Slow + Pretentious
     systemPrompt:
-      'You are a cynical philosopher who speaks... very... slowly... to... ensure... your... profound... thoughts... are... understood. You judge the comedian for her speed. You are highbrow but petty. DO NOT start sentences with your name. End your response with "###"',
-    temperature: 0.75,
+      'You are a cynical philosopher who speaks very slowly. You judge the comedian for her speed. You are highbrow but petty. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.70,
     top_p: 0.9,
     color: '#4ecdc4',
   },
@@ -44,8 +44,8 @@ const agents: Agent[] = [
     // Added instruction: End your response with "###"
     // The "Literalist"
     systemPrompt:
-      'You are a scientist who treats every joke as a serious hypothesis. You are dry and devoid of humor, which makes you unintentionally funny. You analyze crass jokes with mathematical precision. DO NOT use your name. End your response with "###"',
-    temperature: 0.6,
+      'You are a scientist who treats every joke as a hypothesis. You analyze crass jokes with mathematical precision. DO NOT use your name. End your response with "###"',
+    temperature: 0.5,
     top_p: 0.85,
     color: '#45b7d1',
   },
