@@ -206,3 +206,83 @@ button:disabled {
 .chat-log::-webkit-scrollbar-thumb:hover {
   background: #45b7d1;
 }
+
+/* Mode selector styles */
+.mode-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px;
+  background-color: #0f3460;
+  border: 2px solid #1a1a2e;
+  color: #888;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+  background-color: #4ecdc4;
+  border-color: #4ecdc4;
+  color: #0f0f23;
+}
+
+.mode-btn:hover:not(.active):not(:disabled) {
+  background-color: #1a1a2e;
+  border-color: #4ecdc4;
+  color: #4ecdc4;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Improv mode styles */
+.improv-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.improv-controls textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #1a1a2e;
+  background-color: #0f3460;
+  color: #fff;
+  font-size: 0.95em;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  min-height: 80px;
+}
+
+.improv-controls textarea:focus {
+  border-color: #4ecdc4;
+}
+
+.improv-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.primary-btn {
+  background-color: #4ecdc4;
+  border-color: #4ecdc4;
+  color: #0f0f23;
+}
+
+.secondary-btn {
+  background-color: #ff6b6b;
+  border-color: #ff6b6b;
+  color: #fff;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background-color: #ff5252;
+  border-color: #ff5252;
+}
