@@ -1,5 +1,24 @@
 import * as webllm from '@mlc-ai/web-llm'
 
+// ============================================================================
+// PROFANITY LEVEL CONFIGURATION
+// ============================================================================
+// Adjust this to control how the AI uses profanity:
+// - 'PG'       : Family-friendly, no swearing at all
+// - 'CASUAL'   : Light profanity (damn, hell, crap)  
+// - 'GRITTY'   : Realistic casual swearing (shit, f*ck, etc.)
+// - 'UNCENSORED': Full uncensored language (use with caution)
+// ============================================================================
+export const PROFANITY_LEVEL: 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED' = 'GRITTY'
+
+export type ProfanityLevel = 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED'
+const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
+  PG: `STYLE GUIDE: Keep language family-friendly. No swearing or crude language.`,
+  CASUAL: `STYLE GUIDE: You may use mild expressions (damn, hell, crap) but avoid strong profanity.`,
+  GRITTY: `STYLE GUIDE: "Gritty & Real". You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion. HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`,
+  UNCENSORED: `STYLE GUIDE: Speak naturally with no language restrictions. Full creative freedom with profanity. HOWEVER: You must still AVOID sexual violence, graphic gore, or hate speech.`,
+}
+
 export interface Agent {
   id: string
   name: string
@@ -21,15 +40,28 @@ export class GroupChatManager {
   private conversationHistory: Message[] = []
   private isInitialized = false
 
-  // CONFIG: The "Gritty but Safe" Style Guide
-  // This allows swearing for realism but strictly bans sexual/violent content.
-  private readonly STYLE_INSTRUCTION = 
-    `STYLE GUIDE: "Gritty & Real". \n` +
-    `You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion.\n` +
-    `HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`;
+  // Style instruction - can be changed at runtime via setProfanityLevel()
+  private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
+  private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
 
   constructor(agents: Agent[]) {
     this.agents = agents
+  }
+
+  /**
+   * Set the profanity level at runtime
+   */
+  setProfanityLevel(level: ProfanityLevel): void {
+    this.currentProfanityLevel = level
+    this.styleInstruction = PROFANITY_INSTRUCTIONS[level]
+    console.log(`Profanity level set to: ${level}`)
+  }
+
+  /**
+   * Get the current profanity level
+   */
+  getProfanityLevel(): ProfanityLevel {
+    return this.currentProfanityLevel
   }
 
   async initialize(
@@ -94,17 +126,20 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Create messages array with current agent's system prompt and the STYLE_INSTRUCTION
+    // Build the full system prompt: agent persona + style guide + optional director note
+    // web-llm requires exactly ONE system message as the first entry
+    let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
+
+    // If a hiddenInstruction was provided, append it to the system prompt
+    if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
+      fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
+    }
+
+    // Create messages array with single merged system prompt
     const messages: Message[] = [
-      { role: 'system', content: currentAgent.systemPrompt },
-      { role: 'system', content: this.STYLE_INSTRUCTION },
+      { role: 'system', content: fullSystemPrompt },
       ...this.conversationHistory,
     ]
-
-    // If a hiddenInstruction was provided, add it as a transient system message for this request only
-    if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-      messages.splice(1, 0, { role: 'system', content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` })
-    }
 
     try {
       // Generate response with stricter sampling to prevent repetition
@@ -222,14 +257,14 @@ export class GroupChatManager {
 
     // 1. Context: Only look at the last 6 lines to judge current momentum
     const recentHistory = this.conversationHistory.slice(-6)
-    if (recentHistory.length === 0) return "" 
+    if (recentHistory.length === 0) return ""
 
     const historyText = recentHistory
       .map(m => `${m.role === 'user' ? 'Prompt' : 'Actor'}: ${m.content}`)
       .join('\n')
 
     // 2. The Judgment Prompt
-    const directorSystemPrompt = 
+    const directorSystemPrompt =
       `You are an expert Improv Director. Watch the scene below.\n` +
       `First, judge the scene: is it "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive)?\n` +
       `Then, provide a ONE-SENTENCE direction to the NEXT actor.\n` +
