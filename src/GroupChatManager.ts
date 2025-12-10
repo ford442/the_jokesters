@@ -95,16 +95,21 @@ export class GroupChatManager {
     const currentAgent = this.agents[this.currentAgentIndex]
 
     // Create messages array with current agent's system prompt and the STYLE_INSTRUCTION
-    const messages: Message[] = [
+    // ALL system messages must come first, before any user/assistant messages
+    const systemMessages: Message[] = [
       { role: 'system', content: currentAgent.systemPrompt },
       { role: 'system', content: this.STYLE_INSTRUCTION },
-      ...this.conversationHistory,
     ]
 
-    // If a hiddenInstruction was provided, add it as a transient system message for this request only
+    // If a hiddenInstruction was provided, add it as a transient system message
     if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-      messages.splice(1, 0, { role: 'system', content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` })
+      systemMessages.push({ role: 'system', content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` })
     }
+
+    const messages: Message[] = [
+      ...systemMessages,
+      ...this.conversationHistory,
+    ]
 
     try {
       // Generate response with stricter sampling to prevent repetition
@@ -275,5 +280,123 @@ export class GroupChatManager {
 
   getAgents(): Agent[] {
     return this.agents
+  }
+
+  /**
+   * Prerender multiple conversation turns ahead of time to avoid gaps.
+   * This generates LLM responses for upcoming turns in the background.
+   * @param initialPrompt The starting prompt for the conversation
+   * @param turnCount Number of turns to prerender (default: 3)
+   * @param options Options for each turn (maxTokens, seed)
+   * @returns Array of prerendered responses with agent info
+   */
+  async prerenderTurns(
+    initialPrompt: string,
+    turnCount: number = 3,
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+  ): Promise<Array<{ agentId: string; agentName: string; response: string; sentences: string[] }>> {
+    if (!this.engine || !this.isInitialized) {
+      throw new Error('GroupChatManager not initialized. Call initialize() first.')
+    }
+
+    console.log(`[Prerender] Starting prerender of ${turnCount} conversation turns`)
+    
+    const prerenderedTurns: Array<{ agentId: string; agentName: string; response: string; sentences: string[] }> = []
+    
+    // Save current state to restore later
+    const originalHistory = [...this.conversationHistory]
+    const originalAgentIndex = this.currentAgentIndex
+    
+    try {
+      // Start with initial prompt
+      let currentPrompt = initialPrompt
+
+      for (let i = 0; i < turnCount; i++) {
+        const currentAgent = this.agents[this.currentAgentIndex]
+        
+        // Create system messages - ALL must come first
+        const systemMessages: Message[] = [
+          { role: 'system', content: currentAgent.systemPrompt },
+          { role: 'system', content: this.STYLE_INSTRUCTION },
+        ]
+
+        if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
+          systemMessages.push({ 
+            role: 'system', 
+            content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` 
+          })
+        }
+
+        const messages: Message[] = [
+          ...systemMessages,
+          ...this.conversationHistory,
+          { role: 'user', content: currentPrompt }
+        ]
+
+        // Generate response (non-streaming for prerender)
+        const completion = await this.engine.chat.completions.create({
+          messages: messages as webllm.ChatCompletionMessageParam[],
+          temperature: currentAgent.temperature,
+          top_p: currentAgent.top_p,
+          max_tokens: options.maxTokens || 96,
+          stream: false,
+          stop: ["###", "Director:", "User:"],
+          // @ts-ignore
+          seed: options.seed ? options.seed + i : undefined,
+          // @ts-ignore
+          repetition_penalty: 0.955,
+          presence_penalty: 0.556,
+        })
+
+        const fullResponse = completion.choices[0]?.message?.content || ''
+        
+        // Clean the response
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+        const cleanResponse = fullResponse
+          .replace(namePrefixRegex, '')
+          .replace(/###/g, '')
+          .replace(/Director:\s*/gi, '')
+          .replace(/User:\s*/gi, '')
+          .trim()
+
+        // Split into sentences for TTS
+        const sentences = cleanResponse
+          .split(/([.!?])\s+/)
+          .reduce((acc: string[], part: string, idx: number, arr: string[]) => {
+            if (idx % 2 === 0 && part.trim()) {
+              const sentence = part + (arr[idx + 1] || '')
+              acc.push(sentence.trim())
+            }
+            return acc
+          }, [])
+          .filter((s: string) => s.length > 0)
+
+        console.log(`[Prerender] Turn ${i + 1}/${turnCount}: ${currentAgent.name} - ${sentences.length} sentences`)
+
+        prerenderedTurns.push({
+          agentId: currentAgent.id,
+          agentName: currentAgent.name,
+          response: cleanResponse,
+          sentences: sentences
+        })
+
+        // Update conversation history for next turn
+        this.conversationHistory.push({ role: 'user', content: currentPrompt })
+        this.conversationHistory.push({ role: 'assistant', content: cleanResponse })
+
+        // Move to next agent
+        this.currentAgentIndex = (this.currentAgentIndex + 1) % this.agents.length
+
+        // For next iteration, use a continuation prompt
+        currentPrompt = '(Reply naturally to the last thing said)'
+      }
+
+      return prerenderedTurns
+
+    } finally {
+      // Restore original state - prerendering shouldn't affect actual conversation
+      this.conversationHistory = originalHistory
+      this.currentAgentIndex = originalAgentIndex
+    }
   }
 }
