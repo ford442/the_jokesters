@@ -30,17 +30,82 @@ export class Stage {
     }
 
     private setupLights() {
-        const ambient = new THREE.AmbientLight(0xffffff, 0.2);
+        // Ambient light for base illumination
+        const ambient = new THREE.AmbientLight(0xffffff, 0.3);
         this.scene.add(ambient);
+
+        // Stage lights - Three colored lights from above for TV show feel
+        const leftStageLight = new THREE.DirectionalLight(0xff6b6b, 0.5);
+        leftStageLight.position.set(-5, 8, 3);
+        leftStageLight.castShadow = true;
+        this.scene.add(leftStageLight);
+
+        const centerStageLight = new THREE.DirectionalLight(0x45b7d1, 0.5);
+        centerStageLight.position.set(0, 8, 3);
+        centerStageLight.castShadow = true;
+        this.scene.add(centerStageLight);
+
+        const rightStageLight = new THREE.DirectionalLight(0x4ecdc4, 0.5);
+        rightStageLight.position.set(5, 8, 3);
+        rightStageLight.castShadow = true;
+        this.scene.add(rightStageLight);
+
+        // Rim light from behind for depth
+        const rimLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        rimLight.position.set(0, 5, -5);
+        this.scene.add(rimLight);
+
+        // Configure shadow quality
+        [leftStageLight, centerStageLight, rightStageLight].forEach(light => {
+            light.shadow.mapSize.width = 1024;
+            light.shadow.mapSize.height = 1024;
+            light.shadow.camera.near = 0.5;
+            light.shadow.camera.far = 50;
+        });
     }
 
     private setupGround() {
+        // Main stage floor with grid pattern
         const geo = new THREE.PlaneGeometry(20, 10);
-        const mat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
+        const mat = new THREE.MeshStandardMaterial({ 
+            color: 0x2a2a3e,
+            roughness: 0.7,
+            metalness: 0.2
+        });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.rotation.x = -Math.PI / 2;
         mesh.receiveShadow = true;
         this.scene.add(mesh);
+
+        // Add a grid overlay for stage lines
+        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x333333);
+        gridHelper.position.y = 0.01; // Slightly above floor to prevent z-fighting
+        this.scene.add(gridHelper);
+
+        // Add backdrop/curtain
+        const backdropGeo = new THREE.PlaneGeometry(20, 8);
+        const backdropMat = new THREE.MeshStandardMaterial({ 
+            color: 0x16213e,
+            roughness: 0.9,
+            metalness: 0.1
+        });
+        const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
+        backdrop.position.set(0, 4, -3);
+        backdrop.receiveShadow = true;
+        this.scene.add(backdrop);
+
+        // Add stage edge strips (like a comedy club stage)
+        const stripGeo = new THREE.BoxGeometry(20, 0.1, 0.3);
+        const stripMat = new THREE.MeshStandardMaterial({ 
+            color: 0xffd700,
+            metalness: 0.6,
+            roughness: 0.3,
+            emissive: 0xffd700,
+            emissiveIntensity: 0.2
+        });
+        const strip = new THREE.Mesh(stripGeo, stripMat);
+        strip.position.set(0, 0.05, 4);
+        this.scene.add(strip);
     }
 
     private initActors() {
