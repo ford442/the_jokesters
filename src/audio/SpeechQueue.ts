@@ -1,5 +1,6 @@
 
 import { AudioEngine } from './AudioEngine';
+import type { SynthesisOptions } from './AudioEngine';
 
 export class SpeechQueue {
     private queue: Float32Array[] = [];
@@ -7,8 +8,11 @@ export class SpeechQueue {
     private audioContext: AudioContext;
     private currentSource: AudioBufferSourceNode | null = null;
     private destinationNode: AudioNode;
+    private audioEngine: AudioEngine;
+    private prerenderQueue: Promise<Float32Array>[] = [];
 
-    constructor(_audioEngine: AudioEngine) {
+    constructor(audioEngine: AudioEngine) {
+        this.audioEngine = audioEngine;
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         this.destinationNode = this.audioContext.destination;
     }
@@ -75,5 +79,53 @@ export class SpeechQueue {
             };
             check();
         });
+    }
+
+    /**
+     * Prerender audio for upcoming sentences to avoid gaps during performance.
+     * This starts synthesis in the background before the audio is needed.
+     * @param texts Array of text strings to prerender
+     * @param agentId Agent ID for voice selection
+     * @param options Synthesis options (steps, seed, speed)
+     */
+    public prerenderSentences(texts: string[], agentId: string, options: SynthesisOptions = {}) {
+        console.log(`[SpeechQueue] Prerendering ${texts.length} sentences for ${agentId}`);
+        
+        // Start synthesis for each text asynchronously
+        for (const text of texts) {
+            const promise = this.audioEngine.synthesize(text, agentId, options);
+            this.prerenderQueue.push(promise);
+        }
+    }
+
+    /**
+     * Add prerendered audio to the playback queue.
+     * This should be called when you want to actually play the prerendered audio.
+     */
+    public async addPrerendered() {
+        if (this.prerenderQueue.length === 0) return;
+
+        try {
+            // Wait for the next prerendered audio and add it to queue
+            const audioData = await this.prerenderQueue.shift()!;
+            this.queue.push(audioData);
+            this.playNext();
+        } catch (e) {
+            console.error('[SpeechQueue] Failed to add prerendered audio:', e);
+        }
+    }
+
+    /**
+     * Clear all prerendered audio promises
+     */
+    public clearPrerendered() {
+        this.prerenderQueue = [];
+    }
+
+    /**
+     * Get count of prerendered items waiting
+     */
+    public getPrerenderCount(): number {
+        return this.prerenderQueue.length;
     }
 }

@@ -216,6 +216,9 @@ async function initApp() {
       chatLog.scrollTop = chatLog.scrollHeight
     }
 
+    // Prerender state for audio
+    let isPrerendering = false;
+
     // Helper to speak and animate with options (steps + seed)
     const speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
       try {
@@ -225,6 +228,21 @@ async function initApp() {
       } catch (e) {
         console.error("Speech synthesis failed", e);
       }
+    }
+
+    // Prerender upcoming sentences to avoid gaps in audio
+    const prerenderAhead = async (sentences: string[], agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
+      if (isPrerendering || sentences.length === 0) return;
+      
+      isPrerendering = true;
+      console.log(`[Prerender Audio] Starting prerender of ${sentences.length} sentences`);
+      
+      // Prerender first 2-3 sentences ahead
+      const prerenderCount = Math.min(3, sentences.length);
+      const toPrerender = sentences.slice(0, prerenderCount);
+      
+      speechQueue.prerenderSentences(toPrerender, agentId, options);
+      isPrerendering = false;
     }
 
     // Handle send message
@@ -265,24 +283,44 @@ async function initApp() {
         // derive optional seed for reproducibility in chat mode
         const baseUserSeed = seedInput.value ? parseInt(seedInput.value) : undefined
         const baseTurnSeed = baseUserSeed !== undefined ? baseUserSeed + groupChatManager.getHistoryLength() : undefined
+        
+        // Character-specific speeds
+        const characterSpeeds: Record<string, number> = {
+          'comedian': 1.5,
+          'philosopher': 0.6,
+          'scientist': 1.0
+        }
+
+        // Buffer for prerendering
+        const sentenceBuffer: string[] = [];
+        let sentenceIndex = 0;
+
         await groupChatManager.chat(message + ' ###', (sentence) => {
           // New sentence received
           console.log(`[${agent.name} speaks]: ${sentence}`);
-          // Apply character-specific speed
-          const characterSpeeds: Record<string, number> = {
-            'comedian': 1.5,
-            'philosopher': 0.6,
-            'scientist': 1.0
-          }
-          speakAndVisualize(sentence, agent.id, { steps: parseInt(ttsStepsSlider.value || '10'), speed: characterSpeeds[agent.id] || 1.0, seed: baseTurnSeed });
+          
+          // Add to buffer for prerendering
+          sentenceBuffer.push(sentence);
 
-          // Update UI with partial text (optional, or just append)
-          // Actually chat() returns full response at end, but we can update UI incrementally here if we want.
-          // But the chat() implementation we wrote accumulates internal buffer.
-          // For now, let's just let chat() finish for the full text return or update span incrementally.
-          // Since we get 'sentence', it's easier to append sentences.
-          // But we missed the punctuation in the sentence callback (GroupChatManager logic: "We keep the delimiter").
-          // So we can visually append the sentence.
+          // Prerender next few sentences ahead
+          if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
+            const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
+            prerenderAhead(upcomingSentences, agent.id, { 
+              steps: parseInt(ttsStepsSlider.value || '10'), 
+              speed: characterSpeeds[agent.id] || 1.0, 
+              seed: baseTurnSeed 
+            });
+          }
+
+          // Speak current sentence
+          speakAndVisualize(sentence, agent.id, { 
+            steps: parseInt(ttsStepsSlider.value || '10'), 
+            speed: characterSpeeds[agent.id] || 1.0, 
+            seed: baseTurnSeed 
+          });
+          sentenceIndex++;
+
+          // Update UI with partial text
           if (!fullResponse) contentSpan.textContent = ""; // clear ...
           fullResponse += sentence + " ";
           contentSpan.textContent = fullResponse;
@@ -377,6 +415,8 @@ async function initApp() {
     const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
 
     let isImprovRunning = false
+    let prerenderedQueue: Array<{ agentId: string; agentName: string; response: string; sentences: string[] }> = []
+    
     const startImprovScene = async () => {
       const title = sceneTitleInput.value.trim()
       const description = sceneDescriptionInput.value.trim()
@@ -403,8 +443,27 @@ async function initApp() {
         // Reset conversation history and start with a seed line
         isImprovRunning = true
         groupChatManager.resetConversation()
+        prerenderedQueue = []
 
-        if (groupChatManager.getHistoryLength() === 0) {
+        // Prerender initial turns to get ahead
+        const initialPrompt = `You are participating in an improv comedy scene with other characters.\nScene: "${title}"\nDescription: ${description}\n\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). ###`
+        
+        addMessage('System', '🎬 Prerendering opening dialogue...', '#888')
+        
+        try {
+          const prerendered = await groupChatManager.prerenderTurns(initialPrompt, 3)
+          prerenderedQueue = prerendered
+          console.log(`[Improv] Prerendered ${prerendered.length} turns`)
+          addMessage('System', `✅ Prerendered ${prerendered.length} turns ahead`, '#4ecdc4')
+        } catch (e) {
+          console.error('[Improv] Prerender failed, continuing with live generation', e)
+          addMessage('System', '⚠️ Prerender failed, using live generation', '#ff6b6b')
+        }
+
+        // Play first prerendered turn if available
+        if (prerenderedQueue.length > 0) {
+          await playPrerenderedTurn()
+        } else if (groupChatManager.getHistoryLength() === 0) {
           const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?'
           addMessage('Director', `Action! "${seed}"`, '#888')
           await processTurn(seed)
@@ -461,8 +520,14 @@ async function initApp() {
           // Default instruction for flow
           const prompt = '(Reply naturally to the last thing said)'
 
-          // 4. Execute turn with the critique injected invisibly
-          await processTurn(prompt, critique)
+          // 4. Execute turn - use prerendered if available, otherwise generate live
+          if (prerenderedQueue.length > 0) {
+            console.log(`[Improv] Using prerendered turn (${prerenderedQueue.length} remaining)`)
+            await playPrerenderedTurn()
+          } else {
+            console.log('[Improv] No prerendered turns, generating live')
+            await processTurn(prompt, critique)
+          }
         }
 
         // Wait for final audio to finish
@@ -489,6 +554,68 @@ async function initApp() {
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+    }
+
+    // Play a prerendered turn from the queue
+    const playPrerenderedTurn = async () => {
+      if (prerenderedQueue.length === 0) return
+
+      const turn = prerenderedQueue.shift()!
+      const agent = agents.find(a => a.id === turn.agentId)!
+
+      console.log(`[Prerendered] Playing: ${agent.name} - ${turn.sentences.length} sentences`)
+
+      stage.setActiveActor(turn.agentId)
+      
+      const messageDiv = document.createElement('div')
+      messageDiv.className = 'message'
+      messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content"></span>`
+      chatLog.appendChild(messageDiv)
+      const contentSpan = messageDiv.querySelector('.content')!
+
+      // Character-specific speeds
+      const characterSpeeds: Record<string, number> = {
+        'comedian': 1.5,
+        'philosopher': 0.6,
+        'scientist': 1.0
+      }
+
+      // Speak each sentence
+      for (const sentence of turn.sentences) {
+        await speakAndVisualize(sentence, turn.agentId, { 
+          steps: 16, 
+          speed: characterSpeeds[turn.agentId] || 1.0 
+        })
+        contentSpan.textContent = contentSpan.textContent ? contentSpan.textContent + ' ' + sentence : sentence
+        chatLog.scrollTop = chatLog.scrollHeight
+        
+        // Small delay between sentences for natural pacing
+        await new Promise(r => setTimeout(r, 200))
+      }
+
+      // Add to actual conversation history
+      groupChatManager.chat('(Continue)', () => {}, { maxTokens: 1 }).catch(() => {})
+      
+      // Update history manually to match prerendered content
+      const history = (groupChatManager as any).conversationHistory
+      if (history.length > 0 && history[history.length - 1].role === 'assistant') {
+        history[history.length - 1].content = turn.response
+      }
+
+      await speechQueue.waitUntilFinished()
+      updateNextAgentUI()
+
+      // Trigger new prerendering when queue gets low
+      if (prerenderedQueue.length < 2 && isImprovRunning) {
+        console.log('[Prerender] Queue low, generating more turns in background...')
+        // Don't await - let it happen in background
+        groupChatManager.prerenderTurns('(Reply naturally to the last thing said)', 2)
+          .then(newTurns => {
+            prerenderedQueue.push(...newTurns)
+            console.log(`[Prerender] Added ${newTurns.length} turns to queue (now ${prerenderedQueue.length})`)
+          })
+          .catch(e => console.error('[Prerender] Background prerender failed:', e))
+      }
     }
 
     // Director logic: process a single turn with pacing and TTS steps
@@ -522,9 +649,27 @@ async function initApp() {
           'scientist': 1.0
         }
 
+        // Buffer for prerendering upcoming sentences
+        const sentenceBuffer: string[] = [];
+        let sentenceIndex = 0;
+
         await groupChatManager.chat(effectivePrompt, (sentence) => {
-          // 3. Pass ttsSteps to speak
+          // Add sentence to buffer for prerendering
+          sentenceBuffer.push(sentence);
+
+          // Prerender next few sentences ahead if we have enough in buffer
+          if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
+            const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
+            prerenderAhead(upcomingSentences, agent.id, { 
+              steps: pacing.ttsSteps, 
+              speed: characterSpeeds[agent.id] || 1.0, 
+              seed: turnSeed 
+            });
+          }
+
+          // 3. Pass ttsSteps to speak current sentence
           speakAndVisualize(sentence, agent.id, { steps: pacing.ttsSteps, speed: characterSpeeds[agent.id] || 1.0, seed: turnSeed })
+          sentenceIndex++;
 
           contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
           chatLog.scrollTop = chatLog.scrollHeight
