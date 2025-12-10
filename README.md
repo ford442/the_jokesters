@@ -128,7 +128,27 @@ The application requires WebGPU support:
 
 ## Recent Improvements
 
-### Enhanced Avatar Appearance (Latest)
+### LLM Dialog Prerendering (Latest)
+The improv mode now prerenders conversation turns to eliminate gaps during performance:
+
+**How It Works:**
+- **Initial Prerender**: When starting a scene, the system generates 3 conversation turns ahead of time
+- **Background Generation**: As turns are played, the system automatically generates more in the background
+- **Instant Playback**: Prerendered dialogue plays immediately with no LLM wait time
+- **Smart Queue Management**: Keeps 2-3 turns prerendered at all times during scenes
+- **Graceful Fallback**: Falls back to live generation if prerendering fails
+
+**Technical Details:**
+- `GroupChatManager.prerenderTurns()` generates multiple turns without affecting actual conversation
+- Prerendered turns maintain character consistency and director critique integration
+- Non-blocking: prerendering happens in background while previous turn plays
+- Memory-efficient: only stores pending turns, not entire conversation
+
+**Bug Fix:**
+- Fixed `SystemMessageOrderError` where system messages were incorrectly ordered after user messages
+- All system prompts (character, style, director notes) now correctly appear first
+
+### Enhanced Avatar Appearance
 The 3D avatars have been significantly upgraded with more expressive and TV-show-quality visuals:
 
 **Avatar Features:**

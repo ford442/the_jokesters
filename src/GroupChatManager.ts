@@ -28,6 +28,13 @@ export class GroupChatManager {
     `You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion.\n` +
     `HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`;
 
+  // Sampling parameters for reducing repetition
+  private readonly REPETITION_PENALTY = 0.955;
+  private readonly PRESENCE_PENALTY = 0.556;
+
+  // Default prerender configuration
+  private readonly DEFAULT_PRERENDER_TURNS = 3;
+
   constructor(agents: Agent[]) {
     this.agents = agents
   }
@@ -117,7 +124,7 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Use the override if provided, otherwise default to 144
+        // Use the override if provided, otherwise default to 96
         max_tokens: options.maxTokens || 96,
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
@@ -125,8 +132,8 @@ export class GroupChatManager {
         // @ts-ignore - optional seed not on all runtime types
         seed: options.seed,
         // @ts-ignore - WebLLM supports this even if types might complain
-        repetition_penalty: 0.955, // Increased from 1.01 to stop loops
-        presence_penalty: 0.556, // Encourage new topics
+        repetition_penalty: this.REPETITION_PENALTY, // Reduces repetitive patterns
+        presence_penalty: this.PRESENCE_PENALTY, // Encourages new topics
       })
 
       let fullResponse = ''
@@ -303,7 +310,7 @@ export class GroupChatManager {
    */
   async prerenderTurns(
     initialPrompt: string,
-    turnCount: number = 3,
+    turnCount: number = this.DEFAULT_PRERENDER_TURNS,
     options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
   ): Promise<Array<{ agentId: string; agentName: string; response: string; sentences: string[] }>> {
     if (!this.engine || !this.isInitialized) {
@@ -355,8 +362,8 @@ export class GroupChatManager {
           // @ts-ignore - seed is supported by WebLLM but not in base OpenAI types
           seed: options.seed ? options.seed + i : undefined,
           // @ts-ignore - repetition_penalty is WebLLM-specific extension
-          repetition_penalty: 0.955,
-          presence_penalty: 0.556,
+          repetition_penalty: this.REPETITION_PENALTY,
+          presence_penalty: this.PRESENCE_PENALTY,
         })
 
         const fullResponse = completion.choices[0]?.message?.content || ''
