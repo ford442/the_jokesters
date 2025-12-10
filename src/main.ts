@@ -55,6 +55,12 @@ const agents: Agent[] = [
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
+  // Configuration constants for prerendering
+  const PRERENDER_INITIAL_TURNS = 3  // Number of turns to prerender at scene start
+  const PRERENDER_MIN_QUEUE = 2      // Minimum queue size before triggering background prerender
+  const PRERENDER_BATCH_SIZE = 2     // Number of turns to generate in background
+  const MAX_PRERENDER_SENTENCES = 3  // Maximum sentences to prerender for audio
+
   app.innerHTML = `
     <div class="container">
       <h1>The Jokesters</h1>
@@ -237,8 +243,8 @@ async function initApp() {
       isPrerendering = true;
       console.log(`[Prerender Audio] Starting prerender of ${sentences.length} sentences`);
       
-      // Prerender first 2-3 sentences ahead
-      const prerenderCount = Math.min(3, sentences.length);
+      // Prerender first few sentences ahead
+      const prerenderCount = Math.min(MAX_PRERENDER_SENTENCES, sentences.length);
       const toPrerender = sentences.slice(0, prerenderCount);
       
       speechQueue.prerenderSentences(toPrerender, agentId, options);
@@ -451,7 +457,7 @@ async function initApp() {
         addMessage('System', '🎬 Prerendering opening dialogue...', '#888')
         
         try {
-          const prerendered = await groupChatManager.prerenderTurns(initialPrompt, 3)
+          const prerendered = await groupChatManager.prerenderTurns(initialPrompt, PRERENDER_INITIAL_TURNS)
           prerenderedQueue = prerendered
           console.log(`[Improv] Prerendered ${prerendered.length} turns`)
           addMessage('System', `✅ Prerendered ${prerendered.length} turns ahead`, '#4ecdc4')
@@ -600,10 +606,11 @@ async function initApp() {
       updateNextAgentUI()
 
       // Trigger new prerendering when queue gets low
-      if (prerenderedQueue.length < 2 && isImprovRunning) {
+      if (prerenderedQueue.length < PRERENDER_MIN_QUEUE && isImprovRunning) {
         console.log('[Prerender] Queue low, generating more turns in background...')
+        const continuePrompt = '(Reply naturally to the last thing said)'
         // Don't await - let it happen in background
-        groupChatManager.prerenderTurns('(Reply naturally to the last thing said)', 2)
+        groupChatManager.prerenderTurns(continuePrompt, PRERENDER_BATCH_SIZE)
           .then(newTurns => {
             prerenderedQueue.push(...newTurns)
             console.log(`[Prerender] Added ${newTurns.length} turns to queue (now ${prerenderedQueue.length})`)
