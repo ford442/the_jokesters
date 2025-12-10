@@ -1,6 +1,6 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
-import type { Agent } from './GroupChatManager'
+import type { Agent, ProfanityLevel } from './GroupChatManager'
 import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
@@ -85,6 +85,12 @@ async function initApp() {
               <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
               <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
             </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
+              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
+            </div>
           </div>
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
@@ -149,6 +155,8 @@ async function initApp() {
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
   const chaosVal = document.getElementById('director-chaos-val')!
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
+  const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
+  const profanityVal = document.getElementById('profanity-val')!
 
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
@@ -196,6 +204,21 @@ async function initApp() {
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
     chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
+
+    // Profanity level slider
+    const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
+      { level: 'PG', label: '👼 PG', color: '#4ecdc4' },
+      { level: 'CASUAL', label: '😏 Casual', color: '#45b7d1' },
+      { level: 'GRITTY', label: '🔥 Gritty', color: '#ffd700' },
+      { level: 'UNCENSORED', label: '💀 Uncensored', color: '#ff6b6b' },
+    ]
+    profanitySlider.oninput = () => {
+      const idx = parseInt(profanitySlider.value)
+      const { level, label, color } = profanityLevels[idx]
+      profanityVal.textContent = label
+      profanityVal.style.color = color
+      groupChatManager.setProfanityLevel(level)
+    }
 
     // Update next agent info
     const updateNextAgentUI = () => {
@@ -351,7 +374,7 @@ async function initApp() {
           // THE REAL FIX: Explicit instruction for brevity
           promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
         }
-      // 50% Chance: "The Standard"
+        // 50% Chance: "The Standard"
       } else if (roll > 0.2) {
         return {
           type: 'standard',
@@ -359,7 +382,7 @@ async function initApp() {
           ttsSteps: 16,
           promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
         }
-      // 20% Chance: "The Rant"
+        // 20% Chance: "The Rant"
       } else {
         return {
           type: 'rant',
@@ -465,7 +488,7 @@ async function initApp() {
         const agent = agents.find(a => a.id === currentAgentId)!
 
         stage.setActiveActor(currentAgentId)
-        
+
         const messageDiv = document.createElement('div')
         messageDiv.className = 'message'
         messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`

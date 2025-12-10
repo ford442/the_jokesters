@@ -1,5 +1,28 @@
 import * as webllm from '@mlc-ai/web-llm'
 
+// ============================================================================
+// PROFANITY LEVEL CONFIGURATION
+// ============================================================================
+// - 'PG'       : Family-friendly, no swearing
+// - 'CASUAL'   : Light profanity (damn, hell)
+// - 'GRITTY'   : Casual swearing (default)
+// - 'UNCENSORED': Full language freedom
+// ============================================================================
+export const PROFANITY_LEVEL: 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED' = 'GRITTY'
+
+export type ProfanityLevel = 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED'
+
+// Shortened style guides to reduce token usage
+const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
+  PG: `Keep it family-friendly. No swearing.`,
+  CASUAL: `Mild language OK (damn, hell). No strong profanity.`,
+  GRITTY: `Casual swearing OK (shit, f*ck). No sexual/violent content.`,
+  UNCENSORED: `Full language freedom. No sexual/violent content.`,
+}
+
+// Max conversation history to keep (prevents VRAM exhaustion)
+const MAX_HISTORY_MESSAGES = 8
+
 export interface Agent {
   id: string
   name: string
@@ -21,8 +44,28 @@ export class GroupChatManager {
   private conversationHistory: Message[] = []
   private isInitialized = false
 
+  // Style instruction - can be changed at runtime via setProfanityLevel()
+  private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
+  private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
+
   constructor(agents: Agent[]) {
     this.agents = agents
+  }
+
+  /**
+   * Set the profanity level at runtime
+   */
+  setProfanityLevel(level: ProfanityLevel): void {
+    this.currentProfanityLevel = level
+    this.styleInstruction = PROFANITY_INSTRUCTIONS[level]
+    console.log(`Profanity level set to: ${level}`)
+  }
+
+  /**
+   * Get the current profanity level
+   */
+  getProfanityLevel(): ProfanityLevel {
+    return this.currentProfanityLevel
   }
 
   async initialize(
@@ -87,10 +130,14 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Create messages array with current agent's system prompt
+    // Build merged system prompt: agent persona + style guide
+    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
+
+    // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
+    const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
     const messages: Message[] = [
-      { role: 'system', content: currentAgent.systemPrompt },
-      ...this.conversationHistory,
+      { role: 'system', content: fullSystemPrompt },
+      ...recentHistory,
     ]
 
     try {
@@ -99,16 +146,16 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Use the override if provided, otherwise default to 144
-        max_tokens: options.maxTokens || 144,
+        // Hard cap at 96 tokens to reduce VRAM usage
+        max_tokens: Math.min(options.maxTokens || 96, 96),
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
         stop: ["###", "Director:", "User:"],
         // @ts-ignore - optional seed not on all runtime types
         seed: options.seed,
         // @ts-ignore - WebLLM supports this even if types might complain
-        repetition_penalty: 1.15, // Increased from 1.01 to stop loops
-        presence_penalty: 0.6, // Encourage new topics
+        repetition_penalty: 1.15,
+        presence_penalty: 0.6,
       })
 
       let fullResponse = ''
