@@ -108,6 +108,248 @@ Track high-level scene beats and callbacks:
 
 ---
 
+---
+
+## 🎭 Scene-Starting System Analysis & Future Directions
+
+### Current System: Prompt-Driven Scene Initialization
+
+**How It Works:**
+- User provides a **scene title** and **description** (e.g., "At the Coffee Shop" / "Three friends discuss adventures")
+- The system creates an initial prompt combining scene context with character instructions
+- Agents improvise within the scene constraints, taking turns organically
+- Director can intervene based on chaos level to maintain flow or escalate tension
+
+**Strengths:**
+- ✅ **Flexible** — Works for any scenario without pre-scripting
+- ✅ **Creative autonomy** — Agents improvise naturally within characters
+- ✅ **Low barrier to entry** — Only requires 1-2 sentences from the user
+- ✅ **Dynamic pacing** — Random pacing system (one-liners, standard, rants) creates rhythm variety
+- ✅ **Director intelligence** — Silent coach analyzes momentum and injects steering when needed
+
+**Weaknesses:**
+- ⚠️ **Generic setups** — Without detailed context, scenes can feel aimless
+- ⚠️ **No structure** — Lacks classic improv formats (games, scenes with specific rules)
+- ⚠️ **Limited callbacks** — Agents don't retain long-term memory for recurring jokes
+- ⚠️ **Unpredictable humor quality** — Success depends heavily on LLM output
+
+---
+
+### Alternative Scene-Starting Methods
+
+#### Method 1: Full Script Supply
+**Description:** Provide a complete dialogue script for agents to perform.
+
+**Pros:**
+- Guaranteed quality control
+- Can replicate classic comedy sketches
+- Predictable timing and structure
+
+**Cons:**
+- Removes spontaneity and improvisation
+- Requires significant upfront writing
+- Agents become puppets rather than performers
+
+**Use Case:** Best for educational demonstrations or recreating famous scenes.
+
+---
+
+#### Method 2: Storyline/Adventure Mode
+**Description:** Provide a narrative arc with plot points, goals, or obstacles agents must navigate.
+
+**Example:**
+```
+Story: "A heist goes wrong"
+Act 1: Planning the heist at a diner
+Act 2: The plan fails hilariously
+Act 3: Escaping the consequences
+```
+
+**Pros:**
+- Creates dramatic structure and tension
+- Gives agents clear objectives to pursue
+- Natural escalation and resolution
+- Callbacks are easier (refer to earlier acts)
+
+**Cons:**
+- Requires more complex Director logic
+- May feel constraining to pure improv
+- Harder to implement technically
+
+**Use Case:** Best for longer-form narrative comedy with arcs and payoffs.
+
+---
+
+#### Method 3: Improv Game Formats
+**Description:** Use classic improv game structures (e.g., "Questions Only", "Character Swap", "Props").
+
+**Example:**
+```
+Game: "Questions Only"
+Rule: All lines must be questions. If someone makes a statement, they lose.
+Setup: "At a job interview"
+```
+
+**Pros:**
+- Creates built-in tension and rules
+- Forces creativity within constraints
+- Familiar to improv audiences
+- Easy to judge "success" or "failure"
+
+**Cons:**
+- LLMs may struggle to follow strict rules consistently
+- Requires robust validation system
+- Limited to structured formats
+
+**Use Case:** Best for game-show-style entertainment with clear win/loss conditions.
+
+---
+
+#### Method 4: Character Relationship Pre-Definition
+**Description:** Define relationships before the scene (e.g., "Comedian and Philosopher are exes", "Scientist is Comedian's therapist").
+
+**Pros:**
+- Instant dramatic tension
+- Provides subtext and motivations
+- Creates richer character dynamics
+
+**Cons:**
+- Requires UI for relationship definition
+- May complicate system prompts
+- Agents need relationship memory
+
+**Use Case:** Best for character-driven comedy with emotional stakes.
+
+---
+
+### What Makes Current Setup Humorous (and Not)
+
+#### ✅ What Works:
+1. **Personality contrast** — Fast comedian vs. slow philosopher creates natural tension
+2. **Character consistency** — Agents maintain distinct voices (frantic vs. pretentious vs. analytical)
+3. **Director interventions** — When stagnant, Director injects chaos effectively
+4. **Gritty style guide** — Casual profanity adds realism and edge
+5. **Pacing variety** — Random one-liners vs. rants keeps rhythm unpredictable
+
+#### ❌ What Doesn't Work:
+1. **Repetitive patterns** — Agents can fall into predictable response loops
+2. **Lack of callbacks** — No memory of earlier jokes for running gags
+3. **Unclear stakes** — Scenes can feel aimless without goals or obstacles
+4. **Weak scene endings** — No natural climax or resolution
+5. **Limited physical comedy** — Text-based limits slapstick potential
+6. **No audience interaction** — Missing simulated reactions (laughs, groans)
+
+---
+
+### 🚀 How to Improve TV-Show-Like Entertainment
+
+#### 1. Episode Structure
+- **Cold Open:** Quick 1-minute scene before main sketch
+- **Main Sketch:** 3-5 minute improv with arc
+- **Tag:** Quick callback joke at the end
+- Implement scene "chapters" with Director managing transitions
+
+#### 2. Audience Simulation
+- Add simulated laugh track or emoji reactions based on joke quality
+- Use sentiment analysis or Director to judge "funniness"
+- Visual feedback (e.g., applause meter, live audience avatars)
+
+#### 3. Recurring Characters & Callbacks
+- **Character memory system**: Store "signature moves" (e.g., Comedian's trademark rant about hotdogs)
+- **Callback injection**: Director can prompt agents to reference earlier jokes
+- **Running gags**: Track recurring themes across scenes
+
+#### 4. Guest Characters / NPCs
+- Allow Director to spawn one-off characters mid-scene
+  - Example: "A waiter interrupts with a ridiculous order"
+- Temporary fourth agent controlled by Director for plot twists
+
+#### 5. Scene Templates Library
+Pre-built setups with structure:
+- **Talk Show** — Host interviews agents with pre-defined segments
+- **Courtroom** — Prosecutor vs. Defense with absurd case
+- **Game Show** — Host asks trivia, agents compete hilariously
+- **News Desk** — Anchor reports breaking "news" with correspondent interviews
+
+#### 6. Music & Sound Effects
+- Background music based on scene mood (tension, slapstick, dramatic)
+- Character-triggered SFX (already planned in roadmap)
+- Intro/outro jingles for "episodes"
+
+#### 7. Visual Enhancements
+- Better avatars with expressive animations
+- Scene-specific backgrounds (coffee shop, courtroom, spaceship)
+- Visual props that appear based on dialogue
+- Camera angles that change dynamically
+
+---
+
+### 🎬 New Angles for Automated Character Interaction
+
+#### 1. Antagonistic Pairing
+- Assign **conflict roles** per scene:
+  - Agent A: "You want to leave the party"
+  - Agent B: "You want them to stay"
+- Forces genuine dramatic tension and negotiation
+
+#### 2. Secret Objectives
+- Each agent gets a **hidden goal** unknown to others:
+  - Comedian: "Steer conversation to your favorite topic: pickles"
+  - Philosopher: "Avoid talking about your embarrassing past"
+- Director tracks whether they achieve goals
+
+#### 3. Status Games
+- Assign **power dynamics**:
+  - High status: Philosopher is boss, others are employees
+  - Low status: Scientist is intern, gets picked on
+- Changes how agents address and interrupt each other
+
+#### 4. Timed Challenges
+- **Beat the clock**: Agents must resolve situation in 5 turns
+- **Speed rounds**: One-liners only for 3 turns
+- **Silence game**: Longest pause wins (agents try NOT to talk)
+
+#### 5. Emotional Arcs
+- Assign **emotional journey** per character:
+  - Start: Angry → Middle: Confused → End: Joyful
+- Director enforces emotional checkpoints
+
+#### 6. Genre Shifts Mid-Scene
+- Director can announce: "GENRE SHIFT: Now it's a horror scene"
+- Agents must adapt on the fly, creating absurd tonal whiplash
+
+#### 7. Audience Voting System
+- After each turn, simulate "audience vote" for best line
+- Winning agent gets spotlight bonus or extra turn
+- Gamifies performance and creates competition
+
+#### 8. Character Swap Mechanic
+- Mid-scene, Director forces agents to **swap personalities**
+- Comedian becomes Philosopher, etc.
+- Tests versatility and creates chaos
+
+---
+
+### Implementation Priorities
+
+**Phase 1 - Quick Wins (1-2 weeks):**
+- [ ] Add scene templates library (talk show, courtroom, news desk)
+- [ ] Implement simulated audience reactions (laugh track, emoji reactions)
+- [ ] Create "cold open" + "tag" episode structure
+
+**Phase 2 - Medium Complexity (3-4 weeks):**
+- [ ] Build character memory system for callbacks
+- [ ] Add secret objectives and conflict roles
+- [ ] Implement status games and power dynamics
+
+**Phase 3 - Advanced Features (5-8 weeks):**
+- [ ] Guest character / NPC spawning by Director
+- [ ] Genre shift mechanism
+- [ ] Emotional arc tracking
+- [ ] Audience voting system
+
+---
+
 ## Contributing
 
 Feel free to pick up any planned feature! Open an issue first to discuss approach.
