@@ -8,7 +8,13 @@ A multi-agent chat application powered by Llama-3 and WebGPU, featuring 3D anima
 
 - **Multi-Agent Chat System**: Simulates multiple AI agents with distinct personalities using a single Llama-3.1-8B model
 - **Dynamic Prompt Swapping**: Each agent has its own system prompt and sampling parameters (temperature, top_p)
-- **3D Agent Visualization**: Agents are rendered as 3D capsules using Three.js that jump when speaking
+- **Enhanced 3D Avatar Visualization**: Agents are rendered as expressive 3D capsules with:
+  - Animated eyes with pupils that glow when speaking
+  - Expressive mouth that opens with speech volume
+  - Decorative accessories (antenna, rings) for personality
+  - Blinking animations and volume-reactive squash/stretch
+  - TV-show-quality stage lighting with colored spotlights
+  - Professional stage setup with grid floor and backdrop
 - **WebGPU-Powered**: Uses @mlc-ai/web-llm for in-browser LLM inference with WebGPU acceleration
 - **Real-time Interaction**: Chat with rotating AI agents, each with unique personalities
 - **Improv Comedy Mode**: Watch agents perform autonomous multi-character improv scenes based on your provided script/subject
@@ -119,6 +125,71 @@ The application requires WebGPU support:
 - First load requires downloading ~4GB model files (cached after first run)
 - Requires sufficient GPU memory for WebGPU inference
 - Model inference runs entirely in-browser - no server required!
+
+## Recent Improvements
+
+### LLM Dialog Prerendering (Latest)
+The improv mode now prerenders conversation turns to eliminate gaps during performance:
+
+**How It Works:**
+- **Initial Prerender**: When starting a scene, the system generates 3 conversation turns ahead of time
+- **Background Generation**: As turns are played, the system automatically generates more in the background
+- **Instant Playback**: Prerendered dialogue plays immediately with no LLM wait time
+- **Smart Queue Management**: Keeps 2-3 turns prerendered at all times during scenes
+- **Graceful Fallback**: Falls back to live generation if prerendering fails
+
+**Technical Details:**
+- `GroupChatManager.prerenderTurns()` generates multiple turns without affecting actual conversation
+- Prerendered turns maintain character consistency and director critique integration
+- Non-blocking: prerendering happens in background while previous turn plays
+- Memory-efficient: only stores pending turns, not entire conversation
+
+**Bug Fix:**
+- Fixed `SystemMessageOrderError` where system messages were incorrectly ordered after user messages
+- All system prompts (character, style, director notes) now correctly appear first
+
+### Enhanced Avatar Appearance
+The 3D avatars have been significantly upgraded with more expressive and TV-show-quality visuals:
+
+**Avatar Features:**
+- **Expressive Eyes**: Large spherical eyes with pupils that glow when speaking
+- **Animated Mouth**: Curved mouth that opens/scales based on speech volume
+- **Decorative Elements**: 
+  - Metallic ring around the body
+  - Antenna with colored ball on top matching agent color
+- **Dynamic Materials**: Enhanced materials with metalness, roughness, and emissive properties
+- **Blinking Animation**: Occasional realistic blinks when idle
+- **Volume-Reactive**: Squash and stretch animation responds to speech intensity
+
+**Stage Improvements:**
+- **Professional Lighting**: Three colored directional lights (red, blue, teal) plus rim light
+- **TV Studio Aesthetic**: Grid floor pattern, dark backdrop, and golden stage edge strip
+- **Enhanced Shadows**: High-quality shadow mapping for depth
+- **Eye Glow Lighting**: Point lights at eye level when agent speaks
+
+### Comprehensive Scene-Starting Analysis
+The ROADMAP.md now includes extensive documentation on:
+- **Current System Analysis**: Strengths and weaknesses of prompt-driven scene initialization
+- **Alternative Methods**: 
+  - Full script supply
+  - Storyline/adventure mode
+  - Improv game formats
+  - Character relationship pre-definition
+- **Humor Analysis**: What makes the current setup work and what doesn't
+- **TV-Show Improvements**: 
+  - Episode structure with cold opens and tags
+  - Audience simulation with reactions
+  - Scene templates (talk show, courtroom, game show)
+  - Music and sound effects integration
+- **New Interaction Angles**:
+  - Antagonistic pairing with conflict roles
+  - Secret objectives for each agent
+  - Status games and power dynamics
+  - Timed challenges and emotional arcs
+  - Genre shifts mid-scene
+  - Audience voting system
+
+See [ROADMAP.md](ROADMAP.md) for complete details and implementation priorities.
 
 ## License
 
