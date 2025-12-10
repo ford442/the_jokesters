@@ -9,6 +9,8 @@ export class Actor {
     private rightEye!: THREE.Mesh;
     private mouth!: THREE.Line;
     private eyeGlow: THREE.PointLight;
+    private blinkTimer: number = 0;
+    private isBlinking: boolean = false;
     // private originalY: number;
 
     constructor(_id: string, color: string, x: number) {
@@ -96,7 +98,8 @@ export class Actor {
         );
         const points = mouthCurve.getPoints(20);
         const mouthGeo = new THREE.BufferGeometry().setFromPoints(points);
-        const mouthMat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+        // Note: linewidth is not supported by WebGL, line will appear as 1px
+        const mouthMat = new THREE.LineBasicMaterial({ color: 0x000000 });
         this.mouth = new THREE.Line(mouthGeo, mouthMat);
         this.mouth.position.set(0, 0.4, 0.28);
         this.mouth.rotation.x = Math.PI / 2;
@@ -175,20 +178,34 @@ export class Actor {
             this.mouth.scale.set(mouthScale, mouthScale, 1);
         }
 
-        // Make eyes blink occasionally when not talking much
-        if (volume < 0.1 && Math.random() < 0.01) {
-            this.blink();
+        // Handle blinking animation
+        if (this.isBlinking) {
+            this.blinkTimer++;
+            if (this.blinkTimer > 6) {
+                // End blink
+                this.leftEye.scale.y = 1;
+                this.rightEye.scale.y = 1;
+                this.isBlinking = false;
+                this.blinkTimer = 0;
+            }
+        } else if (volume < 0.1) {
+            // Idle state - blink occasionally
+            this.blinkTimer++;
+            // Blink approximately every 240 frames (4 seconds at 60fps)
+            if (this.blinkTimer > 240) {
+                this.startBlink();
+            }
+        } else {
+            // Talking - reset timer
+            this.blinkTimer = 0;
         }
     }
 
-    private blink() {
-        // Quick blink animation
-        const originalScale = this.leftEye.scale.y;
+    private startBlink() {
+        if (this.isBlinking) return;
+        this.isBlinking = true;
+        this.blinkTimer = 0;
         this.leftEye.scale.y = 0.1;
         this.rightEye.scale.y = 0.1;
-        setTimeout(() => {
-            this.leftEye.scale.y = originalScale;
-            this.rightEye.scale.y = originalScale;
-        }, 100);
     }
 }
