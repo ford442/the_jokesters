@@ -593,14 +593,8 @@ async function initApp() {
         await new Promise(r => setTimeout(r, 200))
       }
 
-      // Add to actual conversation history
-      groupChatManager.chat('(Continue)', () => {}, { maxTokens: 1 }).catch(() => {})
-      
-      // Update history manually to match prerendered content
-      const history = (groupChatManager as any).conversationHistory
-      if (history.length > 0 && history[history.length - 1].role === 'assistant') {
-        history[history.length - 1].content = turn.response
-      }
+      // Update conversation history to keep it in sync with prerendered content
+      groupChatManager.addToHistory('(Continue)', turn.response)
 
       await speechQueue.waitUntilFinished()
       updateNextAgentUI()
