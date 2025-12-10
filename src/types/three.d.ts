@@ -150,6 +150,12 @@ declare module 'three' {
         constructor(parameters?: any);
     }
 
+    export class Vector2 {
+        constructor(x?: number, y?: number);
+        x: number;
+        y: number;
+    }
+
     // Curves and lines
     export class EllipseCurve {
         constructor(
@@ -159,7 +165,7 @@ declare module 'three' {
             aClockwise: boolean,
             aRotation: number
         );
-        getPoints(divisions: number): Vector3[];
+        getPoints(divisions: number): Vector2[];
     }
 
     export class Line extends Object3D {
