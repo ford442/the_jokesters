@@ -362,33 +362,32 @@ async function initApp() {
     })
 
     // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
+    // All maxTokens capped at 96 to prevent VRAM exhaustion
     const calculatePacing = () => {
       const roll = Math.random();
       // 30% Chance: "The One-Liner"
       if (roll > 0.7) {
         return {
           type: 'punchline',
-          // SAFETY NET ONLY: Allow enough space for a full sentence
-          maxTokens: 60,
+          maxTokens: 48,
           ttsSteps: 25,
-          // THE REAL FIX: Explicit instruction for brevity
-          promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
+          promptSuffix: ' (One joking sentence. Be brief.)'
         }
         // 50% Chance: "The Standard"
       } else if (roll > 0.2) {
         return {
           type: 'standard',
-          maxTokens: 150,
+          maxTokens: 72,
           ttsSteps: 16,
-          promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
+          promptSuffix: ' (1-2 sentences.)'
         }
         // 20% Chance: "The Rant"
       } else {
         return {
           type: 'rant',
-          maxTokens: 256,
+          maxTokens: 96,
           ttsSteps: 8,
-          promptSuffix: ' (Go on a funny, passionate rant. Be expressive!)'
+          promptSuffix: ' (Be expressive!)'
         }
       }
     }
