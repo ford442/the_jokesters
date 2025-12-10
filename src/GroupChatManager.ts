@@ -12,12 +12,17 @@ import * as webllm from '@mlc-ai/web-llm'
 export const PROFANITY_LEVEL: 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED' = 'GRITTY'
 
 export type ProfanityLevel = 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED'
+
+// Shortened style guides to reduce token usage
 const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
-  PG: `STYLE GUIDE: Keep language family-friendly. No swearing or crude language.`,
-  CASUAL: `STYLE GUIDE: You may use mild expressions (damn, hell, crap) but avoid strong profanity.`,
-  GRITTY: `STYLE GUIDE: "Gritty & Real". You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion. HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`,
-  UNCENSORED: `STYLE GUIDE: Speak naturally with no language restrictions. Full creative freedom with profanity. HOWEVER: You must still AVOID sexual violence, graphic gore, or hate speech.`,
+  PG: `Keep it family-friendly. No swearing.`,
+  CASUAL: `Mild language OK (damn, hell). No strong profanity.`,
+  GRITTY: `Casual swearing OK (shit, f*ck). No sexual/violent content.`,
+  UNCENSORED: `Full language freedom. No sexual/violent content.`,
 }
+
+// Max conversation history to keep (prevents VRAM exhaustion)
+const MAX_HISTORY_MESSAGES = 8
 
 export interface Agent {
   id: string
@@ -136,9 +141,11 @@ export class GroupChatManager {
     }
 
     // Create messages array with single merged system prompt
+    // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
+    const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
     const messages: Message[] = [
       { role: 'system', content: fullSystemPrompt },
-      ...this.conversationHistory,
+      ...recentHistory,
     ]
 
     try {
@@ -147,8 +154,8 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Use the override if provided, otherwise default to 144
-        max_tokens: options.maxTokens || 96,
+        // Hard cap at 96 tokens to reduce VRAM usage
+        max_tokens: Math.min(options.maxTokens || 96, 96),
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
         stop: ["###", "Director:", "User:"],
