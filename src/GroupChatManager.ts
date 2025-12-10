@@ -283,6 +283,17 @@ export class GroupChatManager {
   }
 
   /**
+   * Add a user message and assistant response to the conversation history.
+   * Used when playing back prerendered turns to keep history in sync.
+   */
+  addToHistory(userMessage: string, assistantResponse: string): void {
+    this.conversationHistory.push({ role: 'user', content: userMessage })
+    this.conversationHistory.push({ role: 'assistant', content: assistantResponse })
+    // Move to next agent
+    this.currentAgentIndex = (this.currentAgentIndex + 1) % this.agents.length
+  }
+
+  /**
    * Prerender multiple conversation turns ahead of time to avoid gaps.
    * This generates LLM responses for upcoming turns in the background.
    * @param initialPrompt The starting prompt for the conversation
@@ -341,9 +352,9 @@ export class GroupChatManager {
           max_tokens: options.maxTokens || 96,
           stream: false,
           stop: ["###", "Director:", "User:"],
-          // @ts-ignore
+          // @ts-ignore - seed is supported by WebLLM but not in base OpenAI types
           seed: options.seed ? options.seed + i : undefined,
-          // @ts-ignore
+          // @ts-ignore - repetition_penalty is WebLLM-specific extension
           repetition_penalty: 0.955,
           presence_penalty: 0.556,
         })
