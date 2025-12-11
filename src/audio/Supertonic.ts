@@ -169,16 +169,16 @@ export async function loadSupertonic(basePath: string) {
 
     // Load Configs
     const [cfg, indexer] = await Promise.all([
-        fetch(`${basePath}/tts/onnx/tts.json`).then(r => r.json()),
-        fetch(`${basePath}/unicode_indexer.json`).then(r => r.json())
+        fetch(`https://test.1ink.us/the-jokesters/tts/onnx/tts.json`).then(r => r.json()),
+        fetch(`https://test.1ink.us/the-jokesters/tts/onnx/unicode_indexer.json`).then(r => r.json())
     ]);
 
     // Load Models
     const [dp, enc, vec, voc] = await Promise.all([
-        ort.InferenceSession.create(`${basePath}/duration_predictor.onnx`, opt),
-        ort.InferenceSession.create(`${basePath}/text_encoder.onnx`, opt),
-        ort.InferenceSession.create(`${basePath}/vector_estimator.onnx`, opt),
-        ort.InferenceSession.create(`${basePath}/vocoder.onnx`, opt)
+        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/duration_predictor.onnx`, opt),
+        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/text_encoder.onnx`, opt),
+        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/vector_estimator.onnx`, opt),
+        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/vocoder.onnx`, opt)
     ]);
 
     return new SupertonicTTS(cfg, new UnicodeProcessor(indexer), dp, enc, vec, voc);
