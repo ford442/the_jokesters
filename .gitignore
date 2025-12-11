@@ -6,12 +6,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+.git_disabled
 node_modules
 dist
 dist-ssr
 *.local
-
+/public/tts
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
