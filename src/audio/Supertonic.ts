@@ -169,7 +169,7 @@ export async function loadSupertonic(basePath: string) {
 
     // Load Configs
     const [cfg, indexer] = await Promise.all([
-        fetch(`${basePath}/tts.json`).then(r => r.json()),
+        fetch(`${basePath}/tts/onnx/tts.json`).then(r => r.json()),
         fetch(`${basePath}/unicode_indexer.json`).then(r => r.json())
     ]);
 
