@@ -83,6 +83,19 @@ export class GroupChatManager {
     }
   }
 
+  private buildSystemMessage(
+    agentSystemPrompt: string,
+    hiddenInstruction?: string
+  ): string {
+    let systemMessage = agentSystemPrompt + '\n\n' + this.STYLE_INSTRUCTION;
+    
+    if (hiddenInstruction && hiddenInstruction.trim()) {
+      systemMessage += '\n\n### DIRECTOR\'S SECRET NOTE ###\n' + hiddenInstruction + '\n(You MUST incorporate this note immediately!)';
+    }
+    
+    return systemMessage;
+  }
+
   async chat(
     userMessage: string,
     onSentence?: (sentence: string) => void,
@@ -101,20 +114,14 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Create messages array with current agent's system prompt and the STYLE_INSTRUCTION
-    // ALL system messages must come first, before any user/assistant messages
-    const systemMessages: Message[] = [
-      { role: 'system', content: currentAgent.systemPrompt },
-      { role: 'system', content: this.STYLE_INSTRUCTION },
-    ]
-
-    // If a hiddenInstruction was provided, add it as a transient system message
-    if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-      systemMessages.push({ role: 'system', content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` })
-    }
+    // Build combined system message
+    const systemMessage = this.buildSystemMessage(
+      currentAgent.systemPrompt,
+      options.hiddenInstruction
+    )
 
     const messages: Message[] = [
-      ...systemMessages,
+      { role: 'system', content: systemMessage },
       ...this.conversationHistory,
     ]
 
@@ -332,21 +339,14 @@ export class GroupChatManager {
       for (let i = 0; i < turnCount; i++) {
         const currentAgent = this.agents[this.currentAgentIndex]
         
-        // Create system messages - ALL must come first
-        const systemMessages: Message[] = [
-          { role: 'system', content: currentAgent.systemPrompt },
-          { role: 'system', content: this.STYLE_INSTRUCTION },
-        ]
-
-        if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-          systemMessages.push({ 
-            role: 'system', 
-            content: `### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)` 
-          })
-        }
+        // Build combined system message
+        const systemMessage = this.buildSystemMessage(
+          currentAgent.systemPrompt,
+          options.hiddenInstruction
+        )
 
         const messages: Message[] = [
-          ...systemMessages,
+          { role: 'system', content: systemMessage },
           ...this.conversationHistory,
           { role: 'user', content: currentPrompt }
         ]
