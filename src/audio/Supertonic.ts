@@ -164,7 +164,7 @@ export class SupertonicTTS {
 }
 
 // --- Loader Helper ---
-export async function loadSupertonic(basePath: string) {
+export async function loadSupertonic() {
     const opt: ort.InferenceSession.SessionOptions = { executionProviders: ['webgpu', 'wasm'] };
 
     // Load Configs
