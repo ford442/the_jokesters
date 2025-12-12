@@ -9,10 +9,13 @@ import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
-
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
+// Define available models and a default for the dropdown
+const availableModels = webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
+// Find a common default (like Llama-3-8B-chat) or fall back to the first available model
+const defaultModel = availableModels.find(id => id.includes('Llama-3-8B-chat-q4f32_1')) || availableModels[0];
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
 const agents: Agent[] = [
@@ -157,11 +160,23 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
-
-  try {
-    // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
-    const groupChatManager = new GroupChatManager(agents)
-
+const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+ try {
+    // NEW: Populate model select dropdown
+    availableModels.forEach(modelId => {
+      const option = document.createElement('option');
+      option.value = modelId;
+      option.textContent = modelId;
+      modelSelect.appendChild(option);
+    });
+    // Set the default model in the dropdown
+    if (defaultModel) {
+      modelSelect.value = defaultModel;
+    }
+   
+let groupChatManager: GroupChatManager;
+    let improvSceneManager: ImprovSceneManager;
+   
     const audioEngine = new AudioEngine()
     const speechQueue = new SpeechQueue(audioEngine)
 
@@ -182,25 +197,68 @@ async function initApp() {
 
     stage.setLipSync(lipSync)
     stage.render()
+// NEW: Function to handle LLM/Manager initialization and re-initialization
+    const initializeManagers = async (modelId: string) => {
+      // 1. Initialize Audio Engine (only done once, but we update status)
+      statusText.textContent = "Initializing Audio Engine..."
+      await audioEngine.init('./tts/onnx');
 
-    // 1. Initialize Audio Engine (in background or parallel)
-    statusText.textContent = "Initializing Audio Engine..."
-    await audioEngine.init('./tts/onnx');
-    // 2. Initialize the chat manager with progress callback
-    statusText.textContent = "Initializing WebLLM..."
-    await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
-      const percentage = Math.round(progress.progress * 100)
-      progressBar.style.width = `${percentage}%`
-      statusText.textContent = progress.text
-    })
+      // 2. Instantiate new managers
+      // Note: We assume GroupChatManager is re-created safely or handles termination internally.
+      groupChatManager = new GroupChatManager(agents)
+      improvSceneManager = new ImprovSceneManager(groupChatManager)
 
-    // Initialize ImprovSceneManager
-    const improvSceneManager = new ImprovSceneManager(groupChatManager)
+      // 3. Initialize the chat manager with progress callback, passing the new modelId
+      statusText.textContent = `Initializing WebLLM: ${modelId}...`
+      await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
+        const percentage = Math.round(progress.progress * 100)
+        progressBar.style.width = `${percentage}%`
+        statusText.textContent = progress.text
+      }, modelId) // <--- ASSUMPTION: initialize is modified to take modelId here
 
-    // Hide loading, show chat
-    loadingDiv.style.display = 'none'
-    chatContainer.style.display = 'flex'
+      // Re-apply settings to the new manager instance
+      const idx = parseInt(profanitySlider.value)
+      const { level } = profanityLevels[idx]
+      groupChatManager.setProfanityLevel(level)
 
+      // Hide loading, show chat
+      loadingDiv.style.display = 'none'
+      chatContainer.style.display = 'flex'
+
+      updateNextAgentUI()
+    }
+    
+    // Initial load with the default model
+    if (defaultModel) {
+      await initializeManagers(defaultModel);
+    }
+
+    // NEW: Model change listener
+    modelSelect.addEventListener('change', async () => {
+      const newModelId = modelSelect.value;
+      
+      // Stop improv if running
+      if (isImprovRunning) {
+        stopImprovScene();
+      }
+      
+      chatContainer.style.display = 'none';
+      loadingDiv.style.display = 'flex';
+      chatLog.innerHTML = ''; // Clear chat log
+
+      try {
+        // Re-initialize the managers with the new model
+        await initializeManagers(newModelId);
+      } catch (e) {
+        console.error('Error reloading model:', e);
+        // Show an error message and revert UI
+        statusText.textContent = `Error loading model ${newModelId}. See console.`;
+        statusText.style.color = '#ff6b6b';
+        loadingDiv.style.display = 'flex';
+        chatContainer.style.display = 'none';
+      }
+    });
+   
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
     chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
