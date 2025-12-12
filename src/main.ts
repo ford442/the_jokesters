@@ -9,13 +9,16 @@ import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
+
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
 // Define available models and a default for the dropdown
 const availableModels = webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
 // Find a common default (like Llama-3-8B-chat) or fall back to the first available model
-const defaultModel = availableModels.find(id => id.includes('Llama-3-8B-chat-q4f32_1')) || availableModels[0];
+// Using Hermes-3-Llama-3.2-3B-q4f32_1-MLC as a default since it was hardcoded before
+const defaultModel = availableModels.find(id => id.includes('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')) || availableModels[0];
+
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
 const agents: Agent[] = [
@@ -72,6 +75,11 @@ async function initApp() {
         <canvas id="scene"></canvas>
         <div class="controls">
           <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+              <label style="color: #888; font-size: 0.8em; white-space: nowrap;">LLM Model</label>
+              <select id="model-select" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;"></select>
+            </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
               <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
               <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
@@ -92,7 +100,7 @@ async function initApp() {
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
               <label style="color: #888; font-size: 0.8em;">Language</label>
               <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
-              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
+              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">櫨 Gritty</span>
             </div>
           </div>
           <div class="mode-selector">
@@ -101,7 +109,6 @@ async function initApp() {
           </div>
           <div id="chat-log" class="chat-log"></div>
           
-          <!-- Chat Mode Controls -->
           <div id="chat-mode-controls" class="input-group">
             <input 
               type="text" 
@@ -112,7 +119,6 @@ async function initApp() {
             <button id="send-btn">Send</button>
           </div>
           
-          <!-- Improv Mode Controls -->
           <div id="improv-mode-controls" class="improv-controls" style="display: none;">
             <div class="input-group">
               <input 
@@ -160,8 +166,76 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
-const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
- try {
+  // NEW: Get reference to the model selection box
+  const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+
+  // Refactor: Define managers using 'let' so they can be re-assigned on model change
+  let groupChatManager: GroupChatManager;
+  let improvSceneManager: ImprovSceneManager;
+  let audioEngine: AudioEngine;
+  let speechQueue: SpeechQueue;
+  let stage: Stage;
+  let lipSync: LipSync;
+
+  const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
+    { level: 'PG', label: '他 PG', color: '#4ecdc4' },
+    { level: 'CASUAL', label: ' Casual', color: '#45b7d1' },
+    { level: 'GRITTY', label: '櫨 Gritty', color: '#ffd700' },
+    { level: 'UNCENSORED', label: '逐 Uncensored', color: '#ff6b6b' },
+  ]
+  
+  // NEW: Function to handle LLM/Manager initialization and re-initialization
+  const initializeManagers = async (modelId: string) => {
+    // 1. Initialize Audio Engine (in background or parallel)
+    // Only initialize the shared resources once
+    if (!audioEngine) {
+      statusText.textContent = "Initializing Audio Engine..."
+      audioEngine = new AudioEngine()
+      speechQueue = new SpeechQueue(audioEngine)
+
+      // Check for WebGL 2 support explicitly before initializing Three.js
+      const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
+      if (!gl) {
+        throw new Error('WebGL 2 is not supported or is disabled in this environment.');
+      }
+
+      stage = new Stage(canvas, gl as WebGLRenderingContext)
+      lipSync = new LipSync(speechQueue.getAudioContext())
+
+      // Wire up Audio -> Visuals
+      speechQueue.setDestination(lipSync.analyser)
+      lipSync.analyser.connect(speechQueue.getAudioContext().destination)
+
+      stage.setLipSync(lipSync)
+      stage.render()
+      await audioEngine.init('./tts/onnx');
+    }
+
+    // 2. Instantiate new managers
+    groupChatManager = new GroupChatManager(agents)
+    improvSceneManager = new ImprovSceneManager(groupChatManager)
+
+    // 3. Initialize the chat manager with progress callback, passing the new modelId
+    statusText.textContent = `Initializing WebLLM: ${modelId}...`
+    await groupChatManager.initialize(modelId, (progress: webllm.InitProgressReport) => {
+      const percentage = Math.round(progress.progress * 100)
+      progressBar.style.width = `${percentage}%`
+      statusText.textContent = progress.text
+    })
+
+    // Re-apply settings to the new manager instance
+    const idx = parseInt(profanitySlider.value)
+    const { level } = profanityLevels[idx]
+    groupChatManager.setProfanityLevel(level)
+
+    // Hide loading, show chat
+    loadingDiv.style.display = 'none'
+    chatContainer.style.display = 'flex'
+
+    updateNextAgentUI()
+  }
+
+  try {
     // NEW: Populate model select dropdown
     availableModels.forEach(modelId => {
       const option = document.createElement('option');
@@ -173,64 +247,23 @@ const modelSelect = document.getElementById('model-select') as HTMLSelectElement
     if (defaultModel) {
       modelSelect.value = defaultModel;
     }
-   
-let groupChatManager: GroupChatManager;
-    let improvSceneManager: ImprovSceneManager;
-   
-    const audioEngine = new AudioEngine()
-    const speechQueue = new SpeechQueue(audioEngine)
-
-    // Check for WebGL 2 support explicitly before initializing Three.js
-    // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality
-    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
-    if (!gl) {
-      throw new Error('WebGL 2 is not supported or is disabled in this environment.');
-    }
-
-    const stage = new Stage(canvas, gl as WebGLRenderingContext)
-    const lipSync = new LipSync(speechQueue.getAudioContext())
-
-    // Wire up Audio -> Visuals
-    // SpeechQueue -> LipSync -> Destination
-    speechQueue.setDestination(lipSync.analyser)
-    lipSync.analyser.connect(speechQueue.getAudioContext().destination)
-
-    stage.setLipSync(lipSync)
-    stage.render()
-// NEW: Function to handle LLM/Manager initialization and re-initialization
-    const initializeManagers = async (modelId: string) => {
-      // 1. Initialize Audio Engine (only done once, but we update status)
-      statusText.textContent = "Initializing Audio Engine..."
-      await audioEngine.init('./tts/onnx');
-
-      // 2. Instantiate new managers
-      // Note: We assume GroupChatManager is re-created safely or handles termination internally.
-      groupChatManager = new GroupChatManager(agents)
-      improvSceneManager = new ImprovSceneManager(groupChatManager)
-
-      // 3. Initialize the chat manager with progress callback, passing the new modelId
-      statusText.textContent = `Initializing WebLLM: ${modelId}...`
-      await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
-        const percentage = Math.round(progress.progress * 100)
-        progressBar.style.width = `${percentage}%`
-        statusText.textContent = progress.text
-      }, modelId) // <--- ASSUMPTION: initialize is modified to take modelId here
-
-      // Re-apply settings to the new manager instance
-      const idx = parseInt(profanitySlider.value)
-      const { level } = profanityLevels[idx]
-      groupChatManager.setProfanityLevel(level)
-
-      // Hide loading, show chat
-      loadingDiv.style.display = 'none'
-      chatContainer.style.display = 'flex'
-
-      updateNextAgentUI()
-    }
     
     // Initial load with the default model
     if (defaultModel) {
       await initializeManagers(defaultModel);
+    }
+    
+    // UI listeners
+    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
+    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
+
+    // Profanity level slider
+    profanitySlider.oninput = () => {
+      const idx = parseInt(profanitySlider.value)
+      const { level, label, color } = profanityLevels[idx]
+      profanityVal.textContent = label
+      profanityVal.style.color = color
+      groupChatManager.setProfanityLevel(level)
     }
 
     // NEW: Model change listener
@@ -247,36 +280,22 @@ let groupChatManager: GroupChatManager;
       chatLog.innerHTML = ''; // Clear chat log
 
       try {
-        // Re-initialize the managers with the new model
+        // 1. Terminate the current engine gracefully using the old manager instance
+        // This is crucial to free up VRAM before loading the new model.
+        await groupChatManager.terminate(); 
+        
+        // 2. Re-initialize (which creates new managers and loads the new model)
         await initializeManagers(newModelId);
+
       } catch (e) {
         console.error('Error reloading model:', e);
-        // Show an error message and revert UI
+        // Show an error message
         statusText.textContent = `Error loading model ${newModelId}. See console.`;
         statusText.style.color = '#ff6b6b';
         loadingDiv.style.display = 'flex';
         chatContainer.style.display = 'none';
       }
     });
-   
-    // UI listeners
-    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
-    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
-
-    // Profanity level slider
-    const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
-      { level: 'PG', label: '👼 PG', color: '#4ecdc4' },
-      { level: 'CASUAL', label: '😏 Casual', color: '#45b7d1' },
-      { level: 'GRITTY', label: '🔥 Gritty', color: '#ffd700' },
-      { level: 'UNCENSORED', label: '💀 Uncensored', color: '#ff6b6b' },
-    ]
-    profanitySlider.oninput = () => {
-      const idx = parseInt(profanitySlider.value)
-      const { level, label, color } = profanityLevels[idx]
-      profanityVal.textContent = label
-      profanityVal.style.color = color
-      groupChatManager.setProfanityLevel(level)
-    }
 
     // Update next agent info
     const updateNextAgentUI = () => {
@@ -476,7 +495,7 @@ let groupChatManager: GroupChatManager;
       stopImprovBtn.style.display = 'inline-block'
 
       // Clear chat log for new scene
-      addMessage('System', `🎭 Starting improv scene: "${title}"`, '#4ecdc4')
+      addMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4')
       addMessage('System', description, '#4ecdc4')
 
       try {
@@ -528,7 +547,7 @@ let groupChatManager: GroupChatManager;
       isImprovRunning = false
       // Stop the manager if it's running
       if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
-      addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
+      addMessage('System', '鹿 Scene stopped by user', '#ff6b6b')
       sceneTitleInput.disabled = false
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
