@@ -177,6 +177,13 @@ async function initApp() {
   let stage: Stage;
   let lipSync: LipSync;
 
+  // Update next agent info in the UI
+  const updateNextAgentUI = () => {
+    const nextAgent = groupChatManager.getCurrentAgent()
+    nextAgentSpan.textContent = nextAgent.name
+    nextAgentSpan.style.color = nextAgent.color
+  }
+
   const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
     { level: 'PG', label: '他 PG', color: '#4ecdc4' },
     { level: 'CASUAL', label: ' Casual', color: '#45b7d1' },
@@ -297,12 +304,7 @@ async function initApp() {
       }
     });
 
-    // Update next agent info
-    const updateNextAgentUI = () => {
-      const nextAgent = groupChatManager.getCurrentAgent()
-      nextAgentSpan.textContent = nextAgent.name
-      nextAgentSpan.style.color = nextAgent.color
-    }
+    // Update next agent info (defined above)
     updateNextAgentUI()
 
     // Add message to chat log
