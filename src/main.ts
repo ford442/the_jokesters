@@ -212,6 +212,7 @@ async function initApp() {
 
   // Update next agent info in the UI
   const updateNextAgentUI = () => {
+    if (!groupChatManager) return
     const nextAgent = groupChatManager.getCurrentAgent()
     nextAgentSpan.textContent = nextAgent.name
     nextAgentSpan.style.color = nextAgent.color
