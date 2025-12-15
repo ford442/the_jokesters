@@ -2,6 +2,7 @@ declare module '@mlc-ai/web-llm' {
     export class MLCEngine {
         constructor();
         setInitProgressCallback(callback: (report: InitProgressReport) => void): void;
+        unload(): Promise<void>;
         reload(modelId: string, chatOpts?: any): Promise<void>;
         chat: {
             completions: {
