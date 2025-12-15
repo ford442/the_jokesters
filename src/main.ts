@@ -21,8 +21,8 @@ const customVicunaModelConfig = {
   low_resource_required: false,
 };
 
-// 2. A smaller model for contrast (e.g., Qwen2-0.5B)
-const smallModelId = 'Qwen2-0.5B-Instruct-q4f16_1-MLC';
+// 2. A smaller model for contrast (Qwen2 0.5B from mlc-ai)
+const smallModelId = 'mlc-ai/Qwen2-0.5B-Instruct-q4f32_1-MLC';
 // The previous default model
 const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
 
@@ -104,7 +104,8 @@ async function initApp() {
             
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
               <label style="color: #888; font-size: 0.8em; white-space: nowrap;">LLM Model</label>
-              <select id="model-select" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;"></select>
+                <select id="model-select" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;"></select>
+                <button id="load-model-btn" style="margin-left: 8px; padding: 4px 8px;">Load Model</button>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
               <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
@@ -184,6 +185,7 @@ async function initApp() {
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
+  const loadModelBtn = document.getElementById('load-model-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
   const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
   const ttsStepsVal = document.getElementById('tts-steps-val')!
@@ -192,6 +194,11 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
+  // Improv controls (declared early so other functions can reference them)
+  const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
+  const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
+  const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
+  const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 
@@ -219,8 +226,9 @@ async function initApp() {
   
   // NEW: Function to handle LLM/Manager initialization and re-initialization
   const initializeManagers = async (modelId: string) => {
-    // Disable model select during initialization to prevent re-entrancy
+    // Disable model select and load button during initialization to prevent re-entrancy
     if (modelSelect) modelSelect.disabled = true;
+    if (loadModelBtn) loadModelBtn.disabled = true;
 
     // 1. Initialize Audio Engine (in background or parallel)
     // Only initialize the shared resources once
@@ -267,8 +275,14 @@ async function initApp() {
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
-    // Re-enable model select after successful initialization
+    // Re-enable model select and load button after successful initialization
     if (modelSelect) modelSelect.disabled = false;
+    if (loadModelBtn) loadModelBtn.disabled = false;
+
+    // Enable chat and improv controls now that a model is loaded
+    userInput.disabled = false
+    sendBtn.disabled = false
+    if (typeof (startImprovBtn as any) !== 'undefined' && startImprovBtn) startImprovBtn.disabled = false
 
     updateNextAgentUI()
   }
@@ -285,11 +299,9 @@ async function initApp() {
     if (initialDefaultModel) {
       modelSelect.value = initialDefaultModel;
     }
-    
-    // Initial load with the default model
-    if (initialDefaultModel) {
-      await initializeManagers(initialDefaultModel);
-    }
+    // Do NOT auto-load any model. The user must click "Load Model" to initialize.
+    statusText.textContent = 'Select a model and click "Load Model" to begin.'
+    loadingDiv.style.display = 'flex'
     
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
@@ -304,39 +316,75 @@ async function initApp() {
       groupChatManager.setProfanityLevel(level)
     }
 
+    // Disable chat/improv controls until a model is loaded
+    userInput.disabled = true
+    sendBtn.disabled = true
+    if (startImprovBtn) startImprovBtn.disabled = true
+
     // NEW: Model change listener
-    modelSelect.addEventListener('change', async () => {
-      const newModelId = modelSelect.value;
-      
-      // Stop improv if running
-      if (isImprovRunning) {
-        stopImprovScene();
-      }
-      
-      chatContainer.style.display = 'none';
-      loadingDiv.style.display = 'flex';
-      chatLog.innerHTML = ''; // Clear chat log
-
-      try {
-        // 1. Terminate the current engine gracefully using the old manager instance
-        // This is crucial to free up VRAM before loading the new model.
-        if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
-          await groupChatManager.terminate();
-        }
-
-        // 2. Re-initialize (which creates new managers and loads the new model)
-        await initializeManagers(newModelId);
-
-      } catch (e) {
-        console.error('Error reloading model:', e);
-        // Show an error message
-        statusText.textContent = `Error loading model ${newModelId}. See console.`;
-        statusText.style.color = '#ff6b6b';
-        loadingDiv.style.display = 'flex';
-        chatContainer.style.display = 'none';
-        if (modelSelect) modelSelect.disabled = false;
-      }
+    // When selection changes, enable the Load Model button and leave loading explicit
+    modelSelect.addEventListener('change', () => {
+      if (loadModelBtn) loadModelBtn.disabled = false;
     });
+
+    // Load Model button handler (explicit, mandatory model load)
+    if (loadModelBtn) {
+      loadModelBtn.addEventListener('click', async () => {
+        const newModelId = modelSelect.value;
+
+        // Stop improv if running
+        if (isImprovRunning) stopImprovScene();
+
+        chatContainer.style.display = 'none';
+        loadingDiv.style.display = 'flex';
+        chatLog.innerHTML = '';
+
+        try {
+          // If the selected model looks like Qwen2, perform a lightweight URL check
+          if (newModelId.toLowerCase().includes('qwen')) {
+            const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+            const urlToCheck = modelInfo?.model
+            if (urlToCheck) {
+              statusText.textContent = `Checking model URL for ${newModelId}...`
+              // Fetch with timeout to verify reachability
+              const controller = new AbortController()
+              const timeout = setTimeout(() => controller.abort(), 5000)
+              try {
+                const resp = await fetch(urlToCheck, { method: 'HEAD', signal: controller.signal })
+                clearTimeout(timeout)
+                if (!resp.ok) {
+                  throw new Error(`Model URL returned ${resp.status}`)
+                }
+              } catch (err) {
+                console.error('Qwen model URL check failed:', err)
+                statusText.textContent = `Model URL check failed for ${newModelId}. See console.`
+                statusText.style.color = '#ff6b6b'
+                loadingDiv.style.display = 'flex'
+                if (modelSelect) modelSelect.disabled = false
+                if (loadModelBtn) loadModelBtn.disabled = false
+                return
+              }
+            }
+          }
+
+          // Terminate gracefully if we have an existing manager
+          if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
+            await groupChatManager.terminate()
+          }
+
+          // Initialize with the chosen model
+          await initializeManagers(newModelId)
+        } catch (e) {
+          console.error('Error loading model:', e)
+          statusText.textContent = `Error loading model ${newModelId}. See console.`
+          statusText.style.color = '#ff6b6b'
+          loadingDiv.style.display = 'flex'
+          chatContainer.style.display = 'none'
+          if (modelSelect) modelSelect.disabled = false
+          if (loadModelBtn) loadModelBtn.disabled = false
+        }
+      })
+    }
 
     // Update next agent info (defined above)
     updateNextAgentUI()
@@ -507,10 +555,6 @@ async function initApp() {
     }
 
     // Improv mode controls
-    const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
-    const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
-    const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
-    const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
 
     let isImprovRunning = false
     const startImprovScene = async () => {
