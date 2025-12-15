@@ -10,14 +10,40 @@ import * as webllm from '@mlc-ai/web-llm'
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 
-// Log available models on startup
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
+// --- Custom Model Configurations ---
+// 1. User's custom Vicuna model (7B)
+const customVicunaModelConfig = {
+  model_id: "ford442/vicuna-7b-q4f32-webllm",
+  model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
+  // This WASM file is assumed to be the correct library for the model architecture
+  model_lib: "./Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+  vram_required_MB: 4096,
+  low_resource_required: false,
+};
 
-// Define available models and a default for the dropdown
-const availableModels = webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
-// Find a common default (like Llama-3-8B-chat) or fall back to the first available model
-// Using Hermes-3-Llama-3.2-3B-q4f32_1-MLC as a default since it was hardcoded before
-const defaultModel = availableModels.find(id => id.includes('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')) || availableModels[0];
+// 2. A smaller model for contrast (e.g., Qwen2-0.5B)
+const smallModelId = 'Qwen2-0.5B-Instruct-q4f16_1-MLC';
+// The previous default model
+const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
+
+// Inject the custom model into the WebLLM configuration list
+// This ensures that webllm.CreateMLCEngine knows how to load the custom model weights/wasm
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === customVicunaModelConfig.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(customVicunaModelConfig as any)
+}
+
+// Log available models (now includes the custom one)
+console.log('Available prebuilt models (including custom):', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
+
+// Curate the list of models we want in the dropdown, in a logical order
+const availableModels = [
+  defaultModelId,
+  customVicunaModelConfig.model_id,
+  smallModelId,
+].filter(id => webllm.prebuiltAppConfig.model_list.some((m: any) => m.model_id === id)); // Filter to ensure only models that exist are included
+
+// Set the initial default model
+const initialDefaultModel = availableModels.find(id => id.includes(defaultModelId)) || availableModels[0];
 
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
@@ -193,6 +219,9 @@ async function initApp() {
   
   // NEW: Function to handle LLM/Manager initialization and re-initialization
   const initializeManagers = async (modelId: string) => {
+    // Disable model select during initialization to prevent re-entrancy
+    if (modelSelect) modelSelect.disabled = true;
+
     // 1. Initialize Audio Engine (in background or parallel)
     // Only initialize the shared resources once
     if (!audioEngine) {
@@ -238,6 +267,8 @@ async function initApp() {
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+    // Re-enable model select after successful initialization
+    if (modelSelect) modelSelect.disabled = false;
 
     updateNextAgentUI()
   }
@@ -251,13 +282,13 @@ async function initApp() {
       modelSelect.appendChild(option);
     });
     // Set the default model in the dropdown
-    if (defaultModel) {
-      modelSelect.value = defaultModel;
+    if (initialDefaultModel) {
+      modelSelect.value = initialDefaultModel;
     }
     
     // Initial load with the default model
-    if (defaultModel) {
-      await initializeManagers(defaultModel);
+    if (initialDefaultModel) {
+      await initializeManagers(initialDefaultModel);
     }
     
     // UI listeners
@@ -289,8 +320,10 @@ async function initApp() {
       try {
         // 1. Terminate the current engine gracefully using the old manager instance
         // This is crucial to free up VRAM before loading the new model.
-        await groupChatManager.terminate(); 
-        
+        if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
+          await groupChatManager.terminate();
+        }
+
         // 2. Re-initialize (which creates new managers and loads the new model)
         await initializeManagers(newModelId);
 
@@ -301,6 +334,7 @@ async function initApp() {
         statusText.style.color = '#ff6b6b';
         loadingDiv.style.display = 'flex';
         chatContainer.style.display = 'none';
+        if (modelSelect) modelSelect.disabled = false;
       }
     });
 
