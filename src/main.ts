@@ -21,6 +21,15 @@ const customVicunaModelConfig = {
   low_resource_required: false,
 };
 
+// 3. Lightweight Llama-2 2B for quick comparison testing
+const llama2bModelConfig = {
+  model_id: 'Llama-2-2B-chat-q4f32_1-MLC',
+  model: 'https://huggingface.co/meta-llama/Llama-2-2b-chat-hf/resolve/main/',
+  model_lib: './Llama-2-2b-chat-q4f32_1-webgpu.wasm',
+  vram_required_MB: 2048,
+  low_resource_required: false,
+}
+
 // 2. A smaller model for contrast (Qwen2 0.5B from mlc-ai)
 const smallModelId = 'mlc-ai/Qwen2-0.5B-Instruct-q4f32_1-MLC';
 // The previous default model
@@ -31,6 +40,10 @@ const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
 if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === customVicunaModelConfig.model_id)) {
   webllm.prebuiltAppConfig.model_list.push(customVicunaModelConfig as any)
 }
+// Inject Llama2b for local testing if not present
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === llama2bModelConfig.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(llama2bModelConfig as any)
+}
 
 // Log available models (now includes the custom one)
 console.log('Available prebuilt models (including custom):', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
@@ -38,6 +51,7 @@ console.log('Available prebuilt models (including custom):', webllm.prebuiltAppC
 // Curate the list of models we want in the dropdown, in a logical order
 const availableModels = [
   defaultModelId,
+  llama2bModelConfig.model_id,
   customVicunaModelConfig.model_id,
   smallModelId,
 ].filter(id => webllm.prebuiltAppConfig.model_list.some((m: any) => m.model_id === id)); // Filter to ensure only models that exist are included
@@ -108,7 +122,10 @@ async function initApp() {
         <div class="controls">
           <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
             
-            <!-- Model selector moved to the loading panel so it's visible before chat initializes -->
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+              <label style="color: #888; font-size: 0.8em; white-space: nowrap;">LLM Model</label>
+              <select id="model-select-main" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;"></select>
+            </div>
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
               <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
               <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
@@ -204,6 +221,7 @@ async function initApp() {
   const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+  const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -309,9 +327,11 @@ async function initApp() {
     chatContainer.style.display = 'flex'
     // Re-enable model select and load button after successful initialization
     if (modelSelect) modelSelect.disabled = false;
+    if (modelSelectMain) modelSelectMain.disabled = false;
     if (loadModelBtn) loadModelBtn.disabled = false;
 
-    // Clear any model error message now that init succeeded
+    // Ensure both selects reflect the active model
+    if (modelSelectMain) modelSelectMain.value = modelId;
     if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
 
     // Enable chat and improv controls now that a model is loaded
@@ -323,16 +343,21 @@ async function initApp() {
   }
 
   try {
-    // NEW: Populate model select dropdown
+    // NEW: Populate model select dropdown (both loading and main settings select)
     availableModels.forEach(modelId => {
       const option = document.createElement('option');
       option.value = modelId;
       option.textContent = modelId;
       modelSelect.appendChild(option);
+      if (modelSelectMain) {
+        const opt2 = option.cloneNode(true) as HTMLOptionElement
+        modelSelectMain.appendChild(opt2)
+      }
     });
     // Set the default model in the dropdown
     if (initialDefaultModel) {
       modelSelect.value = initialDefaultModel;
+      if (modelSelectMain) modelSelectMain.value = initialDefaultModel;
     }
     // Do NOT auto-load any model. The user must click "Load Model" to initialize.
     statusText.textContent = 'Select a model and click "Load Model" to begin.'
@@ -359,8 +384,16 @@ async function initApp() {
     // NEW: Model change listener
     // When selection changes, enable the Load Model button and leave loading explicit
     modelSelect.addEventListener('change', () => {
+      if (modelSelectMain) modelSelectMain.value = modelSelect.value;
       if (loadModelBtn) loadModelBtn.disabled = false;
     });
+
+    if (modelSelectMain) {
+      modelSelectMain.addEventListener('change', () => {
+        modelSelect.value = modelSelectMain.value;
+        if (loadModelBtn) loadModelBtn.disabled = false;
+      });
+    }
 
     // Load Model button handler (explicit, mandatory model load)
     if (loadModelBtn) {
@@ -443,6 +476,7 @@ Suggestions:
           loadingDiv.style.display = 'flex'
           chatContainer.style.display = 'none'
           if (modelSelect) modelSelect.disabled = false
+          if (modelSelectMain) modelSelectMain.disabled = false
           if (loadModelBtn) loadModelBtn.disabled = false
         }
       })
