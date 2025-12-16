@@ -16,16 +16,17 @@ const customVicunaModelConfig = {
   model_id: "ford442/vicuna-7b-q4f32-webllm",
   model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
   // This WASM file is assumed to be the correct library for the model architecture
-  model_lib: "./Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
   vram_required_MB: 4096,
   low_resource_required: false,
 };
 
 // 3. Lightweight Llama-2 2B for quick comparison testing
+// Note: "Llama-2-2B" does not exist officially. Replacing with TinyLlama-1.1B which is a valid small Llama-based model.
 const llama2bModelConfig = {
-  model_id: 'Llama-2-2B-chat-q4f32_1-MLC',
-  model: 'https://huggingface.co/meta-llama/Llama-2-2b-chat-hf/resolve/main/',
-  model_lib: './Llama-2-2b-chat-q4f32_1-webgpu.wasm',
+  model_id: 'TinyLlama-1.1B-Chat-v0.4-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/TinyLlama-1.1B-Chat-v0.4-q4f32_1-MLC/resolve/main/',
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/TinyLlama-1.1B-Chat-v0.4-q4f32_1-ctx2k_cs1k-webgpu.wasm',
   vram_required_MB: 2048,
   low_resource_required: false,
 }
