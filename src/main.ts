@@ -414,6 +414,10 @@ async function initApp() {
 
     // Handle send message
     const sendMessage = async () => {
+      if (!groupChatManager) {
+        addMessage('System', 'No model loaded. Please select and load a model first.', '#ff6b6b')
+        return
+      }
       const message = userInput.value.trim()
       if (!message) return
 
@@ -509,8 +513,8 @@ async function initApp() {
       improvModeControls.style.display = 'none'
 
       // Stop improv if running
-      if (improvSceneManager.isSceneRunning()) {
-        improvSceneManager.stop()
+      if (improvSceneManager && improvSceneManager.isSceneRunning && improvSceneManager.isSceneRunning()) {
+        try { improvSceneManager.stop() } catch (err) { console.warn('Failed to stop improvSceneManager:', err) }
       }
 
       updateNextAgentUI()
@@ -559,6 +563,10 @@ async function initApp() {
 
     let isImprovRunning = false
     const startImprovScene = async () => {
+      if (!groupChatManager) {
+        addMessage('System', 'No model loaded. Please select and load a model first.', '#ff6b6b')
+        return
+      }
       const title = sceneTitleInput.value.trim()
       const description = sceneDescriptionInput.value.trim()
 
@@ -627,7 +635,9 @@ async function initApp() {
     const stopImprovScene = () => {
       isImprovRunning = false
       // Stop the manager if it's running
-      if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
+      if (improvSceneManager && improvSceneManager.isSceneRunning && improvSceneManager.isSceneRunning()) {
+        try { improvSceneManager.stop() } catch (err) { console.warn('Failed to stop improvSceneManager:', err) }
+      }
       addMessage('System', '鹿 Scene stopped by user', '#ff6b6b')
       sceneTitleInput.disabled = false
       sceneDescriptionInput.disabled = false
@@ -637,6 +647,11 @@ async function initApp() {
 
     // Director logic: process a single turn with pacing and TTS steps
     const processTurn = async (inputText: string) => {
+      if (!groupChatManager) {
+        console.warn('processTurn called with no groupChatManager')
+        isImprovRunning = false
+        return
+      }
       try {
         // 1. Calculate Pacing for this specific turn
         const pacing = calculatePacing()
