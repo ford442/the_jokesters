@@ -96,6 +96,7 @@ async function initApp() {
           <div id="progress" class="progress-fill"></div>
         </div>
         <p id="status">Initializing WebLLM...</p>
+        <div id="model-error" style="color:#ff6b6b;margin-top:6px;display:none;white-space:pre-wrap;"></div>
         <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
           <label style="color:#888; font-size:0.9em; white-space:nowrap;">LLM Model</label>
           <select id="model-select" style="flex:1; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;"></select>
@@ -200,6 +201,7 @@ async function initApp() {
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
+  const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
 
@@ -229,6 +231,9 @@ async function initApp() {
   
   // NEW: Function to handle LLM/Manager initialization and re-initialization
   const initializeManagers = async (modelId: string) => {
+    // Clear any prior model error
+    if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
+
     // Disable model select and load button during initialization to prevent re-entrancy
     if (modelSelect) modelSelect.disabled = true;
     if (loadModelBtn) loadModelBtn.disabled = true;
@@ -305,6 +310,9 @@ async function initApp() {
     // Re-enable model select and load button after successful initialization
     if (modelSelect) modelSelect.disabled = false;
     if (loadModelBtn) loadModelBtn.disabled = false;
+
+    // Clear any model error message now that init succeeded
+    if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
 
     // Enable chat and improv controls now that a model is loaded
     userInput.disabled = false
@@ -394,6 +402,9 @@ async function initApp() {
             }
           }
 
+          // Clear prior model error
+          if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
+
           // Terminate gracefully if we have an existing manager
           if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
             await groupChatManager.terminate()
@@ -401,10 +412,34 @@ async function initApp() {
 
           // Initialize with the chosen model
           await initializeManagers(newModelId)
-        } catch (e) {
+        } catch (e: any) {
           console.error('Error loading model:', e)
-          statusText.textContent = `Error loading model ${newModelId}. See console.`
-          statusText.style.color = '#ff6b6b'
+          const errMsg = e?.message || String(e)
+
+          // Detect cache.add / network errors and show a clearer message
+          if (errMsg.includes('Cache.add') || errMsg.includes("Failed to execute 'add' on 'Cache'") || errMsg.includes('NetworkError') || errMsg.includes('net::ERR')) {
+            const friendly = `Network error while fetching model assets. This commonly happens when the browser cannot fetch model files from the host (CORS, network/firewall, or blocked Host).
+
+Suggestions:
+  • Check your network connection and any firewall/proxy settings.
+  • Try a different model in the selector.
+  • If using Hugging Face/cas-bridge, ensure the model URL is reachable from your browser (open DevTools → Network to inspect failing GETs).
+  • As a fallback, download the model locally and point the app to a local URL or static server.`
+            statusText.textContent = friendly
+            statusText.style.color = '#ff6b6b'
+            if (modelErrorDiv) {
+              modelErrorDiv.textContent = friendly
+              modelErrorDiv.style.display = 'block'
+            }
+          } else {
+            statusText.textContent = `Error loading model ${newModelId}. See console.`
+            statusText.style.color = '#ff6b6b'
+            if (modelErrorDiv) {
+              modelErrorDiv.textContent = `Error loading model: ${errMsg}`
+              modelErrorDiv.style.display = 'block'
+            }
+          }
+
           loadingDiv.style.display = 'flex'
           chatContainer.style.display = 'none'
           if (modelSelect) modelSelect.disabled = false
