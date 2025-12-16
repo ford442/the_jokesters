@@ -96,17 +96,18 @@ async function initApp() {
           <div id="progress" class="progress-fill"></div>
         </div>
         <p id="status">Initializing WebLLM...</p>
+        <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
+          <label style="color:#888; font-size:0.9em; white-space:nowrap;">LLM Model</label>
+          <select id="model-select" style="flex:1; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;"></select>
+          <button id="load-model-btn" style="margin-left:8px; padding:6px 10px;">Load Model</button>
+        </div>
       </div>
       <div id="chat-container" class="chat-container" style="display: none;">
         <canvas id="scene"></canvas>
         <div class="controls">
           <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
             
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-              <label style="color: #888; font-size: 0.8em; white-space: nowrap;">LLM Model</label>
-                <select id="model-select" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;"></select>
-                <button id="load-model-btn" style="margin-left: 8px; padding: 4px 8px;">Load Model</button>
-            </div>
+            <!-- Model selector moved to the loading panel so it's visible before chat initializes -->
             <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
               <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
               <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
@@ -209,6 +210,7 @@ async function initApp() {
   let speechQueue: SpeechQueue;
   let stage: Stage;
   let lipSync: LipSync;
+  let audioInitializing = false;
 
   // Update next agent info in the UI
   const updateNextAgentUI = () => {
@@ -230,6 +232,10 @@ async function initApp() {
     // Disable model select and load button during initialization to prevent re-entrancy
     if (modelSelect) modelSelect.disabled = true;
     if (loadModelBtn) loadModelBtn.disabled = true;
+    if (audioInitializing) {
+      statusText.textContent = 'Audio initialization already in progress...'
+      return
+    }
 
     // 1. Initialize Audio Engine (in background or parallel)
     // Only initialize the shared resources once
@@ -237,6 +243,7 @@ async function initApp() {
       statusText.textContent = "Initializing Audio Engine..."
       audioEngine = new AudioEngine()
       speechQueue = new SpeechQueue(audioEngine)
+      audioInitializing = true
 
       // Check for WebGL 2 support explicitly before initializing Three.js
       const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
@@ -253,7 +260,26 @@ async function initApp() {
 
       stage.setLipSync(lipSync)
       stage.render()
-      await audioEngine.init('./tts/onnx');
+      audioInitializing = true
+      try {
+        await audioEngine.init('./tts/onnx');
+      } catch (err: any) {
+        // Clear UI state and show a clearer error message for WASM/Module failures
+        console.error('Audio engine initialization failed:', err)
+        statusText.textContent = 'Audio engine failed to initialize. See console for details.'
+        statusText.style.color = '#ff6b6b'
+        // Common Emscripten error when multiple Module objects conflict
+        if (String(err).includes('Module object should not be replaced')) {
+          console.error('Possible Emscripten Module conflict: ensure the BespokeSynth WASM is built with MODULARIZE=1 or that the script order does not replace window.Module.')
+        }
+        // Re-enable UI controls to allow retry or selecting a different model
+        if (modelSelect) modelSelect.disabled = false
+        if (loadModelBtn) loadModelBtn.disabled = false
+        audioInitializing = false
+        throw err
+      } finally {
+        audioInitializing = false
+      }
     }
 
     // 2. Instantiate new managers
