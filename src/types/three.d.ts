@@ -57,6 +57,7 @@ declare module 'three' {
         constructor(geometry?: any, material?: any);
         castShadow: boolean;
         receiveShadow: boolean;
+        material: any;
     }
 
     // Geometry classes
@@ -87,6 +88,7 @@ declare module 'three' {
 
     export class MeshStandardMaterial {
         constructor(parameters?: any);
+        emissiveIntensity: number;
     }
 
     // Light classes
@@ -103,6 +105,10 @@ declare module 'three' {
         constructor(color?: number | string, intensity?: number);
         target: Object3D;
         castShadow: boolean;
+        shadow: {
+            mapSize: { width: number; height: number };
+            camera: { near: number; far: number };
+        };
     }
 
     export class SpotLight extends Light {
@@ -111,5 +117,63 @@ declare module 'three' {
         angle: number;
         penumbra: number;
         castShadow: boolean;
+        shadow: {
+            mapSize: { width: number; height: number };
+            camera: { near: number; far: number };
+        };
+    }
+
+    export class PointLight extends Light {
+        constructor(color?: any, intensity?: number, distance?: number, decay?: number);
+    }
+
+    // Additional geometry
+    export class TorusGeometry {
+        constructor(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number);
+    }
+
+    export class CylinderGeometry {
+        constructor(radiusTop?: number, radiusBottom?: number, height?: number, radialSegments?: number);
+    }
+
+    export class BufferGeometry {
+        constructor();
+        setFromPoints(points: any[]): this;
+    }
+
+    // Additional materials
+    export class MeshBasicMaterial {
+        constructor(parameters?: any);
+    }
+
+    export class LineBasicMaterial {
+        constructor(parameters?: any);
+    }
+
+    export class Vector2 {
+        constructor(x?: number, y?: number);
+        x: number;
+        y: number;
+    }
+
+    // Curves and lines
+    export class EllipseCurve {
+        constructor(
+            aX: number, aY: number,
+            xRadius: number, yRadius: number,
+            aStartAngle: number, aEndAngle: number,
+            aClockwise: boolean,
+            aRotation: number
+        );
+        getPoints(divisions: number): Vector2[];
+    }
+
+    export class Line extends Object3D {
+        constructor(geometry?: any, material?: any);
+    }
+
+    // Helpers
+    export class GridHelper extends Object3D {
+        constructor(size?: number, divisions?: number, colorCenterLine?: number, colorGrid?: number);
     }
 }
