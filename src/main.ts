@@ -479,9 +479,11 @@ async function initApp() {
         chatLog.innerHTML = '';
 
         try {
-          // If the selected model looks like Qwen2, perform a lightweight URL check
+          const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+
+          // Lightweight URL checks to prevent long-running network failures when loading large WASM/model assets
+          // 1) If the selected model is Qwen, keep the existing URL HEAD check (it was added for reliability)
           if (newModelId.toLowerCase().includes('qwen')) {
-            const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
             const urlToCheck = modelInfo?.model
             if (urlToCheck) {
               statusText.textContent = `Checking model URL for ${newModelId}...`
@@ -503,6 +505,66 @@ async function initApp() {
                 if (loadModelBtn) loadModelBtn.disabled = false
                 return
               }
+            }
+          }
+
+          // 2) Preflight-check the model runtime/WASM URL (model_lib) for ALL models. Some hosts (raw.githubusercontent.com, cf CDN) can be rate-limited or return HTML errors.
+          const modelRuntimeURL = modelInfo?.model_lib || modelInfo?.model_lib_url || modelInfo?.model
+          if (modelRuntimeURL) {
+            statusText.textContent = `Checking model runtime URL for ${newModelId}...`
+            const controller = new AbortController()
+            const timeoutMs = 8000
+            const timeout = setTimeout(() => controller.abort(), timeoutMs)
+            let ok = false
+            try {
+              // Try HEAD first (many hosts support it). If it fails or returns HTML, try a small Range GET as fallback.
+              const headResp = await fetch(modelRuntimeURL, { method: 'HEAD', signal: controller.signal })
+              clearTimeout(timeout)
+              if (headResp.ok) {
+                const ct = headResp.headers.get('content-type') || ''
+                if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                  ok = true
+                } else {
+                  console.warn('Model runtime HEAD returned non-binary content-type:', ct)
+                }
+              } else {
+                console.warn('Model runtime HEAD returned non-OK status:', headResp.status)
+              }
+            } catch (headErr) {
+              console.warn('HEAD check failed for model runtime, attempting Range GET as fallback:', headErr)
+              try {
+                // Reset controller for second request
+                const controller2 = new AbortController()
+                const timeout2 = setTimeout(() => controller2.abort(), timeoutMs)
+                const rangeResp = await fetch(modelRuntimeURL, { method: 'GET', headers: { Range: 'bytes=0-1023' }, signal: controller2.signal })
+                clearTimeout(timeout2)
+                if (rangeResp.ok) {
+                  const ct = rangeResp.headers.get('content-type') || ''
+                  if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                    ok = true
+                  } else {
+                    console.warn('Model runtime Range GET returned non-binary content-type:', ct)
+                  }
+                } else {
+                  console.warn('Model runtime Range GET returned non-OK status:', rangeResp.status)
+                }
+              } catch (rangeErr) {
+                console.error('Range GET fallback failed for model runtime:', rangeErr)
+              }
+            }
+
+            if (!ok) {
+              const friendly = `Model runtime '${modelRuntimeURL}' is not reachable or does not look like a binary runtime (WASM). This commonly causes network/cache errors while loading a model.`
+              console.error(friendly)
+              statusText.textContent = friendly
+              statusText.style.color = '#ff6b6b'
+              if (modelErrorDiv) {
+                modelErrorDiv.textContent = `${friendly}\n\nSuggestions:\n • Check the URL in the model config is a direct link to the WASM runtime (not a directory or HTML page).\n • Raw GitHub links may be rate-limited; try hosting the WASM on a stable CDN (jsdelivr/gh-cdn) or mlc-ai's releases.\n • If the file is very large, try a smaller model or a local static host.`
+                modelErrorDiv.style.display = 'block'
+              }
+              if (modelSelect) modelSelect.disabled = false
+              if (loadModelBtn) loadModelBtn.disabled = false
+              return
             }
           }
 
