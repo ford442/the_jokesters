@@ -119,6 +119,7 @@ The application requires WebGPU support:
 - First load requires downloading ~4GB model files (cached after first run)
 - Requires sufficient GPU memory for WebGPU inference
 - Model inference runs entirely in-browser - no server required!
+- For detailed information on model loading, configuration, and troubleshooting, see [model-plan.md](./model-plan.md)
 
 ## License
 
