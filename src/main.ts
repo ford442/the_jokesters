@@ -188,7 +188,7 @@ async function initApp() {
           <button id="load-model-btn" style="margin-left:8px; padding:6px 10px;">Load Model</button>
         </div>
       </div>
-      <div id="chat-container" class="chat-container" style="display: none;">
+      <div id="chat-container" class="chat-container">
         <canvas id="scene"></canvas>
         <div class="controls">
           <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
