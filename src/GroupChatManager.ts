@@ -167,7 +167,6 @@ export class GroupChatManager {
     // Retry configuration
     const maxRetries = 3
     const baseDelay = 1000 // 1 second
-    let lastError: any = null
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -193,7 +192,6 @@ export class GroupChatManager {
         console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
         return // Success! Exit the function
       } catch (error) {
-        lastError = error
         console.error(`Failed to initialize GroupChatManager (attempt ${attempt}/${maxRetries}):`, error)
         
         // Check if this is a cache/network error
@@ -205,7 +203,7 @@ export class GroupChatManager {
           await this.clearModelCache()
           
           // Exponential backoff: wait before retrying
-          const delay = baseDelay * Math.pow(2, attempt - 1) // 1s, 2s, 4s, ...
+          const delay = baseDelay * Math.pow(2, attempt - 1) // (1s, 2s, 4s for attempts 1, 2, 3)
           console.log(`Waiting ${delay}ms before retry...`)
           await this.sleep(delay)
           continue
@@ -237,8 +235,6 @@ export class GroupChatManager {
       }
     }
 
-    // This should never be reached, but just in case
-    throw lastError || new Error(`Failed to initialize model ${modelId} after ${maxRetries} attempts`)
   }
 
   async chat(
