@@ -102,7 +102,29 @@ export class GroupChatManager {
       await this.terminate();
     }
 
-    try {
+		// Basic validation to provide clearer diagnostics when things go wrong
+		if (!modelId || typeof modelId !== 'string') {
+			throw new Error('Invalid modelId passed to GroupChatManager.initialize')
+		}
+
+		// If the modelId is registered in the prebuilt list, warn if key metadata is missing
+		const modelInfo = (webllm as any).prebuiltAppConfig?.model_list?.find((m: any) => m.model_id === modelId)
+		if (modelInfo) {
+			if (!modelInfo.model) {
+				console.warn(`Model '${modelId}' registered but missing 'model' URL field. This may cause initialization errors.`)
+			}
+			if (!modelInfo.model_lib) {
+				// We don't require model_lib for all runtimes, but warn if it's missing for known WASM models
+				console.warn(`Model '${modelId}' registered but missing 'model_lib' (WASM library) - if this model requires a specific lib, include it on the model entry.`)
+			}
+		} else {
+			// If it's not a registered model id, it might be an explicit URL; warn otherwise
+			if (!/^https?:\/\//i.test(modelId)) {
+				console.warn(`Model id '${modelId}' is not registered in webllm.prebuiltAppConfig.model_list and does not look like a URL.`)
+			}
+		}
+
+		try {
       console.log(`Loading WebLLM model: ${modelId}...`);
 
       // Follow the official example format
@@ -119,10 +141,12 @@ export class GroupChatManager {
 
       this.isInitialized = true
       console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
-    } catch (error) {
-      console.error('Failed to initialize GroupChatManager:', error)
-      throw error
-    }
+		} catch (error) {
+			console.error('Failed to initialize GroupChatManager:', error)
+			// Provide a more actionable error message for common model-config issues
+			const base = error instanceof Error ? error.message : String(error)
+			throw new Error(`${base} (while initializing model '${modelId}'). Check that the model is registered in webllm.prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`)
+		}
   }
 
   async chat(
