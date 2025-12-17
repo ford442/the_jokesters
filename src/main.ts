@@ -147,8 +147,8 @@ const availableModels = [
   smolLM2Config.model_id,
 ].filter(id => webllm.prebuiltAppConfig.model_list.some((m: any) => m.model_id === id)); // Filter to ensure only models that exist are included
 
-// Set the initial default model
-const initialDefaultModel = availableModels.find(id => id.includes(defaultModelId)) || availableModels[0];
+// Set the initial default model (use equality to avoid accidental undefined.includes calls)
+const initialDefaultModel = availableModels.find(id => id === defaultModelId) || availableModels[0];
 
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
@@ -493,7 +493,31 @@ async function initApp() {
     // Load Model button handler (explicit, mandatory model load)
     if (loadModelBtn) {
       loadModelBtn.addEventListener('click', async () => {
-        const newModelId = modelSelect.value;
+        const newModelId = (modelSelect.value || '').toString();
+
+        // Basic validation: ensure a model id was selected
+        if (!newModelId) {
+          const friendly = `No model selected. Please select a model from the dropdown before clicking Load Model.`
+          statusText.textContent = friendly
+          statusText.style.color = '#ff6b6b'
+          if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+          if (modelSelect) modelSelect.disabled = false
+          if (loadModelBtn) loadModelBtn.disabled = false
+          return
+        }
+
+        // Look up the model metadata so we can provide clearer diagnostics if fields are missing
+        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+        if (!modelInfo) {
+          const friendly = `Model '${newModelId}' was not found in the WebLLM prebuilt model list. Ensure it's been registered in the app config.`
+          console.error(friendly)
+          statusText.textContent = friendly
+          statusText.style.color = '#ff6b6b'
+          if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+          if (modelSelect) modelSelect.disabled = false
+          if (loadModelBtn) loadModelBtn.disabled = false
+          return
+        }
 
         // Stop improv if running
         if (isImprovRunning) stopImprovScene();
