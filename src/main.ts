@@ -1,6 +1,6 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
-import type { Agent } from './GroupChatManager'
+import type { Agent, ProfanityLevel } from './GroupChatManager'
 import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
@@ -91,6 +91,12 @@ async function initApp() {
               <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
               <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
             </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
+              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
+            </div>
           </div>
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
@@ -155,6 +161,8 @@ async function initApp() {
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
   const chaosVal = document.getElementById('director-chaos-val')!
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
+  const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
+  const profanityVal = document.getElementById('profanity-val')!
 
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
@@ -202,6 +210,21 @@ async function initApp() {
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
     chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
+
+    // Profanity level slider
+    const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
+      { level: 'PG', label: '👼 PG', color: '#4ecdc4' },
+      { level: 'CASUAL', label: '😏 Casual', color: '#45b7d1' },
+      { level: 'GRITTY', label: '🔥 Gritty', color: '#ffd700' },
+      { level: 'UNCENSORED', label: '💀 Uncensored', color: '#ff6b6b' },
+    ]
+    profanitySlider.oninput = () => {
+      const idx = parseInt(profanitySlider.value)
+      const { level, label, color } = profanityLevels[idx]
+      profanityVal.textContent = label
+      profanityVal.style.color = color
+      groupChatManager.setProfanityLevel(level)
+    }
 
     // Update next agent info
     const updateNextAgentUI = () => {
@@ -383,33 +406,32 @@ async function initApp() {
     })
 
     // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
+    // All maxTokens capped at 96 to prevent VRAM exhaustion
     const calculatePacing = () => {
       const roll = Math.random();
       // 30% Chance: "The One-Liner"
       if (roll > 0.7) {
         return {
           type: 'punchline',
-          // SAFETY NET ONLY: Allow enough space for a full sentence
-          maxTokens: 60,
+          maxTokens: 48,
           ttsSteps: 25,
-          // THE REAL FIX: Explicit instruction for brevity
-          promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
+          promptSuffix: ' (One joking sentence. Be brief.)'
         }
-      // 50% Chance: "The Standard"
+        // 50% Chance: "The Standard"
       } else if (roll > 0.2) {
         return {
           type: 'standard',
-          maxTokens: 150,
+          maxTokens: 72,
           ttsSteps: 16,
-          promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
+          promptSuffix: ' (1-2 sentences.)'
         }
-      // 20% Chance: "The Rant"
+        // 20% Chance: "The Rant"
       } else {
         return {
           type: 'rant',
-          maxTokens: 256,
+          maxTokens: 96,
           ttsSteps: 8,
-          promptSuffix: ' (Go on a funny, passionate rant. Be expressive!)'
+          promptSuffix: ' (Be expressive!)'
         }
       }
     }
@@ -483,44 +505,44 @@ async function initApp() {
           // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
           const turnCount = groupChatManager.getHistoryLength()
           const chaosLevel = parseInt(chaosSlider.value)
-          
+
           let critique = ""
-          
+
           // 3. Intelligent Director Check
           // Only judge if scene is underway (turns > 2) and probability matches Chaos slider
           if (turnCount > 2 && Math.random() * 100 < chaosLevel) {
-             
-             // Visual cue that the Director is "Thinking"
-             const thinkingDiv = document.createElement('div')
-             thinkingDiv.innerHTML = `<em style="color:#666; font-size:0.9em">Director is watching...</em>`
-             chatLog.appendChild(thinkingDiv)
-             chatLog.scrollTop = chatLog.scrollHeight
 
-             // Get judgment
-             const rawCritique = await groupChatManager.getDirectorCritique()
-             
-             // Remove thinking cue
-             chatLog.removeChild(thinkingDiv)
+            // Visual cue that the Director is "Thinking"
+            const thinkingDiv = document.createElement('div')
+            thinkingDiv.innerHTML = `<em style="color:#666; font-size:0.9em">Director is watching...</em>`
+            chatLog.appendChild(thinkingDiv)
+            chatLog.scrollTop = chatLog.scrollHeight
 
-             // Parse format "[STATUS]: Instruction"
-             if (rawCritique.includes(":")) {
-               const parts = rawCritique.split(":")
-               const status = parts[0].trim().toUpperCase() // "FLOWING" or "STAGNANT"
-               critique = parts.slice(1).join(":").trim()
+            // Get judgment
+            const rawCritique = await groupChatManager.getDirectorCritique()
 
-               // Color code the output
-               if (status.includes("FLOWING")) {
-                 // Green/Teal for "Good job, keep going"
-                 addMessage('Director (Note)', `📝 ${critique}`, '#4ecdc4')
-               } else {
-                 // Red/Orange for "Boring, change it!"
-                 addMessage('Director (Action!)', `🎬 ${critique}`, '#ff6b6b')
-               }
-             } else if (rawCritique) {
-               // Fallback if format is weird
-               critique = rawCritique
-               addMessage('Director', `📣 ${critique}`, '#ffd700')
-             }
+            // Remove thinking cue
+            chatLog.removeChild(thinkingDiv)
+
+            // Parse format "[STATUS]: Instruction"
+            if (rawCritique.includes(":")) {
+              const parts = rawCritique.split(":")
+              const status = parts[0].trim().toUpperCase() // "FLOWING" or "STAGNANT"
+              critique = parts.slice(1).join(":").trim()
+
+              // Color code the output
+              if (status.includes("FLOWING")) {
+                // Green/Teal for "Good job, keep going"
+                addMessage('Director (Note)', `📝 ${critique}`, '#4ecdc4')
+              } else {
+                // Red/Orange for "Boring, change it!"
+                addMessage('Director (Action!)', `🎬 ${critique}`, '#ff6b6b')
+              }
+            } else if (rawCritique) {
+              // Fallback if format is weird
+              critique = rawCritique
+              addMessage('Director', `📣 ${critique}`, '#ffd700')
+            }
           }
 
           // Default instruction for flow
@@ -630,7 +652,7 @@ async function initApp() {
         const agent = agents.find(a => a.id === currentAgentId)!
 
         stage.setActiveActor(currentAgentId)
-        
+
         const messageDiv = document.createElement('div')
         messageDiv.className = 'message'
         messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
