@@ -98,18 +98,59 @@ export class SupertonicPipeline {
         console.log(`[Supertonic] Initializing ONNX. Wasm Path: ${wasmPath}`);
 
         // 4. Load Configs
+        // The deploy environment sometimes places these TTS assets under different paths
+        // (e.g., `assets/onnx` instead of `tts/onnx`). Probe a set of reasonable locations
+        // and use the first one that contains a valid `tts.json`.
+        const probeForConfigBase = async (candidates: string[]) => {
+            for (const candidate of candidates) {
+                const url = candidate.endsWith('/') ? `${candidate}tts.json` : `${candidate}/tts.json`;
+                try {
+                    const resp = await fetch(url, { method: 'GET' }); // GET because some hosts block HEAD
+                    if (!resp.ok) continue;
+                    const ct = (resp.headers.get('content-type') || '').toLowerCase();
+                    // Accept JSON or permissive text (some misconfigured servers use text/plain)
+                    if (ct.includes('application/json') || ct.includes('text/plain') || ct.includes('application/octet-stream')) {
+                        return { base: candidate.replace(/\/$/, ''), resp };
+                    }
+                } catch (err) {
+                    // Ignore network errors and try the next candidate
+                    console.warn(`[Supertonic] Probe failed for ${url}:`, err);
+                }
+            }
+            return null;
+        };
+
+        // Candidate bases to probe, in preferred order
+        const candidates = [
+            modelPath,
+            modelPath.replace(/^\.\//, ''),
+            'tts/onnx',
+            './tts/onnx',
+            'assets/onnx',
+            './assets/onnx',
+            'assets',
+            './assets'
+        ];
+
         try {
-            const configResp = await fetch(`${modelPath}/tts.json`);
-            if (!configResp.ok) throw new Error(`Failed to load tts.json from ${modelPath}`);
-            this.cfgs = await configResp.json();
+            const found = await probeForConfigBase(candidates);
+            if (!found) throw new Error(`Could not locate tts.json at ${modelPath} or common locations: ${candidates.join(', ')}`);
+
+            // Use the found base path (note: found.resp is the tts.json fetch response)
+            this.cfgs = await found.resp.json();
             this.sampleRate = this.cfgs.ae.sample_rate;
 
-            const indexerResp = await fetch(`${modelPath}/unicode_indexer.json`);
-            if (!indexerResp.ok) throw new Error(`Failed to load unicode_indexer.json`);
+            const indexerUrl = `${found.base}/unicode_indexer.json`;
+            const indexerResp = await fetch(indexerUrl);
+            if (!indexerResp.ok) throw new Error(`Failed to load unicode_indexer.json from ${indexerUrl}`);
             const indexer = await indexerResp.json();
             this.textProcessor = new UnicodeProcessor(indexer);
+
+            // Ensure modelPath points to the discovered base (so later model loads use the correct path)
+            modelPath = found.base;
+            console.log(`[Supertonic] Using model base: ${modelPath}`);
         } catch (e) {
-            console.error("[Supertonic] Error loading JSON configs:", e);
+            console.error("[Supertonic] Error locating/loading JSON configs:", e);
             throw e;
         }
 
