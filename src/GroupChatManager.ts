@@ -92,13 +92,13 @@ export class GroupChatManager {
    * Helper function to detect if an error is a cache-related network error
    */
   private isCacheNetworkError(error: any): boolean {
-    const errMsg = error instanceof Error ? error.message : String(error)
+    const errMsg = (error instanceof Error ? error.message : String(error)).toLowerCase()
     return (
-      errMsg.includes('Cache.add') ||
-      errMsg.includes("Failed to execute 'add' on 'Cache'") ||
-      errMsg.includes('NetworkError') ||
-      errMsg.includes('net::ERR') ||
-      errMsg.includes('Failed to fetch') ||
+      errMsg.includes('cache.add') ||
+      errMsg.includes("failed to execute 'add' on 'cache'") ||
+      errMsg.includes('networkerror') ||
+      errMsg.includes('net::err') ||
+      errMsg.includes('failed to fetch') ||
       errMsg.includes('network error')
     )
   }
@@ -108,7 +108,8 @@ export class GroupChatManager {
    */
   private async clearModelCache(): Promise<void> {
     try {
-      if ('caches' in self) {
+      // Use globalThis for better compatibility across browser/worker contexts
+      if ('caches' in globalThis) {
         const cacheNames = await caches.keys()
         console.log(`Clearing ${cacheNames.length} cache(s) to recover from error...`)
         for (const name of cacheNames) {
@@ -202,13 +203,13 @@ export class GroupChatManager {
           console.log('Detected cache/network error. Clearing cache before retry...')
           await this.clearModelCache()
           
-          // Exponential backoff: wait before retrying
-          const delay = baseDelay * Math.pow(2, attempt - 1) // (1s, 2s, 4s for attempts 1, 2, 3)
+          // Exponential backoff: wait before retrying (delays before retry 2, 3 would be: 1s, 2s)
+          const delay = baseDelay * Math.pow(2, attempt - 1)
           console.log(`Waiting ${delay}ms before retry...`)
           await this.sleep(delay)
           continue
         } else if (attempt < maxRetries) {
-          // For non-cache errors, still retry but with shorter delay
+          // For non-cache errors, still retry but with linear delay (delays before retry 2, 3: 1s, 2s)
           const delay = baseDelay * attempt
           console.log(`Waiting ${delay}ms before retry...`)
           await this.sleep(delay)
