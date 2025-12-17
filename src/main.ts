@@ -753,6 +753,44 @@ Suggestions:
       chatModeBtn.classList.remove('active')
       chatModeControls.style.display = 'none'
       improvModeControls.style.display = 'block'
+      // Show a persistent 'Return to Chat' floating button so users can easily switch back
+      const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
+      if (existing) existing.style.display = 'block'
+    })
+
+    // Floating 'Return to Chat' button to aid recovery from Improv-only view
+    const returnBtn = document.createElement('button') as HTMLButtonElement
+    returnBtn.id = 'return-to-chat-btn'
+    returnBtn.textContent = 'Return to Chat'
+    returnBtn.title = 'Switch back to Chat Mode'
+    returnBtn.style.position = 'fixed'
+    returnBtn.style.left = '16px'
+    returnBtn.style.bottom = '16px'
+    returnBtn.style.zIndex = '9999'
+    returnBtn.style.background = '#4ecdc4'
+    returnBtn.style.color = '#0f0f23'
+    returnBtn.style.border = 'none'
+    returnBtn.style.padding = '10px 12px'
+    returnBtn.style.borderRadius = '8px'
+    returnBtn.style.cursor = 'pointer'
+    returnBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
+    returnBtn.style.display = 'none'
+    document.body.appendChild(returnBtn)
+
+    returnBtn.addEventListener('click', () => {
+      // Simulate clicking the chat mode button to ensure consistent UI state
+      chatModeBtn.click()
+      returnBtn.style.display = 'none'
+    })
+
+    // Hide the floating button when switching back to Chat
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'none'
+      const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
+      if (existing) existing.style.display = 'none'
     })
 
     // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
