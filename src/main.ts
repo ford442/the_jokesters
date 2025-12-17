@@ -395,9 +395,13 @@ async function initApp() {
     const { level } = profanityLevels[idx]
     groupChatManager.setProfanityLevel(level)
 
-    // Hide loading, show chat
+    // Hide loading, show chat and restore interactions
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+    if (chatContainer) {
+      chatContainer.style.opacity = '1'
+      chatContainer.style.pointerEvents = 'auto'
+    }
     // Re-enable model select and load button after successful initialization
     if (modelSelect) modelSelect.disabled = false;
     if (modelSelectMain) modelSelectMain.disabled = false;
@@ -476,7 +480,11 @@ async function initApp() {
         // Stop improv if running
         if (isImprovRunning) stopImprovScene();
 
-        chatContainer.style.display = 'none';
+        // Do not hide the chat panel — instead dim and disable interactions during model loading
+        if (chatContainer) {
+          chatContainer.style.opacity = '0.6';
+          chatContainer.style.pointerEvents = 'none';
+        }
         loadingDiv.style.display = 'flex';
         chatLog.innerHTML = '';
 
@@ -609,7 +617,11 @@ Suggestions:
           }
 
           loadingDiv.style.display = 'flex'
-          chatContainer.style.display = 'none'
+          // Restore chat panel visibility and interactions after a failed load
+          if (chatContainer) {
+            chatContainer.style.opacity = '1'
+            chatContainer.style.pointerEvents = 'auto'
+          }
           if (modelSelect) modelSelect.disabled = false
           if (modelSelectMain) modelSelectMain.disabled = false
           if (loadModelBtn) loadModelBtn.disabled = false
