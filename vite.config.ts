@@ -4,10 +4,10 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   base: './',
   server: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'credentialless',
-    },
+    // headers: {
+    //   'Cross-Origin-Opener-Policy': 'same-origin',
+    //   'Cross-Origin-Embedder-Policy': 'credentialless',
+    // },
     fs: {
       allow: ['..']
     }
