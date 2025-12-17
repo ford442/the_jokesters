@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
     },
     fs: {
       allow: ['..']
@@ -20,6 +20,10 @@ export default defineConfig({
           src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
           dest: 'assets/ort'
         }
+        // Note: TTS model files (tts.json, unicode_indexer.json, *.onnx) are expected
+        // to be hosted at ./tts/onnx/ on the deployment server
+        // Note: Voice style JSON files (F1.json, F2.json, M1.json, M2.json) are expected
+        // to be hosted at ./tts/voice_styles/ on the deployment server
       ]
     })
   ],
