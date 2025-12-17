@@ -1,5 +1,29 @@
 import * as webllm from '@mlc-ai/web-llm'
 
+// ============================================================================
+// PROFANITY LEVEL CONFIGURATION
+// ============================================================================
+// Adjust this to control how the AI uses profanity:
+// - 'PG'       : Family-friendly, no swearing at all
+// - 'CASUAL'   : Light profanity (damn, hell, crap)  
+// - 'GRITTY'   : Realistic casual swearing (shit, f*ck, etc.)
+// - 'UNCENSORED': Full uncensored language (use with caution)
+// ============================================================================
+export const PROFANITY_LEVEL: 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED' = 'GRITTY'
+
+export type ProfanityLevel = 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED'
+
+// Shortened style guides to reduce token usage
+const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
+  PG: `Keep it family-friendly. No swearing.`,
+  CASUAL: `Mild language OK (damn, hell). No strong profanity.`,
+  GRITTY: `Casual swearing OK (shit, f*ck). No sexual/violent content.`,
+  UNCENSORED: `Full language freedom. No sexual/violent content.`,
+}
+
+// Max conversation history to keep (prevents VRAM exhaustion)
+const MAX_HISTORY_MESSAGES = 8
+
 export interface Agent {
   id: string
   name: string
@@ -21,12 +45,9 @@ export class GroupChatManager {
   private conversationHistory: Message[] = []
   private isInitialized = false
 
-  // CONFIG: The "Gritty but Safe" Style Guide
-  // This allows swearing for realism but strictly bans sexual/violent content.
-  private readonly STYLE_INSTRUCTION = 
-    `STYLE GUIDE: "Gritty & Real". \n` +
-    `You are encouraged to use casual profanity (shit, hell, damn, f*ck) to sound like a real person expressing genuine emotion.\n` +
-    `HOWEVER: You must strictly AVOID sexual violence, graphic gore, or hate speech. Be cool and edgy, not gross or abusive.`;
+  // Style instruction - can be changed at runtime via setProfanityLevel()
+  private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
+  private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
 
   // Sampling parameters for reducing repetition
   private readonly REPETITION_PENALTY = 0.955;
@@ -37,6 +58,22 @@ export class GroupChatManager {
 
   constructor(agents: Agent[]) {
     this.agents = agents
+  }
+
+  /**
+   * Set the profanity level at runtime
+   */
+  setProfanityLevel(level: ProfanityLevel): void {
+    this.currentProfanityLevel = level
+    this.styleInstruction = PROFANITY_INSTRUCTIONS[level]
+    console.log(`Profanity level set to: ${level}`)
+  }
+
+  /**
+   * Get the current profanity level
+   */
+  getProfanityLevel(): ProfanityLevel {
+    return this.currentProfanityLevel
   }
 
   async initialize(
@@ -114,15 +151,21 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Build combined system message
-    const systemMessage = this.buildSystemMessage(
-      currentAgent.systemPrompt,
-      options.hiddenInstruction
-    )
+    // Build the full system prompt: agent persona + style guide + optional director note
+    // web-llm requires exactly ONE system message as the first entry
+    let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
 
+    // If a hiddenInstruction was provided, append it to the system prompt
+    if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
+      fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
+    }
+
+    // Create messages array with single merged system prompt
+    // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
+    const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
     const messages: Message[] = [
-      { role: 'system', content: systemMessage },
-      ...this.conversationHistory,
+      { role: 'system', content: fullSystemPrompt },
+      ...recentHistory,
     ]
 
     try {
@@ -131,8 +174,8 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Use the override if provided, otherwise default to 96
-        max_tokens: options.maxTokens || 96,
+        // Hard cap at 96 tokens to reduce VRAM usage
+        max_tokens: Math.min(options.maxTokens || 96, 96),
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
         stop: ["###", "Director:", "User:"],
@@ -241,14 +284,14 @@ export class GroupChatManager {
 
     // 1. Context: Only look at the last 6 lines to judge current momentum
     const recentHistory = this.conversationHistory.slice(-6)
-    if (recentHistory.length === 0) return "" 
+    if (recentHistory.length === 0) return ""
 
     const historyText = recentHistory
       .map(m => `${m.role === 'user' ? 'Prompt' : 'Actor'}: ${m.content}`)
       .join('\n')
 
     // 2. The Judgment Prompt
-    const directorSystemPrompt = 
+    const directorSystemPrompt =
       `You are an expert Improv Director. Watch the scene below.\n` +
       `First, judge the scene: is it "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive)?\n` +
       `Then, provide a ONE-SENTENCE direction to the NEXT actor.\n` +
