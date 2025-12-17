@@ -37,7 +37,7 @@ const smallModelId = 'mlc-ai/Qwen2-0.5B-Instruct-q4f32_1-MLC';
 // 4. Snowflake embedding model (for vector/embedding tasks)
 const snowflakeEmbedModelConfig = {
   model_id: 'snowflake-arctic-embed-s-q0f32-MLC-b4',
-  model: 'https://huggingface.co/mlc-ai/snowflake-arctic-embed-s-q0f32-MLC',
+  model: 'https://huggingface.co/mlc-ai/snowflake-arctic-embed-s-q0f32-MLC/resolve/main/',
   // Prebuilt WASM runtime for the Snowflake embedding model (hosted by mlc-ai libs)
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/snowflake-arctic-embed-s-q0f32-ctx512_cs512_batch4-webgpu.wasm',
   vram_required_MB: 238.71,
@@ -48,7 +48,7 @@ const snowflakeEmbedModelConfig = {
 // Phi-3.5 Vision instruct (q4f16)
 const phi35VisionQ4f16Config = {
   model_id: 'Phi-3.5-vision-instruct-q4f16_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f16_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f16_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f16_1-ctx4k_cs2k-webgpu.wasm',
   vram_required_MB: 3952.18,
   low_resource_required: true,
@@ -59,7 +59,7 @@ const phi35VisionQ4f16Config = {
 // Phi-3.5 Vision instruct (q4f32)
 const phi35VisionQ4f32Config = {
   model_id: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f32_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f32_1-ctx4k_cs2k-webgpu.wasm',
   vram_required_MB: 5879.84,
   low_resource_required: true,
@@ -70,7 +70,7 @@ const phi35VisionQ4f32Config = {
 // SmolLM2 small instruct model
 const smolLM2Config = {
   model_id: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/SmolLM2-360M-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
   vram_required_MB: 579.61,
   low_resource_required: true,
