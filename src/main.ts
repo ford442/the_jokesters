@@ -489,6 +489,20 @@ async function initApp() {
         try {
           const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
 
+          // Prevent loading non-chat-capable models (e.g., embeddings or VLMs) into the Chat flow
+          const modelType = (modelInfo?.model_type || '').toString().toLowerCase()
+          const allowedChatTypes = ['llm', 'chat']
+          if (modelType && !allowedChatTypes.includes(modelType)) {
+            const friendly = `Model '${newModelId}' is type '${modelType}' and cannot be used for Chat. Please select an LLM/chat-capable model.`
+            console.warn(friendly)
+            statusText.textContent = friendly
+            statusText.style.color = '#ff6b6b'
+            if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+            if (modelSelect) modelSelect.disabled = false
+            if (loadModelBtn) loadModelBtn.disabled = false
+            return
+          }
+
           // Lightweight URL checks to prevent long-running network failures when loading large WASM/model assets
           // 1) If the selected model is Qwen, keep the existing URL HEAD check (it was added for reliability)
           if (newModelId.toLowerCase().includes('qwen')) {
