@@ -293,8 +293,6 @@ async function initApp() {
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
-  // Controls container (so we can hide it when a scene starts)
-  const controlsDiv = document.querySelector('.controls') as HTMLDivElement | null;
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -887,10 +885,9 @@ Suggestions:
       addMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4')
       addMessage('System', description, '#4ecdc4')
 
-      // Hide the right-hand controls for a focused, immersive scene, and expose a floating stop button
-      if (controlsDiv) controlsDiv.style.display = 'none'
+      // Keep controls visible during scenes per user preference
       const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
-      if (floatingStop) floatingStop.style.display = 'block'
+      if (floatingStop) floatingStop.style.display = 'none'
 
       try {
         // Start our own Director loop rather than using ImprovSceneManager's
@@ -936,8 +933,7 @@ Suggestions:
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
 
-      // Restore controls after scene stopped
-      if (controlsDiv) controlsDiv.style.display = 'flex'
+      // Controls remain visible (no-op). Ensure floating stop button is hidden
       const floatingStop2 = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
       if (floatingStop2) floatingStop2.style.display = 'none'
     }
@@ -954,8 +950,7 @@ Suggestions:
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
 
-      // Restore controls when we stop the scene
-      if (controlsDiv) controlsDiv.style.display = 'flex'
+      // Controls remain visible; just ensure floating stop button is hidden
       const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
       if (floatingStop) floatingStop.style.display = 'none'
     }
