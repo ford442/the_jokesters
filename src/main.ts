@@ -293,6 +293,8 @@ async function initApp() {
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
+  // Controls container (so we can hide it when a scene starts)
+  const controlsDiv = document.querySelector('.controls') as HTMLDivElement | null;
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -778,6 +780,25 @@ Suggestions:
     returnBtn.style.display = 'none'
     document.body.appendChild(returnBtn)
 
+    // Floating 'Stop Scene' button that appears when a scene is running and hides the right controls
+    const floatingStopBtn = document.createElement('button') as HTMLButtonElement
+    floatingStopBtn.id = 'floating-stop-improv-btn'
+    floatingStopBtn.textContent = 'Stop Scene'
+    floatingStopBtn.title = 'Stop the running scene and restore controls'
+    floatingStopBtn.style.position = 'fixed'
+    floatingStopBtn.style.right = '16px'
+    floatingStopBtn.style.bottom = '16px'
+    floatingStopBtn.style.zIndex = '9999'
+    floatingStopBtn.style.background = '#ff6b6b'
+    floatingStopBtn.style.color = '#ffffff'
+    floatingStopBtn.style.border = 'none'
+    floatingStopBtn.style.padding = '10px 12px'
+    floatingStopBtn.style.borderRadius = '8px'
+    floatingStopBtn.style.cursor = 'pointer'
+    floatingStopBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
+    floatingStopBtn.style.display = 'none'
+    document.body.appendChild(floatingStopBtn)
+
     returnBtn.addEventListener('click', () => {
       // Simulate clicking the chat mode button to ensure consistent UI state
       chatModeBtn.click()
@@ -854,6 +875,11 @@ Suggestions:
       addMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4')
       addMessage('System', description, '#4ecdc4')
 
+      // Hide the right-hand controls for a focused, immersive scene, and expose a floating stop button
+      if (controlsDiv) controlsDiv.style.display = 'none'
+      const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop) floatingStop.style.display = 'block'
+
       try {
         // Start our own Director loop rather than using ImprovSceneManager's
         // Reset conversation history and start with a seed line
@@ -897,6 +923,11 @@ Suggestions:
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+
+      // Restore controls after scene stopped
+      if (controlsDiv) controlsDiv.style.display = 'flex'
+      const floatingStop2 = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop2) floatingStop2.style.display = 'none'
     }
 
     const stopImprovScene = () => {
@@ -910,6 +941,11 @@ Suggestions:
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+
+      // Restore controls when we stop the scene
+      if (controlsDiv) controlsDiv.style.display = 'flex'
+      const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop) floatingStop.style.display = 'none'
     }
 
     // Director logic: process a single turn with pacing and TTS steps
@@ -968,6 +1004,14 @@ Suggestions:
 
     startImprovBtn.addEventListener('click', startImprovScene)
     stopImprovBtn.addEventListener('click', stopImprovScene)
+
+    // Hook up the floating stop button (appears when controls are hidden during a running scene)
+    const floatingStopBtnEl = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+    if (floatingStopBtnEl) {
+      floatingStopBtnEl.addEventListener('click', () => {
+        stopImprovScene()
+      })
+    }
 
     userInput.focus()
   } catch (error: any) {
