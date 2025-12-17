@@ -87,6 +87,47 @@ export class GroupChatManager {
     }
   }
 
+
+  /**
+   * Helper function to detect if an error is a cache-related network error
+   */
+  private isCacheNetworkError(error: any): boolean {
+    const errMsg = (error instanceof Error ? error.message : String(error)).toLowerCase()
+    return (
+      errMsg.includes('cache.add') ||
+      errMsg.includes("failed to execute 'add' on 'cache'") ||
+      errMsg.includes('networkerror') ||
+      errMsg.includes('net::err') ||
+      errMsg.includes('failed to fetch') ||
+      errMsg.includes('network error')
+    )
+  }
+
+  /**
+   * Attempt to clear the cache storage to recover from cache errors
+   */
+  private async clearModelCache(): Promise<void> {
+    try {
+      // Use globalThis for better compatibility across browser/worker contexts
+      if ('caches' in globalThis) {
+        const cacheNames = await caches.keys()
+        console.log(`Clearing ${cacheNames.length} cache(s) to recover from error...`)
+        for (const name of cacheNames) {
+          await caches.delete(name)
+          console.log(`Deleted cache: ${name}`)
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to clear cache storage:', err)
+    }
+  }
+
+  /**
+   * Sleep helper for retry delays
+   */
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms))
+  }
   /**
    * MODIFIED: Accepts modelId to dynamically load the LLM.
    */
@@ -124,29 +165,77 @@ export class GroupChatManager {
 			}
 		}
 
-		try {
-      console.log(`Loading WebLLM model: ${modelId}...`);
+    // Retry configuration
+    const maxRetries = 3
+    const baseDelay = 1000 // 1 second
 
-      // Follow the official example format
-      this.engine = await webllm.CreateMLCEngine(
-        modelId, // <-- Use the dynamic modelId
-        {
-          // appConfig: appConfig,
-          initProgressCallback: onProgress
-        }, // engineConfig
-        {
-          repetition_penalty: 1.15
-        } // chatOpts (optional)
-      );
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          console.log(`Retry attempt ${attempt}/${maxRetries} for loading model: ${modelId}`)
+        } else {
+          console.log(`Loading WebLLM model: ${modelId}...`)
+        }
 
-      this.isInitialized = true
-      console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
-		} catch (error) {
-			console.error('Failed to initialize GroupChatManager:', error)
-			// Provide a more actionable error message for common model-config issues
-			const base = error instanceof Error ? error.message : String(error)
-			throw new Error(`${base} (while initializing model '${modelId}'). Check that the model is registered in webllm.prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`)
-		}
+        // Follow the official example format
+        this.engine = await webllm.CreateMLCEngine(
+          modelId, // <-- Use the dynamic modelId
+          {
+            // appConfig: appConfig,
+            initProgressCallback: onProgress
+          }, // engineConfig
+          {
+            repetition_penalty: 1.15
+          } // chatOpts (optional)
+        );
+
+        this.isInitialized = true
+        console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
+        return // Success! Exit the function
+      } catch (error) {
+        console.error(`Failed to initialize GroupChatManager (attempt ${attempt}/${maxRetries}):`, error)
+        
+        // Check if this is a cache/network error
+        const isCacheError = this.isCacheNetworkError(error)
+        
+        if (isCacheError && attempt < maxRetries) {
+          // On cache errors, clear cache and retry
+          console.log('Detected cache/network error. Clearing cache before retry...')
+          await this.clearModelCache()
+          
+          // Exponential backoff: wait before retrying (delays before retry 2, 3 would be: 1s, 2s)
+          const delay = baseDelay * Math.pow(2, attempt - 1)
+          console.log(`Waiting ${delay}ms before retry...`)
+          await this.sleep(delay)
+          continue
+        } else if (attempt < maxRetries) {
+          // For non-cache errors, still retry but with linear delay (delays before retry 2, 3: 1s, 2s)
+          const delay = baseDelay * attempt
+          console.log(`Waiting ${delay}ms before retry...`)
+          await this.sleep(delay)
+          continue
+        }
+        
+        // If we've exhausted retries, throw enhanced error
+        const base = error instanceof Error ? error.message : String(error)
+        let enhancedMessage = `${base} (while initializing model '${modelId}' after ${maxRetries} attempts).`
+        
+        if (isCacheError) {
+          enhancedMessage += `\n\nThis appears to be a cache/network error. Suggestions:
+  • Check your network connection and try again
+  • Clear browser cache manually (Settings → Privacy → Clear browsing data)
+  • Try a different, smaller model (e.g., SmolLM2-360M-Instruct-q4f32_1-MLC)
+  • Verify model URLs are reachable: open browser DevTools → Network tab
+  • If using Hugging Face, ensure URLs point to '/resolve/main/' not just repo root
+  • Check that you have sufficient disk space for model caching (2-8GB needed)`
+        } else {
+          enhancedMessage += `\n\nCheck that the model is registered in webllm.prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`
+        }
+        
+        throw new Error(enhancedMessage)
+      }
+    }
+
   }
 
   async chat(
