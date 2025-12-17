@@ -37,7 +37,7 @@ const smallModelId = 'mlc-ai/Qwen2-0.5B-Instruct-q4f32_1-MLC';
 // 4. Snowflake embedding model (for vector/embedding tasks)
 const snowflakeEmbedModelConfig = {
   model_id: 'snowflake-arctic-embed-s-q0f32-MLC-b4',
-  model: 'https://huggingface.co/mlc-ai/snowflake-arctic-embed-s-q0f32-MLC',
+  model: 'https://huggingface.co/mlc-ai/snowflake-arctic-embed-s-q0f32-MLC/resolve/main/',
   // Prebuilt WASM runtime for the Snowflake embedding model (hosted by mlc-ai libs)
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/snowflake-arctic-embed-s-q0f32-ctx512_cs512_batch4-webgpu.wasm',
   vram_required_MB: 238.71,
@@ -48,7 +48,7 @@ const snowflakeEmbedModelConfig = {
 // Phi-3.5 Vision instruct (q4f16)
 const phi35VisionQ4f16Config = {
   model_id: 'Phi-3.5-vision-instruct-q4f16_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f16_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f16_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f16_1-ctx4k_cs2k-webgpu.wasm',
   vram_required_MB: 3952.18,
   low_resource_required: true,
@@ -59,7 +59,7 @@ const phi35VisionQ4f16Config = {
 // Phi-3.5 Vision instruct (q4f32)
 const phi35VisionQ4f32Config = {
   model_id: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f32_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f32_1-ctx4k_cs2k-webgpu.wasm',
   vram_required_MB: 5879.84,
   low_resource_required: true,
@@ -70,7 +70,7 @@ const phi35VisionQ4f32Config = {
 // SmolLM2 small instruct model
 const smolLM2Config = {
   model_id: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/SmolLM2-360M-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
   vram_required_MB: 579.61,
   low_resource_required: true,
@@ -80,6 +80,26 @@ const smolLM2Config = {
 
 // The previous default model
 const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
+
+// IMPORTANT: Ensure the default Hermes model also uses the /resolve/main/ URL pattern to point to raw files
+// instead of the HTML repo page. This overrides the default internal config in WebLLM if present.
+const hermesModelConfig = {
+  model_id: defaultModelId,
+  model: 'https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/resolve/main/',
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+  vram_required_MB: 2951.51,
+  low_resource_required: true,
+  overrides: { context_window_size: 4096 },
+  model_type: 'llm',
+}
+
+// Inject/Update the default Hermes model
+const existingHermes = webllm.prebuiltAppConfig.model_list.findIndex((m: any) => m.model_id === defaultModelId)
+if (existingHermes !== -1) {
+  webllm.prebuiltAppConfig.model_list[existingHermes] = hermesModelConfig as any
+} else {
+  webllm.prebuiltAppConfig.model_list.push(hermesModelConfig as any)
+}
 
 // Inject the custom model into the WebLLM configuration list
 // This ensures that webllm.CreateMLCEngine knows how to load the custom model weights/wasm
@@ -188,7 +208,7 @@ async function initApp() {
           <button id="load-model-btn" style="margin-left:8px; padding:6px 10px;">Load Model</button>
         </div>
       </div>
-      <div id="chat-container" class="chat-container" style="display: none;">
+      <div id="chat-container" class="chat-container">
         <canvas id="scene"></canvas>
         <div class="controls">
           <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
@@ -393,9 +413,13 @@ async function initApp() {
     const { level } = profanityLevels[idx]
     groupChatManager.setProfanityLevel(level)
 
-    // Hide loading, show chat
+    // Hide loading, show chat and restore interactions
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+    if (chatContainer) {
+      chatContainer.style.opacity = '1'
+      chatContainer.style.pointerEvents = 'auto'
+    }
     // Re-enable model select and load button after successful initialization
     if (modelSelect) modelSelect.disabled = false;
     if (modelSelectMain) modelSelectMain.disabled = false;
@@ -498,14 +522,34 @@ async function initApp() {
         // Stop improv if running
         if (isImprovRunning) stopImprovScene();
 
-        chatContainer.style.display = 'none';
+        // Do not hide the chat panel — instead dim and disable interactions during model loading
+        if (chatContainer) {
+          chatContainer.style.opacity = '0.6';
+          chatContainer.style.pointerEvents = 'none';
+        }
         loadingDiv.style.display = 'flex';
         chatLog.innerHTML = '';
 
         try {
-          // If the selected model looks like Qwen2, perform a lightweight URL check
+          const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+
+          // Prevent loading non-chat-capable models (e.g., embeddings or VLMs) into the Chat flow
+          const modelType = (modelInfo?.model_type || '').toString().toLowerCase()
+          const allowedChatTypes = ['llm', 'chat']
+          if (modelType && !allowedChatTypes.includes(modelType)) {
+            const friendly = `Model '${newModelId}' is type '${modelType}' and cannot be used for Chat. Please select an LLM/chat-capable model.`
+            console.warn(friendly)
+            statusText.textContent = friendly
+            statusText.style.color = '#ff6b6b'
+            if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+            if (modelSelect) modelSelect.disabled = false
+            if (loadModelBtn) loadModelBtn.disabled = false
+            return
+          }
+
+          // Lightweight URL checks to prevent long-running network failures when loading large WASM/model assets
+          // 1) If the selected model is Qwen, keep the existing URL HEAD check (it was added for reliability)
           if (newModelId.toLowerCase().includes('qwen')) {
-            const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
             const urlToCheck = modelInfo?.model
             if (urlToCheck) {
               statusText.textContent = `Checking model URL for ${newModelId}...`
@@ -527,6 +571,66 @@ async function initApp() {
                 if (loadModelBtn) loadModelBtn.disabled = false
                 return
               }
+            }
+          }
+
+          // 2) Preflight-check the model runtime/WASM URL (model_lib) for ALL models. Some hosts (raw.githubusercontent.com, cf CDN) can be rate-limited or return HTML errors.
+          const modelRuntimeURL = modelInfo?.model_lib || modelInfo?.model_lib_url || modelInfo?.model
+          if (modelRuntimeURL) {
+            statusText.textContent = `Checking model runtime URL for ${newModelId}...`
+            const controller = new AbortController()
+            const timeoutMs = 8000
+            const timeout = setTimeout(() => controller.abort(), timeoutMs)
+            let ok = false
+            try {
+              // Try HEAD first (many hosts support it). If it fails or returns HTML, try a small Range GET as fallback.
+              const headResp = await fetch(modelRuntimeURL, { method: 'HEAD', signal: controller.signal })
+              clearTimeout(timeout)
+              if (headResp.ok) {
+                const ct = headResp.headers.get('content-type') || ''
+                if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                  ok = true
+                } else {
+                  console.warn('Model runtime HEAD returned non-binary content-type:', ct)
+                }
+              } else {
+                console.warn('Model runtime HEAD returned non-OK status:', headResp.status)
+              }
+            } catch (headErr) {
+              console.warn('HEAD check failed for model runtime, attempting Range GET as fallback:', headErr)
+              try {
+                // Reset controller for second request
+                const controller2 = new AbortController()
+                const timeout2 = setTimeout(() => controller2.abort(), timeoutMs)
+                const rangeResp = await fetch(modelRuntimeURL, { method: 'GET', headers: { Range: 'bytes=0-1023' }, signal: controller2.signal })
+                clearTimeout(timeout2)
+                if (rangeResp.ok) {
+                  const ct = rangeResp.headers.get('content-type') || ''
+                  if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                    ok = true
+                  } else {
+                    console.warn('Model runtime Range GET returned non-binary content-type:', ct)
+                  }
+                } else {
+                  console.warn('Model runtime Range GET returned non-OK status:', rangeResp.status)
+                }
+              } catch (rangeErr) {
+                console.error('Range GET fallback failed for model runtime:', rangeErr)
+              }
+            }
+
+            if (!ok) {
+              const friendly = `Model runtime '${modelRuntimeURL}' is not reachable or does not look like a binary runtime (WASM). This commonly causes network/cache errors while loading a model.`
+              console.error(friendly)
+              statusText.textContent = friendly
+              statusText.style.color = '#ff6b6b'
+              if (modelErrorDiv) {
+                modelErrorDiv.textContent = `${friendly}\n\nSuggestions:\n • Check the URL in the model config is a direct link to the WASM runtime (not a directory or HTML page).\n • Raw GitHub links may be rate-limited; try hosting the WASM on a stable CDN (jsdelivr/gh-cdn) or mlc-ai's releases.\n • If the file is very large, try a smaller model or a local static host.`
+                modelErrorDiv.style.display = 'block'
+              }
+              if (modelSelect) modelSelect.disabled = false
+              if (loadModelBtn) loadModelBtn.disabled = false
+              return
             }
           }
 
@@ -569,7 +673,11 @@ Suggestions:
           }
 
           loadingDiv.style.display = 'flex'
-          chatContainer.style.display = 'none'
+          // Restore chat panel visibility and interactions after a failed load
+          if (chatContainer) {
+            chatContainer.style.opacity = '1'
+            chatContainer.style.pointerEvents = 'auto'
+          }
           if (modelSelect) modelSelect.disabled = false
           if (modelSelectMain) modelSelectMain.disabled = false
           if (loadModelBtn) loadModelBtn.disabled = false
@@ -713,8 +821,66 @@ Suggestions:
     improvModeBtn.addEventListener('click', () => {
       improvModeBtn.classList.add('active')
       chatModeBtn.classList.remove('active')
-      chatModeControls.style.display = 'none'
+      // Keep both control panels visible so users can access chat while in Improv mode
+      chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
+      // Show the floating 'Return to Chat' button as an optional quick-switch
+      const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
+      if (existing) existing.style.display = 'block'
+    })
+
+    // Floating 'Return to Chat' button to aid quick switching
+    const returnBtn = document.createElement('button') as HTMLButtonElement
+    returnBtn.id = 'return-to-chat-btn'
+    returnBtn.textContent = 'Return to Chat'
+    returnBtn.title = 'Switch back to Chat Mode'
+    returnBtn.style.position = 'fixed'
+    returnBtn.style.left = '16px'
+    returnBtn.style.bottom = '16px'
+    returnBtn.style.zIndex = '9999'
+    returnBtn.style.background = '#4ecdc4'
+    returnBtn.style.color = '#0f0f23'
+    returnBtn.style.border = 'none'
+    returnBtn.style.padding = '10px 12px'
+    returnBtn.style.borderRadius = '8px'
+    returnBtn.style.cursor = 'pointer'
+    returnBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
+    returnBtn.style.display = 'none'
+    document.body.appendChild(returnBtn)
+
+    // Floating 'Stop Scene' button that appears when a scene is running and hides the right controls
+    const floatingStopBtn = document.createElement('button') as HTMLButtonElement
+    floatingStopBtn.id = 'floating-stop-improv-btn'
+    floatingStopBtn.textContent = 'Stop Scene'
+    floatingStopBtn.title = 'Stop the running scene and restore controls'
+    floatingStopBtn.style.position = 'fixed'
+    floatingStopBtn.style.right = '16px'
+    floatingStopBtn.style.bottom = '16px'
+    floatingStopBtn.style.zIndex = '9999'
+    floatingStopBtn.style.background = '#ff6b6b'
+    floatingStopBtn.style.color = '#ffffff'
+    floatingStopBtn.style.border = 'none'
+    floatingStopBtn.style.padding = '10px 12px'
+    floatingStopBtn.style.borderRadius = '8px'
+    floatingStopBtn.style.cursor = 'pointer'
+    floatingStopBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
+    floatingStopBtn.style.display = 'none'
+    document.body.appendChild(floatingStopBtn)
+
+    returnBtn.addEventListener('click', () => {
+      // Simulate clicking the chat mode button to ensure consistent UI state
+      chatModeBtn.click()
+      returnBtn.style.display = 'none'
+    })
+
+    // Ensure both panels remain visible when switching back to Chat
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'block'
+      const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
+      if (existing) existing.style.display = 'none'
     })
 
     // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
@@ -777,6 +943,10 @@ Suggestions:
       addMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4')
       addMessage('System', description, '#4ecdc4')
 
+      // Keep controls visible during scenes per user preference
+      const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop) floatingStop.style.display = 'none'
+
       try {
         // Start our own Director loop rather than using ImprovSceneManager's
         // Reset conversation history and start with a seed line
@@ -820,6 +990,10 @@ Suggestions:
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+
+      // Controls remain visible (no-op). Ensure floating stop button is hidden
+      const floatingStop2 = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop2) floatingStop2.style.display = 'none'
     }
 
     const stopImprovScene = () => {
@@ -833,6 +1007,10 @@ Suggestions:
       sceneDescriptionInput.disabled = false
       startImprovBtn.style.display = 'inline-block'
       stopImprovBtn.style.display = 'none'
+
+      // Controls remain visible; just ensure floating stop button is hidden
+      const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+      if (floatingStop) floatingStop.style.display = 'none'
     }
 
     // Director logic: process a single turn with pacing and TTS steps
@@ -891,6 +1069,14 @@ Suggestions:
 
     startImprovBtn.addEventListener('click', startImprovScene)
     stopImprovBtn.addEventListener('click', stopImprovScene)
+
+    // Hook up the floating stop button (appears when controls are hidden during a running scene)
+    const floatingStopBtnEl = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+    if (floatingStopBtnEl) {
+      floatingStopBtnEl.addEventListener('click', () => {
+        stopImprovScene()
+      })
+    }
 
     userInput.focus()
   } catch (error: any) {
