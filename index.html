@@ -8,6 +8,40 @@
   </head>
   <body>
     <div id="app"></div>
+    <script>
+      // Surface runtime errors directly in the page to help diagnose missing UI
+      window.addEventListener('error', e => {
+        try {
+          const container = document.getElementById('app') || document.body;
+          const msg = (e && e.message) ? e.message : String(e.error || e);
+          const pre = document.createElement('pre');
+          pre.style.color = 'white';
+          pre.style.background = '#ff6b6b';
+          pre.style.padding = '12px';
+          pre.style.borderRadius = '6px';
+          pre.textContent = `Runtime error: ${msg}`;
+          container.prepend(pre);
+          console.error('Captured runtime error:', e);
+        } catch (err) {
+          console.error('Failed to render runtime error to page:', err);
+        }
+      });
+      window.addEventListener('unhandledrejection', e => {
+        try {
+          const container = document.getElementById('app') || document.body;
+          const pre = document.createElement('pre');
+          pre.style.color = 'white';
+          pre.style.background = '#ff6b6b';
+          pre.style.padding = '12px';
+          pre.style.borderRadius = '6px';
+          pre.textContent = `Unhandled Rejection: ${String(e.reason)}`;
+          container.prepend(pre);
+          console.error('Unhandled rejection:', e);
+        } catch (err) {
+          console.error('Failed to render unhandled rejection to page:', err);
+        }
+      });
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
