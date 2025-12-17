@@ -33,6 +33,51 @@ const llama2bModelConfig = {
 
 // 2. A smaller model for contrast (Qwen2 0.5B from mlc-ai)
 const smallModelId = 'mlc-ai/Qwen2-0.5B-Instruct-q4f32_1-MLC';
+
+// 4. Snowflake embedding model (for vector/embedding tasks)
+const snowflakeEmbedModelConfig = {
+  model_id: 'snowflake-arctic-embed-s-q0f32-MLC-b4',
+  model: 'https://huggingface.co/mlc-ai/snowflake-arctic-embed-s-q0f32-MLC',
+  // Prebuilt WASM runtime for the Snowflake embedding model (hosted by mlc-ai libs)
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/snowflake-arctic-embed-s-q0f32-ctx512_cs512_batch4-webgpu.wasm',
+  vram_required_MB: 238.71,
+  // Use a simple string type here to avoid coupling to an enum that may not be present at runtime
+  model_type: 'embedding',
+};
+
+// Phi-3.5 Vision instruct (q4f16)
+const phi35VisionQ4f16Config = {
+  model_id: 'Phi-3.5-vision-instruct-q4f16_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f16_1-MLC',
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f16_1-ctx4k_cs2k-webgpu.wasm',
+  vram_required_MB: 3952.18,
+  low_resource_required: true,
+  overrides: { context_window_size: 4096 },
+  model_type: 'vlm',
+};
+
+// Phi-3.5 Vision instruct (q4f32)
+const phi35VisionQ4f32Config = {
+  model_id: 'Phi-3.5-vision-instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/Phi-3.5-vision-instruct-q4f32_1-MLC',
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Phi-3.5-vision-instruct-q4f32_1-ctx4k_cs2k-webgpu.wasm',
+  vram_required_MB: 5879.84,
+  low_resource_required: true,
+  overrides: { context_window_size: 4096 },
+  model_type: 'vlm',
+};
+
+// SmolLM2 small instruct model
+const smolLM2Config = {
+  model_id: 'SmolLM2-360M-Instruct-q4f32_1-MLC',
+  model: 'https://huggingface.co/mlc-ai/SmolLM2-360M-Instruct-q4f32_1-MLC',
+  model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/SmolLM2-360M-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+  vram_required_MB: 579.61,
+  low_resource_required: true,
+  overrides: { context_window_size: 4096 },
+  model_type: 'llm',
+};
+
 // The previous default model
 const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
 
@@ -46,6 +91,26 @@ if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === llama2b
   webllm.prebuiltAppConfig.model_list.push(llama2bModelConfig as any)
 }
 
+// Register Snowflake embedding model so it's discoverable in the UI
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === snowflakeEmbedModelConfig.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(snowflakeEmbedModelConfig as any)
+}
+
+// Phi-3.5 Vision instruct (q4f16)
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === phi35VisionQ4f16Config.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(phi35VisionQ4f16Config as any)
+}
+
+// Phi-3.5 Vision instruct (q4f32)
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === phi35VisionQ4f32Config.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(phi35VisionQ4f32Config as any)
+}
+
+// SmolLM2 small instruct model
+if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === smolLM2Config.model_id)) {
+  webllm.prebuiltAppConfig.model_list.push(smolLM2Config as any)
+}
+
 // Log available models (now includes the custom one)
 console.log('Available prebuilt models (including custom):', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
@@ -55,6 +120,11 @@ const availableModels = [
   llama2bModelConfig.model_id,
   customVicunaModelConfig.model_id,
   smallModelId,
+  snowflakeEmbedModelConfig.model_id,
+  // Newly added models
+  phi35VisionQ4f16Config.model_id,
+  phi35VisionQ4f32Config.model_id,
+  smolLM2Config.model_id,
 ].filter(id => webllm.prebuiltAppConfig.model_list.some((m: any) => m.model_id === id)); // Filter to ensure only models that exist are included
 
 // Set the initial default model
