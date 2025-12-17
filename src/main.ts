@@ -751,14 +751,15 @@ Suggestions:
     improvModeBtn.addEventListener('click', () => {
       improvModeBtn.classList.add('active')
       chatModeBtn.classList.remove('active')
-      chatModeControls.style.display = 'none'
+      // Keep both control panels visible so users can access chat while in Improv mode
+      chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
-      // Show a persistent 'Return to Chat' floating button so users can easily switch back
+      // Show the floating 'Return to Chat' button as an optional quick-switch
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'block'
     })
 
-    // Floating 'Return to Chat' button to aid recovery from Improv-only view
+    // Floating 'Return to Chat' button to aid quick switching
     const returnBtn = document.createElement('button') as HTMLButtonElement
     returnBtn.id = 'return-to-chat-btn'
     returnBtn.textContent = 'Return to Chat'
@@ -783,12 +784,12 @@ Suggestions:
       returnBtn.style.display = 'none'
     })
 
-    // Hide the floating button when switching back to Chat
+    // Ensure both panels remain visible when switching back to Chat
     chatModeBtn.addEventListener('click', () => {
       chatModeBtn.classList.add('active')
       improvModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
-      improvModeControls.style.display = 'none'
+      improvModeControls.style.display = 'block'
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'none'
     })
