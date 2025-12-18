@@ -19,6 +19,7 @@ const customVicunaModelConfig = {
   model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
   vram_required_MB: 4096,
   low_resource_required: false,
+  model_type: 'llm',
 };
 
 // 3. Lightweight Llama-2 2B for quick comparison testing
