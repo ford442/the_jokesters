@@ -469,7 +469,7 @@ async function initApp() {
     
     // Helper function to extract a friendly model name from model_id
     const getModelDisplayName = (modelId: string): string => {
-      return modelId.split('/').pop() || 'Vicuna 7B';
+      return modelId.split('/').pop() || modelId || 'Unknown Model';
     };
     
     const savedAutoLoad = localStorage.getItem(AUTO_LOAD_KEY);
@@ -483,8 +483,10 @@ async function initApp() {
       const modelName = getModelDisplayName(customVicunaModelConfig.model_id);
       if (autoLoadVicunaCheckbox.checked) {
         statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
+        statusText.style.color = ''; // Reset to default color
       } else {
         statusText.textContent = 'Select a model and click "Load Model" to begin.';
+        statusText.style.color = ''; // Reset to default color
       }
     });
     
@@ -501,6 +503,7 @@ async function initApp() {
         
         const modelName = getModelDisplayName(vicunaModelId);
         statusText.textContent = `Auto-loading ${modelName} for Improv...`;
+        statusText.style.color = ''; // Reset to default color
         
         // Trigger model load after a short delay to ensure UI is ready
         // Note: Errors from the actual model loading happen in the button's event handler
@@ -518,6 +521,7 @@ async function initApp() {
     } else {
       // Do NOT auto-load any model. The user must click "Load Model" to initialize.
       statusText.textContent = 'Select a model and click "Load Model" to begin.';
+      statusText.style.color = ''; // Reset to default color
     }
     loadingDiv.style.display = 'flex'
     
