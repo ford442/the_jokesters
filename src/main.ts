@@ -208,6 +208,12 @@ async function initApp() {
           <select id="model-select" style="flex:1; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;"></select>
           <button id="load-model-btn" style="margin-left:8px; padding:6px 10px;">Load Model</button>
         </div>
+        <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+          <label style="display:flex; align-items:center; gap:6px; color:#888; font-size:0.85em; cursor:pointer;">
+            <input type="checkbox" id="auto-load-vicuna" style="cursor:pointer;">
+            <span>Auto-load Vicuna 7B for Improv at startup</span>
+          </label>
+        </div>
       </div>
       <div id="chat-container" class="chat-container">
         <canvas id="scene"></canvas>
@@ -314,6 +320,7 @@ async function initApp() {
   // NEW: Get reference to the model selection box
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
+  const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement;
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -455,8 +462,67 @@ async function initApp() {
       modelSelect.value = initialDefaultModel;
       if (modelSelectMain) modelSelectMain.value = initialDefaultModel;
     }
-    // Do NOT auto-load any model. The user must click "Load Model" to initialize.
-    statusText.textContent = 'Select a model and click "Load Model" to begin.'
+    
+    // Load auto-load preference from localStorage
+    const AUTO_LOAD_KEY = 'jokesters-auto-load-vicuna';
+    const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
+    
+    // Helper function to extract a friendly model name from model_id
+    const getModelDisplayName = (modelId: string): string => {
+      return modelId.split('/').pop() || modelId || 'Unknown Model';
+    };
+    
+    const savedAutoLoad = localStorage.getItem(AUTO_LOAD_KEY);
+    if (savedAutoLoad === 'true') {
+      autoLoadVicunaCheckbox.checked = true;
+    }
+    
+    // Save preference when checkbox changes
+    autoLoadVicunaCheckbox.addEventListener('change', () => {
+      localStorage.setItem(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
+      const modelName = getModelDisplayName(customVicunaModelConfig.model_id);
+      if (autoLoadVicunaCheckbox.checked) {
+        statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
+        statusText.style.color = ''; // Reset to default color
+      } else {
+        statusText.textContent = 'Select a model and click "Load Model" to begin.';
+        statusText.style.color = ''; // Reset to default color
+      }
+    });
+    
+    // Auto-load Vicuna 7B if option is enabled
+    if (autoLoadVicunaCheckbox.checked) {
+      // Verify that Vicuna model is available before attempting to auto-load
+      const vicunaModelId = customVicunaModelConfig.model_id;
+      const isVicunaAvailable = availableModels.includes(vicunaModelId);
+      
+      if (isVicunaAvailable) {
+        // Set Vicuna as the selected model
+        modelSelect.value = vicunaModelId;
+        if (modelSelectMain) modelSelectMain.value = vicunaModelId;
+        
+        const modelName = getModelDisplayName(vicunaModelId);
+        statusText.textContent = `Auto-loading ${modelName} for Improv...`;
+        statusText.style.color = ''; // Reset to default color
+        
+        // Trigger model load after a short delay to ensure UI is ready
+        // Note: Errors from the actual model loading happen in the button's event handler
+        setTimeout(() => {
+          loadModelBtn.click();
+        }, AUTO_LOAD_DELAY_MS);
+      } else {
+        // Vicuna model not available, disable auto-load and inform user
+        console.warn('Vicuna model not available in model list, disabling auto-load');
+        autoLoadVicunaCheckbox.checked = false;
+        localStorage.setItem(AUTO_LOAD_KEY, 'false');
+        statusText.textContent = 'Vicuna model not available. Auto-load disabled. Select a model and click "Load Model" to begin.';
+        statusText.style.color = '#ff6b6b';
+      }
+    } else {
+      // Do NOT auto-load any model. The user must click "Load Model" to initialize.
+      statusText.textContent = 'Select a model and click "Load Model" to begin.';
+      statusText.style.color = ''; // Reset to default color
+    }
     loadingDiv.style.display = 'flex'
     
     // UI listeners
