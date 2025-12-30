@@ -465,6 +465,13 @@ async function initApp() {
     
     // Load auto-load preference from localStorage
     const AUTO_LOAD_KEY = 'jokesters-auto-load-vicuna';
+    const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
+    
+    // Helper function to extract a friendly model name from model_id
+    const getModelDisplayName = (modelId: string): string => {
+      return modelId.split('/').pop() || 'Vicuna 7B';
+    };
+    
     const savedAutoLoad = localStorage.getItem(AUTO_LOAD_KEY);
     if (savedAutoLoad === 'true') {
       autoLoadVicunaCheckbox.checked = true;
@@ -473,7 +480,7 @@ async function initApp() {
     // Save preference when checkbox changes
     autoLoadVicunaCheckbox.addEventListener('change', () => {
       localStorage.setItem(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
-      const modelName = customVicunaModelConfig.model_id.split('/').pop() || 'Vicuna 7B';
+      const modelName = getModelDisplayName(customVicunaModelConfig.model_id);
       if (autoLoadVicunaCheckbox.checked) {
         statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
       } else {
@@ -492,14 +499,14 @@ async function initApp() {
         modelSelect.value = vicunaModelId;
         if (modelSelectMain) modelSelectMain.value = vicunaModelId;
         
-        const modelName = vicunaModelId.split('/').pop() || 'Vicuna 7B';
+        const modelName = getModelDisplayName(vicunaModelId);
         statusText.textContent = `Auto-loading ${modelName} for Improv...`;
         
         // Trigger model load after a short delay to ensure UI is ready
         // Note: Errors from the actual model loading happen in the button's event handler
         setTimeout(() => {
           loadModelBtn.click();
-        }, 500);
+        }, AUTO_LOAD_DELAY_MS);
       } else {
         // Vicuna model not available, disable auto-load and inform user
         console.warn('Vicuna model not available in model list, disabling auto-load');
