@@ -473,8 +473,9 @@ async function initApp() {
     // Save preference when checkbox changes
     autoLoadVicunaCheckbox.addEventListener('change', () => {
       localStorage.setItem(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
+      const modelName = customVicunaModelConfig.model_id.split('/').pop() || 'Vicuna 7B';
       if (autoLoadVicunaCheckbox.checked) {
-        statusText.textContent = 'Vicuna 7B will auto-load at next startup. Click "Load Model" now to load it immediately.';
+        statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
       } else {
         statusText.textContent = 'Select a model and click "Load Model" to begin.';
       }
@@ -482,22 +483,31 @@ async function initApp() {
     
     // Auto-load Vicuna 7B if option is enabled
     if (autoLoadVicunaCheckbox.checked) {
-      // Set Vicuna as the selected model
-      modelSelect.value = customVicunaModelConfig.model_id;
-      if (modelSelectMain) modelSelectMain.value = customVicunaModelConfig.model_id;
+      // Verify that Vicuna model is available before attempting to auto-load
+      const vicunaModelId = customVicunaModelConfig.model_id;
+      const isVicunaAvailable = availableModels.includes(vicunaModelId);
       
-      statusText.textContent = 'Auto-loading Vicuna 7B for Improv...';
-      
-      // Trigger model load after a short delay to ensure UI is ready
-      setTimeout(async () => {
-        try {
+      if (isVicunaAvailable) {
+        // Set Vicuna as the selected model
+        modelSelect.value = vicunaModelId;
+        if (modelSelectMain) modelSelectMain.value = vicunaModelId;
+        
+        const modelName = vicunaModelId.split('/').pop() || 'Vicuna 7B';
+        statusText.textContent = `Auto-loading ${modelName} for Improv...`;
+        
+        // Trigger model load after a short delay to ensure UI is ready
+        // Note: Errors from the actual model loading happen in the button's event handler
+        setTimeout(() => {
           loadModelBtn.click();
-        } catch (err) {
-          console.error('Auto-load failed:', err);
-          statusText.textContent = 'Auto-load failed. Please load model manually.';
-          statusText.style.color = '#ff6b6b';
-        }
-      }, 500);
+        }, 500);
+      } else {
+        // Vicuna model not available, disable auto-load and inform user
+        console.warn('Vicuna model not available in model list, disabling auto-load');
+        autoLoadVicunaCheckbox.checked = false;
+        localStorage.setItem(AUTO_LOAD_KEY, 'false');
+        statusText.textContent = 'Vicuna model not available. Auto-load disabled. Select a model and click "Load Model" to begin.';
+        statusText.style.color = '#ff6b6b';
+      }
     } else {
       // Do NOT auto-load any model. The user must click "Load Model" to initialize.
       statusText.textContent = 'Select a model and click "Load Model" to begin.';
