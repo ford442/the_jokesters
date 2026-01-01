@@ -9,6 +9,8 @@ import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
+import { AgentModelManager } from './AgentModelManager'
+import type { AgentModelMapping } from './AgentModelManager'
 
 // --- Custom Model Configurations ---
 // 1. User's custom Vicuna model (7B)
@@ -189,6 +191,13 @@ const agents: Agent[] = [
   },
 ]
 
+// Default model mappings (variety pack for 6GB+ GPUs)
+const defaultAgentModelMappings: AgentModelMapping[] = [
+  { agentId: 'comedian', modelId: 'SmolLM2-360M-Instruct-q4f32_1-MLC' },      // 580MB - chaotic
+  { agentId: 'philosopher', modelId: smallModelId },                          // 500MB - odd
+  { agentId: 'scientist', modelId: defaultModelId },                          // 3GB - verbose
+]
+
 // Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
@@ -245,6 +254,37 @@ async function initApp() {
               <label style="color: #888; font-size: 0.8em;">Language</label>
               <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
               <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">櫨 Gritty</span>
+            </div>
+            
+            <div class="model-assignment-panel" style="margin-top: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label style="color: #4ecdc4; font-size: 0.9em; font-weight: bold;">🎭 Agent Model Assignment</label>
+                <button id="toggle-model-assignment" style="background: transparent; border: 1px solid #4ecdc4; color: #4ecdc4; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Show</button>
+              </div>
+              <div id="model-assignment-content" style="display: none;">
+                <div class="assignment-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                  <label style="color: #ff6b6b; font-size: 0.85em; width: 100px;">🔴 Comedian:</label>
+                  <select id="model-comedian" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.85em;"></select>
+                  <span class="vram-badge" data-agent="comedian" style="color: #888; font-size: 0.75em; white-space: nowrap;">0 MB</span>
+                </div>
+                <div class="assignment-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                  <label style="color: #4ecdc4; font-size: 0.85em; width: 100px;">🟢 Philosopher:</label>
+                  <select id="model-philosopher" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.85em;"></select>
+                  <span class="vram-badge" data-agent="philosopher" style="color: #888; font-size: 0.75em; white-space: nowrap;">0 MB</span>
+                </div>
+                <div class="assignment-row" style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                  <label style="color: #45b7d1; font-size: 0.85em; width: 100px;">🔵 Scientist:</label>
+                  <select id="model-scientist" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.85em;"></select>
+                  <span class="vram-badge" data-agent="scientist" style="color: #888; font-size: 0.75em; white-space: nowrap;">0 MB</span>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: #0f3460; border-radius: 4px; border-left: 3px solid #4ecdc4;">
+                  <div style="font-size: 0.8em; color: #888;">Current Model: <span id="current-model-display" style="color: #4ecdc4;">None</span></div>
+                  <div style="font-size: 0.8em; color: #888;">Estimated VRAM: <span id="current-vram-display" style="color: #4ecdc4;">0</span> MB</div>
+                </div>
+                <div style="margin-top: 8px; padding: 6px; background: #16213e; border-radius: 4px; font-size: 0.75em; color: #888;">
+                  💡 Models swap automatically per turn. Only one loaded at a time.
+                </div>
+              </div>
             </div>
           </div>
           <div class="mode-selector">
@@ -325,6 +365,7 @@ async function initApp() {
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
   let improvSceneManager: ImprovSceneManager;
+  let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
   let speechQueue: SpeechQueue;
   let stage: Stage;
@@ -337,6 +378,55 @@ async function initApp() {
     const nextAgent = groupChatManager.getCurrentAgent()
     nextAgentSpan.textContent = nextAgent.name
     nextAgentSpan.style.color = nextAgent.color
+  }
+
+  // Update current model display in UI
+  const updateCurrentModelDisplay = () => {
+    if (!agentModelManager) return
+    
+    const currentModel = agentModelManager.getCurrentModel()
+    const currentModelSpan = document.getElementById('current-model-display')
+    const currentVramSpan = document.getElementById('current-vram-display')
+    
+    if (currentModelSpan && currentModel) {
+      // Shorten model name for display
+      const shortName = currentModel.split('/').pop() || currentModel
+      currentModelSpan.textContent = shortName
+    }
+    
+    if (currentVramSpan && currentModel) {
+      const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === currentModel)
+      const vram = modelInfo?.vram_required_MB || 0
+      currentVramSpan.textContent = Math.round(vram).toString()
+      
+      // Color code by VRAM usage
+      if (vram < 1000) {
+        currentVramSpan.style.color = '#4ecdc4' // Green
+      } else if (vram < 3000) {
+        currentVramSpan.style.color = '#ffd700' // Yellow
+      } else {
+        currentVramSpan.style.color = '#ff6b6b' // Red
+      }
+    }
+  }
+
+  // Update VRAM badge for an agent's dropdown
+  const updateVRAMBadge = (agentId: string, modelId: string) => {
+    const badge = document.querySelector(`[data-agent="${agentId}"]`)
+    if (!badge) return
+    
+    const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === modelId)
+    const vram = modelInfo?.vram_required_MB || 0
+    badge.textContent = `${Math.round(vram)} MB`
+    
+    // Color code
+    if (vram < 1000) {
+      (badge as HTMLElement).style.color = '#4ecdc4'
+    } else if (vram < 3000) {
+      (badge as HTMLElement).style.color = '#ffd700'
+    } else {
+      (badge as HTMLElement).style.color = '#ff6b6b'
+    }
   }
 
   const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
@@ -416,6 +506,15 @@ async function initApp() {
       statusText.textContent = progress.text
     })
 
+    // 4. Initialize AgentModelManager
+    agentModelManager = new AgentModelManager(
+      groupChatManager,
+      defaultAgentModelMappings,
+      (progress) => {
+        statusText.textContent = `Swapping model: ${progress.text}`
+      }
+    )
+
     // Re-apply settings to the new manager instance
     const idx = parseInt(profanitySlider.value)
     const { level } = profanityLevels[idx]
@@ -461,6 +560,56 @@ async function initApp() {
     if (initialDefaultModel) {
       modelSelect.value = initialDefaultModel;
       if (modelSelectMain) modelSelectMain.value = initialDefaultModel;
+    }
+    
+    // Populate agent model assignment dropdowns
+    const agentIds = ['comedian', 'philosopher', 'scientist']
+    agentIds.forEach(agentId => {
+      const select = document.getElementById(`model-${agentId}`) as HTMLSelectElement
+      if (!select) return
+      
+      availableModels.forEach(modelId => {
+        // Only show LLM models (exclude embedding/vision models)
+        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === modelId)
+        const modelType = modelInfo?.model_type?.toString().toLowerCase()
+        if (modelType && !['llm', 'chat'].includes(modelType)) return
+        
+        const option = document.createElement('option')
+        option.value = modelId
+        option.textContent = modelId
+        select.appendChild(option)
+      })
+      
+      // Set default values from mappings
+      const defaultMapping = defaultAgentModelMappings.find(m => m.agentId === agentId)
+      if (defaultMapping) {
+        select.value = defaultMapping.modelId
+        updateVRAMBadge(agentId, defaultMapping.modelId)
+      }
+      
+      // Update on change
+      select.addEventListener('change', () => {
+        if (agentModelManager) {
+          agentModelManager.setModelForAgent(agentId, select.value)
+          updateVRAMBadge(agentId, select.value)
+          addMessage('System', `${agentId} will use ${select.value} on next turn`, '#4ecdc4')
+        }
+      })
+    })
+
+    // Toggle model assignment panel
+    const toggleBtn = document.getElementById('toggle-model-assignment')
+    const content = document.getElementById('model-assignment-content')
+    if (toggleBtn && content) {
+      toggleBtn.addEventListener('click', () => {
+        if (content.style.display === 'none') {
+          content.style.display = 'block'
+          toggleBtn.textContent = 'Hide'
+        } else {
+          content.style.display = 'none'
+          toggleBtn.textContent = 'Show'
+        }
+      })
     }
     
     // Load auto-load preference from localStorage
@@ -783,6 +932,14 @@ Suggestions:
         addMessage('System', 'No model loaded. Please select and load a model first.', '#ff6b6b')
         return
       }
+      
+      // 🔥 NEW: Ensure correct model before processing
+      const currentAgentId = groupChatManager.getCurrentAgent().id
+      if (agentModelManager) {
+        await agentModelManager.ensureModelForAgent(currentAgentId)
+        updateCurrentModelDisplay()
+      }
+      
       const message = userInput.value.trim()
       if (!message) return
 
@@ -796,7 +953,6 @@ Suggestions:
       try {
         // Get response from current agent with streaming
         // We buffer the response for log, but speak sentence by sentence
-        let currentAgentId = groupChatManager.getCurrentAgent().id;
         const agent = agents.find(a => a.id === currentAgentId)!;
 
         // Start a fresh response line in chat log? 
@@ -1088,11 +1244,17 @@ Suggestions:
         return
       }
       try {
+        // 🔥 NEW: Ensure correct model is loaded for this agent
+        const currentAgentId = groupChatManager.getCurrentAgent().id
+        if (agentModelManager) {
+          await agentModelManager.ensureModelForAgent(currentAgentId)
+          updateCurrentModelDisplay() // Update UI
+        }
+        
         // 1. Calculate Pacing for this specific turn
         const pacing = calculatePacing()
         console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`)
 
-        let currentAgentId = groupChatManager.getCurrentAgent().id
         const agent = agents.find(a => a.id === currentAgentId)!
 
         stage.setActiveActor(currentAgentId)
