@@ -96,62 +96,104 @@ const hermesModelConfig = {
   model_type: 'llm',
 }
 
-// Inject/Update the default Hermes model
-const existingHermes = webllm.prebuiltAppConfig.model_list.findIndex((m: any) => m.model_id === defaultModelId)
-if (existingHermes !== -1) {
-  webllm.prebuiltAppConfig.model_list[existingHermes] = hermesModelConfig as any
-} else {
-  webllm.prebuiltAppConfig.model_list.push(hermesModelConfig as any)
+// Helper: apply the custom model configurations to a given engine module
+const applyModelConfigsToEngine = (engine: any) => {
+  if (!engine || !(engine as any).prebuiltAppConfig || !Array.isArray((engine as any).prebuiltAppConfig.model_list)) {
+    console.warn('Engine does not expose a prebuiltAppConfig.model_list; skipping model injection for this engine')
+    return
+  }
+
+  const list = (engine as any).prebuiltAppConfig.model_list
+
+  // Inject/Update the default Hermes model
+  const existingHermes = list.findIndex((m: any) => m.model_id === defaultModelId)
+  if (existingHermes !== -1) {
+    list[existingHermes] = hermesModelConfig as any
+  } else {
+    list.push(hermesModelConfig as any)
+  }
+
+  // Inject the custom model into the engine's configuration list
+  if (!list.find((m: any) => m.model_id === customVicunaModelConfig.model_id)) {
+    list.push(customVicunaModelConfig as any)
+  }
+
+  // Inject Llama2b for local testing if not present
+  if (!list.find((m: any) => m.model_id === llama2bModelConfig.model_id)) {
+    list.push(llama2bModelConfig as any)
+  }
+
+  // Register Snowflake embedding model so it's discoverable in the UI
+  if (!list.find((m: any) => m.model_id === snowflakeEmbedModelConfig.model_id)) {
+    list.push(snowflakeEmbedModelConfig as any)
+  }
+
+  // Phi-3.5 Vision instruct (q4f16)
+  if (!list.find((m: any) => m.model_id === phi35VisionQ4f16Config.model_id)) {
+    list.push(phi35VisionQ4f16Config as any)
+  }
+
+  // Phi-3.5 Vision instruct (q4f32)
+  if (!list.find((m: any) => m.model_id === phi35VisionQ4f32Config.model_id)) {
+    list.push(phi35VisionQ4f32Config as any)
+  }
+
+  // SmolLM2 small instruct model
+  if (!list.find((m: any) => m.model_id === smolLM2Config.model_id)) {
+    list.push(smolLM2Config as any)
+  }
+
+  console.log('Available prebuilt models (including custom):', list.map((m: any) => m.model_id))
 }
 
-// Inject the custom model into the WebLLM configuration list
-// This ensures that webllm.CreateMLCEngine knows how to load the custom model weights/wasm
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === customVicunaModelConfig.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(customVicunaModelConfig as any)
-}
-// Inject Llama2b for local testing if not present
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === llama2bModelConfig.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(llama2bModelConfig as any)
-}
+// Apply configs to the default imported engine (webllm)
+applyModelConfigsToEngine(webllm)
 
-// Register Snowflake embedding model so it's discoverable in the UI
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === snowflakeEmbedModelConfig.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(snowflakeEmbedModelConfig as any)
-}
+// Active engine module (defaults to the imported webllm)
+  let activeEngineModule: any = webllm
+  const engineModules: Record<string, any> = { webllm }
 
-// Phi-3.5 Vision instruct (q4f16)
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === phi35VisionQ4f16Config.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(phi35VisionQ4f16Config as any)
-}
+  // Populate model selects for a given engine
+  const populateModelSelect = (engine: any) => {
+    const models = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
 
-// Phi-3.5 Vision instruct (q4f32)
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === phi35VisionQ4f32Config.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(phi35VisionQ4f32Config as any)
-}
+    // Clear existing options
+    modelSelect.innerHTML = ''
+    if (modelSelectMain) modelSelectMain.innerHTML = ''
 
-// SmolLM2 small instruct model
-if (!webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === smolLM2Config.model_id)) {
-  webllm.prebuiltAppConfig.model_list.push(smolLM2Config as any)
-}
+    models.forEach((m: any) => {
+      const option = document.createElement('option')
+      option.value = m.model_id
+      option.textContent = m.model_id
+      modelSelect.appendChild(option)
+      if (modelSelectMain) {
+        const opt2 = option.cloneNode(true) as HTMLOptionElement
+        modelSelectMain.appendChild(opt2)
+      }
+    })
+  }
 
-// Log available models (now includes the custom one)
-console.log('Available prebuilt models (including custom):', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
+  // Compute curated available models from a given engine
+  const getAvailableModels = (engine: any) => {
+    const list = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
+    return [
+      defaultModelId,
+      llama2bModelConfig.model_id,
+      customVicunaModelConfig.model_id,
+      smallModelId,
+      snowflakeEmbedModelConfig.model_id,
+      // Newly added models
+      phi35VisionQ4f16Config.model_id,
+      phi35VisionQ4f32Config.model_id,
+      smolLM2Config.model_id,
+    ].filter(id => list.some((m: any) => m.model_id === id));
+  }
 
-// Curate the list of models we want in the dropdown, in a logical order
-const availableModels = [
-  defaultModelId,
-  llama2bModelConfig.model_id,
-  customVicunaModelConfig.model_id,
-  smallModelId,
-  snowflakeEmbedModelConfig.model_id,
-  // Newly added models
-  phi35VisionQ4f16Config.model_id,
-  phi35VisionQ4f32Config.model_id,
-  smolLM2Config.model_id,
-].filter(id => webllm.prebuiltAppConfig.model_list.some((m: any) => m.model_id === id)); // Filter to ensure only models that exist are included
+  // Set the initial available models based on the default engine (webllm)
+  const availableModels = getAvailableModels(activeEngineModule)
 
-// Set the initial default model (use equality to avoid accidental undefined.includes calls)
-const initialDefaultModel = availableModels.find(id => id === defaultModelId) || availableModels[0];
+  // Set the initial default model (use equality to avoid accidental undefined.includes calls)
+  const initialDefaultModel = availableModels.find(id => id === defaultModelId) || availableModels[0];
 
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
@@ -210,10 +252,16 @@ async function initApp() {
         <div class="progress-bar">
           <div id="progress" class="progress-fill"></div>
         </div>
-        <p id="status">Initializing WebLLM...</p>
+        <p id="status">Initializing model engine...</p>
         <div id="model-error" style="color:#ff6b6b;margin-top:6px;display:none;white-space:pre-wrap;"></div>
         <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
-          <label style="color:#888; font-size:0.9em; white-space:nowrap;">LLM Model</label>
+          <label style="color:#888; font-size:0.9em; white-space:nowrap;">Engine</label>
+          <select id="engine-select" style="width:140px; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;">
+            <option value="webllm">WebLLM</option>
+            <option value="chatllm">ChatLLM</option>
+          </select>
+
+          <label style="color:#888; font-size:0.9em; white-space:nowrap; margin-left:8px;">LLM Model</label>
           <select id="model-select" style="flex:1; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;"></select>
           <button id="load-model-btn" style="margin-left:8px; padding:6px 10px;">Load Model</button>
         </div>
@@ -297,19 +345,21 @@ async function initApp() {
             <input 
               type="text" 
               id="user-input" 
-              placeholder="Type a message..."
+              placeholder="Type a message (load a model to enable)..."
               autocomplete="off"
+              disabled
             />
-            <button id="send-btn">Send</button>
+            <button id="send-btn" disabled>Send</button>
           </div>
           
-          <div id="improv-mode-controls" class="improv-controls" style="display: none;">
+          <div id="improv-mode-controls" class="improv-controls">
             <div class="input-group">
               <input 
                 type="text" 
                 id="scene-title" 
                 placeholder="Scene title (e.g., 'At the Coffee Shop')..."
                 autocomplete="off"
+                disabled
               />
             </div>
             <div class="input-group">
@@ -318,11 +368,12 @@ async function initApp() {
                 placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..."
                 rows="3"
                 autocomplete="off"
+                disabled
               ></textarea>
             </div>
             <div class="improv-buttons">
-              <button id="start-improv-btn" class="primary-btn">Start Scene</button>
-              <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
+              <button id="start-improv-btn" class="primary-btn" disabled>Start Scene</button>
+              <button id="stop-improv-btn" class="secondary-btn" style="display: none;" disabled>Stop Scene</button>
             </div>
           </div>
           
@@ -395,7 +446,7 @@ async function initApp() {
     }
     
     if (currentVramSpan && currentModel) {
-      const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === currentModel)
+      const modelInfo = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list.find((m: any) => m.model_id === currentModel) : undefined
       const vram = modelInfo?.vram_required_MB || 0
       currentVramSpan.textContent = Math.round(vram).toString()
       
@@ -415,7 +466,8 @@ async function initApp() {
     const badge = document.querySelector(`[data-agent="${agentId}"]`)
     if (!badge) return
     
-    const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === modelId)
+    const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
+    const modelInfo = list.find((m: any) => m.model_id === modelId)
     const vram = modelInfo?.vram_required_MB || 0
     badge.textContent = `${Math.round(vram)} MB`
     
@@ -437,7 +489,7 @@ async function initApp() {
   ]
   
   // NEW: Function to handle LLM/Manager initialization and re-initialization
-  const initializeManagers = async (modelId: string) => {
+  const initializeManagers = async (modelId: string, engineModule: any) => {
     // Clear any prior model error
     if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
 
@@ -498,13 +550,13 @@ async function initApp() {
     groupChatManager = new GroupChatManager(agents)
     improvSceneManager = new ImprovSceneManager(groupChatManager)
 
-    // 3. Initialize the chat manager with progress callback, passing the new modelId
-    statusText.textContent = `Initializing WebLLM: ${modelId}...`
-    await groupChatManager.initialize(modelId, (progress: webllm.InitProgressReport) => {
+    // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
+    statusText.textContent = `Initializing model: ${modelId}...`
+    await groupChatManager.initialize(modelId, (progress: any) => {
       const percentage = Math.round(progress.progress * 100)
       progressBar.style.width = `${percentage}%`
       statusText.textContent = progress.text
-    })
+    }, engineModule)
 
     // 4. Initialize AgentModelManager
     agentModelManager = new AgentModelManager(
@@ -545,17 +597,9 @@ async function initApp() {
   }
 
   try {
-    // NEW: Populate model select dropdown (both loading and main settings select)
-    availableModels.forEach(modelId => {
-      const option = document.createElement('option');
-      option.value = modelId;
-      option.textContent = modelId;
-      modelSelect.appendChild(option);
-      if (modelSelectMain) {
-        const opt2 = option.cloneNode(true) as HTMLOptionElement
-        modelSelectMain.appendChild(opt2)
-      }
-    });
+    // Populate model select dropdown from the active engine module
+    populateModelSelect(activeEngineModule)
+
     // Set the default model in the dropdown
     if (initialDefaultModel) {
       modelSelect.value = initialDefaultModel;
@@ -570,9 +614,8 @@ async function initApp() {
       
       availableModels.forEach(modelId => {
         // Only show LLM models (exclude embedding/vision models)
-        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === modelId)
-        const modelType = modelInfo?.model_type?.toString().toLowerCase()
-        if (modelType && !['llm', 'chat'].includes(modelType)) return
+        const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
+        const modelInfo = list.find((m: any) => m.model_id === modelId)
         
         const option = document.createElement('option')
         option.value = modelId
@@ -612,6 +655,57 @@ async function initApp() {
       })
     }
     
+    // Engine selection UI
+    const engineSelect = document.getElementById('engine-select') as HTMLSelectElement | null;
+
+    // Attempt to dynamically load engine modules when selected and repopulate models
+    if (engineSelect) {
+      engineSelect.addEventListener('change', async () => {
+        const selected = engineSelect.value
+        statusText.textContent = `Switching engine to ${selected}...`
+        statusText.style.color = ''
+
+        try {
+          if (engineModules[selected]) {
+            activeEngineModule = engineModules[selected]
+          } else {
+            // Try to dynamically import known modules. You can extend this mapping later.
+            if (selected === 'chatllm') {
+              // Attempt dynamic import; if not available the bundler will throw
+              const mod = await import('@mlc-ai/chat-llm')
+              engineModules['chatllm'] = mod
+              activeEngineModule = mod
+            } else if (selected === 'webllm') {
+              activeEngineModule = webllm
+              engineModules['webllm'] = webllm
+            } else {
+              throw new Error(`Unknown engine: ${selected}`)
+            }
+          }
+
+          // Apply our custom model configs to the newly selected engine (if it supports prebuiltAppConfig)
+          applyModelConfigsToEngine(activeEngineModule)
+
+          // Recompute available models and populate selects
+          const newModels = getAvailableModels(activeEngineModule)
+          populateModelSelect(activeEngineModule)
+          if (newModels.length) {
+            modelSelect.value = newModels[0]
+            if (modelSelectMain) modelSelectMain.value = newModels[0]
+          }
+
+          statusText.textContent = `Engine switched to ${selected}. Select a model and click "Load Model".`
+        } catch (err) {
+          console.error('Failed to switch engine:', err)
+          statusText.textContent = `Failed to switch engine to ${selected}. See console.`
+          statusText.style.color = '#ff6b6b'
+          // Revert to webllm
+          engineSelect.value = 'webllm'
+          activeEngineModule = webllm
+        }
+      })
+    }
+
     // Load auto-load preference from localStorage
     const AUTO_LOAD_KEY = 'jokesters-auto-load-vicuna';
     const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
@@ -723,9 +817,10 @@ async function initApp() {
         }
 
         // Look up the model metadata so we can provide clearer diagnostics if fields are missing
-        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+        const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
+        const modelInfo = list.find((m: any) => m.model_id === newModelId)
         if (!modelInfo) {
-          const friendly = `Model '${newModelId}' was not found in the WebLLM prebuilt model list. Ensure it's been registered in the app config.`
+          const friendly = `Model '${newModelId}' was not found in the selected engine's prebuilt model list. Ensure it's been registered in the app config.`
           console.error(friendly)
           statusText.textContent = friendly
           statusText.style.color = '#ff6b6b'
@@ -859,7 +954,7 @@ async function initApp() {
           }
 
           // Initialize with the chosen model
-          await initializeManagers(newModelId)
+          await initializeManagers(newModelId, activeEngineModule)
         } catch (e: any) {
           console.error('Error loading model:', e)
           const errMsg = e?.message || String(e)
@@ -1031,7 +1126,8 @@ Suggestions:
       chatModeBtn.classList.add('active')
       improvModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
-      improvModeControls.style.display = 'none'
+      // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
+      improvModeControls.style.display = 'block'
 
       // Stop improv if running
       if (improvSceneManager && improvSceneManager.isSceneRunning && improvSceneManager.isSceneRunning()) {

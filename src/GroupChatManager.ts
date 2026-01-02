@@ -38,7 +38,7 @@ export interface Message {
 }
 
 export class GroupChatManager {
-  private engine: webllm.MLCEngine | null = null
+  private engine: any = null
   private agents: Agent[]
   private currentAgentIndex = 0
   private conversationHistory: Message[] = []
@@ -69,13 +69,12 @@ export class GroupChatManager {
   }
 
   /**
-   * NEW: Gracefully unloads the WebLLM engine to free up VRAM.
-   * This is crucial for switching models.
-   */
-  async terminate(): Promise<void> {
-    if (this.engine) {
-      console.log("Terminating current WebLLM engine...");
-      try {
+   * NEW: Gracefully unloads the engine to free up VRAM.
+   * This is crucial for switching models.
+   */
+  async terminate(): Promise<void> {
+    if (this.engine) {
+      console.log("Terminating current LLM engine...");
         // Use the official unload method for cleanup
         await this.engine.unload();
       } catch (error) {
@@ -133,23 +132,27 @@ export class GroupChatManager {
    */
   async initialize(
     modelId: string, // <-- New parameter for dynamic model loading
-    onProgress?: (progress: webllm.InitProgressReport) => void
-  ): Promise<void> {
-    
-    // We will rely on main.ts to call terminate() on the old instance 
-    // before creating a new GroupChatManager instance, but if this is called 
-    // again without creating a new instance, we should terminate the existing engine.
-    if (this.engine) {
-      await this.terminate();
-    }
+    onProgress?: (progress: any) => void,
+    engineModule?: any
+  ): Promise<void> {
+    
+    // We will rely on main.ts to call terminate() on the old instance 
+    // before creating a new GroupChatManager instance, but if this is called 
+    // again without creating a new instance, we should terminate the existing engine.
+    if (this.engine) {
+      await this.terminate();
+    }
 
 		// Basic validation to provide clearer diagnostics when things go wrong
 		if (!modelId || typeof modelId !== 'string') {
 			throw new Error('Invalid modelId passed to GroupChatManager.initialize')
 		}
 
+		// Use provided engine module or fallback to the bundled webllm import
+		const engineLib = engineModule || (webllm as any)
+
 		// If the modelId is registered in the prebuilt list, warn if key metadata is missing
-		const modelInfo = (webllm as any).prebuiltAppConfig?.model_list?.find((m: any) => m.model_id === modelId)
+		const modelInfo = (engineLib as any).prebuiltAppConfig?.model_list?.find((m: any) => m.model_id === modelId)
 		if (modelInfo) {
 			if (!modelInfo.model) {
 				console.warn(`Model '${modelId}' registered but missing 'model' URL field. This may cause initialization errors.`)
@@ -161,7 +164,7 @@ export class GroupChatManager {
 		} else {
 			// If it's not a registered model id, it might be an explicit URL; warn otherwise
 			if (!/^https?:\/\//i.test(modelId)) {
-				console.warn(`Model id '${modelId}' is not registered in webllm.prebuiltAppConfig.model_list and does not look like a URL.`)
+				console.warn(`Model id '${modelId}' is not registered in the engine's prebuiltAppConfig.model_list and does not look like a URL.`)
 			}
 		}
 
@@ -174,11 +177,11 @@ export class GroupChatManager {
         if (attempt > 1) {
           console.log(`Retry attempt ${attempt}/${maxRetries} for loading model: ${modelId}`)
         } else {
-          console.log(`Loading WebLLM model: ${modelId}...`)
+          console.log(`Loading model: ${modelId}...`)
         }
 
         // Follow the official example format
-        this.engine = await webllm.CreateMLCEngine(
+        this.engine = await engineLib.CreateMLCEngine(
           modelId, // <-- Use the dynamic modelId
           {
             // appConfig: appConfig,
@@ -229,9 +232,7 @@ export class GroupChatManager {
   • If using Hugging Face, ensure URLs point to '/resolve/main/' not just repo root
   • Check that you have sufficient disk space for model caching (2-8GB needed)`
         } else {
-          enhancedMessage += `\n\nCheck that the model is registered in webllm.prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`
-        }
-        
+          enhancedMessage += `\n\nCheck that the model is registered in the engine's prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`
         throw new Error(enhancedMessage)
       }
     }
@@ -269,18 +270,17 @@ export class GroupChatManager {
     try {
       // Generate response with stricter sampling to prevent repetition
       const completion = await this.engine.chat.completions.create({
-        messages: messages as webllm.ChatCompletionMessageParam[],
-        temperature: currentAgent.temperature,
-        top_p: currentAgent.top_p,
-        // Hard cap at 96 tokens to reduce VRAM usage
-        max_tokens: Math.min(options.maxTokens || 96, 96),
-        stream: true,
-        // Use a stop token plus fallbacks to catch structural shifts
-        stop: ["###", "Director:", "User:"],
-        // @ts-ignore - optional seed not on all runtime types
-        seed: options.seed,
-        // @ts-ignore - WebLLM supports this even if types might complain
-        repetition_penalty: 1.15,
+          messages: messages as any[],
+          temperature: currentAgent.temperature,
+          top_p: currentAgent.top_p,
+          // Hard cap at 96 tokens to reduce VRAM usage
+          max_tokens: Math.min(options.maxTokens || 96, 96),
+          stream: true,
+          // Use a stop token plus fallbacks to catch structural shifts
+          stop: ["###", "Director:", "User:"],
+          // @ts-ignore - optional seed not on all runtime types
+          seed: options.seed,
+          // @ts-ignore - runtime may support this even if types might complain
         presence_penalty: 0.6,
       })
 
