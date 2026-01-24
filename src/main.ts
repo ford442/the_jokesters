@@ -81,13 +81,13 @@ const smolLM2Config = {
   model_type: 'llm',
 };
 
-// The previous default model
-const defaultModelId = 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC';
+// Set Vicuna 7B as the default model
+const defaultModelId = customVicunaModelConfig.model_id;
 
 // IMPORTANT: Ensure the default Hermes model also uses the /resolve/main/ URL pattern to point to raw files
 // instead of the HTML repo page. This overrides the default internal config in WebLLM if present.
 const hermesModelConfig = {
-  model_id: defaultModelId,
+  model_id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
   model: 'https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/resolve/main/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
   vram_required_MB: 2951.51,
@@ -106,7 +106,7 @@ const applyModelConfigsToEngine = (engine: any) => {
   const list = (engine as any).prebuiltAppConfig.model_list
 
   // Inject/Update the default Hermes model
-  const existingHermes = list.findIndex((m: any) => m.model_id === defaultModelId)
+  const existingHermes = list.findIndex((m: any) => m.model_id === hermesModelConfig.model_id)
   if (existingHermes !== -1) {
     list[existingHermes] = hermesModelConfig as any
   } else {
@@ -148,52 +148,6 @@ const applyModelConfigsToEngine = (engine: any) => {
 
 // Apply configs to the default imported engine (webllm)
 applyModelConfigsToEngine(webllm)
-
-// Active engine module (defaults to the imported webllm)
-  let activeEngineModule: any = webllm
-  const engineModules: Record<string, any> = { webllm }
-
-  // Populate model selects for a given engine
-  const populateModelSelect = (engine: any) => {
-    const models = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
-
-    // Clear existing options
-    modelSelect.innerHTML = ''
-    if (modelSelectMain) modelSelectMain.innerHTML = ''
-
-    models.forEach((m: any) => {
-      const option = document.createElement('option')
-      option.value = m.model_id
-      option.textContent = m.model_id
-      modelSelect.appendChild(option)
-      if (modelSelectMain) {
-        const opt2 = option.cloneNode(true) as HTMLOptionElement
-        modelSelectMain.appendChild(opt2)
-      }
-    })
-  }
-
-  // Compute curated available models from a given engine
-  const getAvailableModels = (engine: any) => {
-    const list = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
-    return [
-      defaultModelId,
-      llama2bModelConfig.model_id,
-      customVicunaModelConfig.model_id,
-      smallModelId,
-      snowflakeEmbedModelConfig.model_id,
-      // Newly added models
-      phi35VisionQ4f16Config.model_id,
-      phi35VisionQ4f32Config.model_id,
-      smolLM2Config.model_id,
-    ].filter(id => list.some((m: any) => m.model_id === id));
-  }
-
-  // Set the initial available models based on the default engine (webllm)
-  const availableModels = getAvailableModels(activeEngineModule)
-
-  // Set the initial default model (use equality to avoid accidental undefined.includes calls)
-  const initialDefaultModel = availableModels.find(id => id === defaultModelId) || availableModels[0];
 
 // Define our agents with different personalities and sampling parameters
 // --- CASUAL & FUNNY AGENTS ---
@@ -258,7 +212,7 @@ async function initApp() {
           <label style="color:#888; font-size:0.9em; white-space:nowrap;">Engine</label>
           <select id="engine-select" style="width:140px; background:#0f3460; border:1px solid #444; color:white; padding:2px 5px;">
             <option value="webllm">WebLLM</option>
-            <option value="chatllm">ChatLLM</option>
+            <option value="chatllm" selected>ChatLLM</option>
           </select>
 
           <label style="color:#888; font-size:0.9em; white-space:nowrap; margin-left:8px;">LLM Model</label>
@@ -267,7 +221,7 @@ async function initApp() {
         </div>
         <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
           <label style="display:flex; align-items:center; gap:6px; color:#888; font-size:0.85em; cursor:pointer;">
-            <input type="checkbox" id="auto-load-vicuna" style="cursor:pointer;">
+            <input type="checkbox" id="auto-load-vicuna" style="cursor:pointer;" checked>
             <span>Auto-load Vicuna 7B for Improv at startup</span>
           </label>
         </div>
@@ -402,13 +356,14 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
-  // Improv controls (declared early so other functions can reference them)
+  // Improv controls
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
   const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
-  // NEW: Get reference to the model selection box
+
+  // NEW: Get reference to the model selection box - DECLARATIONS MOVED UP HERE
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
   const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement;
@@ -422,6 +377,46 @@ async function initApp() {
   let stage: Stage;
   let lipSync: LipSync;
   let audioInitializing = false;
+
+  // Active engine module state
+  let activeEngineModule: any = webllm;
+  const engineModules: Record<string, any> = { webllm };
+
+  // Populate model selects for a given engine (MOVED INSIDE INITAPP)
+  const populateModelSelect = (engine: any) => {
+    const models = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
+
+    // Clear existing options
+    modelSelect.innerHTML = ''
+    if (modelSelectMain) modelSelectMain.innerHTML = ''
+
+    models.forEach((m: any) => {
+      const option = document.createElement('option')
+      option.value = m.model_id
+      option.textContent = m.model_id
+      modelSelect.appendChild(option)
+      if (modelSelectMain) {
+        const opt2 = option.cloneNode(true) as HTMLOptionElement
+        modelSelectMain.appendChild(opt2)
+      }
+    })
+  }
+
+  // Compute curated available models from a given engine (MOVED INSIDE INITAPP)
+  const getAvailableModels = (engine: any) => {
+    const list = (engine && engine.prebuiltAppConfig && Array.isArray(engine.prebuiltAppConfig.model_list)) ? engine.prebuiltAppConfig.model_list : []
+    return [
+      defaultModelId,
+      llama2bModelConfig.model_id,
+      customVicunaModelConfig.model_id,
+      smallModelId,
+      snowflakeEmbedModelConfig.model_id,
+      // Newly added models
+      phi35VisionQ4f16Config.model_id,
+      phi35VisionQ4f32Config.model_id,
+      smolLM2Config.model_id,
+    ].filter(id => list.some((m: any) => m.model_id === id));
+  }
 
   // Update next agent info in the UI
   const updateNextAgentUI = () => {
@@ -600,6 +595,12 @@ async function initApp() {
     // Populate model select dropdown from the active engine module
     populateModelSelect(activeEngineModule)
 
+    // Set the initial available models based on the default engine (webllm)
+    const availableModels = getAvailableModels(activeEngineModule)
+
+    // Set the initial default model (use equality to avoid accidental undefined.includes calls)
+    const initialDefaultModel = availableModels.find(id => id === defaultModelId) || availableModels[0];
+
     // Set the default model in the dropdown
     if (initialDefaultModel) {
       modelSelect.value = initialDefaultModel;
@@ -614,8 +615,6 @@ async function initApp() {
       
       availableModels.forEach(modelId => {
         // Only show LLM models (exclude embedding/vision models)
-        const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
-        const modelInfo = list.find((m: any) => m.model_id === modelId)
         
         const option = document.createElement('option')
         option.value = modelId
@@ -671,8 +670,10 @@ async function initApp() {
           } else {
             // Try to dynamically import known modules. You can extend this mapping later.
             if (selected === 'chatllm') {
-              // Attempt dynamic import; if not available the bundler will throw
-              const mod = await import('@mlc-ai/chat-llm')
+              // ALIAS TO WEBLLM as ChatLLM package is unavailable
+              // const mod = await import('@mlc-ai/chat-llm') // REMOVED
+              console.log('ChatLLM selected: using WebLLM engine alias')
+              const mod = webllm; // Alias
               engineModules['chatllm'] = mod
               activeEngineModule = mod
             } else if (selected === 'webllm') {
@@ -737,7 +738,9 @@ async function initApp() {
     if (autoLoadVicunaCheckbox.checked) {
       // Verify that Vicuna model is available before attempting to auto-load
       const vicunaModelId = customVicunaModelConfig.model_id;
-      const isVicunaAvailable = availableModels.includes(vicunaModelId);
+      // Re-calculate available models since getAvailableModels depends on activeEngineModule which might have changed (though unlikely at startup)
+      const currentAvailable = getAvailableModels(activeEngineModule);
+      const isVicunaAvailable = currentAvailable.includes(vicunaModelId);
       
       if (isVicunaAvailable) {
         // Set Vicuna as the selected model
@@ -1252,9 +1255,10 @@ Suggestions:
 
       // Build the scene object if necessary (not used directly in Director loop)
 
-      // Disable inputs
+      // Disable inputs (do NOT hide them)
       sceneTitleInput.disabled = true
       sceneDescriptionInput.disabled = true
+      // Only hide the start button as it doesn't make sense to start again
       startImprovBtn.style.display = 'none'
       stopImprovBtn.style.display = 'inline-block'
 
