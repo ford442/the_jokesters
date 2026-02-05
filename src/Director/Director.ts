@@ -38,7 +38,7 @@ export class Director {
         this.isRunning = true;
         this.manager.resetConversation();
 
-        this.callbacks.onMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4');
+        this.callbacks.onMessage('System', `🎬 Starting improv scene: "${title}"`, '#4ecdc4');
         this.callbacks.onMessage('System', description, '#4ecdc4');
 
         try {
