@@ -1,7 +1,6 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent, ProfanityLevel } from './GroupChatManager'
-import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
@@ -11,6 +10,7 @@ import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
+import { Director, type DirectorCallbacks } from './Director/Director'
 
 // --- Custom Model Configurations ---
 // 1. User's custom Vicuna model (7B)
@@ -370,13 +370,17 @@ async function initApp() {
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
-  let improvSceneManager: ImprovSceneManager;
+  let director: Director;
+  let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
   let speechQueue: SpeechQueue;
   let stage: Stage;
   let lipSync: LipSync;
   let audioInitializing = false;
+
+  let addMessage: (sender: string, message: string, color: string) => void;
+  let speakAndVisualize: (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
 
   // Active engine module state
   let activeEngineModule: any = webllm;
@@ -543,7 +547,6 @@ async function initApp() {
 
     // 2. Instantiate new managers
     groupChatManager = new GroupChatManager(agents)
-    improvSceneManager = new ImprovSceneManager(groupChatManager)
 
     // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
     statusText.textContent = `Initializing model: ${modelId}...`
@@ -561,6 +564,58 @@ async function initApp() {
         statusText.textContent = `Swapping model: ${progress.text}`
       }
     )
+
+    // Initialize Director
+    const directorCallbacks: DirectorCallbacks = {
+      onMessage: (sender, message, color) => addMessage(sender, message, color),
+      onSpeak: async (sentence, agentId, options) => {
+        await speakAndVisualize(sentence, agentId, options);
+        // Update the "..." bubble with the spoken text
+        if (currentMessageContentSpan) {
+           const currentText = currentMessageContentSpan.textContent === '...' ? '' : (currentMessageContentSpan.textContent || '');
+           currentMessageContentSpan.textContent = currentText + sentence + ' ';
+           chatLog.scrollTop = chatLog.scrollHeight;
+        }
+      },
+      onTurnStart: async (agentId) => {
+        if (agentModelManager) {
+          await agentModelManager.ensureModelForAgent(agentId);
+          updateCurrentModelDisplay();
+        }
+        // Update UI for "..."
+        const agent = agents.find(a => a.id === agentId)!;
+        stage.setActiveActor(agentId);
+
+        // Create message div
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
+        chatLog.appendChild(messageDiv);
+        currentMessageContentSpan = messageDiv.querySelector('.content')!;
+        chatLog.scrollTop = chatLog.scrollHeight;
+      },
+      onTurnEnd: async () => {
+        await speechQueue.waitUntilFinished();
+        updateNextAgentUI();
+        currentMessageContentSpan = null;
+      },
+      onError: (error) => {
+        console.error('Director Error:', error);
+        addMessage('System', 'Error in director loop', '#ff0000');
+      },
+      onSceneStop: () => {
+        addMessage('System', '鹿 Scene stopped by user', '#ff6b6b');
+        sceneTitleInput.disabled = false;
+        sceneDescriptionInput.disabled = false;
+        startImprovBtn.style.display = 'inline-block';
+        stopImprovBtn.style.display = 'none';
+        const floatingStop = document.getElementById('floating-stop-improv-btn');
+        if (floatingStop) floatingStop.style.display = 'none';
+      },
+      getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined
+    };
+    director = new Director(groupChatManager, directorCallbacks);
+    if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
 
     // Re-apply settings to the new manager instance
     const idx = parseInt(profanitySlider.value)
@@ -773,7 +828,10 @@ async function initApp() {
     
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
-    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
+    chaosSlider.oninput = () => {
+      chaosVal.textContent = chaosSlider.value + '%';
+      if (director) director.setChaosLevel(parseInt(chaosSlider.value));
+    }
 
     // Profanity level slider
     profanitySlider.oninput = () => {
@@ -834,7 +892,7 @@ async function initApp() {
         }
 
         // Stop improv if running
-        if (isImprovRunning) stopImprovScene();
+        if (director && director.isSceneRunning()) stopImprovScene();
 
         // Do not hide the chat panel — instead dim and disable interactions during model loading
         if (chatContainer) {
@@ -1003,7 +1061,7 @@ Suggestions:
     updateNextAgentUI()
 
     // Add message to chat log
-    const addMessage = (sender: string, message: string, color: string) => {
+    addMessage = (sender: string, message: string, color: string) => {
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
       messageDiv.innerHTML = `
@@ -1014,7 +1072,7 @@ Suggestions:
     }
 
     // Helper to speak and animate with options (steps + seed)
-    const speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
+    speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
       try {
         stage.setActiveActor(agentId);
         const audioData = await audioEngine.synthesize(text, agentId, { steps: options.steps, seed: options.seed });
@@ -1133,8 +1191,8 @@ Suggestions:
       improvModeControls.style.display = 'block'
 
       // Stop improv if running
-      if (improvSceneManager && improvSceneManager.isSceneRunning && improvSceneManager.isSceneRunning()) {
-        try { improvSceneManager.stop() } catch (err) { console.warn('Failed to stop improvSceneManager:', err) }
+      if (director && director.isSceneRunning()) {
+        director.stopScene();
       }
 
       updateNextAgentUI()
@@ -1205,43 +1263,9 @@ Suggestions:
       if (existing) existing.style.display = 'none'
     })
 
-    // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
-    const calculatePacing = () => {
-      const roll = Math.random();
-      // 30% Chance: "The One-Liner"
-      if (roll > 0.7) {
-        return {
-          type: 'punchline',
-          // SAFETY NET ONLY: Allow enough space for a full sentence
-          maxTokens: 60,
-          ttsSteps: 25,
-          // THE REAL FIX: Explicit instruction for brevity
-          promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
-        }
-        // 50% Chance: "The Standard"
-      } else if (roll > 0.2) {
-        return {
-          type: 'standard',
-          maxTokens: 150,
-          ttsSteps: 16,
-          promptSuffix: ' (Keep the conversation flowing. 1-2 sentences.)'
-        }
-        // 20% Chance: "The Rant"
-      } else {
-        return {
-          type: 'rant',
-          maxTokens: 256,
-          ttsSteps: 8,
-          promptSuffix: ' (Go on a funny, passionate rant. Be expressive!)'
-        }
-      }
-    }
-
     // Improv mode controls
-
-    let isImprovRunning = false
     const startImprovScene = async () => {
-      if (!groupChatManager) {
+      if (!director) {
         addMessage('System', 'No model loaded. Please select and load a model first.', '#ff6b6b')
         return
       }
@@ -1253,8 +1277,6 @@ Suggestions:
         return
       }
 
-      // Build the scene object if necessary (not used directly in Director loop)
-
       // Disable inputs (do NOT hide them)
       sceneTitleInput.disabled = true
       sceneDescriptionInput.disabled = true
@@ -1262,138 +1284,15 @@ Suggestions:
       startImprovBtn.style.display = 'none'
       stopImprovBtn.style.display = 'inline-block'
 
-      // Clear chat log for new scene
-      addMessage('System', `鹿 Starting improv scene: "${title}"`, '#4ecdc4')
-      addMessage('System', description, '#4ecdc4')
-
       // Keep controls visible during scenes per user preference
       const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
       if (floatingStop) floatingStop.style.display = 'none'
 
-      try {
-        // Start our own Director loop rather than using ImprovSceneManager's
-        // Reset conversation history and start with a seed line
-        isImprovRunning = true
-        groupChatManager.resetConversation()
-
-        if (groupChatManager.getHistoryLength() === 0) {
-          const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?'
-          addMessage('Director', `Action! "${seed}"`, '#888')
-          await processTurn(seed)
-        }
-
-        // Continue loop until stopped
-        while (isImprovRunning) {
-          await new Promise(r => setTimeout(r, 800))
-          if (!isImprovRunning) break
-
-          // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
-          const turnCount = groupChatManager.getHistoryLength()
-          const chaosLevel = parseInt(chaosSlider.value)
-          let prompt = '(Reply naturally to the last thing said)'
-          if (turnCount % 3 === 0 && Math.random() * 100 < chaosLevel) {
-            prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)'
-          } else if (turnCount % 4 === 0 && Math.random() * 100 < chaosLevel) {
-            prompt = '(Make a highbrow reference to history that completely misses the point.)'
-          }
-
-          await processTurn(prompt)
-        }
-
-        // Wait for final audio to finish
-        await speechQueue.waitUntilFinished()
-
-      } catch (error) {
-        console.error('Error running improv scene:', error)
-        addMessage('System', 'Error running improv scene', '#ff0000')
-      }
-
-      // Re-enable inputs
-      sceneTitleInput.disabled = false
-      sceneDescriptionInput.disabled = false
-      startImprovBtn.style.display = 'inline-block'
-      stopImprovBtn.style.display = 'none'
-
-      // Controls remain visible (no-op). Ensure floating stop button is hidden
-      const floatingStop2 = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
-      if (floatingStop2) floatingStop2.style.display = 'none'
+      await director.startScene(title, description);
     }
 
     const stopImprovScene = () => {
-      isImprovRunning = false
-      // Stop the manager if it's running
-      if (improvSceneManager && improvSceneManager.isSceneRunning && improvSceneManager.isSceneRunning()) {
-        try { improvSceneManager.stop() } catch (err) { console.warn('Failed to stop improvSceneManager:', err) }
-      }
-      addMessage('System', '鹿 Scene stopped by user', '#ff6b6b')
-      sceneTitleInput.disabled = false
-      sceneDescriptionInput.disabled = false
-      startImprovBtn.style.display = 'inline-block'
-      stopImprovBtn.style.display = 'none'
-
-      // Controls remain visible; just ensure floating stop button is hidden
-      const floatingStop = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
-      if (floatingStop) floatingStop.style.display = 'none'
-    }
-
-    // Director logic: process a single turn with pacing and TTS steps
-    const processTurn = async (inputText: string) => {
-      if (!groupChatManager) {
-        console.warn('processTurn called with no groupChatManager')
-        isImprovRunning = false
-        return
-      }
-      try {
-        // 🔥 NEW: Ensure correct model is loaded for this agent
-        const currentAgentId = groupChatManager.getCurrentAgent().id
-        if (agentModelManager) {
-          await agentModelManager.ensureModelForAgent(currentAgentId)
-          updateCurrentModelDisplay() // Update UI
-        }
-        
-        // 1. Calculate Pacing for this specific turn
-        const pacing = calculatePacing()
-        console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`)
-
-        const agent = agents.find(a => a.id === currentAgentId)!
-
-        stage.setActiveActor(currentAgentId)
-
-        const messageDiv = document.createElement('div')
-        messageDiv.className = 'message'
-        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
-        chatLog.appendChild(messageDiv)
-        const contentSpan = messageDiv.querySelector('.content')!
-
-        // 2. Pass maxTokens to chat and append pacing prompt to the hidden prompt
-        // Compute the per-turn deterministic seed if user provided a seed
-        const userSeed = seedInput.value ? parseInt(seedInput.value) : undefined
-        const turnSeed = userSeed !== undefined ? userSeed + groupChatManager.getHistoryLength() : undefined
-        const effectivePrompt = inputText + pacing.promptSuffix + ' ###'
-
-        // Character-specific speeds
-        const characterSpeeds: Record<string, number> = {
-          'comedian': 1.5,
-          'philosopher': 0.6,
-          'scientist': 1.0
-        }
-
-        await groupChatManager.chat(effectivePrompt, (sentence) => {
-          // 3. Pass ttsSteps to speak
-          speakAndVisualize(sentence, agent.id, { steps: pacing.ttsSteps, speed: characterSpeeds[agent.id] || 1.0, seed: turnSeed })
-
-          contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
-          chatLog.scrollTop = chatLog.scrollHeight
-        }, { maxTokens: pacing.maxTokens, seed: turnSeed })
-
-        await speechQueue.waitUntilFinished()
-        updateNextAgentUI()
-
-      } catch (error) {
-        console.error('Turn Error:', error)
-        isImprovRunning = false
-        // stopImprovLoop equivalent
-      }
+      if (director) director.stopScene();
     }
 
     startImprovBtn.addEventListener('click', startImprovScene)
