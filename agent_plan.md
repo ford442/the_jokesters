@@ -1,5 +1,9 @@
 # Avatar Interaction System: Expansion Plan
 
+## Project Velocity
+* **tasks_per_run**: 1
+* **status**: On Track
+
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
 - **The Agents** (`Comedian`, `Philosopher`, `Scientist`) are stateless configurations (Prompts + Visual Params). They do not "think" independently; they react to the context provided to them.
@@ -33,55 +37,41 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 **Workflow:**
 1.  **Generation:** An external high-IQ model (Gemini/GPT-4) generates a "Beat Sheet" JSON.
 2.  **Parsing:** The Director loads this JSON.
-    ```json
-    [
-      { "speaker": "comedian", "action": "laugh", "line": "Is that a toaster?" },
-      { "speaker": "scientist", "action": "analyze", "line": "It appears to be a rudimentary heating element." }
-    ]
-    ```
-3.  **Execution:**
-    * **Strict Mode:** Feed the `line` directly to TTS (AudioEngine).
-    * **Loose Mode:** Feed the `line` to the LLM as an instruction: `(Say this line in your own style: "It appears to be a rudimentary heating element.")`.
+3.  **Execution:** Feed the `line` to the LLM as an instruction.
 
 ### Mode B: Media Reaction ("The MST3K Protocol")
 *Description: Agents watch a video or look at images and comment on them in real-time.*
 
-**Workflow:**
-1.  **The Feed:** An HTML `<video>` element or StreetView `<iframe>` runs in the background.
-2.  **Time-Synced Metadata:** A JSON file maps timestamps to context descriptions.
-    * `00:10`: "The hero trips over a rake."
-    * `00:25`: "A giant rubber monster appears."
-3.  **The Loop:**
-    * The Director monitors video time.
-    * When a timestamp is hit, it pauses the video (optional) and triggers an agent turn.
-    * **Prompt Injection:** `(CONTEXT: You are watching a movie. On screen: The hero trips over a rake. Make a snarky comment.)`
-
 ### Mode C: The Reporter (Dynamic Context / RAG)
 *Description: Agents act as experts on specific live topics (Olympics, Science).*
-
-**Workflow:**
-1.  **Fetch:** `FetchService` pulls live data (News API) or static knowledge (Wiki Summary).
-2.  **Context Loading:**
-    * **Scenario:** "Breaking News"
-    * **System Prompt Update:** The `GroupChatManager` temporarily appends the data to the *System Prompt*.
-    * *Example:* `SYSTEM: You are a sports reporter. DATA: France won Gold. SCORE: 12-0.`
-3.  **Interaction:** Agents discuss the injected data as if they just witnessed it.
 
 ### Mode D: Serialized Memory ("TV Show Logic")
 *Description: Agents remember past interactions across sessions.*
 
-**Workflow:**
-1.  **Storage:** Create a `MemoryManager` using `localStorage` or IndexedDB.
-2.  **Episode Summaries:** At the end of a session, ask the LLM to "Summarize this conversation in 3 sentences." Save this as `last_episode_summary`.
-3.  **Recap Injection:** On app load, inject the summary into the System Prompt.
-    * *Prompt:* `(PREVIOUSLY ON THE JOKESTERS: The Comedian admitted she hates pizza. The Scientist built a time machine.)`
+### Mode E: Creative Expansion (New)
+*   **Roast Battle Mode**: Agents take turns roasting each other or the user.
+    *   *Model Pairing*: Hermes-3 (Uncensored) for maximum creativity.
+*   **Collaborative Storytelling**: Agents build a story sentence by sentence.
+*   **Musical Improv**: Agents generate lyrics for a song.
+*   **Heckler Interaction**: User interrupts, agents must handle it.
 
 ---
 
-## 4. Implementation Roadmap
+## 4. Infrastructure & Storage (HF Integration)
+
+### Goal: Cloud Persistence
+Move heavy data (scripts, memories) to Hugging Face storage.
+
+1.  **Authentication**: Implement HF OAuth or Token input in UI.
+2.  **Episode Storage**: Push finished "Episode Scripts" to a private Dataset.
+3.  **Continuity**: Fetch "Previous Episode Summaries" at boot.
+
+---
+
+## 5. Implementation Roadmap
 
 ### Phase 1: The Refactor (Foundation)
-* [ ] Extract `Director` logic from `main.ts` into `src/Director/Director.ts`.
+* [x] Extract `Director` logic from `main.ts` into `src/Director/Director.ts`.
 * [ ] Create `Director.playScenario(scenario)` interface.
 
 ### Phase 2: The "Watcher" (MST3K)
@@ -91,8 +81,17 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 
 ### Phase 3: The "Writer" (Scripts)
 * [ ] Create `ScriptParser` to read JSON scripts.
-* [ ] Connect to a "Script Generator" (could be a simple prompt to the local LLM first: "Write a script about X").
+* [ ] Connect to a "Script Generator".
 
-### Phase 4: Persistence
-* [ ] Implement `MemoryManager`.
+### Phase 4: Persistence (HF Integration)
+* [ ] Implement `MemoryManager` (Local).
+* [ ] Add HF Token Input in Settings.
+* [ ] Implement `HFStorageManager` class.
+    *   `authenticate(token)`
+    *   `saveEpisode(data)`
+    *   `loadLastEpisode()`
 * [ ] Add "Save/Load" buttons to the UI.
+
+### Phase 5: New Creative Modes
+* [ ] Implement "Roast Battle" Scenario.
+* [ ] Implement "Collaborative Storytelling" Scenario.
