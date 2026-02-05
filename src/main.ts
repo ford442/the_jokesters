@@ -1,8 +1,6 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
 import type { Agent, ProfanityLevel } from './GroupChatManager'
-import { Director } from './Director/Director'
-
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
@@ -12,6 +10,7 @@ import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
+import { Director, type DirectorCallbacks } from './Director/Director'
 
 // --- Custom Model Configurations ---
 // 1. User's custom Vicuna model (7B)
@@ -373,12 +372,16 @@ async function initApp() {
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
   let director: Director;
+  let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
   let speechQueue: SpeechQueue;
   let stage: Stage;
   let lipSync: LipSync;
   let audioInitializing = false;
+
+  let addMessage: (sender: string, message: string, color: string) => void;
+  let speakAndVisualize: (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
 
   // Active engine module state
   let activeEngineModule: any = webllm;
@@ -532,16 +535,12 @@ async function initApp() {
       // 2. Instantiate new managers
       groupChatManager = new GroupChatManager(agents)
 
-      // 3. Initialize the chat manager
-      statusText.textContent = `Initializing Model: ${modelId}...`
-
-      // Pass the profanity level
-      const profanity = parseInt(profanitySlider.value) as unknown as ProfanityLevel
-      groupChatManager.setProfanityLevel(profanity)
-
-      await groupChatManager.initialize(modelId, (progress) => {
+      // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
+      statusText.textContent = `Initializing model: ${modelId}...`
+      await groupChatManager.initialize(modelId, (progress: any) => {
+        const percentage = Math.round(progress.progress * 100)
+        progressBar.style.width = `${percentage}%`
         statusText.textContent = progress.text
-        console.log(progress)
       }, engineModule)
 
       // 4. Initialize AgentModelManager
@@ -553,31 +552,62 @@ async function initApp() {
         }
       )
 
-      // 5. Initialize THE DIRECTOR
-      director = new Director(
-        groupChatManager,
-        agentModelManager,
-        stage,
-        audioEngine,
-        speechQueue,
-        {
-          onAgentChange: () => updateNextAgentUI(), // Simple refresh
-          onLogMessage: (sender, msg, color) => addMessage(sender, msg, color),
-          onStop: () => {
-            // Reset UI when director stops
-            sceneTitleInput.disabled = false
-            sceneDescriptionInput.disabled = false
-            startImprovBtn.style.display = 'inline-block'
-            stopImprovBtn.style.display = 'none'
-            const floatStop = document.getElementById('floating-stop-improv-btn')
-            if (floatStop) floatStop.style.display = 'none'
-            addMessage('System', '🎬 Scene stopped', '#ff6b6b')
+      // Initialize Director
+      const directorCallbacks: DirectorCallbacks = {
+        onMessage: (sender, message, color) => addMessage(sender, message, color),
+        onSpeak: async (sentence, agentId, options) => {
+          await speakAndVisualize(sentence, agentId, options);
+          // Update the "..." bubble with the spoken text
+          if (currentMessageContentSpan) {
+             const currentText = currentMessageContentSpan.textContent === '...' ? '' : (currentMessageContentSpan.textContent || '');
+             currentMessageContentSpan.textContent = currentText + sentence + ' ';
+             chatLog.scrollTop = chatLog.scrollHeight;
           }
-        }
-      )
+        },
+        onTurnStart: async (agentId) => {
+          if (agentModelManager) {
+            await agentModelManager.ensureModelForAgent(agentId);
+            updateCurrentModelDisplay();
+          }
+          // Update UI for "..."
+          const agent = agents.find(a => a.id === agentId)!;
+          stage.setActiveActor(agentId);
 
-      // Sync initial config
-      updateDirectorConfig()
+          // Create message div
+          const messageDiv = document.createElement('div');
+          messageDiv.className = 'message';
+          messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
+          chatLog.appendChild(messageDiv);
+          currentMessageContentSpan = messageDiv.querySelector('.content')!;
+          chatLog.scrollTop = chatLog.scrollHeight;
+        },
+        onTurnEnd: async () => {
+          await speechQueue.waitUntilFinished();
+          updateNextAgentUI();
+          currentMessageContentSpan = null;
+        },
+        onError: (error) => {
+          console.error('Director Error:', error);
+          addMessage('System', 'Error in director loop', '#ff0000');
+        },
+        onSceneStop: () => {
+          addMessage('System', '鹿 Scene stopped by user', '#ff6b6b');
+          sceneTitleInput.disabled = false;
+          sceneDescriptionInput.disabled = false;
+          startImprovBtn.style.display = 'inline-block';
+          stopImprovBtn.style.display = 'none';
+          const floatingStop = document.getElementById('floating-stop-improv-btn');
+          if (floatingStop) floatingStop.style.display = 'none';
+        },
+        getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined
+      };
+      director = new Director(groupChatManager, directorCallbacks);
+      if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
+
+      // Re-apply settings to the new manager instance
+      const idx = parseInt(profanitySlider.value)
+      const { level } = profanityLevels[idx]
+      groupChatManager.setProfanityLevel(level)
 
       statusText.textContent = 'Ready! Select a mode to begin.'
       statusText.style.color = '#4ecdc4'
@@ -735,8 +765,35 @@ async function initApp() {
         statusText.style.color = '#ff6b6b';
       }
     }
-    
-    // Sync UI selects
+
+    // UI listeners
+    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
+    chaosSlider.oninput = () => {
+      chaosVal.textContent = chaosSlider.value + '%';
+      if (director) director.setChaosLevel(parseInt(chaosSlider.value));
+    }
+
+    // Profanity level slider
+    profanitySlider.oninput = () => {
+      const idx = parseInt(profanitySlider.value)
+      const { level, label, color } = profanityLevels[idx]
+      profanityVal.textContent = label
+      profanityVal.style.color = color
+      groupChatManager.setProfanityLevel(level)
+    }
+
+    // Disable chat/improv controls until a model is loaded
+    userInput.disabled = true
+    sendBtn.disabled = true
+    if (startImprovBtn) startImprovBtn.disabled = true
+
+    // NEW: Model change listener
+    // When selection changes, enable the Load Model button and leave loading explicit
+    modelSelect.addEventListener('change', () => {
+      if (modelSelectMain) modelSelectMain.value = modelSelect.value;
+      if (loadModelBtn) loadModelBtn.disabled = false;
+    });
+
     if (modelSelectMain) {
       modelSelectMain.addEventListener('change', () => {
         modelSelect.value = modelSelectMain.value
@@ -773,7 +830,7 @@ async function initApp() {
         }
 
         // Stop improv if running
-        if (director) director.stop();
+        if (director && director.isSceneRunning()) stopImprovScene();
 
         // Do not hide the chat panel — instead dim and disable interactions during model loading
         if (chatContainer) {
@@ -937,27 +994,28 @@ Suggestions:
         }
       })
 
-    // UI listeners
-    ttsStepsSlider.oninput = () => {
-      ttsStepsVal.textContent = ttsStepsSlider.value
-      updateDirectorConfig() // NEW
-    }
-    chaosSlider.oninput = () => {
-      chaosVal.textContent = chaosSlider.value + '%'
-      updateDirectorConfig() // NEW
-    }
-    seedInput.oninput = () => {
-        updateDirectorConfig() // NEW
+    // Update next agent info (defined above)
+    updateNextAgentUI()
+
+    // Add message to chat log
+    addMessage = (sender: string, message: string, color: string) => {
+      const messageDiv = document.createElement('div')
+      messageDiv.className = 'message'
+      messageDiv.innerHTML = `
+        <strong style="color: ${color}">${sender}:</strong> ${message}
+      `
+      chatLog.appendChild(messageDiv)
+      chatLog.scrollTop = chatLog.scrollHeight
     }
 
-    profanitySlider.oninput = () => {
-      const val = parseInt(profanitySlider.value)
-      const labels = ['Clean', 'Mild', 'Gritty', 'Explicit']
-      profanityVal.textContent = labels[val]
-
-      // Update running manager immediately
-      if (groupChatManager) {
-        groupChatManager.setProfanityLevel(val as unknown as ProfanityLevel)
+    // Helper to speak and animate with options (steps + seed)
+    speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
+      try {
+        stage.setActiveActor(agentId);
+        const audioData = await audioEngine.synthesize(text, agentId, { steps: options.steps, seed: options.seed });
+        speechQueue.add(audioData);
+      } catch (e) {
+        console.error("Speech synthesis failed", e);
       }
     }
 
@@ -1005,49 +1063,75 @@ Suggestions:
     })
 
     // Mode switching
-    const chatModeBtn = document.getElementById('chat-mode-btn') as HTMLButtonElement
-    const improvModeBtn = document.getElementById('improv-mode-btn') as HTMLButtonElement
-    const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement
-    const improvModeControls = document.getElementById('improv-mode-controls') as HTMLDivElement
+    const chatModeBtn = document.getElementById('chat-mode-btn')!
+    const improvModeBtn = document.getElementById('improv-mode-btn')!
+    const chatModeControls = document.getElementById('chat-mode-controls')!
+    const improvModeControls = document.getElementById('improv-mode-controls')!
 
-    // Floating Stop Button (for when UI is hidden)
-    const floatingStopBtn = document.createElement('button')
-    floatingStopBtn.id = 'floating-stop-improv-btn'
-    floatingStopBtn.textContent = '⏹ Stop Scene'
-    floatingStopBtn.style.position = 'fixed'
-    floatingStopBtn.style.bottom = '20px'
-    floatingStopBtn.style.left = '50%'
-    floatingStopBtn.style.transform = 'translateX(-50%)'
-    floatingStopBtn.style.zIndex = '9999'
-    floatingStopBtn.style.background = '#ff6b6b'
-    floatingStopBtn.style.color = '#ffffff'
-    floatingStopBtn.style.border = 'none'
-    floatingStopBtn.style.padding = '10px 12px'
-    floatingStopBtn.style.borderRadius = '8px'
-    floatingStopBtn.style.cursor = 'pointer'
-    floatingStopBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
-    floatingStopBtn.style.display = 'none'
-    document.body.appendChild(floatingStopBtn)
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
+      improvModeControls.style.display = 'block'
+
+      // Stop improv if running
+      if (director && director.isSceneRunning()) {
+        director.stopScene();
+      }
+
+      updateNextAgentUI()
+    })
+
+    improvModeBtn.addEventListener('click', () => {
+      improvModeBtn.classList.add('active')
+      chatModeBtn.classList.remove('active')
+      // Keep both control panels visible so users can access chat while in Improv mode
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'block'
+      // Show the floating 'Return to Chat' button as an optional quick-switch
+      const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
+      if (existing) existing.style.display = 'block'
+    })
+
+    // Floating 'Return to Chat' button to aid quick switching
+    const returnBtn = document.createElement('button') as HTMLButtonElement
+    returnBtn.id = 'return-to-chat-btn'
+    returnBtn.textContent = 'Return to Chat'
+    returnBtn.title = 'Switch back to Chat Mode'
+    returnBtn.style.position = 'fixed'
+    returnBtn.style.left = '16px'
+    returnBtn.style.bottom = '16px'
+    returnBtn.style.zIndex = '9999'
+    returnBtn.style.background = '#4ecdc4'
+    returnBtn.style.color = '#0f0f23'
+    returnBtn.style.border = 'none'
+    returnBtn.style.padding = '10px 12px'
+    returnBtn.style.borderRadius = '8px'
+    returnBtn.style.cursor = 'pointer'
+    returnBtn.style.boxShadow = '0 4px 14px rgba(0,0,0,0.3)'
+    returnBtn.style.display = 'none'
+    document.body.appendChild(returnBtn)
 
     // Return to Chat Mode button (created dynamically or hidden)
-    const returnBtn = document.createElement('button')
-    returnBtn.id = 'return-to-chat-btn'
-    returnBtn.textContent = '⬅ Return to Chat'
-    returnBtn.style.position = 'absolute'
-    returnBtn.style.top = '10px'
-    returnBtn.style.left = '10px'
-    returnBtn.style.zIndex = '1000'
-    returnBtn.style.display = 'none' // Hidden by default
-    returnBtn.style.padding = '6px 10px'
-    returnBtn.className = 'secondary-btn'
-    document.body.appendChild(returnBtn)
+    const returnBtn2 = document.createElement('button')
+    returnBtn2.id = 'return-to-chat-btn'
+    returnBtn2.textContent = '⬅ Return to Chat'
+    returnBtn2.style.position = 'absolute'
+    returnBtn2.style.top = '10px'
+    returnBtn2.style.left = '10px'
+    returnBtn2.style.zIndex = '1000'
+    returnBtn2.style.display = 'none' // Hidden by default
+    returnBtn2.style.padding = '6px 10px'
+    returnBtn2.className = 'secondary-btn'
+    document.body.appendChild(returnBtn2)
 
     chatModeBtn.addEventListener('click', () => {
       chatModeBtn.classList.add('active')
       improvModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'none'
-      returnBtn.style.display = 'none'
+      returnBtn2.style.display = 'none'
     })
 
     improvModeBtn.addEventListener('click', () => {
@@ -1057,10 +1141,10 @@ Suggestions:
       improvModeControls.style.display = 'block'
     })
 
-    returnBtn.addEventListener('click', () => {
+    returnBtn2.addEventListener('click', () => {
       // Simulate clicking the chat mode button to ensure consistent UI state
       chatModeBtn.click()
-      returnBtn.style.display = 'none'
+      returnBtn2.style.display = 'none'
     })
 
     // Ensure both panels remain visible when switching back to Chat
@@ -1073,8 +1157,7 @@ Suggestions:
       if (existing) existing.style.display = 'none'
     })
 
-    // Improv mode controls - REPLACED LOGIC
-
+    // Improv mode controls
     const startImprovScene = async () => {
       if (!director) {
         addMessage('System', 'No model loaded. Please select and load a model first.', '#ff6b6b')
@@ -1093,31 +1176,21 @@ Suggestions:
       sceneDescriptionInput.disabled = true
       startImprovBtn.style.display = 'none'
       stopImprovBtn.style.display = 'inline-block'
-      const floatStop = document.getElementById('floating-stop-improv-btn')
-      if (floatStop) floatStop.style.display = 'none' // Hidden by default, shown via CSS or other logic if desired
 
-      // Update config one last time before start
-      updateDirectorConfig()
-
-      // Start Director
-      await director.startScenario({
-        mode: 'improv',
-        title: title,
-        description: description
-      })
+      await director.startScene(title, description);
     }
 
     const stopImprovScene = () => {
-      if (director) director.stop()
+      if (director) director.stopScene();
     }
 
     startImprovBtn.addEventListener('click', startImprovScene)
     stopImprovBtn.addEventListener('click', stopImprovScene)
 
     // Hook up the floating stop button (appears when controls are hidden during a running scene)
-    const floatingStopBtnEl = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
-    if (floatingStopBtnEl) {
-      floatingStopBtnEl.addEventListener('click', () => {
+    const floatingStopBtn = document.getElementById('floating-stop-improv-btn') as HTMLButtonElement | null
+    if (floatingStopBtn) {
+      floatingStopBtn.addEventListener('click', () => {
         stopImprovScene()
       })
     }
