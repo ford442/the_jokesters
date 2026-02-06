@@ -1,7 +1,7 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 1
+* **tasks_per_run**: 2
 * **status**: On Track
 
 ## 1. System Philosophy: "The Digital Director"
@@ -50,8 +50,10 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 
 ### Mode E: Creative Expansion (New)
 *   **Roast Battle Mode**: Agents take turns roasting each other or the user.
-    *   *Model Pairing*: Hermes-3 (Uncensored) for maximum creativity.
+    *   *Model Pairing*: Hermes-3 (Uncensored) or Llama-3 (Instruct) for maximum creativity and bite.
+    *   *Mechanic*: Score tracking based on "Oooooh" reactions from other agents.
 *   **Collaborative Storytelling**: Agents build a story sentence by sentence.
+    *   *Model Pairing*: Phi-3 (High logic/coherence) to keep the plot on rails.
 *   **Musical Improv**: Agents generate lyrics for a song.
 *   **Heckler Interaction**: User interrupts, agents must handle it.
 
@@ -60,11 +62,13 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 ## 4. Infrastructure & Storage (HF Integration)
 
 ### Goal: Cloud Persistence
-Move heavy data (scripts, memories) to Hugging Face storage.
+Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 1.  **Authentication**: Implement HF OAuth or Token input in UI.
-2.  **Episode Storage**: Push finished "Episode Scripts" to a private Dataset.
-3.  **Continuity**: Fetch "Previous Episode Summaries" at boot.
+2.  **Episode Storage**: Push finished "Episode Scripts" (JSON) to a private HF Dataset.
+    *   `Dataset: user/jokesters-episodes`
+3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
+    *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
 
 ---
 
@@ -72,7 +76,7 @@ Move heavy data (scripts, memories) to Hugging Face storage.
 
 ### Phase 1: The Refactor (Foundation)
 * [x] Extract `Director` logic from `main.ts` into `src/Director/Director.ts`.
-* [ ] Create `Director.playScenario(scenario)` interface.
+* [x] Create `Director.playScenario(scenario)` interface.
 
 ### Phase 2: The "Watcher" (MST3K)
 * [ ] Add a video player to the UI (hidden or behind agents).
@@ -81,17 +85,17 @@ Move heavy data (scripts, memories) to Hugging Face storage.
 
 ### Phase 3: The "Writer" (Scripts)
 * [ ] Create `ScriptParser` to read JSON scripts.
-* [ ] Connect to a "Script Generator".
+* [ ] Connect to a "Script Generator" (External LLM API hook).
 
 ### Phase 4: Persistence (HF Integration)
-* [ ] Implement `MemoryManager` (Local).
-* [ ] Add HF Token Input in Settings.
-* [ ] Implement `HFStorageManager` class.
+* [ ] Implement `MemoryManager` (Local `localStorage` wrapper first).
+* [ ] Add HF Token Input in Settings Modal.
+* [ ] Implement `HFStorageManager` class using `@huggingface/hub` (or REST API).
     *   `authenticate(token)`
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
 * [ ] Add "Save/Load" buttons to the UI.
 
 ### Phase 5: New Creative Modes
-* [ ] Implement "Roast Battle" Scenario.
-* [ ] Implement "Collaborative Storytelling" Scenario.
+* [ ] Implement "Roast Battle" Scenario logic in `Director`.
+* [ ] Implement "Collaborative Storytelling" Scenario logic.
