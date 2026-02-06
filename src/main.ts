@@ -10,7 +10,14 @@ import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
-import { Director, type DirectorCallbacks } from './Director/Director'
+import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
+
+const profanityLevels: { level: ProfanityLevel, label: string, color: string }[] = [
+  { level: 'PG', label: 'Safe', color: '#4ecdc4' },
+  { level: 'CASUAL', label: 'PG-13', color: '#ffd700' },
+  { level: 'GRITTY', label: 'R-Rated', color: '#ff6b6b' },
+  { level: 'UNCENSORED', label: 'Uncensored', color: '#ff0000' }
+]
 
 // --- Custom Model Configurations ---
 // 1. User's custom Vicuna model (7B)
@@ -343,7 +350,6 @@ async function initApp() {
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
-  // const progressBar = document.getElementById('progress') as HTMLDivElement // Unused
   const statusText = document.getElementById('status')!
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
@@ -422,7 +428,7 @@ async function initApp() {
   }
 
   // Helper to add messages to the log
-  const addMessage = (sender: string, text: string, color: string) => {
+  addMessage = (sender: string, text: string, color: string) => {
     const div = document.createElement('div')
     div.className = 'message'
     div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}`
@@ -482,16 +488,6 @@ async function initApp() {
     stage = new Stage(canvas)
     // stage.start() // Removed as per error: Property 'start' does not exist on type 'Stage'
 
-    // NEW: Helper to safely update Director config from UI
-    const updateDirectorConfig = () => {
-      if (!director) return
-      director.updateConfig({
-        chaosLevel: parseInt(chaosSlider.value),
-        ttsSteps: parseInt(ttsStepsSlider.value),
-        userSeed: seedInput.value ? parseInt(seedInput.value) : undefined
-      })
-    }
-
     const initializeManagers = async (modelId: string, engineModule: any) => {
       // 1. Initialize Audio Engine (once)
       if (!audioInitializing) {
@@ -538,8 +534,6 @@ async function initApp() {
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
       await groupChatManager.initialize(modelId, (progress: any) => {
-        const percentage = Math.round(progress.progress * 100)
-        progressBar.style.width = `${percentage}%`
         statusText.textContent = progress.text
       }, engineModule)
 
@@ -1177,7 +1171,11 @@ Suggestions:
       startImprovBtn.style.display = 'none'
       stopImprovBtn.style.display = 'inline-block'
 
-      await director.startScene(title, description);
+      await director.playScenario({
+        type: 'improv',
+        title: title,
+        description: description
+      } as Scenario);
     }
 
     const stopImprovScene = () => {
