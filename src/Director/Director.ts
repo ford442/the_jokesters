@@ -10,6 +10,16 @@ export interface DirectorCallbacks {
     getSeed: () => number | undefined;
 }
 
+export interface Scenario {
+    type: 'improv' | 'script' | 'reaction' | 'narrative';
+    title: string;
+    description: string;
+    config?: {
+        chaosLevel?: number;
+        initialPrompt?: string;
+    };
+}
+
 export class Director {
     private manager: GroupChatManager;
     private callbacks: DirectorCallbacks;
@@ -29,8 +39,8 @@ export class Director {
         return this.isRunning;
     }
 
-    public async startScene(title: string, description: string) {
-        if (!this.manager) {
+    public async playScenario(scenario: Scenario) {
+         if (!this.manager) {
             this.callbacks.onError('No manager available');
             return;
         }
@@ -38,21 +48,41 @@ export class Director {
         this.isRunning = true;
         this.manager.resetConversation();
 
-        this.callbacks.onMessage('System', `🎬 Starting improv scene: "${title}"`, '#4ecdc4');
-        this.callbacks.onMessage('System', description, '#4ecdc4');
+        this.callbacks.onMessage('System', `🎬 Starting ${scenario.type} scene: "${scenario.title}"`, '#4ecdc4');
+        this.callbacks.onMessage('System', scenario.description, '#4ecdc4');
+
+        // Apply config overrides if present
+        if (scenario.config?.chaosLevel !== undefined) {
+            this.chaosLevel = scenario.config.chaosLevel;
+        }
 
         try {
-            if (this.manager.getHistoryLength() === 0) {
-                const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
-                this.callbacks.onMessage('Director', `Action! "${seed}"`, '#888');
-                await this.processTurn(seed);
+            if (scenario.type === 'improv') {
+                await this.runImprovLoop(scenario);
+            } else {
+                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
+                 this.stopScene();
             }
-
-            this.loop();
         } catch (error) {
             this.callbacks.onError(error);
             this.stopScene();
         }
+    }
+
+    /**
+     * Legacy method for backward compatibility
+     * @deprecated Use playScenario instead
+     */
+    public async startScene(title: string, description: string) {
+        const scenario: Scenario = {
+            type: 'improv',
+            title,
+            description,
+            config: {
+                chaosLevel: this.chaosLevel
+            }
+        };
+        await this.playScenario(scenario);
     }
 
     public stopScene() {
@@ -62,7 +92,13 @@ export class Director {
         }
     }
 
-    private async loop() {
+    private async runImprovLoop(scenario: Scenario) {
+         if (this.manager.getHistoryLength() === 0) {
+            const seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
+            this.callbacks.onMessage('Director', `Action! "${seed}"`, '#888');
+            await this.processTurn(seed);
+        }
+
         while (this.isRunning) {
             await new Promise(r => setTimeout(r, 800));
             if (!this.isRunning) break;
