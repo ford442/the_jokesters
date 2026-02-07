@@ -18,6 +18,13 @@ export interface DirectorCallbacks {
     };
 }
 
+export interface ReporterSegment {
+    type: 'intro' | 'headlines' | 'main_story' | 'panel_discussion' | 'fact_check' | 'breaking' | 'closing';
+    speakerRole?: 'anchor' | 'reporter' | 'analyst' | 'expert' | 'host';
+    promptInjection: string;
+    maxTurns: number;
+}
+
 export interface Scenario {
     type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter';
     title: string;
@@ -30,7 +37,17 @@ export interface Scenario {
         reporterTopic?: string;
         reporterCategory?: 'science' | 'news' | 'technology' | 'sports';
         reporterContext?: string;
+        reporterSegments?: ReporterSegment[];
+        enableBreakingNews?: boolean;
+        sources?: string[];
+        scripted?: boolean;
+        generatedScript?: ScriptBeat[];
     };
+}
+
+export interface ScriptBeat {
+    speaker: string;
+    line: string;
 }
 
 export class Director {
@@ -53,7 +70,7 @@ export class Director {
     }
 
     public async playScenario(scenario: Scenario) {
-         if (!this.manager) {
+        if (!this.manager) {
             this.callbacks.onError('No manager available');
             return;
         }
@@ -77,8 +94,8 @@ export class Director {
             } else if (scenario.type === 'reporter') {
                 await this.runReporterLoop(scenario);
             } else {
-                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
-                 this.stopScene();
+                this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
+                this.stopScene();
             }
         } catch (error) {
             this.callbacks.onError(error);
@@ -110,7 +127,7 @@ export class Director {
     }
 
     private async runImprovLoop(scenario: Scenario) {
-         if (this.manager.getHistoryLength() === 0) {
+        if (this.manager.getHistoryLength() === 0) {
             const seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
             this.callbacks.onMessage('Director', `Action! "${seed}"`, '#888');
             await this.processTurn(seed);
@@ -160,8 +177,8 @@ export class Director {
         try {
             await this.callbacks.videoControls.play();
         } catch (e) {
-             console.warn('Auto-play might be blocked or failed:', e);
-             this.callbacks.onMessage('System', 'Please click play on the video if it does not start automatically.', '#ff6b6b');
+            console.warn('Auto-play might be blocked or failed:', e);
+            this.callbacks.onMessage('System', 'Please click play on the video if it does not start automatically.', '#ff6b6b');
         }
 
         this.callbacks.onMessage('Director', 'Starting reaction loop...', '#888');
@@ -180,11 +197,11 @@ export class Director {
 
                 // Resume
                 if (this.isRunning) {
-                     try {
+                    try {
                         await this.callbacks.videoControls.play();
-                     } catch (e) {
+                    } catch (e) {
                         console.error('Failed to resume video:', e);
-                     }
+                    }
                 }
             }
 
@@ -199,6 +216,8 @@ export class Director {
     private async runReporterLoop(scenario: Scenario) {
         const topic = scenario.config?.reporterTopic || scenario.title;
         const context = scenario.config?.reporterContext;
+        const segments = scenario.config?.reporterSegments || this.getDefaultReporterSegments();
+        const enableBreakingNews = scenario.config?.enableBreakingNews ?? true;
 
         if (!context) {
             this.callbacks.onError('Reporter mode requires context data in config.reporterContext');
@@ -206,28 +225,161 @@ export class Director {
             return;
         }
 
-        // Inject the initial topic and context
-        const initialPrompt = context + ` (Discuss the topic: "${topic}")`;
-        this.callbacks.onMessage('Director', `📰 Topic: ${topic}`, '#888');
-        
-        await this.processTurn(initialPrompt);
+        // Show topic and sources
+        this.callbacks.onMessage('Director', `📰 Now Reporting: ${topic}`, '#888');
+        if (scenario.config?.sources && scenario.config.sources.length > 0) {
+            this.callbacks.onMessage('Director', `📡 Sources: ${scenario.config.sources.join(', ')}`, '#666');
+        }
 
-        // Continue the discussion
-        while (this.isRunning) {
-            await new Promise(r => setTimeout(r, 1000));
+        // Execute each segment
+        for (const segment of segments) {
             if (!this.isRunning) break;
+            await this.executeReporterSegment(segment, context, topic, enableBreakingNews);
+        }
 
-            const turnCount = this.manager.getHistoryLength();
-            
-            // Periodically re-inject context to keep discussion on topic
-            let prompt = '(Continue discussing the topic. Share your perspective.)';
-            
-            if (turnCount % 3 === 0) {
-                // Re-inject context every 3 turns to stay on topic
-                prompt = context + ' (Respond to what was just said and add new insights.)';
+        // Natural end of show
+        if (this.isRunning) {
+            this.callbacks.onMessage('Director', '📰 End of broadcast', '#888');
+        }
+    }
+
+    private getDefaultReporterSegments(): ReporterSegment[] {
+        return [
+            {
+                type: 'intro',
+                speakerRole: 'host',
+                promptInjection: '(You are the HOST introducing today\'s topic. Welcome viewers and set the stage with a mix of professionalism and wit.)',
+                maxTurns: 1
+            },
+            {
+                type: 'headlines',
+                speakerRole: 'anchor',
+                promptInjection: '(You are the ANCHOR presenting the headline story. Be serious and informative, like a professional newsreader.)',
+                maxTurns: 1
+            },
+            {
+                type: 'main_story',
+                speakerRole: 'expert',
+                promptInjection: '(You are the EXPERT analyst. Present the key facts and provide analysis. Reference specific details from the context.)',
+                maxTurns: 2
+            },
+            {
+                type: 'panel_discussion',
+                speakerRole: 'analyst',
+                promptInjection: '(Join the PANEL DISCUSSION. React to what others have said, offer your perspective, and engage in friendly debate.)',
+                maxTurns: 4
+            },
+            {
+                type: 'closing',
+                speakerRole: 'host',
+                promptInjection: '(You are the HOST wrapping up the segment. Summarize key takeaways and sign off with style.)',
+                maxTurns: 1
+            }
+        ];
+    }
+
+    private async executeReporterSegment(
+        segment: ReporterSegment, 
+        context: string, 
+        _topic: string,
+        enableBreakingNews: boolean
+    ): Promise<void> {
+        // Notify about segment change
+        const segmentEmojis: Record<string, string> = {
+            intro: '🎬',
+            headlines: '📰',
+            main_story: '📊',
+            panel_discussion: '💬',
+            fact_check: '✅',
+            breaking: '🚨',
+            closing: '👋'
+        };
+
+        const segmentNames: Record<string, string> = {
+            intro: 'Show Intro',
+            headlines: 'Headlines',
+            main_story: 'Main Story',
+            panel_discussion: 'Panel Discussion',
+            fact_check: 'Fact Check',
+            breaking: 'Breaking News',
+            closing: 'Closing'
+        };
+
+        // Optional: Random breaking news interruption (controlled by chaos level)
+        if (enableBreakingNews && segment.type !== 'breaking' && Math.random() * 100 < this.chaosLevel / 3) {
+            this.callbacks.onMessage('Director', `${segmentEmojis['breaking']} BREAKING NEWS interruption!`, '#ff6b6b');
+            const breakingPrompt = `(BREAKING NEWS INTERRUPTION! A surprising development just came in. React with appropriate urgency and surprise!)`;
+            await this.processTurn(context + ' ' + breakingPrompt);
+        }
+
+        // Execute segment turns
+        for (let turn = 0; turn < segment.maxTurns && this.isRunning; turn++) {
+            if (turn === 0) {
+                this.callbacks.onMessage('Director', 
+                    `${segmentEmojis[segment.type] || '📰'} ${segmentNames[segment.type] || segment.type}`, 
+                    '#4ecdc4'
+                );
+            }
+
+            // Build prompt based on segment type
+            let prompt = segment.promptInjection;
+
+            // Add context for the first turn of each segment
+            if (turn === 0 && (segment.type === 'headlines' || segment.type === 'main_story')) {
+                prompt = context + ' ' + prompt;
+            }
+
+            // For panel discussion, add variety
+            if (segment.type === 'panel_discussion') {
+                const panelPrompts = [
+                    '(Agree with the previous speaker but add a twist.)',
+                    '(Play devil\'s advocate and challenge the previous point.)',
+                    '(Share a surprising fact or connection others missed.)',
+                    '(Make a bold prediction about where this is heading.)'
+                ];
+                if (turn > 0) {
+                    prompt = segment.promptInjection + ' ' + panelPrompts[turn % panelPrompts.length];
+                }
             }
 
             await this.processTurn(prompt);
+
+            // Brief pause between turns for natural pacing
+            if (turn < segment.maxTurns - 1) {
+                await new Promise(r => setTimeout(r, 500));
+            }
+        }
+
+        // Pause between segments
+        await new Promise(r => setTimeout(r, 800));
+    }
+
+    private async runScriptedReporter(script: ScriptBeat[], _fallbackContext: string) {
+        this.callbacks.onMessage('Director', `🎭 Performing ${script.length} scripted beats...`, '#888');
+
+        for (let i = 0; i < script.length && this.isRunning; i++) {
+            const beat = script[i];
+            await this.processScriptBeat(beat);
+            // Natural pause between beats
+            await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+        }
+    }
+
+    private async processScriptBeat(beat: ScriptBeat): Promise<void> {
+        try {
+            await this.callbacks.onTurnStart(beat.speaker);
+
+            const prompt = `(SCRIPT PERFORMANCE: Deliver this scripted line authentically in your character's voice and style: "${beat.line.replace(/"/g, '\\"')}" \\
+Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. ###)`;
+
+            await this.manager.chatForAgent(beat.speaker, prompt, async (sentence: string) => {
+                await this.callbacks.onSpeak(sentence, beat.speaker, {});
+            });
+
+            await this.callbacks.onTurnEnd();
+        } catch (error) {
+            console.error('Script beat error:', error);
+            this.callbacks.onError(error);
         }
     }
 
@@ -264,35 +416,34 @@ export class Director {
         if (!this.manager || !this.isRunning) return;
 
         try {
-             const currentAgent = this.manager.getCurrentAgent();
+            const currentAgent = this.manager.getCurrentAgent();
 
-             // Notify start of turn (used for model swapping and UI setup)
-             await this.callbacks.onTurnStart(currentAgent.id);
+            // Notify start of turn (used for model swapping and UI setup)
+            await this.callbacks.onTurnStart(currentAgent.id);
 
-             const pacing = this.calculatePacing();
-             // console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`);
+            const pacing = this.calculatePacing();
 
-             const effectivePrompt = inputText + pacing.promptSuffix + ' ###';
+            const effectivePrompt = inputText + pacing.promptSuffix + ' ###';
 
-             // Character speeds
-             const characterSpeeds: Record<string, number> = {
+            // Character speeds
+            const characterSpeeds: Record<string, number> = {
                 'comedian': 1.5,
                 'philosopher': 0.6,
                 'scientist': 1.0
-             };
+            };
 
-             const userSeed = this.callbacks.getSeed ? this.callbacks.getSeed() : undefined;
-             const turnSeed = userSeed !== undefined ? userSeed + this.manager.getHistoryLength() : undefined;
+            const userSeed = this.callbacks.getSeed ? this.callbacks.getSeed() : undefined;
+            const turnSeed = userSeed !== undefined ? userSeed + this.manager.getHistoryLength() : undefined;
 
-             await this.manager.chat(effectivePrompt, async (sentence) => {
-                 await this.callbacks.onSpeak(sentence, currentAgent.id, {
-                     steps: pacing.ttsSteps,
-                     speed: characterSpeeds[currentAgent.id] || 1.0,
-                     seed: turnSeed
-                 });
-             }, { maxTokens: pacing.maxTokens, seed: turnSeed });
+            await this.manager.chat(effectivePrompt, async (sentence) => {
+                await this.callbacks.onSpeak(sentence, currentAgent.id, {
+                    steps: pacing.ttsSteps,
+                    speed: characterSpeeds[currentAgent.id] || 1.0,
+                    seed: turnSeed
+                });
+            }, { maxTokens: pacing.maxTokens, seed: turnSeed });
 
-             await this.callbacks.onTurnEnd();
+            await this.callbacks.onTurnEnd();
 
         } catch (error) {
             console.error('Turn Error:', error);
