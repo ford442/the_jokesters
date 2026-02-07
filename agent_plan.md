@@ -56,6 +56,9 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
     *   *Model Pairing*: Phi-3 (High logic/coherence) to keep the plot on rails.
 *   **Musical Improv**: Agents generate lyrics for a song.
 *   **Heckler Interaction**: User interrupts, agents must handle it.
+*   **The Debate Club**: Two agents debate an absurd topic, while the third moderates.
+    *   *Model Pairing*: Qwen2.5-Coder (Logic) vs. Hermes-3 (Creativity).
+    *   *Mechanic*: Moderator tracks time and assigns points.
 
 ---
 
@@ -79,8 +82,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] Create `Director.playScenario(scenario)` interface.
 
 ### Phase 2: The "Watcher" (MST3K)
-* [ ] Add a video player to the UI (hidden or behind agents).
-* [ ] Create `MediaReactionManager` to poll video time and dispatch events.
+* [x] Add a video player to the UI (hidden or behind agents).
+* [x] Create `MediaReactionManager` to poll video time and dispatch events.
 * [ ] Test with a hardcoded video + JSON description file.
 
 ### Phase 3: The "Writer" (Scripts)
@@ -99,3 +102,4 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 5: New Creative Modes
 * [ ] Implement "Roast Battle" Scenario logic in `Director`.
 * [ ] Implement "Collaborative Storytelling" Scenario logic.
+* [ ] Implement "The Debate Club" Scenario logic.

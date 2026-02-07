@@ -1,4 +1,5 @@
 import { GroupChatManager } from '../GroupChatManager';
+import { MediaReactionManager, type ReactionTrigger } from './MediaReactionManager';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -8,6 +9,13 @@ export interface DirectorCallbacks {
     onError: (error: any) => void;
     onSceneStop: () => void;
     getSeed: () => number | undefined;
+    videoControls?: {
+        play: () => Promise<void>;
+        pause: () => void;
+        load: (url: string) => void;
+        getTime: () => number;
+        show: (visible: boolean) => void;
+    };
 }
 
 export interface Scenario {
@@ -17,6 +25,8 @@ export interface Scenario {
     config?: {
         chaosLevel?: number;
         initialPrompt?: string;
+        videoUrl?: string;
+        triggers?: ReactionTrigger[];
     };
 }
 
@@ -59,6 +69,8 @@ export class Director {
         try {
             if (scenario.type === 'improv') {
                 await this.runImprovLoop(scenario);
+            } else if (scenario.type === 'reaction') {
+                await this.runReactionLoop(scenario);
             } else {
                  this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                  this.stopScene();
@@ -116,6 +128,67 @@ export class Director {
 
             await this.processTurn(prompt);
         }
+    }
+
+    private async runReactionLoop(scenario: Scenario) {
+        if (!this.callbacks.videoControls) {
+            this.callbacks.onError('Reaction mode requires video controls');
+            this.stopScene();
+            return;
+        }
+
+        const videoUrl = scenario.config?.videoUrl;
+        const triggers = scenario.config?.triggers;
+
+        if (!videoUrl || !triggers) {
+            this.callbacks.onError('Reaction mode requires videoUrl and triggers in config');
+            this.stopScene();
+            return;
+        }
+
+        const reactionManager = new MediaReactionManager(triggers);
+
+        // Setup video
+        this.callbacks.videoControls.show(true);
+        this.callbacks.videoControls.load(videoUrl);
+
+        try {
+            await this.callbacks.videoControls.play();
+        } catch (e) {
+             console.warn('Auto-play might be blocked or failed:', e);
+             this.callbacks.onMessage('System', 'Please click play on the video if it does not start automatically.', '#ff6b6b');
+        }
+
+        this.callbacks.onMessage('Director', 'Starting reaction loop...', '#888');
+
+        while (this.isRunning) {
+            // Poll video time
+            const time = this.callbacks.videoControls.getTime();
+            const trigger = reactionManager.checkTriggers(time);
+
+            if (trigger) {
+                // Pause and React
+                this.callbacks.videoControls.pause();
+                this.callbacks.onMessage('Director', `Reaction triggered: ${trigger.prompt}`, '#888');
+
+                await this.processTurn(trigger.prompt);
+
+                // Resume
+                if (this.isRunning) {
+                     try {
+                        await this.callbacks.videoControls.play();
+                     } catch (e) {
+                        console.error('Failed to resume video:', e);
+                     }
+                }
+            }
+
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        // Cleanup
+        this.callbacks.videoControls.pause();
+        this.callbacks.videoControls.show(false);
     }
 
     private calculatePacing() {

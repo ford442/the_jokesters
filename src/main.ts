@@ -300,7 +300,13 @@ async function initApp() {
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
             <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
+            <button id="watcher-mode-btn" class="mode-btn">Watcher Mode</button>
           </div>
+
+          <div id="video-container" style="display:none; margin-top: 10px; margin-bottom: 10px;">
+             <video id="reaction-video" controls style="width:100%; max-height: 400px; border: 1px solid #4ecdc4; border-radius: 8px;"></video>
+          </div>
+
           <div id="chat-log" class="chat-log"></div>
           
           <div id="chat-mode-controls" class="input-group">
@@ -546,6 +552,20 @@ async function initApp() {
         }
       )
 
+      // Video Controls
+      const videoElement = document.getElementById('reaction-video') as HTMLVideoElement;
+      const videoContainer = document.getElementById('video-container') as HTMLDivElement;
+
+      const videoControls = {
+          play: async () => await videoElement.play(),
+          pause: () => videoElement.pause(),
+          load: (url: string) => { videoElement.src = url; },
+          getTime: () => videoElement.currentTime,
+          show: (visible: boolean) => {
+              videoContainer.style.display = visible ? 'block' : 'none';
+          }
+      };
+
       // Initialize Director
       const directorCallbacks: DirectorCallbacks = {
         onMessage: (sender, message, color) => addMessage(sender, message, color),
@@ -592,8 +612,13 @@ async function initApp() {
           stopImprovBtn.style.display = 'none';
           const floatingStop = document.getElementById('floating-stop-improv-btn');
           if (floatingStop) floatingStop.style.display = 'none';
+
+          // Ensure video is hidden/paused on stop
+          videoElement.pause();
+          videoContainer.style.display = 'none';
         },
-        getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined
+        getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined,
+        videoControls: videoControls
       };
       director = new Director(groupChatManager, directorCallbacks);
       if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
@@ -1059,12 +1084,14 @@ Suggestions:
     // Mode switching
     const chatModeBtn = document.getElementById('chat-mode-btn')!
     const improvModeBtn = document.getElementById('improv-mode-btn')!
+    const watcherModeBtn = document.getElementById('watcher-mode-btn')!
     const chatModeControls = document.getElementById('chat-mode-controls')!
     const improvModeControls = document.getElementById('improv-mode-controls')!
 
     chatModeBtn.addEventListener('click', () => {
       chatModeBtn.classList.add('active')
       improvModeBtn.classList.remove('active')
+      watcherModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
       improvModeControls.style.display = 'block'
@@ -1080,6 +1107,7 @@ Suggestions:
     improvModeBtn.addEventListener('click', () => {
       improvModeBtn.classList.add('active')
       chatModeBtn.classList.remove('active')
+      watcherModeBtn.classList.remove('active')
       // Keep both control panels visible so users can access chat while in Improv mode
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
@@ -1087,6 +1115,43 @@ Suggestions:
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'block'
     })
+
+    watcherModeBtn.addEventListener('click', async () => {
+         watcherModeBtn.classList.add('active');
+         chatModeBtn.classList.remove('active');
+         improvModeBtn.classList.remove('active');
+
+         // In watcher mode, we can keep chat controls visible for manual messages
+         chatModeControls.style.display = 'flex';
+         improvModeControls.style.display = 'none';
+
+         if (director && director.isSceneRunning()) {
+             director.stopScene();
+         }
+
+         // Wait a moment for stop to process
+         await new Promise(r => setTimeout(r, 100));
+
+         if (!director) {
+              addMessage('System', 'No model loaded.', '#ff6b6b');
+              return;
+         }
+
+         // Start Reaction Scenario
+         await director.playScenario({
+            type: 'reaction',
+            title: 'Movie Night',
+            description: 'The agents watch a classic clip and react to it.',
+            config: {
+                videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                triggers: [
+                    { timestamp: 10, prompt: '(Laugh at the big bunny)', executed: false },
+                    { timestamp: 30, prompt: '(Comment on the birds)', executed: false },
+                    { timestamp: 60, prompt: '(Get bored and make a joke about the plot)', executed: false }
+                ]
+            }
+         } as Scenario);
+    });
 
     // Floating 'Return to Chat' button to aid quick switching
     const returnBtn = document.createElement('button') as HTMLButtonElement
