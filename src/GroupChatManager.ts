@@ -136,7 +136,7 @@ export class GroupChatManager {
     onProgress?: (progress: any) => void,
     engineModule?: any
   ): Promise<void> {
-    
+
     // We will rely on main.ts to call terminate() on the old instance 
     // before creating a new GroupChatManager instance, but if this is called 
     // again without creating a new instance, we should terminate the existing engine.
@@ -198,15 +198,15 @@ export class GroupChatManager {
         return // Success! Exit the function
       } catch (error) {
         console.error(`Failed to initialize GroupChatManager (attempt ${attempt}/${maxRetries}):`, error)
-        
+
         // Check if this is a cache/network error
         const isCacheError = this.isCacheNetworkError(error)
-        
+
         if (isCacheError && attempt < maxRetries) {
           // On cache errors, clear cache and retry
           console.log('Detected cache/network error. Clearing cache before retry...')
           await this.clearModelCache()
-          
+
           // Exponential backoff: wait before retrying (delays before retry 2, 3 would be: 1s, 2s)
           const delay = baseDelay * Math.pow(2, attempt - 1)
           console.log(`Waiting ${delay}ms before retry...`)
@@ -219,11 +219,11 @@ export class GroupChatManager {
           await this.sleep(delay)
           continue
         }
-        
+
         // If we've exhausted retries, throw enhanced error
         const base = error instanceof Error ? error.message : String(error)
         let enhancedMessage = `${base} (while initializing model '${modelId}' after ${maxRetries} attempts).`
-        
+
         if (isCacheError) {
           enhancedMessage += `\n\nThis appears to be a cache/network error. Suggestions:
   • Check your network connection and try again
@@ -271,18 +271,18 @@ export class GroupChatManager {
     try {
       // Generate response with stricter sampling to prevent repetition
       const completion = await this.engine.chat.completions.create({
-          messages: messages as any[],
-          temperature: currentAgent.temperature,
-          top_p: currentAgent.top_p,
-          // Hard cap at 96 tokens to reduce VRAM usage
-          max_tokens: Math.min(options.maxTokens || 96, 96),
-          stream: true,
-          // Use a stop token plus fallbacks to catch structural shifts
-          stop: ["###", "Director:", "User:"],
-          // @ts-ignore - optional seed not on all runtime types
-          seed: options.seed,
-          // @ts-ignore - runtime may support this even if types might complain
-          presence_penalty: 0.6,
+        messages: messages as any[],
+        temperature: currentAgent.temperature,
+        top_p: currentAgent.top_p,
+        // Hard cap at 96 tokens to reduce VRAM usage
+        max_tokens: Math.min(options.maxTokens || 96, 96),
+        stream: true,
+        // Use a stop token plus fallbacks to catch structural shifts
+        stop: ["###", "Director:", "User:"],
+        // @ts-ignore - optional seed not on all runtime types
+        seed: options.seed,
+        // @ts-ignore - runtime may support this even if types might complain
+        presence_penalty: 0.6,
       })
 
       let fullResponse = ''
@@ -371,6 +371,32 @@ export class GroupChatManager {
     } catch (error) {
       console.error('Error generating response:', error)
       throw error
+    }
+  }
+
+  /**
+   * Chat forcing a specific agent (for scripted modes)
+   */
+  async chatForAgent(
+    agentId: string,
+    userMessage: string,
+    onSentence?: (sentence: string) => void,
+    options: { maxTokens?: number; seed?: number } = {}
+  ): Promise<{ agentId: string; response: string }> {
+    const savedIndex = this.currentAgentIndex;
+
+    // Find and set target agent index
+    const targetIndex = this.agents.findIndex(agent => agent.id === agentId);
+    if (targetIndex === -1) {
+      throw new Error(`Agent ${agentId} not found`);
+    }
+    this.currentAgentIndex = targetIndex;
+
+    try {
+      return await this.chat(userMessage, onSentence, options);
+    } finally {
+      // Restore original index after chat (don't advance for script)
+      this.currentAgentIndex = savedIndex;
     }
   }
 

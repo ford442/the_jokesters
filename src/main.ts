@@ -201,6 +201,12 @@ const defaultAgentModelMappings: AgentModelMapping[] = [
   { agentId: 'scientist', modelId: defaultModelId },                          // 3GB - verbose
 ]
 
+// Export interface for ScriptBeat
+export interface ScriptBeat {
+  speaker: string;
+  line: string;
+}
+
 // Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
@@ -348,8 +354,15 @@ async function initApp() {
           </div>
           
           <div id="reporter-mode-controls" class="improv-controls" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+              <label style="color: #888; font-size: 0.9em; cursor: pointer;">
+                <input type="checkbox" id="use-custom-article" style="cursor: pointer;">
+                <span>Use pasted article</span>
+              </label>
+              <input type="text" id="article-title" placeholder="Article title (optional)" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled />
+            </div>
             <div class="input-group">
-              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic Category</label>
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic Category (for suggestions)</label>
               <select id="reporter-category" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
                 <option value="science">Science</option>
                 <option value="news">News</option>
@@ -358,7 +371,7 @@ async function initApp() {
               </select>
             </div>
             <div class="input-group">
-              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic (or select suggestion)</label>
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic (or select suggestion, if not using custom)</label>
               <input 
                 type="text" 
                 id="reporter-topic" 
@@ -366,6 +379,16 @@ async function initApp() {
                 autocomplete="off"
                 disabled
               />
+            </div>
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Paste article text here</label>
+              <textarea 
+                id="article-text" 
+                placeholder="Paste the full article text or facts here..."
+                rows="4"
+                style="width: 100%; background: #0f3460; border: 1px solid #444; color: white; padding: 8px; font-size: 0.85em;"
+                disabled
+              ></textarea>
             </div>
             <div class="input-group">
               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Quick Topics</label>
@@ -387,6 +410,7 @@ async function initApp() {
     </div>
   `
 
+  // All DOM element declarations - move early to fix scope
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
@@ -394,6 +418,9 @@ async function initApp() {
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
+  const modelSelect = document.getElementById('model-select') as HTMLSelectElement
+  const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null
+  const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement
   const loadModelBtn = document.getElementById('load-model-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
   const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
@@ -403,24 +430,20 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
-  // Improv controls
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
   const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
-  
-  // Reporter controls
   const reporterCategorySelect = document.getElementById('reporter-category') as HTMLSelectElement
   const reporterTopicInput = document.getElementById('reporter-topic') as HTMLInputElement
   const reporterQuickTopicsSelect = document.getElementById('reporter-quick-topics') as HTMLSelectElement
   const startReporterBtn = document.getElementById('start-reporter-btn') as HTMLButtonElement
   const stopReporterBtn = document.getElementById('stop-reporter-btn') as HTMLButtonElement
-
-  // NEW: Get reference to the model selection box - DECLARATIONS MOVED UP HERE
-  const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
-  const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null;
-  const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement;
+  const useCustomArticleCheckbox = document.getElementById('use-custom-article') as HTMLInputElement
+  const articleTitleInput = document.getElementById('article-title') as HTMLInputElement
+  const articleTextTextarea = document.getElementById('article-text') as HTMLTextAreaElement
+  const scriptModeToggle = document.getElementById('script-mode-toggle') as HTMLInputElement
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -506,10 +529,10 @@ async function initApp() {
     // I will just disable the VRAM check for now or cast to any.
     const amManagerAny = agentModelManager as any
     const currentVRAM = amManagerAny.getRequiredVRAM ? amManagerAny.getRequiredVRAM(currentModelId) : 0
-    
+
     const displayEl = document.getElementById('current-model-display')
     const vramEl = document.getElementById('current-vram-display')
-    
+
     if (displayEl) displayEl.textContent = currentModelId ? currentModelId.split('/').pop() || currentModelId : 'None'
     if (vramEl) vramEl.textContent = currentVRAM.toFixed(0)
   }
@@ -522,9 +545,9 @@ async function initApp() {
         // Get the model assigned to this agent from the UI select
         const select = document.getElementById(`model-${agentId}`) as HTMLSelectElement
         if (select && select.value) {
-            const amManagerAny = agentModelManager as any
-            const vram = amManagerAny.getRequiredVRAM ? amManagerAny.getRequiredVRAM(select.value) : 0
-            badge.textContent = `${vram.toFixed(0)} MB`
+          const amManagerAny = agentModelManager as any
+          const vram = amManagerAny.getRequiredVRAM ? amManagerAny.getRequiredVRAM(select.value) : 0
+          badge.textContent = `${vram.toFixed(0)} MB`
         }
       }
     })
@@ -565,11 +588,11 @@ async function initApp() {
         // If AudioEngine doesn't have it, maybe it was added dynamically or I missed it.
         // I will add a safe check.
         if ('onAudioProcess' in audioEngine) {
-             (audioEngine as any).onAudioProcess = (data: any) => {
-                 if ((lipSync as any).update) {
-                    (lipSync as any).update(data)
-                 }
-             }
+          (audioEngine as any).onAudioProcess = (data: any) => {
+            if ((lipSync as any).update) {
+              (lipSync as any).update(data)
+            }
+          }
         }
 
         stage.setLipSync(lipSync)
@@ -598,13 +621,13 @@ async function initApp() {
       const videoContainer = document.getElementById('video-container') as HTMLDivElement;
 
       const videoControls = {
-          play: async () => await videoElement.play(),
-          pause: () => videoElement.pause(),
-          load: (url: string) => { videoElement.src = url; },
-          getTime: () => videoElement.currentTime,
-          show: (visible: boolean) => {
-              videoContainer.style.display = visible ? 'block' : 'none';
-          }
+        play: async () => await videoElement.play(),
+        pause: () => videoElement.pause(),
+        load: (url: string) => { videoElement.src = url; },
+        getTime: () => videoElement.currentTime,
+        show: (visible: boolean) => {
+          videoContainer.style.display = visible ? 'block' : 'none';
+        }
       };
 
       // Initialize Director
@@ -614,9 +637,9 @@ async function initApp() {
           await speakAndVisualize(sentence, agentId, options);
           // Update the "..." bubble with the spoken text
           if (currentMessageContentSpan) {
-             const currentText = currentMessageContentSpan.textContent === '...' ? '' : (currentMessageContentSpan.textContent || '');
-             currentMessageContentSpan.textContent = currentText + sentence + ' ';
-             chatLog.scrollTop = chatLog.scrollHeight;
+            const currentText = currentMessageContentSpan.textContent === '...' ? '' : (currentMessageContentSpan.textContent || '');
+            currentMessageContentSpan.textContent = currentText + sentence + ' ';
+            chatLog.scrollTop = chatLog.scrollHeight;
           }
         },
         onTurnStart: async (agentId) => {
@@ -651,14 +674,14 @@ async function initApp() {
           sceneDescriptionInput.disabled = false;
           startImprovBtn.style.display = 'inline-block';
           stopImprovBtn.style.display = 'none';
-          
+
           // Re-enable reporter controls
           startReporterBtn.disabled = false;
           reporterTopicInput.disabled = false;
           reporterCategorySelect.disabled = false;
           reporterQuickTopicsSelect.disabled = false;
           stopReporterBtn.style.display = 'none';
-          
+
           const floatingStop = document.getElementById('floating-stop-improv-btn');
           if (floatingStop) floatingStop.style.display = 'none';
 
@@ -717,7 +740,7 @@ async function initApp() {
           el.appendChild(opt)
         })
         if (currentVal && models.includes(currentVal)) el.value = currentVal
-        
+
         // Listener for changes
         el.onchange = () => {
           const agentId = selectId.replace('model-', '')
@@ -731,7 +754,7 @@ async function initApp() {
       populateAssignmentSelect('model-comedian', defaultAgentModelMappings.find(m => m.agentId === 'comedian')?.modelId || '')
       populateAssignmentSelect('model-philosopher', defaultAgentModelMappings.find(m => m.agentId === 'philosopher')?.modelId || '')
       populateAssignmentSelect('model-scientist', defaultAgentModelMappings.find(m => m.agentId === 'scientist')?.modelId || '')
-      
+
       updateVRAMBadges()
     }
 
@@ -760,14 +783,14 @@ async function initApp() {
 
         try {
           if (selected === 'chatllm') {
-             // Dynamic import if needed, or just switch active ref
-             // NOTE: @mlc-ai/chat-llm does not exist in this project yet, so this is a placeholder/mock
-             // activeEngineModule = await import('@mlc-ai/chat-llm')
-             // Falling back to webllm for safety in this demo
-             console.warn('ChatLLM engine not installed, falling back to WebLLM logic but separate config.')
-             activeEngineModule = webllm // Mock
+            // Dynamic import if needed, or just switch active ref
+            // NOTE: @mlc-ai/chat-llm does not exist in this project yet, so this is a placeholder/mock
+            // activeEngineModule = await import('@mlc-ai/chat-llm')
+            // Falling back to webllm for safety in this demo
+            console.warn('ChatLLM engine not installed, falling back to WebLLM logic but separate config.')
+            activeEngineModule = webllm // Mock
           } else {
-             activeEngineModule = webllm
+            activeEngineModule = webllm
           }
 
           // Re-populate model list based on new engine
@@ -788,17 +811,17 @@ async function initApp() {
     // Load auto-load preference from localStorage
     const AUTO_LOAD_KEY = 'jokesters-auto-load-vicuna';
     const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
-    
+
     // Helper function to extract a friendly model name from model_id
     const getModelDisplayName = (modelId: string): string => {
       return modelId.split('/').pop() || modelId || 'Unknown Model';
     };
-    
+
     const savedAutoLoad = localStorage.getItem(AUTO_LOAD_KEY);
     if (savedAutoLoad === 'true') {
       autoLoadVicunaCheckbox.checked = true;
     }
-    
+
     // Save preference when checkbox changes
     autoLoadVicunaCheckbox.addEventListener('change', () => {
       localStorage.setItem(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
@@ -811,7 +834,7 @@ async function initApp() {
         statusText.style.color = ''; // Reset to default color
       }
     });
-    
+
     // Auto-load Vicuna 7B if option is enabled
     if (autoLoadVicunaCheckbox.checked) {
       // Verify that Vicuna model is available before attempting to auto-load
@@ -819,14 +842,14 @@ async function initApp() {
       // Re-calculate available models since getAvailableModels depends on activeEngineModule which might have changed (though unlikely at startup)
       const currentAvailable = getAvailableModels(activeEngineModule);
       const isVicunaAvailable = currentAvailable.includes(vicunaModelId);
-      
+
       if (isVicunaAvailable) {
         // Set Vicuna as the selected model
         modelSelect.value = vicunaModelId;
         if (modelSelectMain) modelSelectMain.value = vicunaModelId;
-        
+
         const modelName = getModelDisplayName(vicunaModelId);
-        
+
         statusText.textContent = `Auto-loading ${modelName} in ${AUTO_LOAD_DELAY_MS}ms...`;
 
         // Trigger load after a short delay
@@ -879,9 +902,51 @@ async function initApp() {
     }
 
     loadModelBtn.addEventListener('click', async () => {
-        const newModelId = modelSelect.value
-        if (!newModelId) {
-          const friendly = "No model selected. Please select a model from the list."
+      const newModelId = modelSelect.value
+      if (!newModelId) {
+        const friendly = "No model selected. Please select a model from the list."
+        statusText.textContent = friendly
+        statusText.style.color = '#ff6b6b'
+        if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+        if (modelSelect) modelSelect.disabled = false
+        if (loadModelBtn) loadModelBtn.disabled = false
+        return
+      }
+
+      // Look up the model metadata so we can provide clearer diagnostics if fields are missing
+      const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
+      const modelInfo = list.find((m: any) => m.model_id === newModelId)
+      if (!modelInfo) {
+        const friendly = `Model '${newModelId}' was not found in the selected engine's prebuilt model list. Ensure it's been registered in the app config.`
+        console.error(friendly)
+        statusText.textContent = friendly
+        statusText.style.color = '#ff6b6b'
+        if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
+        if (modelSelect) modelSelect.disabled = false
+        if (loadModelBtn) loadModelBtn.disabled = false
+        return
+      }
+
+      // Stop improv if running
+      if (director && director.isSceneRunning()) stopImprovScene();
+
+      // Do not hide the chat panel — instead dim and disable interactions during model loading
+      if (chatContainer) {
+        chatContainer.style.opacity = '0.6';
+        chatContainer.style.pointerEvents = 'none';
+      }
+      loadingDiv.style.display = 'flex';
+      chatLog.innerHTML = '';
+
+      try {
+        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+
+        // Prevent loading non-chat-capable models (e.g., embeddings or VLMs) into the Chat flow
+        const modelType = (modelInfo?.model_type || '').toString().toLowerCase()
+        const allowedChatTypes = ['llm', 'chat']
+        if (modelType && !allowedChatTypes.includes(modelType)) {
+          const friendly = `Model '${newModelId}' is type '${modelType}' and cannot be used for Chat. Please select an LLM/chat-capable model.`
+          console.warn(friendly)
           statusText.textContent = friendly
           statusText.style.color = '#ff6b6b'
           if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
@@ -890,184 +955,142 @@ async function initApp() {
           return
         }
 
-        // Look up the model metadata so we can provide clearer diagnostics if fields are missing
-        const list = (activeEngineModule && activeEngineModule.prebuiltAppConfig && Array.isArray(activeEngineModule.prebuiltAppConfig.model_list)) ? activeEngineModule.prebuiltAppConfig.model_list : []
-        const modelInfo = list.find((m: any) => m.model_id === newModelId)
-        if (!modelInfo) {
-          const friendly = `Model '${newModelId}' was not found in the selected engine's prebuilt model list. Ensure it's been registered in the app config.`
-          console.error(friendly)
-          statusText.textContent = friendly
-          statusText.style.color = '#ff6b6b'
-          if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
-          if (modelSelect) modelSelect.disabled = false
-          if (loadModelBtn) loadModelBtn.disabled = false
-          return
-        }
-
-        // Stop improv if running
-        if (director && director.isSceneRunning()) stopImprovScene();
-
-        // Do not hide the chat panel — instead dim and disable interactions during model loading
-        if (chatContainer) {
-          chatContainer.style.opacity = '0.6';
-          chatContainer.style.pointerEvents = 'none';
-        }
-        loadingDiv.style.display = 'flex';
-        chatLog.innerHTML = '';
-
-        try {
-          const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
-
-          // Prevent loading non-chat-capable models (e.g., embeddings or VLMs) into the Chat flow
-          const modelType = (modelInfo?.model_type || '').toString().toLowerCase()
-          const allowedChatTypes = ['llm', 'chat']
-          if (modelType && !allowedChatTypes.includes(modelType)) {
-            const friendly = `Model '${newModelId}' is type '${modelType}' and cannot be used for Chat. Please select an LLM/chat-capable model.`
-            console.warn(friendly)
-            statusText.textContent = friendly
-            statusText.style.color = '#ff6b6b'
-            if (modelErrorDiv) { modelErrorDiv.textContent = friendly; modelErrorDiv.style.display = 'block' }
-            if (modelSelect) modelSelect.disabled = false
-            if (loadModelBtn) loadModelBtn.disabled = false
-            return
-          }
-
-          // Lightweight URL checks to prevent long-running network failures when loading large WASM/model assets
-          // 1) If the selected model is Qwen, keep the existing URL HEAD check (it was added for reliability)
-          if (newModelId.toLowerCase().includes('qwen')) {
-            const urlToCheck = modelInfo?.model
-            if (urlToCheck) {
-              statusText.textContent = `Checking model URL for ${newModelId}...`
-              // Fetch with timeout to verify reachability
-              const controller = new AbortController()
-              const timeout = setTimeout(() => controller.abort(), 5000)
-              try {
-                const resp = await fetch(urlToCheck, { method: 'HEAD', signal: controller.signal })
-                clearTimeout(timeout)
-                if (!resp.ok) {
-                  throw new Error(`Model URL returned ${resp.status}`)
-                }
-              } catch (err) {
-                console.error('Qwen model URL check failed:', err)
-                statusText.textContent = `Model URL check failed for ${newModelId}. See console.`
-                statusText.style.color = '#ff6b6b'
-                loadingDiv.style.display = 'flex'
-                if (modelSelect) modelSelect.disabled = false
-                if (loadModelBtn) loadModelBtn.disabled = false
-                return
-              }
-            }
-          }
-
-          // 2) Preflight-check the model runtime/WASM URL (model_lib) for ALL models. Some hosts (raw.githubusercontent.com, cf CDN) can be rate-limited or return HTML errors.
-          const modelRuntimeURL = modelInfo?.model_lib || modelInfo?.model_lib_url || modelInfo?.model
-          if (modelRuntimeURL) {
-            statusText.textContent = `Checking model runtime URL for ${newModelId}...`
+        // Lightweight URL checks to prevent long-running network failures when loading large WASM/model assets
+        // 1) If the selected model is Qwen, keep the existing URL HEAD check (it was added for reliability)
+        if (newModelId.toLowerCase().includes('qwen')) {
+          const urlToCheck = modelInfo?.model
+          if (urlToCheck) {
+            statusText.textContent = `Checking model URL for ${newModelId}...`
+            // Fetch with timeout to verify reachability
             const controller = new AbortController()
-            const timeoutMs = 8000
-            const timeout = setTimeout(() => controller.abort(), timeoutMs)
-            let ok = false
+            const timeout = setTimeout(() => controller.abort(), 5000)
             try {
-              // Try HEAD first (many hosts support it). If it fails or returns HTML, try a small Range GET as fallback.
-              const headResp = await fetch(modelRuntimeURL, { method: 'HEAD', signal: controller.signal })
+              const resp = await fetch(urlToCheck, { method: 'HEAD', signal: controller.signal })
               clearTimeout(timeout)
-              if (headResp.ok) {
-                const ct = headResp.headers.get('content-type') || ''
-                if (!ct.includes('text/html') && !ct.includes('text/plain')) {
-                  ok = true
-                } else {
-                  console.warn('Model runtime HEAD returned non-binary content-type:', ct)
-                }
-              } else {
-                console.warn('Model runtime HEAD returned non-OK status:', headResp.status)
+              if (!resp.ok) {
+                throw new Error(`Model URL returned ${resp.status}`)
               }
-            } catch (headErr) {
-              console.warn('HEAD check failed for model runtime, attempting Range GET as fallback:', headErr)
-              try {
-                // Reset controller for second request
-                const controller2 = new AbortController()
-                const timeout2 = setTimeout(() => controller2.abort(), timeoutMs)
-                const rangeResp = await fetch(modelRuntimeURL, { method: 'GET', headers: { Range: 'bytes=0-1023' }, signal: controller2.signal })
-                clearTimeout(timeout2)
-                if (rangeResp.ok) {
-                  const ct = rangeResp.headers.get('content-type') || ''
-                  if (!ct.includes('text/html') && !ct.includes('text/plain')) {
-                    ok = true
-                  } else {
-                    console.warn('Model runtime Range GET returned non-binary content-type:', ct)
-                  }
-                } else {
-                  console.warn('Model runtime Range GET returned non-OK status:', rangeResp.status)
-                }
-              } catch (rangeErr) {
-                console.error('Range GET fallback failed for model runtime:', rangeErr)
-              }
-            }
-
-            if (!ok) {
-              const friendly = `Model runtime '${modelRuntimeURL}' is not reachable or does not look like a binary runtime (WASM). This commonly causes network/cache errors while loading a model.`
-              console.error(friendly)
-              statusText.textContent = friendly
+            } catch (err) {
+              console.error('Qwen model URL check failed:', err)
+              statusText.textContent = `Model URL check failed for ${newModelId}. See console.`
               statusText.style.color = '#ff6b6b'
-              if (modelErrorDiv) {
-                modelErrorDiv.textContent = `${friendly}\n\nSuggestions:\n • Check the URL in the model config is a direct link to the WASM runtime (not a directory or HTML page).\n • Raw GitHub links may be rate-limited; try hosting the WASM on a stable CDN (jsdelivr/gh-cdn) or mlc-ai's releases.\n • If the file is very large, try a smaller model or a local static host.`
-                modelErrorDiv.style.display = 'block'
-              }
+              loadingDiv.style.display = 'flex'
               if (modelSelect) modelSelect.disabled = false
               if (loadModelBtn) loadModelBtn.disabled = false
               return
             }
           }
+        }
 
-          // Clear prior model error
-          if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
-
-          // Terminate gracefully if we have an existing manager
-          if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
-            await groupChatManager.terminate()
+        // 2) Preflight-check the model runtime/WASM URL (model_lib) for ALL models. Some hosts (raw.githubusercontent.com, cf CDN) can be rate-limited or return HTML errors.
+        const modelRuntimeURL = modelInfo?.model_lib || modelInfo?.model_lib_url || modelInfo?.model
+        if (modelRuntimeURL) {
+          statusText.textContent = `Checking model runtime URL for ${newModelId}...`
+          const controller = new AbortController()
+          const timeoutMs = 8000
+          const timeout = setTimeout(() => controller.abort(), timeoutMs)
+          let ok = false
+          try {
+            // Try HEAD first (many hosts support it). If it fails or returns HTML, try a small Range GET as fallback.
+            const headResp = await fetch(modelRuntimeURL, { method: 'HEAD', signal: controller.signal })
+            clearTimeout(timeout)
+            if (headResp.ok) {
+              const ct = headResp.headers.get('content-type') || ''
+              if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                ok = true
+              } else {
+                console.warn('Model runtime HEAD returned non-binary content-type:', ct)
+              }
+            } else {
+              console.warn('Model runtime HEAD returned non-OK status:', headResp.status)
+            }
+          } catch (headErr) {
+            console.warn('HEAD check failed for model runtime, attempting Range GET as fallback:', headErr)
+            try {
+              // Reset controller for second request
+              const controller2 = new AbortController()
+              const timeout2 = setTimeout(() => controller2.abort(), timeoutMs)
+              const rangeResp = await fetch(modelRuntimeURL, { method: 'GET', headers: { Range: 'bytes=0-1023' }, signal: controller2.signal })
+              clearTimeout(timeout2)
+              if (rangeResp.ok) {
+                const ct = rangeResp.headers.get('content-type') || ''
+                if (!ct.includes('text/html') && !ct.includes('text/plain')) {
+                  ok = true
+                } else {
+                  console.warn('Model runtime Range GET returned non-binary content-type:', ct)
+                }
+              } else {
+                console.warn('Model runtime Range GET returned non-OK status:', rangeResp.status)
+              }
+            } catch (rangeErr) {
+              console.error('Range GET fallback failed for model runtime:', rangeErr)
+            }
           }
 
-          // Initialize with the chosen model
-          await initializeManagers(newModelId, activeEngineModule)
-        } catch (e: any) {
-          console.error('Error loading model:', e)
-          const errMsg = e?.message || String(e)
+          if (!ok) {
+            const friendly = `Model runtime '${modelRuntimeURL}' is not reachable or does not look like a binary runtime (WASM). This commonly causes network/cache errors while loading a model.`
+            console.error(friendly)
+            statusText.textContent = friendly
+            statusText.style.color = '#ff6b6b'
+            if (modelErrorDiv) {
+              modelErrorDiv.textContent = `${friendly}\n\nSuggestions:\n • Check the URL in the model config is a direct link to the WASM runtime (not a directory or HTML page).\n • Raw GitHub links may be rate-limited; try hosting the WASM on a stable CDN (jsdelivr/gh-cdn) or mlc-ai's releases.\n • If the file is very large, try a smaller model or a local static host.`
+              modelErrorDiv.style.display = 'block'
+            }
+            if (modelSelect) modelSelect.disabled = false
+            if (loadModelBtn) loadModelBtn.disabled = false
+            return
+          }
+        }
 
-          // Detect cache.add / network errors and show a clearer message
-          if (errMsg.includes('Cache.add') || errMsg.includes("Failed to execute 'add' on 'Cache'") || errMsg.includes('NetworkError') || errMsg.includes('net::ERR')) {
-            const friendly = `Network error while fetching model assets. This commonly happens when the browser cannot fetch model files from the host (CORS, network/firewall, or blocked Host).
+        // Clear prior model error
+        if (modelErrorDiv) { modelErrorDiv.style.display = 'none'; modelErrorDiv.textContent = '' }
+
+        // Terminate gracefully if we have an existing manager
+        if (groupChatManager && typeof (groupChatManager as any).terminate === 'function') {
+          await groupChatManager.terminate()
+        }
+
+        // Initialize with the chosen model
+        await initializeManagers(newModelId, activeEngineModule)
+      } catch (e: any) {
+        console.error('Error loading model:', e)
+        const errMsg = e?.message || String(e)
+
+        // Detect cache.add / network errors and show a clearer message
+        if (errMsg.includes('Cache.add') || errMsg.includes("Failed to execute 'add' on 'Cache'") || errMsg.includes('NetworkError') || errMsg.includes('net::ERR')) {
+          const friendly = `Network error while fetching model assets. This commonly happens when the browser cannot fetch model files from the host (CORS, network/firewall, or blocked Host).
 
 Suggestions:
   • Check your network connection and any firewall/proxy settings.
   • Try a different model in the selector.
   • If using Hugging Face/cas-bridge, ensure the model URL is reachable from your browser (open DevTools → Network to inspect failing GETs).
   • As a fallback, download the model locally and point the app to a local URL or static server.`
-            statusText.textContent = friendly
-            statusText.style.color = '#ff6b6b'
-            if (modelErrorDiv) {
-              modelErrorDiv.textContent = friendly
-              modelErrorDiv.style.display = 'block'
-            }
-          } else {
-            statusText.textContent = `Error loading model ${newModelId}. See console.`
-            statusText.style.color = '#ff6b6b'
-            if (modelErrorDiv) {
-              modelErrorDiv.textContent = `Error loading model: ${errMsg}`
-              modelErrorDiv.style.display = 'block'
-            }
+          statusText.textContent = friendly
+          statusText.style.color = '#ff6b6b'
+          if (modelErrorDiv) {
+            modelErrorDiv.textContent = friendly
+            modelErrorDiv.style.display = 'block'
           }
-
-          loadingDiv.style.display = 'flex'
-          // Restore chat panel visibility and interactions after a failed load
-          if (chatContainer) {
-            chatContainer.style.opacity = '1'
-            chatContainer.style.pointerEvents = 'auto'
+        } else {
+          statusText.textContent = `Error loading model ${newModelId}. See console.`
+          statusText.style.color = '#ff6b6b'
+          if (modelErrorDiv) {
+            modelErrorDiv.textContent = `Error loading model: ${errMsg}`
+            modelErrorDiv.style.display = 'block'
           }
-          if (modelSelect) modelSelect.disabled = false
-          if (modelSelectMain) modelSelectMain.disabled = false
-          if (loadModelBtn) loadModelBtn.disabled = false
         }
-      })
+
+        loadingDiv.style.display = 'flex'
+        // Restore chat panel visibility and interactions after a failed load
+        if (chatContainer) {
+          chatContainer.style.opacity = '1'
+          chatContainer.style.pointerEvents = 'auto'
+        }
+        if (modelSelect) modelSelect.disabled = false
+        if (modelSelectMain) modelSelectMain.disabled = false
+        if (loadModelBtn) loadModelBtn.disabled = false
+      }
+    })
 
     // Update next agent info (defined above)
     updateNextAgentUI()
@@ -1111,12 +1134,12 @@ Suggestions:
         updateCurrentModelDisplay()
 
         await groupChatManager.chat(text, (_sentence) => {
-           // For now, in manual chat, we just output the text.
-           // In future, we could hook up TTS here too if desired.
-           const current = groupChatManager.getCurrentAgent()
+          // For now, in manual chat, we just output the text.
+          // In future, we could hook up TTS here too if desired.
+          const current = groupChatManager.getCurrentAgent()
 
-           // Simple visualizer update (optional)
-           stage.setActiveActor(current.id)
+          // Simple visualizer update (optional)
+          stage.setActiveActor(current.id)
         })
 
         // Update UI
@@ -1179,60 +1202,77 @@ Suggestions:
     })
 
     watcherModeBtn.addEventListener('click', async () => {
-         watcherModeBtn.classList.add('active');
-         chatModeBtn.classList.remove('active');
-         improvModeBtn.classList.remove('active');
-         reporterModeBtn.classList.remove('active');
+      watcherModeBtn.classList.add('active');
+      chatModeBtn.classList.remove('active');
+      improvModeBtn.classList.remove('active');
+      reporterModeBtn.classList.remove('active');
 
-         // In watcher mode, we can keep chat controls visible for manual messages
-         chatModeControls.style.display = 'flex';
-         improvModeControls.style.display = 'none';
-         reporterModeControls.style.display = 'none';
+      // In watcher mode, we can keep chat controls visible for manual messages
+      chatModeControls.style.display = 'flex';
+      improvModeControls.style.display = 'none';
+      reporterModeControls.style.display = 'none';
 
-         if (director && director.isSceneRunning()) {
-             director.stopScene();
-         }
+      if (director && director.isSceneRunning()) {
+        director.stopScene();
+      }
 
-         // Wait a moment for stop to process
-         await new Promise(r => setTimeout(r, 100));
+      // Wait a moment for stop to process
+      await new Promise(r => setTimeout(r, 100));
 
-         if (!director) {
-              addMessage('System', 'No model loaded.', '#ff6b6b');
-              return;
-         }
+      if (!director) {
+        addMessage('System', 'No model loaded.', '#ff6b6b');
+        return;
+      }
 
-         // Start Reaction Scenario
-         await director.playScenario({
-            type: 'reaction',
-            title: 'Movie Night',
-            description: 'The agents watch a classic clip and react to it.',
-            config: {
-                videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                triggers: [
-                    { timestamp: 10, prompt: '(Laugh at the big bunny)', executed: false },
-                    { timestamp: 30, prompt: '(Comment on the birds)', executed: false },
-                    { timestamp: 60, prompt: '(Get bored and make a joke about the plot)', executed: false }
-                ]
-            }
-         } as Scenario);
+      // Start Reaction Scenario
+      await director.playScenario({
+        type: 'reaction',
+        title: 'Movie Night',
+        description: 'The agents watch a classic clip and react to it.',
+        config: {
+          videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          triggers: [
+            { timestamp: 10, prompt: '(Laugh at the big bunny)', executed: false },
+            { timestamp: 30, prompt: '(Comment on the birds)', executed: false },
+            { timestamp: 60, prompt: '(Get bored and make a joke about the plot)', executed: false }
+          ]
+        }
+      } as Scenario);
     });
 
     // Reporter Mode
     const dataFetchService = new DataFetchService();
-    
+
     // Update quick topics when category changes
-    reporterCategorySelect.addEventListener('change', () => {
-      const category = reporterCategorySelect.value as any;
-      const topics = dataFetchService.getTopicSuggestions(category);
-      reporterQuickTopicsSelect.innerHTML = '<option value="">-- Select a topic --</option>';
-      topics.forEach(topic => {
-        const option = document.createElement('option');
-        option.value = topic;
-        option.textContent = topic;
-        reporterQuickTopicsSelect.appendChild(option);
-      });
+    // Custom article checkbox listener
+    useCustomArticleCheckbox.addEventListener('change', () => {
+      const useCustom = useCustomArticleCheckbox.checked;
+      articleTitleInput.disabled = !useCustom;
+      articleTextTextarea.disabled = !useCustom;
+      reporterTopicInput.disabled = useCustom;
+      reporterCategorySelect.disabled = useCustom;
+      reporterQuickTopicsSelect.disabled = useCustom;
+
+      if (useCustom) {
+        reporterQuickTopicsSelect.value = '';
+        reporterTopicInput.value = '';
+      }
     });
-    
+
+    reporterCategorySelect.addEventListener('change', () => {
+      if (!useCustomArticleCheckbox.checked) {
+        const category = reporterCategorySelect.value as any;
+        const topics = dataFetchService.getTopicSuggestions(category);
+        reporterQuickTopicsSelect.innerHTML = '<option value="">-- Select a topic --</option>';
+        topics.forEach(topic => {
+          const option = document.createElement('option');
+          option.value = topic;
+          option.textContent = topic;
+          reporterQuickTopicsSelect.appendChild(option);
+        });
+      }
+    });
+
     // Auto-fill topic when quick topic is selected
     reporterQuickTopicsSelect.addEventListener('change', () => {
       if (reporterQuickTopicsSelect.value) {
@@ -1245,11 +1285,11 @@ Suggestions:
       chatModeBtn.classList.remove('active');
       improvModeBtn.classList.remove('active');
       watcherModeBtn.classList.remove('active');
-      
+
       chatModeControls.style.display = 'flex';
       improvModeControls.style.display = 'none';
       reporterModeControls.style.display = 'block';
-      
+
       // Initialize quick topics for default category
       if (reporterQuickTopicsSelect.options.length <= 1) {
         const category = reporterCategorySelect.value as any;
@@ -1269,12 +1309,44 @@ Suggestions:
 
     // Start Reporter button
     startReporterBtn.addEventListener('click', async () => {
-      const topic = reporterTopicInput.value.trim();
-      const category = reporterCategorySelect.value as any;
+      let topic = '';
+      let category = reporterCategorySelect.value as any;
+      let context = '';
+      let sources: string[] = [];
 
-      if (!topic) {
-        addMessage('System', 'Please enter a topic to report on.', '#ff6b6b');
-        return;
+      const useCustom = useCustomArticleCheckbox.checked;
+      if (useCustom) {
+        const text = articleTextTextarea.value.trim();
+        const title = articleTitleInput.value.trim() || 'Custom Article';
+        if (!text) {
+          addMessage('System', 'Please paste article text.', '#ff6b6b');
+          return;
+        }
+        topic = title;
+        context = dataFetchService.formatCustomArticle(text, title);
+        sources = ['User Submission'];
+      } else {
+        topic = reporterTopicInput.value.trim();
+        if (!topic) {
+          addMessage('System', 'Please enter a topic to report on.', '#ff6b6b');
+          return;
+        }
+        addMessage('System', `📰 Fetching information about "${topic}"...`, '#4ecdc4');
+        try {
+          // Use new enriched aggregation
+          const enrichedContext = await dataFetchService.fetchAggregatedNews(topic, category);
+          context = dataFetchService.formatEnrichedContext(enrichedContext);
+          sources = enrichedContext.sources;
+
+          addMessage('System', `✅ Found ${sources.length} source(s): ${sources.join(', ')}`, '#4ecdc4');
+        } catch (error) {
+          console.error('Fetch error:', error);
+          addMessage('System', 'Fetch failed, using fallback context.', '#ff6b6b');
+          // Fallback to basic fetch
+          const articles = await dataFetchService.fetchNews(topic, category);
+          context = dataFetchService.formatForPrompt(articles, topic);
+          sources = articles.map(a => a.source);
+        }
       }
 
       if (!director) {
@@ -1287,37 +1359,24 @@ Suggestions:
       reporterTopicInput.disabled = true;
       reporterCategorySelect.disabled = true;
       reporterQuickTopicsSelect.disabled = true;
+      articleTitleInput.disabled = true;
+      articleTextTextarea.disabled = true;
+      useCustomArticleCheckbox.disabled = true;
       stopReporterBtn.style.display = 'inline-block';
-      
-      addMessage('System', `📰 Fetching information about "${topic}"...`, '#4ecdc4');
 
-      try {
-        // Fetch data
-        const articles = await dataFetchService.fetchNews(topic, category);
-        const context = dataFetchService.formatForPrompt(articles, topic);
-
-        // Start Reporter Scenario
-        await director.playScenario({
-          type: 'reporter',
-          title: topic,
-          description: `The agents discuss breaking news and insights about ${topic}`,
-          config: {
-            reporterTopic: topic,
-            reporterCategory: category,
-            reporterContext: context
-          }
-        } as Scenario);
-      } catch (error) {
-        console.error('Reporter mode error:', error);
-        addMessage('System', 'Error starting reporter mode. See console.', '#ff6b6b');
-        
-        // Re-enable controls
-        startReporterBtn.disabled = false;
-        reporterTopicInput.disabled = false;
-        reporterCategorySelect.disabled = false;
-        reporterQuickTopicsSelect.disabled = false;
-        stopReporterBtn.style.display = 'none';
-      }
+      // Start Reporter Scenario with enhanced config
+      await director.playScenario({
+        type: 'reporter',
+        title: topic,
+        description: `The agents present and discuss ${useCustom ? 'the article' : 'news about'} ${topic}`,
+        config: {
+          reporterTopic: topic,
+          reporterCategory: category,
+          reporterContext: context,
+          sources: sources,
+          enableBreakingNews: true
+        }
+      } as Scenario);
     });
 
     // Stop Reporter button
