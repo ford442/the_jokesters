@@ -19,7 +19,7 @@ export interface DirectorCallbacks {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter';
     title: string;
     description: string;
     config?: {
@@ -27,6 +27,9 @@ export interface Scenario {
         initialPrompt?: string;
         videoUrl?: string;
         triggers?: ReactionTrigger[];
+        reporterTopic?: string;
+        reporterCategory?: 'science' | 'news' | 'technology' | 'sports';
+        reporterContext?: string;
     };
 }
 
@@ -71,6 +74,8 @@ export class Director {
                 await this.runImprovLoop(scenario);
             } else if (scenario.type === 'reaction') {
                 await this.runReactionLoop(scenario);
+            } else if (scenario.type === 'reporter') {
+                await this.runReporterLoop(scenario);
             } else {
                  this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                  this.stopScene();
@@ -189,6 +194,41 @@ export class Director {
         // Cleanup
         this.callbacks.videoControls.pause();
         this.callbacks.videoControls.show(false);
+    }
+
+    private async runReporterLoop(scenario: Scenario) {
+        const topic = scenario.config?.reporterTopic || scenario.title;
+        const context = scenario.config?.reporterContext;
+
+        if (!context) {
+            this.callbacks.onError('Reporter mode requires context data in config.reporterContext');
+            this.stopScene();
+            return;
+        }
+
+        // Inject the initial topic and context
+        const initialPrompt = context + ` (Discuss the topic: "${topic}")`;
+        this.callbacks.onMessage('Director', `📰 Topic: ${topic}`, '#888');
+        
+        await this.processTurn(initialPrompt);
+
+        // Continue the discussion
+        while (this.isRunning) {
+            await new Promise(r => setTimeout(r, 1000));
+            if (!this.isRunning) break;
+
+            const turnCount = this.manager.getHistoryLength();
+            
+            // Periodically re-inject context to keep discussion on topic
+            let prompt = '(Continue discussing the topic. Share your perspective.)';
+            
+            if (turnCount % 3 === 0) {
+                // Re-inject context every 3 turns to stay on topic
+                prompt = context + ' (Respond to what was just said and add new insights.)';
+            }
+
+            await this.processTurn(prompt);
+        }
     }
 
     private calculatePacing() {

@@ -11,6 +11,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
 import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
+import { DataFetchService } from './services/DataFetchService'
 
 const profanityLevels: { level: ProfanityLevel, label: string, color: string }[] = [
   { level: 'PG', label: 'Safe', color: '#4ecdc4' },
@@ -301,6 +302,7 @@ async function initApp() {
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
             <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
             <button id="watcher-mode-btn" class="mode-btn">Watcher Mode</button>
+            <button id="reporter-mode-btn" class="mode-btn">Reporter Mode</button>
           </div>
 
           <div id="video-container" style="display:none; margin-top: 10px; margin-bottom: 10px;">
@@ -345,6 +347,38 @@ async function initApp() {
             </div>
           </div>
           
+          <div id="reporter-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic Category</label>
+              <select id="reporter-category" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                <option value="science">Science</option>
+                <option value="news">News</option>
+                <option value="technology">Technology</option>
+                <option value="sports">Sports</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Topic (or select suggestion)</label>
+              <input 
+                type="text" 
+                id="reporter-topic" 
+                placeholder="Enter a topic (e.g., 'Quantum Computing', 'Mars Rover')..."
+                autocomplete="off"
+                disabled
+              />
+            </div>
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Quick Topics</label>
+              <select id="reporter-quick-topics" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                <option value="">-- Select a topic --</option>
+              </select>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-reporter-btn" class="primary-btn" disabled>Start Reporting</button>
+              <button id="stop-reporter-btn" class="secondary-btn" style="display: none;" disabled>Stop Reporting</button>
+            </div>
+          </div>
+          
           <div class="agent-info">
             <p>Next speaker: <span id="next-agent">-</span></p>
           </div>
@@ -375,6 +409,13 @@ async function initApp() {
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
   const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
+  
+  // Reporter controls
+  const reporterCategorySelect = document.getElementById('reporter-category') as HTMLSelectElement
+  const reporterTopicInput = document.getElementById('reporter-topic') as HTMLInputElement
+  const reporterQuickTopicsSelect = document.getElementById('reporter-quick-topics') as HTMLSelectElement
+  const startReporterBtn = document.getElementById('start-reporter-btn') as HTMLButtonElement
+  const stopReporterBtn = document.getElementById('stop-reporter-btn') as HTMLButtonElement
 
   // NEW: Get reference to the model selection box - DECLARATIONS MOVED UP HERE
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
@@ -610,6 +651,14 @@ async function initApp() {
           sceneDescriptionInput.disabled = false;
           startImprovBtn.style.display = 'inline-block';
           stopImprovBtn.style.display = 'none';
+          
+          // Re-enable reporter controls
+          startReporterBtn.disabled = false;
+          reporterTopicInput.disabled = false;
+          reporterCategorySelect.disabled = false;
+          reporterQuickTopicsSelect.disabled = false;
+          stopReporterBtn.style.display = 'none';
+          
           const floatingStop = document.getElementById('floating-stop-improv-btn');
           if (floatingStop) floatingStop.style.display = 'none';
 
@@ -641,6 +690,12 @@ async function initApp() {
       sendBtn.disabled = false
       startImprovBtn.disabled = false
       stopImprovBtn.disabled = false
+      startReporterBtn.disabled = false
+      reporterTopicInput.disabled = false
+      reporterCategorySelect.disabled = false
+      reporterQuickTopicsSelect.disabled = false
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
       modelSelect.disabled = false
       loadModelBtn.disabled = false
       if (modelSelectMain) modelSelectMain.disabled = false
@@ -801,10 +856,11 @@ async function initApp() {
       groupChatManager.setProfanityLevel(level)
     }
 
-    // Disable chat/improv controls until a model is loaded
+    // Disable chat/improv/reporter controls until a model is loaded
     userInput.disabled = true
     sendBtn.disabled = true
     if (startImprovBtn) startImprovBtn.disabled = true
+    if (startReporterBtn) startReporterBtn.disabled = true
 
     // NEW: Model change listener
     // When selection changes, enable the Load Model button and leave loading explicit
@@ -1085,16 +1141,20 @@ Suggestions:
     const chatModeBtn = document.getElementById('chat-mode-btn')!
     const improvModeBtn = document.getElementById('improv-mode-btn')!
     const watcherModeBtn = document.getElementById('watcher-mode-btn')!
+    const reporterModeBtn = document.getElementById('reporter-mode-btn')!
     const chatModeControls = document.getElementById('chat-mode-controls')!
     const improvModeControls = document.getElementById('improv-mode-controls')!
+    const reporterModeControls = document.getElementById('reporter-mode-controls')!
 
     chatModeBtn.addEventListener('click', () => {
       chatModeBtn.classList.add('active')
       improvModeBtn.classList.remove('active')
       watcherModeBtn.classList.remove('active')
+      reporterModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
       improvModeControls.style.display = 'block'
+      reporterModeControls.style.display = 'none'
 
       // Stop improv if running
       if (director && director.isSceneRunning()) {
@@ -1108,9 +1168,11 @@ Suggestions:
       improvModeBtn.classList.add('active')
       chatModeBtn.classList.remove('active')
       watcherModeBtn.classList.remove('active')
+      reporterModeBtn.classList.remove('active')
       // Keep both control panels visible so users can access chat while in Improv mode
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
+      reporterModeControls.style.display = 'none'
       // Show the floating 'Return to Chat' button as an optional quick-switch
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'block'
@@ -1120,10 +1182,12 @@ Suggestions:
          watcherModeBtn.classList.add('active');
          chatModeBtn.classList.remove('active');
          improvModeBtn.classList.remove('active');
+         reporterModeBtn.classList.remove('active');
 
          // In watcher mode, we can keep chat controls visible for manual messages
          chatModeControls.style.display = 'flex';
          improvModeControls.style.display = 'none';
+         reporterModeControls.style.display = 'none';
 
          if (director && director.isSceneRunning()) {
              director.stopScene();
@@ -1151,6 +1215,116 @@ Suggestions:
                 ]
             }
          } as Scenario);
+    });
+
+    // Reporter Mode
+    const dataFetchService = new DataFetchService();
+    
+    // Update quick topics when category changes
+    reporterCategorySelect.addEventListener('change', () => {
+      const category = reporterCategorySelect.value as any;
+      const topics = dataFetchService.getTopicSuggestions(category);
+      reporterQuickTopicsSelect.innerHTML = '<option value="">-- Select a topic --</option>';
+      topics.forEach(topic => {
+        const option = document.createElement('option');
+        option.value = topic;
+        option.textContent = topic;
+        reporterQuickTopicsSelect.appendChild(option);
+      });
+    });
+    
+    // Auto-fill topic when quick topic is selected
+    reporterQuickTopicsSelect.addEventListener('change', () => {
+      if (reporterQuickTopicsSelect.value) {
+        reporterTopicInput.value = reporterQuickTopicsSelect.value;
+      }
+    });
+
+    reporterModeBtn.addEventListener('click', () => {
+      reporterModeBtn.classList.add('active');
+      chatModeBtn.classList.remove('active');
+      improvModeBtn.classList.remove('active');
+      watcherModeBtn.classList.remove('active');
+      
+      chatModeControls.style.display = 'flex';
+      improvModeControls.style.display = 'none';
+      reporterModeControls.style.display = 'block';
+      
+      // Initialize quick topics for default category
+      if (reporterQuickTopicsSelect.options.length <= 1) {
+        const category = reporterCategorySelect.value as any;
+        const topics = dataFetchService.getTopicSuggestions(category);
+        topics.forEach(topic => {
+          const option = document.createElement('option');
+          option.value = topic;
+          option.textContent = topic;
+          reporterQuickTopicsSelect.appendChild(option);
+        });
+      }
+
+      if (director && director.isSceneRunning()) {
+        director.stopScene();
+      }
+    });
+
+    // Start Reporter button
+    startReporterBtn.addEventListener('click', async () => {
+      const topic = reporterTopicInput.value.trim();
+      const category = reporterCategorySelect.value as any;
+
+      if (!topic) {
+        addMessage('System', 'Please enter a topic to report on.', '#ff6b6b');
+        return;
+      }
+
+      if (!director) {
+        addMessage('System', 'No model loaded.', '#ff6b6b');
+        return;
+      }
+
+      // Disable controls
+      startReporterBtn.disabled = true;
+      reporterTopicInput.disabled = true;
+      reporterCategorySelect.disabled = true;
+      reporterQuickTopicsSelect.disabled = true;
+      stopReporterBtn.style.display = 'inline-block';
+      
+      addMessage('System', `📰 Fetching information about "${topic}"...`, '#4ecdc4');
+
+      try {
+        // Fetch data
+        const articles = await dataFetchService.fetchNews(topic, category);
+        const context = dataFetchService.formatForPrompt(articles, topic);
+
+        // Start Reporter Scenario
+        await director.playScenario({
+          type: 'reporter',
+          title: topic,
+          description: `The agents discuss breaking news and insights about ${topic}`,
+          config: {
+            reporterTopic: topic,
+            reporterCategory: category,
+            reporterContext: context
+          }
+        } as Scenario);
+      } catch (error) {
+        console.error('Reporter mode error:', error);
+        addMessage('System', 'Error starting reporter mode. See console.', '#ff6b6b');
+        
+        // Re-enable controls
+        startReporterBtn.disabled = false;
+        reporterTopicInput.disabled = false;
+        reporterCategorySelect.disabled = false;
+        reporterQuickTopicsSelect.disabled = false;
+        stopReporterBtn.style.display = 'none';
+      }
+    });
+
+    // Stop Reporter button
+    stopReporterBtn.addEventListener('click', () => {
+      if (director) {
+        director.stopScene();
+      }
     });
 
     // Floating 'Return to Chat' button to aid quick switching
