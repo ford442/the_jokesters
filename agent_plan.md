@@ -54,11 +54,10 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
     *   *Mechanic*: Score tracking based on "Oooooh" reactions from other agents.
 *   **Collaborative Storytelling**: Agents build a story sentence by sentence.
     *   *Model Pairing*: Phi-3 (High logic/coherence) to keep the plot on rails.
-*   **Musical Improv**: Agents generate lyrics for a song.
-*   **Heckler Interaction**: User interrupts, agents must handle it.
 *   **The Debate Club**: Two agents debate an absurd topic, while the third moderates.
     *   *Model Pairing*: Qwen2.5-Coder (Logic) vs. Hermes-3 (Creativity).
     *   *Mechanic*: Moderator tracks time and assigns points.
+*   **Heckler Interaction**: User interrupts, agents must handle it dynamically.
 
 ---
 
@@ -84,11 +83,12 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 2: The "Watcher" (MST3K)
 * [x] Add a video player to the UI (hidden or behind agents).
 * [x] Create `MediaReactionManager` to poll video time and dispatch events.
-* [ ] Test with a hardcoded video + JSON description file.
+* [x] Test with a hardcoded video + JSON description file.
 
 ### Phase 3: The "Writer" (Scripts)
-* [ ] Create `ScriptParser` to read JSON scripts.
+* [x] Create `ScriptParser` to read JSON scripts.
 * [ ] Connect to a "Script Generator" (External LLM API hook).
+    *   *Idea*: Use a lightweight local model to generate short scripts on the fly.
 
 ### Phase 4: Persistence (HF Integration)
 * [ ] Implement `MemoryManager` (Local `localStorage` wrapper first).
@@ -103,3 +103,4 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] Implement "Roast Battle" Scenario logic in `Director`.
 * [ ] Implement "Collaborative Storytelling" Scenario logic.
 * [ ] Implement "The Debate Club" Scenario logic.
+* [ ] Implement "Heckler Interaction" handling in `Director` loop.
