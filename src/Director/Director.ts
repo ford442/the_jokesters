@@ -93,6 +93,8 @@ export class Director {
                 await this.runReactionLoop(scenario);
             } else if (scenario.type === 'reporter') {
                 await this.runReporterLoop(scenario);
+            } else if (scenario.type === 'script') {
+                await this.runScriptLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -211,6 +213,29 @@ export class Director {
         // Cleanup
         this.callbacks.videoControls.pause();
         this.callbacks.videoControls.show(false);
+    }
+
+    private async runScriptLoop(scenario: Scenario) {
+        const script = scenario.config?.generatedScript;
+        if (!script || script.length === 0) {
+            this.callbacks.onError('Script mode requires a script in config.generatedScript');
+            this.stopScene();
+            return;
+        }
+
+        this.callbacks.onMessage('Director', `🎭 Performing ${script.length} scripted beats...`, '#888');
+
+        for (let i = 0; i < script.length && this.isRunning; i++) {
+            const beat = script[i];
+            await this.processScriptBeat(beat);
+            // Natural pause between beats
+            await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+        }
+
+        if (this.isRunning) {
+            this.callbacks.onMessage('Director', '🎭 Scene Fin.', '#888');
+            this.stopScene();
+        }
     }
 
     private async runReporterLoop(scenario: Scenario) {
@@ -352,17 +377,6 @@ export class Director {
 
         // Pause between segments
         await new Promise(r => setTimeout(r, 800));
-    }
-
-    private async runScriptedReporter(script: ScriptBeat[], _fallbackContext: string) {
-        this.callbacks.onMessage('Director', `🎭 Performing ${script.length} scripted beats...`, '#888');
-
-        for (let i = 0; i < script.length && this.isRunning; i++) {
-            const beat = script[i];
-            await this.processScriptBeat(beat);
-            // Natural pause between beats
-            await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
-        }
     }
 
     private async processScriptBeat(beat: ScriptBeat): Promise<void> {

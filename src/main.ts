@@ -11,6 +11,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
 import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
+import { ScriptParser } from './Director/ScriptParser'
 import { DataFetchService } from './services/DataFetchService'
 
 const profanityLevels: { level: ProfanityLevel, label: string, color: string }[] = [
@@ -309,6 +310,7 @@ async function initApp() {
             <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
             <button id="watcher-mode-btn" class="mode-btn">Watcher Mode</button>
             <button id="reporter-mode-btn" class="mode-btn">Reporter Mode</button>
+            <button id="script-mode-btn" class="mode-btn">Script Mode</button>
           </div>
 
           <div id="video-container" style="display:none; margin-top: 10px; margin-bottom: 10px;">
@@ -443,7 +445,6 @@ async function initApp() {
   const useCustomArticleCheckbox = document.getElementById('use-custom-article') as HTMLInputElement
   const articleTitleInput = document.getElementById('article-title') as HTMLInputElement
   const articleTextTextarea = document.getElementById('article-text') as HTMLTextAreaElement
-  const scriptModeToggle = document.getElementById('script-mode-toggle') as HTMLInputElement
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -1165,6 +1166,7 @@ Suggestions:
     const improvModeBtn = document.getElementById('improv-mode-btn')!
     const watcherModeBtn = document.getElementById('watcher-mode-btn')!
     const reporterModeBtn = document.getElementById('reporter-mode-btn')!
+    const scriptModeBtn = document.getElementById('script-mode-btn')!
     const chatModeControls = document.getElementById('chat-mode-controls')!
     const improvModeControls = document.getElementById('improv-mode-controls')!
     const reporterModeControls = document.getElementById('reporter-mode-controls')!
@@ -1174,6 +1176,7 @@ Suggestions:
       improvModeBtn.classList.remove('active')
       watcherModeBtn.classList.remove('active')
       reporterModeBtn.classList.remove('active')
+      scriptModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
       improvModeControls.style.display = 'block'
@@ -1192,6 +1195,7 @@ Suggestions:
       chatModeBtn.classList.remove('active')
       watcherModeBtn.classList.remove('active')
       reporterModeBtn.classList.remove('active')
+      scriptModeBtn.classList.remove('active')
       // Keep both control panels visible so users can access chat while in Improv mode
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
@@ -1206,6 +1210,7 @@ Suggestions:
       chatModeBtn.classList.remove('active');
       improvModeBtn.classList.remove('active');
       reporterModeBtn.classList.remove('active');
+      scriptModeBtn.classList.remove('active');
 
       // In watcher mode, we can keep chat controls visible for manual messages
       chatModeControls.style.display = 'flex';
@@ -1224,24 +1229,22 @@ Suggestions:
         return;
       }
 
-      // Start Reaction Scenario
-      await director.playScenario({
-        type: 'reaction',
-        title: 'Movie Night',
-        description: 'The agents watch a classic clip and react to it.',
-        config: {
-          videoUrl: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-          triggers: [
-            { timestamp: 10, prompt: '(Laugh at the big bunny)', executed: false },
-            { timestamp: 30, prompt: '(Comment on the birds)', executed: false },
-            { timestamp: 60, prompt: '(Get bored and make a joke about the plot)', executed: false }
-          ]
-        }
-      } as Scenario);
+      try {
+        addMessage('System', '🎬 Loading reaction scenario...', '#888');
+        const response = await fetch('/scenarios/test_reaction.json');
+        if (!response.ok) throw new Error('Failed to load reaction scenario');
+        const json = await response.text();
+        const scenario = scriptParser.parse(json);
+        await director.playScenario(scenario);
+      } catch (e) {
+        console.error('Failed to load reaction scenario:', e);
+        addMessage('System', 'Failed to load reaction scenario.', '#ff6b6b');
+      }
     });
 
     // Reporter Mode
     const dataFetchService = new DataFetchService();
+    const scriptParser = new ScriptParser();
 
     // Update quick topics when category changes
     // Custom article checkbox listener
@@ -1285,6 +1288,7 @@ Suggestions:
       chatModeBtn.classList.remove('active');
       improvModeBtn.classList.remove('active');
       watcherModeBtn.classList.remove('active');
+      scriptModeBtn.classList.remove('active');
 
       chatModeControls.style.display = 'flex';
       improvModeControls.style.display = 'none';
@@ -1304,6 +1308,41 @@ Suggestions:
 
       if (director && director.isSceneRunning()) {
         director.stopScene();
+      }
+    });
+
+    scriptModeBtn.addEventListener('click', async () => {
+      scriptModeBtn.classList.add('active');
+      chatModeBtn.classList.remove('active');
+      improvModeBtn.classList.remove('active');
+      watcherModeBtn.classList.remove('active');
+      reporterModeBtn.classList.remove('active');
+
+      chatModeControls.style.display = 'flex';
+      improvModeControls.style.display = 'none';
+      reporterModeControls.style.display = 'none';
+
+      if (director && director.isSceneRunning()) {
+        director.stopScene();
+      }
+
+      await new Promise(r => setTimeout(r, 100));
+
+      if (!director) {
+        addMessage('System', 'No model loaded.', '#ff6b6b');
+        return;
+      }
+
+      try {
+        addMessage('System', '📜 Loading script...', '#888');
+        const response = await fetch('/scenarios/test_script.json');
+        if (!response.ok) throw new Error('Failed to load script');
+        const json = await response.text();
+        const scenario = scriptParser.parse(json);
+        await director.playScenario(scenario);
+      } catch (e) {
+        console.error('Failed to load script:', e);
+        addMessage('System', 'Failed to load script.', '#ff6b6b');
       }
     });
 

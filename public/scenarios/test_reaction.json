@@ -1,0 +1,13 @@
+{
+  "type": "reaction",
+  "title": "Big Buck Bunny Reaction",
+  "description": "The agents watch Big Buck Bunny and comment on the absurdity.",
+  "config": {
+    "videoUrl": "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "triggers": [
+      { "timestamp": 10, "prompt": "(Laugh at the big bunny waking up)" },
+      { "timestamp": 30, "prompt": "(Comment on the birds being annoying)" },
+      { "timestamp": 60, "prompt": "(Get bored and make a joke about the plot)" }
+    ]
+  }
+}
