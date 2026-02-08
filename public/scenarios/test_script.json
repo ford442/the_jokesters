@@ -1,0 +1,11 @@
+{
+  "type": "script",
+  "title": "The Coffee Shop Debate",
+  "description": "A scripted interaction about the philosophical implications of caffeine.",
+  "script": [
+    { "speaker": "comedian", "line": "Is this coffee or battery acid? I think I just saw a ghost float out of the cup." },
+    { "speaker": "scientist", "line": "Technically, coffee is acidic, with a pH of around 5. It is unlikely to contain spectral entities." },
+    { "speaker": "philosopher", "line": "But what represents the battery? Is it the caffeine that powers our meaningless existence?" },
+    { "speaker": "comedian", "line": "Wow. You really know how to kill a buzz. I just wanted a latte." }
+  ]
+}
