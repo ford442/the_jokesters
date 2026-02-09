@@ -92,11 +92,12 @@ const smolLM2Config = {
   model_type: 'llm',
 };
 
-// IMPORTANT: Ensure the default Hermes model also uses the /resolve/main/ URL pattern to point to raw files
-// instead of the HTML repo page. This overrides the default internal config in WebLLM if present.
+// IMPORTANT: Point to the uploaded Hermes model on test.1ink.us
+// This model was uploaded via upload_hermes.py and is hosted at:
+// https://test.1ink.us/the-jokesters/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/
 const hermesModelConfig = {
   model_id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
-  model: './models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/',
+  model: 'https://test.1ink.us/the-jokesters/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
   vram_required_MB: 2951.51,
   low_resource_required: true,
@@ -197,11 +198,11 @@ const agents: Agent[] = [
   },
 ]
 
-// Default model mappings (variety pack for 6GB+ GPUs)
+// Default model mappings: Use the uploaded Hermes model for all agents
 const defaultAgentModelMappings: AgentModelMapping[] = [
-  { agentId: 'comedian', modelId: 'SmolLM2-360M-Instruct-q4f32_1-MLC' },      // 580MB - chaotic
-  { agentId: 'philosopher', modelId: smallModelId },                          // 500MB - odd
-  { agentId: 'scientist', modelId: defaultModelId },                          // 3GB - verbose
+  { agentId: 'comedian', modelId: hermesModelConfig.model_id },
+  { agentId: 'philosopher', modelId: hermesModelConfig.model_id },
+  { agentId: 'scientist', modelId: hermesModelConfig.model_id },
 ]
 
 // Export interface for ScriptBeat
