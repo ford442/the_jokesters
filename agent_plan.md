@@ -1,13 +1,13 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 2
-* **status**: On Track
+* **tasks_per_run**: 3
+* **status**: On Track (Velocity Increased)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
 - **The Agents** (`Comedian`, `Philosopher`, `Scientist`) are stateless configurations (Prompts + Visual Params). They do not "think" independently; they react to the context provided to them.
-- **The Director** is the main loop (currently in `main.ts`) that orchestrates the scene. It holds the state, decides who speaks, determines the pacing, and injects environmental context.
+- **The Director** is the main loop (currently in `src/Director/Director.ts`) that orchestrates the scene. It holds the state, decides who speaks, determines the pacing, and injects environmental context.
 
 **Goal:** To perfect interactions, we will move logic *out* of the random loop and *into* structured "Director Modes."
 
@@ -16,28 +16,22 @@ Our architecture relies on a **Centralized Director / Stateless Actor** model.
 ## 2. Core Architecture Enhancements
 
 ### A. Formalize the Director
-Currently, the Director is a `while` loop in `main.ts`. We must refactor this into a dedicated `Director` class.
 * **Responsibility:** Manage the "Game Loop" of the conversation.
-* **Input:** A `Scenario` object (Improv, Script, or Reaction).
+* **Input:** A `Scenario` object (Improv, Script, Reaction, Reporter, etc.).
 * **Output:** Orchestrates `GroupChatManager.chat()` calls and `Stage` visual cues.
 
 ### B. The Context Injection Pipeline
 To support new modes, we need a standard way to inject "World Info" into the LLM prompt without breaking character.
 * **Mechanism:** Append "Stage Directions" to the prompt, hidden from the user.
 * **Format:** `(SYSTEM_INJECTION: [Context])`
-* **Example:** `(SYSTEM_INJECTION: You are looking at a photo of a cat. It is ugly. React.)`
 
 ---
 
-## 3. New Interaction Modes
+## 3. New Interaction Modes (The "Dream" Phase)
 
 ### Mode A: Scripted Vignettes ("The Writer's Room")
 *Description: Agents perform a pre-written or AI-generated script instead of improvising.*
-
-**Workflow:**
-1.  **Generation:** An external high-IQ model (Gemini/GPT-4) generates a "Beat Sheet" JSON.
-2.  **Parsing:** The Director loads this JSON.
-3.  **Execution:** Feed the `line` to the LLM as an instruction.
+* **Status:** Implemented (`ScriptGenerator` + `Director.runScriptLoop`).
 
 ### Mode B: Media Reaction ("The MST3K Protocol")
 *Description: Agents watch a video or look at images and comment on them in real-time.*
@@ -58,6 +52,8 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
     *   *Model Pairing*: Qwen2.5-Coder (Logic) vs. Hermes-3 (Creativity).
     *   *Mechanic*: Moderator tracks time and assigns points.
 *   **Heckler Interaction**: User interrupts, agents must handle it dynamically.
+*   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
+    *   *Challenge*: syncing TTS with audio beat.
 
 ---
 
@@ -66,9 +62,10 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 ### Goal: Cloud Persistence
 Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
-1.  **Authentication**: Implement HF OAuth or Token input in UI.
+1.  **Authentication**: Implement HF OAuth or Token input in UI (Settings Modal).
 2.  **Episode Storage**: Push finished "Episode Scripts" (JSON) to a private HF Dataset.
     *   `Dataset: user/jokesters-episodes`
+    *   *Action*: `MemoryManager` should switch from `localStorage` to `HFStorageManager` if token is present.
 3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
     *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
 
@@ -87,20 +84,21 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 3: The "Writer" (Scripts)
 * [x] Create `ScriptParser` to read JSON scripts.
-* [ ] Connect to a "Script Generator" (External LLM API hook).
-    *   *Idea*: Use a lightweight local model to generate short scripts on the fly.
+* [x] Connect to a "Script Generator" (External LLM API hook / Local LLM).
+    *   *Implemented*: `ScriptGenerator` class using `GroupChatManager.completion`.
 
 ### Phase 4: Persistence (HF Integration)
-* [ ] Implement `MemoryManager` (Local `localStorage` wrapper first).
+* [x] Implement `MemoryManager` (Local `localStorage` wrapper first).
 * [ ] Add HF Token Input in Settings Modal.
 * [ ] Implement `HFStorageManager` class using `@huggingface/hub` (or REST API).
     *   `authenticate(token)`
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
-* [ ] Add "Save/Load" buttons to the UI.
+* [ ] Add "Save/Load" buttons to the UI (Cloud Sync).
 
 ### Phase 5: New Creative Modes
 * [ ] Implement "Roast Battle" Scenario logic in `Director`.
 * [ ] Implement "Collaborative Storytelling" Scenario logic.
 * [ ] Implement "The Debate Club" Scenario logic.
 * [ ] Implement "Heckler Interaction" handling in `Director` loop.
+* [ ] Implement "Musical Improv" (Experimental).

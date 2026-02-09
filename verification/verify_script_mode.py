@@ -1,38 +1,66 @@
 from playwright.sync_api import sync_playwright
 
-def run(playwright):
-    browser = playwright.chromium.launch()
-    page = browser.new_page()
-    try:
-        print("Navigating to http://localhost:5173")
-        page.goto("http://localhost:5173")
+def run():
+    print("Starting verification script...")
+    with sync_playwright() as p:
+        print("Launching browser...")
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-        # Wait for title
-        page.wait_for_selector("h1:has-text('The Jokesters')")
-        print("Page loaded")
+        # Capture console messages
+        page.on("console", lambda msg: print(f"CONSOLE: {msg.text}"))
 
-        # Check for Script Mode button
-        script_btn = page.locator("#script-mode-btn")
-        if script_btn.is_visible():
-            print("Script Mode button is visible")
-        else:
-            print("Script Mode button is NOT visible")
+        try:
+            url = "http://localhost:5173"
+            print(f"Navigating to {url}...")
+            page.goto(url)
 
-        # Click Script Mode
-        script_btn.click()
-        print("Clicked Script Mode")
+            # Wait for any content
+            page.wait_for_load_state("networkidle")
 
-        # Wait for a moment for UI update
-        page.wait_for_timeout(1000)
+            # Check if #app exists
+            if page.locator("#app").count() > 0:
+                print("#app found.")
+            else:
+                print("#app not found.")
+                print("Page content:", page.content()[:500])
 
-        # Take screenshot
-        page.screenshot(path="verification/script_mode.png")
-        print("Screenshot saved to verification/script_mode.png")
+            print("Waiting for #script-mode-btn...")
+            # increased timeout
+            page.wait_for_selector("#script-mode-btn", state="attached", timeout=60000)
+            print("Button attached. Checking visibility...")
 
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        browser.close()
+            if page.is_visible("#script-mode-btn"):
+                print("Button is visible.")
+                page.click("#script-mode-btn")
+            else:
+                print("Button is not visible.")
 
-with sync_playwright() as playwright:
-    run(playwright)
+            print("Waiting for #script-mode-controls...")
+            page.wait_for_selector("#script-mode-controls", state="visible", timeout=10000)
+
+            # Verify elements exist
+            if page.is_visible("#script-topic"):
+                print("Script Topic input is visible.")
+            else:
+                print("Script Topic input NOT visible.")
+
+            if page.is_visible("#generate-script-btn"):
+                print("Generate button is visible.")
+            else:
+                print("Generate button NOT visible.")
+
+            # Take a screenshot
+            screenshot_path = "verification/script_mode_verified.png"
+            page.screenshot(path=screenshot_path)
+            print(f"Screenshot saved to {screenshot_path}")
+
+        except Exception as e:
+            print(f"Verification failed: {e}")
+            page.screenshot(path="verification/verification_failed.png")
+            print("Saved failure screenshot.")
+        finally:
+            browser.close()
+
+if __name__ == "__main__":
+    run()

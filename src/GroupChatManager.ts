@@ -421,4 +421,31 @@ export class GroupChatManager {
   getAgents(): Agent[] {
     return this.agents
   }
+
+  /**
+   * One-off completion that bypasses the conversation history.
+   * Useful for generating scripts, summaries, or other tasks.
+   */
+  async completion(
+    messages: Message[],
+    options: { maxTokens?: number; temperature?: number; jsonMode?: boolean } = {}
+  ): Promise<string> {
+    if (!this.engine || !this.isInitialized) {
+      throw new Error('GroupChatManager not initialized. Call initialize() first.')
+    }
+
+    try {
+      const completion = await this.engine.chat.completions.create({
+        messages: messages as any[],
+        temperature: options.temperature || 0.7,
+        max_tokens: options.maxTokens || 1024,
+        response_format: options.jsonMode ? { type: "json_object" } : undefined,
+      });
+
+      return completion.choices[0]?.message?.content || '';
+    } catch (error) {
+      console.error('Completion error:', error);
+      throw error;
+    }
+  }
 }
