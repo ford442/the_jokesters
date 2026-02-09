@@ -13,6 +13,8 @@ import type { AgentModelMapping } from './AgentModelManager'
 import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
 import { ScriptParser } from './Director/ScriptParser'
 import { DataFetchService } from './services/DataFetchService'
+import { ScriptGenerator } from './Director/ScriptGenerator'
+import { MemoryManager } from './Director/MemoryManager'
 
 const profanityLevels: { level: ProfanityLevel, label: string, color: string }[] = [
   { level: 'PG', label: 'Safe', color: '#4ecdc4' },
@@ -313,6 +315,24 @@ async function initApp() {
             <button id="script-mode-btn" class="mode-btn">Script Mode</button>
           </div>
 
+          <div id="script-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Script Topic</label>
+              <input
+                type="text"
+                id="script-topic"
+                placeholder="Enter a topic (e.g., 'Aliens land in the backyard')..."
+                autocomplete="off"
+                disabled
+              />
+            </div>
+            <div class="improv-buttons">
+              <button id="generate-script-btn" class="primary-btn" disabled>Generate & Play</button>
+              <button id="load-example-script-btn" class="secondary-btn" disabled>Load Example</button>
+              <button id="stop-script-btn" class="secondary-btn" style="display: none;" disabled>Stop Script</button>
+            </div>
+          </div>
+
           <div id="video-container" style="display:none; margin-top: 10px; margin-bottom: 10px;">
              <video id="reaction-video" controls style="width:100%; max-height: 400px; border: 1px solid #4ecdc4; border-radius: 8px;"></video>
           </div>
@@ -446,9 +466,16 @@ async function initApp() {
   const articleTitleInput = document.getElementById('article-title') as HTMLInputElement
   const articleTextTextarea = document.getElementById('article-text') as HTMLTextAreaElement
 
+  const scriptTopicInput = document.getElementById('script-topic') as HTMLInputElement
+  const generateScriptBtn = document.getElementById('generate-script-btn') as HTMLButtonElement
+  const loadExampleScriptBtn = document.getElementById('load-example-script-btn') as HTMLButtonElement
+  const stopScriptBtn = document.getElementById('stop-script-btn') as HTMLButtonElement
+
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
   let director: Director;
+  let scriptGenerator: ScriptGenerator;
+  let memoryManager: MemoryManager;
   let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
@@ -601,6 +628,8 @@ async function initApp() {
 
       // 2. Instantiate new managers
       groupChatManager = new GroupChatManager(agents)
+      scriptGenerator = new ScriptGenerator(groupChatManager)
+      memoryManager = new MemoryManager() // Initialize memory manager
 
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
@@ -686,6 +715,14 @@ async function initApp() {
           const floatingStop = document.getElementById('floating-stop-improv-btn');
           if (floatingStop) floatingStop.style.display = 'none';
 
+          // Re-enable script controls
+          stopScriptBtn.style.display = 'none';
+          generateScriptBtn.style.display = 'inline-block';
+          loadExampleScriptBtn.style.display = 'inline-block';
+          generateScriptBtn.disabled = false;
+          loadExampleScriptBtn.disabled = false;
+          scriptTopicInput.disabled = false;
+
           // Ensure video is hidden/paused on stop
           videoElement.pause();
           videoContainer.style.display = 'none';
@@ -720,6 +757,9 @@ async function initApp() {
       reporterQuickTopicsSelect.disabled = false
       sceneTitleInput.disabled = false
       sceneDescriptionInput.disabled = false
+      scriptTopicInput.disabled = false
+      generateScriptBtn.disabled = false
+      loadExampleScriptBtn.disabled = false
       modelSelect.disabled = false
       loadModelBtn.disabled = false
       if (modelSelectMain) modelSelectMain.disabled = false
@@ -809,8 +849,12 @@ async function initApp() {
       })
     }
 
-    // Load auto-load preference from localStorage
-    const AUTO_LOAD_KEY = 'jokesters-auto-load-vicuna';
+    // Load auto-load preference from localStorage via MemoryManager
+    // Note: We instantiate a temporary MemoryManager here just for initial load if not ready,
+    // but better to just use localStorage directly for boot settings or instantiate MM early.
+    // Let's use a temporary MM instance for boot settings since the main one is tied to initApp scope.
+    const bootMemory = new MemoryManager();
+    const AUTO_LOAD_KEY = 'auto-load-vicuna';
     const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
 
     // Helper function to extract a friendly model name from model_id
@@ -818,14 +862,14 @@ async function initApp() {
       return modelId.split('/').pop() || modelId || 'Unknown Model';
     };
 
-    const savedAutoLoad = localStorage.getItem(AUTO_LOAD_KEY);
+    const savedAutoLoad = bootMemory.load<string>(AUTO_LOAD_KEY);
     if (savedAutoLoad === 'true') {
       autoLoadVicunaCheckbox.checked = true;
     }
 
     // Save preference when checkbox changes
     autoLoadVicunaCheckbox.addEventListener('change', () => {
-      localStorage.setItem(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
+      bootMemory.save(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
       const modelName = getModelDisplayName(customVicunaModelConfig.model_id);
       if (autoLoadVicunaCheckbox.checked) {
         statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
@@ -1170,6 +1214,7 @@ Suggestions:
     const chatModeControls = document.getElementById('chat-mode-controls')!
     const improvModeControls = document.getElementById('improv-mode-controls')!
     const reporterModeControls = document.getElementById('reporter-mode-controls')!
+    const scriptModeControls = document.getElementById('script-mode-controls')!
 
     chatModeBtn.addEventListener('click', () => {
       chatModeBtn.classList.add('active')
@@ -1181,6 +1226,7 @@ Suggestions:
       // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
       improvModeControls.style.display = 'block'
       reporterModeControls.style.display = 'none'
+      scriptModeControls.style.display = 'none'
 
       // Stop improv if running
       if (director && director.isSceneRunning()) {
@@ -1200,6 +1246,7 @@ Suggestions:
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
       reporterModeControls.style.display = 'none'
+      scriptModeControls.style.display = 'none'
       // Show the floating 'Return to Chat' button as an optional quick-switch
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'block'
@@ -1216,6 +1263,7 @@ Suggestions:
       chatModeControls.style.display = 'flex';
       improvModeControls.style.display = 'none';
       reporterModeControls.style.display = 'none';
+      scriptModeControls.style.display = 'none';
 
       if (director && director.isSceneRunning()) {
         director.stopScene();
@@ -1293,6 +1341,7 @@ Suggestions:
       chatModeControls.style.display = 'flex';
       improvModeControls.style.display = 'none';
       reporterModeControls.style.display = 'block';
+      scriptModeControls.style.display = 'none';
 
       // Initialize quick topics for default category
       if (reporterQuickTopicsSelect.options.length <= 1) {
@@ -1321,29 +1370,91 @@ Suggestions:
       chatModeControls.style.display = 'flex';
       improvModeControls.style.display = 'none';
       reporterModeControls.style.display = 'none';
+      scriptModeControls.style.display = 'block';
 
       if (director && director.isSceneRunning()) {
         director.stopScene();
       }
+    });
 
-      await new Promise(r => setTimeout(r, 100));
+    generateScriptBtn.addEventListener('click', async () => {
+      if (!director || !scriptGenerator) {
+        addMessage('System', 'No model loaded.', '#ff6b6b');
+        return;
+      }
 
-      if (!director) {
+      const topic = scriptTopicInput.value.trim();
+      if (!topic) {
+        addMessage('System', 'Please enter a topic.', '#ff6b6b');
+        return;
+      }
+
+      // UI Updates
+      scriptTopicInput.disabled = true;
+      generateScriptBtn.disabled = true;
+      loadExampleScriptBtn.disabled = true;
+      stopScriptBtn.style.display = 'inline-block';
+      generateScriptBtn.style.display = 'none';
+      loadExampleScriptBtn.style.display = 'none';
+
+      addMessage('System', `📝 Generating script about "${topic}"...`, '#4ecdc4');
+
+      try {
+        const script = await scriptGenerator.generate(topic);
+
+        await director.playScenario({
+          type: 'script',
+          title: topic,
+          description: `A generated script about ${topic}`,
+          config: {
+            generatedScript: script
+          }
+        });
+
+      } catch (error) {
+        console.error('Generation failed:', error);
+        addMessage('System', 'Failed to generate script.', '#ff6b6b');
+
+        // Reset UI
+        scriptTopicInput.disabled = false;
+        generateScriptBtn.disabled = false;
+        loadExampleScriptBtn.disabled = false;
+        stopScriptBtn.style.display = 'none';
+        generateScriptBtn.style.display = 'inline-block';
+        loadExampleScriptBtn.style.display = 'inline-block';
+      }
+    });
+
+    loadExampleScriptBtn.addEventListener('click', async () => {
+       if (!director) {
         addMessage('System', 'No model loaded.', '#ff6b6b');
         return;
       }
 
       try {
-        addMessage('System', '📜 Loading script...', '#888');
+        addMessage('System', '📜 Loading example script...', '#888');
         const response = await fetch('/scenarios/test_script.json');
         if (!response.ok) throw new Error('Failed to load script');
         const json = await response.text();
         const scenario = scriptParser.parse(json);
+
+        // UI Updates
+        scriptTopicInput.disabled = true;
+        generateScriptBtn.disabled = true;
+        loadExampleScriptBtn.disabled = true;
+        stopScriptBtn.style.display = 'inline-block';
+        generateScriptBtn.style.display = 'none';
+        loadExampleScriptBtn.style.display = 'none';
+
         await director.playScenario(scenario);
       } catch (e) {
         console.error('Failed to load script:', e);
         addMessage('System', 'Failed to load script.', '#ff6b6b');
       }
+    });
+
+    stopScriptBtn.addEventListener('click', () => {
+      if (director) director.stopScene();
     });
 
     // Start Reporter button
