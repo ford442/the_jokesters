@@ -476,7 +476,6 @@ async function initApp() {
   let groupChatManager: GroupChatManager;
   let director: Director;
   let scriptGenerator: ScriptGenerator;
-  let memoryManager: MemoryManager;
   let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
@@ -630,8 +629,6 @@ async function initApp() {
       // 2. Instantiate new managers
       groupChatManager = new GroupChatManager(agents)
       scriptGenerator = new ScriptGenerator(groupChatManager)
-      memoryManager = new MemoryManager() // Initialize memory manager
-
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
       await groupChatManager.initialize(modelId, (progress: any) => {
