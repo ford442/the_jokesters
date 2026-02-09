@@ -94,7 +94,7 @@ const smolLM2Config = {
 // instead of the HTML repo page. This overrides the default internal config in WebLLM if present.
 const hermesModelConfig = {
   model_id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
-  model: 'https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/resolve/main/',
+  model: './models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/',
   model_lib: 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
   vram_required_MB: 2951.51,
   low_resource_required: true,
