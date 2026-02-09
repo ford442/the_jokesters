@@ -982,8 +982,15 @@ async function initApp() {
       chatLog.innerHTML = '';
 
       try {
-        const modelInfo = webllm.prebuiltAppConfig.model_list.find((m: any) => m.model_id === newModelId)
+        // IMPORTANT: use the `modelInfo` resolved from the *active engine* above.
+        // Previously this code re-queried `webllm.prebuiltAppConfig` and shadowed
+        // the `modelInfo` from `activeEngineModule` (see `list` + outer
+        // `modelInfo`). That caused the runtime preflight to validate the wrong
+        // URL (different source), which could block loading (e.g. HEAD/CORS
+        // failures against `test.1ink.us`).
+        // Keep using the previously-resolved `modelInfo` (from `list`).
 
+        // modelInfo (from `list`) is in-scope here — reuse it.
         // Prevent loading non-chat-capable models (e.g., embeddings or VLMs) into the Chat flow
         const modelType = (modelInfo?.model_type || '').toString().toLowerCase()
         const allowedChatTypes = ['llm', 'chat']
@@ -1424,7 +1431,7 @@ Suggestions:
     });
 
     loadExampleScriptBtn.addEventListener('click', async () => {
-       if (!director) {
+      if (!director) {
         addMessage('System', 'No model loaded.', '#ff6b6b');
         return;
       }
