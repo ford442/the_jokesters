@@ -23,4 +23,21 @@ dist-ssr
 *.sln
 *.sw?
 *.backup
-models/\n**/onnx/\n**/Hermes*\npublic/models/
+
+# Models and generated ML artifacts (do NOT commit large model files)
+models/
+public/models/
+**/onnx/
+**/Hermes*
+
+# Common model file extensions
+*.onnx
+*.safetensors
+*.gguf
+*.bin
+*.ckpt
+*.pth
+*.pt
+*.safetensors.lock
+
+# If you intentionally track small model-manifests, add an exception in .git/info/exclude or use a specific pattern
