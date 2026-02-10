@@ -1655,6 +1655,8 @@ Suggestions:
 
     if (errorStr.includes('WebGL') || errorStr.includes('GPU') || errorStr.includes('gl_')) {
       errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
+    } else if (error instanceof Error && error.message) {
+      errorMessage = error.message
     }
 
     statusText.textContent = errorMessage
