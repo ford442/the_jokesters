@@ -55,6 +55,7 @@ export class Director {
     private callbacks: DirectorCallbacks;
     private isRunning: boolean = false;
     private chaosLevel: number = 30;
+    private currentScenario: Scenario | null = null;
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks) {
         this.manager = manager;
@@ -69,12 +70,17 @@ export class Director {
         return this.isRunning;
     }
 
+    public getCurrentScenario(): Scenario | null {
+        return this.currentScenario;
+    }
+
     public async playScenario(scenario: Scenario) {
         if (!this.manager) {
             this.callbacks.onError('No manager available');
             return;
         }
 
+        this.currentScenario = scenario;
         this.isRunning = true;
         this.manager.resetConversation();
 

@@ -218,6 +218,7 @@ async function initApp() {
   app.innerHTML = `
     <div class="container">
       <h1>The Jokesters</h1>
+      <button id="settings-btn" title="Settings">⚙️</button>
       <div id="loading" class="loading">
         <div style="margin-top:12px; display:flex; gap:8px; align-items:center;">
           <label style="color:#888; font-size:0.9em; white-space:nowrap; margin-left:8px;">LLM Model</label>
@@ -349,6 +350,7 @@ async function initApp() {
               disabled
             />
             <button id="send-btn" disabled>Send</button>
+            <button id="save-episode-btn" style="margin-left: 5px; background: #0f3460; border-color: #444;" disabled title="Save to Cloud">💾</button>
           </div>
           
           <div id="improv-mode-controls" class="improv-controls">
@@ -430,6 +432,32 @@ async function initApp() {
           </div>
         </div>
       </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+          <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="close-settings-btn" class="close-modal-btn">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>Hugging Face Token</label>
+              <input type="password" id="hf-token" placeholder="hf_...">
+              <div class="form-hint">Required for cloud sync. Get one from your HF settings.</div>
+            </div>
+            <div class="form-group">
+              <label>Dataset Repository ID</label>
+              <input type="text" id="hf-repo" placeholder="user/jokesters-episodes">
+              <div class="form-hint">A private dataset to store episodes.</div>
+            </div>
+            <div id="settings-status" style="margin-top: 10px; font-size: 0.9em;"></div>
+          </div>
+          <div class="modal-footer">
+            <button id="save-settings-btn">Save Settings</button>
+          </div>
+        </div>
+      </div>
     </div>
   `
 
@@ -441,6 +469,14 @@ async function initApp() {
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
+  const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement
+  const settingsModal = document.getElementById('settings-modal') as HTMLDivElement
+  const closeSettingsBtn = document.getElementById('close-settings-btn') as HTMLButtonElement
+  const saveSettingsBtn = document.getElementById('save-settings-btn') as HTMLButtonElement
+  const hfTokenInput = document.getElementById('hf-token') as HTMLInputElement
+  const hfRepoInput = document.getElementById('hf-repo') as HTMLInputElement
+  const settingsStatus = document.getElementById('settings-status') as HTMLDivElement
+  const saveEpisodeBtn = document.getElementById('save-episode-btn') as HTMLButtonElement
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null
   const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement
@@ -476,6 +512,7 @@ async function initApp() {
   let groupChatManager: GroupChatManager;
   let director: Director;
   let scriptGenerator: ScriptGenerator;
+  let memoryManager: MemoryManager;
   let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
@@ -847,11 +884,10 @@ async function initApp() {
       })
     }
 
+    // Initialize MemoryManager early
+    memoryManager = new MemoryManager();
+
     // Load auto-load preference from localStorage via MemoryManager
-    // Note: We instantiate a temporary MemoryManager here just for initial load if not ready,
-    // but better to just use localStorage directly for boot settings or instantiate MM early.
-    // Let's use a temporary MM instance for boot settings since the main one is tied to initApp scope.
-    const bootMemory = new MemoryManager();
     const AUTO_LOAD_KEY = 'auto-load-vicuna';
     const AUTO_LOAD_DELAY_MS = 500; // Delay before triggering auto-load to ensure UI is ready
 
@@ -860,14 +896,14 @@ async function initApp() {
       return modelId.split('/').pop() || modelId || 'Unknown Model';
     };
 
-    const savedAutoLoad = bootMemory.load<string>(AUTO_LOAD_KEY);
+    const savedAutoLoad = memoryManager.load<string>(AUTO_LOAD_KEY);
     if (savedAutoLoad === 'true') {
       autoLoadVicunaCheckbox.checked = true;
     }
 
     // Save preference when checkbox changes
     autoLoadVicunaCheckbox.addEventListener('change', () => {
-      bootMemory.save(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
+      memoryManager.save(AUTO_LOAD_KEY, autoLoadVicunaCheckbox.checked ? 'true' : 'false');
       const modelName = getModelDisplayName(customVicunaModelConfig.model_id);
       if (autoLoadVicunaCheckbox.checked) {
         statusText.textContent = `${modelName} will auto-load at next startup. Click "Load Model" now to load it immediately.`;
@@ -1645,6 +1681,93 @@ Suggestions:
         stopImprovScene()
       })
     }
+
+    // --- Settings Modal Logic ---
+    const updateSettingsUI = () => {
+       const creds = memoryManager.getCloudCredentials();
+       if (creds.token) hfTokenInput.value = creds.token;
+       if (creds.repoId) hfRepoInput.value = creds.repoId;
+
+       if (creds.token && creds.repoId) {
+         saveEpisodeBtn.disabled = false;
+         saveEpisodeBtn.title = "Save Episode to Cloud";
+       } else {
+         saveEpisodeBtn.disabled = true;
+         saveEpisodeBtn.title = "Configure Cloud Settings to Enable Save";
+       }
+    };
+
+    updateSettingsUI();
+
+    settingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'flex';
+      updateSettingsUI();
+    });
+
+    closeSettingsBtn.addEventListener('click', () => {
+      settingsModal.style.display = 'none';
+      settingsStatus.textContent = '';
+    });
+
+    saveSettingsBtn.addEventListener('click', async () => {
+      const token = hfTokenInput.value.trim();
+      const repo = hfRepoInput.value.trim();
+
+      settingsStatus.textContent = 'Validating...';
+      settingsStatus.style.color = '#ffd700';
+
+      memoryManager.setCloudCredentials(token, repo);
+      const isValid = await memoryManager.validateCloudCredentials();
+
+      if (isValid) {
+        settingsStatus.textContent = '✅ Token Verified & Saved!';
+        settingsStatus.style.color = '#4ecdc4';
+        setTimeout(() => {
+             settingsModal.style.display = 'none';
+             settingsStatus.textContent = '';
+        }, 1500);
+        updateSettingsUI();
+      } else {
+        settingsStatus.textContent = '❌ Invalid Token or Network Error';
+        settingsStatus.style.color = '#ff6b6b';
+      }
+    });
+
+    // Close modal on outside click
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.style.display = 'none';
+      }
+    });
+
+    // --- Save Episode Logic ---
+    saveEpisodeBtn.addEventListener('click', async () => {
+       if (!director) return;
+
+       const scenario = director.getCurrentScenario();
+       const title = scenario ? scenario.title : "Untitled Improv";
+       const timestamp = new Date().toISOString();
+       const episodeId = timestamp.replace(/[:.]/g, '-');
+
+       const logContent = chatLog.innerText;
+
+       const data = {
+         id: episodeId,
+         timestamp: timestamp,
+         title: title,
+         scenario: scenario,
+         log: logContent
+       };
+
+       addMessage('System', '☁️ Saving episode...', '#888');
+       try {
+         await memoryManager.saveEpisodeToCloud(episodeId, data);
+         addMessage('System', '✅ Episode saved to Cloud!', '#4ecdc4');
+       } catch (err) {
+         console.error(err);
+         addMessage('System', '❌ Save failed. Check console.', '#ff6b6b');
+       }
+    });
 
     userInput.focus()
   } catch (error: any) {

@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: On Track (Velocity Increased)
+* **status**: On Track (Velocity Stable)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -89,16 +89,25 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 4: Persistence (HF Integration)
 * [x] Implement `MemoryManager` (Local `localStorage` wrapper first).
-* [ ] Add HF Token Input in Settings Modal.
-* [ ] Implement `HFStorageManager` class using `@huggingface/hub` (or REST API).
+* [x] Add HF Token Input in Settings Modal.
+* [x] Implement `HFStorageManager` class using `fetch` (REST API).
     *   `authenticate(token)`
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
-* [ ] Add "Save/Load" buttons to the UI (Cloud Sync).
+* [x] Add "Save/Load" buttons to the UI (Cloud Sync).
 
 ### Phase 5: New Creative Modes
-* [ ] Implement "Roast Battle" Scenario logic in `Director`.
-* [ ] Implement "Collaborative Storytelling" Scenario logic.
-* [ ] Implement "The Debate Club" Scenario logic.
-* [ ] Implement "Heckler Interaction" handling in `Director` loop.
-* [ ] Implement "Musical Improv" (Experimental).
+* [ ] **Roast Battle Mode**:
+    *   Implement `Director.runRoastLoop(scenario)`.
+    *   Add "Roast Score" UI overlay.
+    *   Agents react with "Oooooh" or "Weak!"
+* [ ] **Collaborative Storytelling**:
+    *   Implement `Director.runStoryLoop(scenario)`.
+    *   Agents take turns adding exactly one sentence.
+    *   Context injection: "The story so far: [Summary]".
+* [ ] **The Debate Club**:
+    *   Implement `Director.runDebateLoop(scenario)`.
+    *   Moderator (Scientist) enforces time limits.
+    *   Topic Generator integration.
+* [ ] **Heckler Interaction**: Implement dynamic handling in `Director` loop.
+* [ ] **Musical Improv**: (Experimental) Sync TTS with audio beat.
