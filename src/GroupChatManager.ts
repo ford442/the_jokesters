@@ -225,13 +225,7 @@ export class GroupChatManager {
         let enhancedMessage = `${base} (while initializing model '${modelId}' after ${maxRetries} attempts).`
 
         if (isCacheError) {
-          enhancedMessage += `\n\nThis appears to be a cache/network error. Suggestions:
-  • Check your network connection and try again
-  • Clear browser cache manually (Settings → Privacy → Clear browsing data)
-  • Try a different, smaller model (e.g., SmolLM2-360M-Instruct-q4f32_1-MLC)
-  • Verify model URLs are reachable: open browser DevTools → Network tab
-  • If using Hugging Face, ensure URLs point to '/resolve/main/' not just repo root
-  • Check that you have sufficient disk space for model caching (2-8GB needed)`
+          enhancedMessage += `\n\nNetwork error while fetching model assets. This commonly happens when the browser cannot fetch model files from the host (CORS, network/firewall, or blocked Host). \n \nSuggestions: \n  • Check your network connection and any firewall/proxy settings. \n  • Try a different model in the selector. \n  • If using Hugging Face/cas-bridge, ensure the model URL is reachable from your browser (open DevTools → Network to inspect failing GETs). \n  • As a fallback, download the model locally and point the app to a local URL or static server.`
         } else {
           enhancedMessage += `\n\nCheck that the model is registered in the engine's prebuiltAppConfig.model_list and that required fields like 'model' and 'model_lib' are present and reachable.`
         }
