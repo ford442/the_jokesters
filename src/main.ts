@@ -46,7 +46,7 @@ const llama2bModelConfig = {
 }
 
 // 2. A smaller model for contrast (Qwen2 0.5B from mlc-ai)
-const smallModelId = 'Qwen2-0.5B-Instruct-q4f16_1-MLC';
+// const smallModelId = 'Qwen2-0.5B-Instruct-q4f16_1-MLC';
 
 // 4. Snowflake embedding model (for vector/embedding tasks)
 const snowflakeEmbedModelConfig = {
