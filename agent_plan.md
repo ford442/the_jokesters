@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: On Track (Velocity Stable)
+* **status**: Ahead of Schedule (Creative Modes Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -68,6 +68,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Action*: `MemoryManager` should switch from `localStorage` to `HFStorageManager` if token is present.
 3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
     *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
+4.  **Vector Memory**: (Future) Use a local vector store (e.g. Voy or simple cosine similarity) to retrieve relevant past jokes.
+
+---
+
+## 5. Audio & Interaction (Future)
+
+*   **Musical Improv**: Agents generate lyrics to a beat.
+    *   Requires: Audio analysis (BPM detection) or pre-set backing tracks.
+    *   Sync: TTS timing must be adjusted (maybe simple syllable counting).
+*   **Heckler Interaction**:
+    *   User input during an active `Director` loop should trigger an interrupt.
+    *   `Director` needs to listen to `GroupChatManager` events or UI input while running a loop.
 
 ---
 
@@ -97,17 +109,19 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
 
 ### Phase 5: New Creative Modes
-* [ ] **Roast Battle Mode**:
+* [x] **Roast Battle Mode**:
     *   Implement `Director.runRoastLoop(scenario)`.
-    *   Add "Roast Score" UI overlay.
-    *   Agents react with "Oooooh" or "Weak!"
-* [ ] **Collaborative Storytelling**:
+    *   Agents react with "Oooooh" or "Weak!" (Simulated via System Messages).
+* [x] **Collaborative Storytelling**:
     *   Implement `Director.runStoryLoop(scenario)`.
     *   Agents take turns adding exactly one sentence.
     *   Context injection: "The story so far: [Summary]".
-* [ ] **The Debate Club**:
+* [x] **The Debate Club**:
     *   Implement `Director.runDebateLoop(scenario)`.
     *   Moderator (Scientist) enforces time limits.
-    *   Topic Generator integration.
-* [ ] **Heckler Interaction**: Implement dynamic handling in `Director` loop.
+    *   Topic Generator integration (via UI input).
+
+### Phase 6: Audio & Interaction
+* [ ] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
 * [ ] **Musical Improv**: (Experimental) Sync TTS with audio beat.
+* [ ] **Voice Input**: Add STT (Whisper-tiny) to allow user to speak to agents.

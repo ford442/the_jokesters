@@ -315,6 +315,42 @@ async function initApp() {
             <button id="watcher-mode-btn" class="mode-btn">Watcher Mode</button>
             <button id="reporter-mode-btn" class="mode-btn">Reporter Mode</button>
             <button id="script-mode-btn" class="mode-btn">Script Mode</button>
+            <button id="roast-mode-btn" class="mode-btn">Roast Mode</button>
+            <button id="story-mode-btn" class="mode-btn">Story Mode</button>
+            <button id="debate-mode-btn" class="mode-btn">Debate Mode</button>
+          </div>
+
+          <div id="roast-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Roast Target</label>
+              <input type="text" id="roast-target" placeholder="Who should they roast? (e.g., 'The Audience', 'Elon Musk')" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-roast-btn" class="primary-btn" disabled>Start Roast</button>
+              <button id="stop-roast-btn" class="secondary-btn" style="display: none;" disabled>Stop Roast</button>
+            </div>
+          </div>
+
+          <div id="story-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Story Starter</label>
+              <input type="text" id="story-prompt" placeholder="Once upon a time..." autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-story-btn" class="primary-btn" disabled>Start Story</button>
+              <button id="stop-story-btn" class="secondary-btn" style="display: none;" disabled>Stop Story</button>
+            </div>
+          </div>
+
+          <div id="debate-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Debate Topic</label>
+              <input type="text" id="debate-topic" placeholder="e.g., 'Is a hotdog a sandwich?'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-debate-btn" class="primary-btn" disabled>Start Debate</button>
+              <button id="stop-debate-btn" class="secondary-btn" style="display: none;" disabled>Stop Debate</button>
+            </div>
           </div>
 
           <div id="script-mode-controls" class="improv-controls" style="display: none;">
@@ -507,6 +543,27 @@ async function initApp() {
   const generateScriptBtn = document.getElementById('generate-script-btn') as HTMLButtonElement
   const loadExampleScriptBtn = document.getElementById('load-example-script-btn') as HTMLButtonElement
   const stopScriptBtn = document.getElementById('stop-script-btn') as HTMLButtonElement
+
+  // New Mode Controls
+  const roastModeBtn = document.getElementById('roast-mode-btn') as HTMLButtonElement
+  const storyModeBtn = document.getElementById('story-mode-btn') as HTMLButtonElement
+  const debateModeBtn = document.getElementById('debate-mode-btn') as HTMLButtonElement
+
+  const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement
+  const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement
+  const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement
+
+  const roastTargetInput = document.getElementById('roast-target') as HTMLInputElement
+  const startRoastBtn = document.getElementById('start-roast-btn') as HTMLButtonElement
+  const stopRoastBtn = document.getElementById('stop-roast-btn') as HTMLButtonElement
+
+  const storyPromptInput = document.getElementById('story-prompt') as HTMLInputElement
+  const startStoryBtn = document.getElementById('start-story-btn') as HTMLButtonElement
+  const stopStoryBtn = document.getElementById('stop-story-btn') as HTMLButtonElement
+
+  const debateTopicInput = document.getElementById('debate-topic') as HTMLInputElement
+  const startDebateBtn = document.getElementById('start-debate-btn') as HTMLButtonElement
+  const stopDebateBtn = document.getElementById('stop-debate-btn') as HTMLButtonElement
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -758,6 +815,19 @@ async function initApp() {
           loadExampleScriptBtn.disabled = false;
           scriptTopicInput.disabled = false;
 
+          // Re-enable new mode controls
+          stopRoastBtn.style.display = 'none';
+          startRoastBtn.style.display = 'inline-block';
+          roastTargetInput.disabled = false;
+
+          stopStoryBtn.style.display = 'none';
+          startStoryBtn.style.display = 'inline-block';
+          storyPromptInput.disabled = false;
+
+          stopDebateBtn.style.display = 'none';
+          startDebateBtn.style.display = 'inline-block';
+          debateTopicInput.disabled = false;
+
           // Ensure video is hidden/paused on stop
           videoElement.pause();
           videoContainer.style.display = 'none';
@@ -795,6 +865,15 @@ async function initApp() {
       scriptTopicInput.disabled = false
       generateScriptBtn.disabled = false
       loadExampleScriptBtn.disabled = false
+
+      // Enable new modes
+      roastTargetInput.disabled = false
+      startRoastBtn.disabled = false
+      storyPromptInput.disabled = false
+      startStoryBtn.disabled = false
+      debateTopicInput.disabled = false
+      startDebateBtn.disabled = false
+
       modelSelect.disabled = false
       loadModelBtn.disabled = false
       if (modelSelectMain) modelSelectMain.disabled = false
@@ -1257,17 +1336,19 @@ Suggestions:
     const reporterModeControls = document.getElementById('reporter-mode-controls')!
     const scriptModeControls = document.getElementById('script-mode-controls')!
 
+    // Helper to hide all mode controls
+    const resetModeUI = () => {
+      [chatModeBtn, improvModeBtn, watcherModeBtn, reporterModeBtn, scriptModeBtn, roastModeBtn, storyModeBtn, debateModeBtn].forEach(b => b.classList.remove('active'));
+      [improvModeControls, reporterModeControls, scriptModeControls, roastModeControls, storyModeControls, debateModeControls].forEach(c => c.style.display = 'none');
+      chatModeControls.style.display = 'none'; // Default hidden unless needed
+    };
+
     chatModeBtn.addEventListener('click', () => {
+      resetModeUI();
       chatModeBtn.classList.add('active')
-      improvModeBtn.classList.remove('active')
-      watcherModeBtn.classList.remove('active')
-      reporterModeBtn.classList.remove('active')
-      scriptModeBtn.classList.remove('active')
       chatModeControls.style.display = 'flex'
       // Keep improv controls visible (disabled until a model is loaded) so users can prepare scenes before load
       improvModeControls.style.display = 'block'
-      reporterModeControls.style.display = 'none'
-      scriptModeControls.style.display = 'none'
 
       // Stop improv if running
       if (director && director.isSceneRunning()) {
@@ -1278,33 +1359,23 @@ Suggestions:
     })
 
     improvModeBtn.addEventListener('click', () => {
+      resetModeUI();
       improvModeBtn.classList.add('active')
-      chatModeBtn.classList.remove('active')
-      watcherModeBtn.classList.remove('active')
-      reporterModeBtn.classList.remove('active')
-      scriptModeBtn.classList.remove('active')
       // Keep both control panels visible so users can access chat while in Improv mode
       chatModeControls.style.display = 'flex'
       improvModeControls.style.display = 'block'
-      reporterModeControls.style.display = 'none'
-      scriptModeControls.style.display = 'none'
+
       // Show the floating 'Return to Chat' button as an optional quick-switch
       const existing = document.getElementById('return-to-chat-btn') as HTMLButtonElement | null
       if (existing) existing.style.display = 'block'
     })
 
     watcherModeBtn.addEventListener('click', async () => {
+      resetModeUI();
       watcherModeBtn.classList.add('active');
-      chatModeBtn.classList.remove('active');
-      improvModeBtn.classList.remove('active');
-      reporterModeBtn.classList.remove('active');
-      scriptModeBtn.classList.remove('active');
 
       // In watcher mode, we can keep chat controls visible for manual messages
       chatModeControls.style.display = 'flex';
-      improvModeControls.style.display = 'none';
-      reporterModeControls.style.display = 'none';
-      scriptModeControls.style.display = 'none';
 
       if (director && director.isSceneRunning()) {
         director.stopScene();
@@ -1373,16 +1444,10 @@ Suggestions:
     });
 
     reporterModeBtn.addEventListener('click', () => {
+      resetModeUI();
       reporterModeBtn.classList.add('active');
-      chatModeBtn.classList.remove('active');
-      improvModeBtn.classList.remove('active');
-      watcherModeBtn.classList.remove('active');
-      scriptModeBtn.classList.remove('active');
-
       chatModeControls.style.display = 'flex';
-      improvModeControls.style.display = 'none';
       reporterModeControls.style.display = 'block';
-      scriptModeControls.style.display = 'none';
 
       // Initialize quick topics for default category
       if (reporterQuickTopicsSelect.options.length <= 1) {
@@ -1402,15 +1467,9 @@ Suggestions:
     });
 
     scriptModeBtn.addEventListener('click', async () => {
+      resetModeUI();
       scriptModeBtn.classList.add('active');
-      chatModeBtn.classList.remove('active');
-      improvModeBtn.classList.remove('active');
-      watcherModeBtn.classList.remove('active');
-      reporterModeBtn.classList.remove('active');
-
       chatModeControls.style.display = 'flex';
-      improvModeControls.style.display = 'none';
-      reporterModeControls.style.display = 'none';
       scriptModeControls.style.display = 'block';
 
       if (director && director.isSceneRunning()) {
@@ -1497,6 +1556,92 @@ Suggestions:
     stopScriptBtn.addEventListener('click', () => {
       if (director) director.stopScene();
     });
+
+    // --- Roast Mode Listeners ---
+    roastModeBtn.addEventListener('click', () => {
+      resetModeUI();
+      roastModeBtn.classList.add('active');
+      chatModeControls.style.display = 'flex';
+      roastModeControls.style.display = 'block';
+      if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startRoastBtn.addEventListener('click', async () => {
+      if (!director) return;
+      const target = roastTargetInput.value.trim() || 'The Audience';
+
+      // UI Updates
+      roastTargetInput.disabled = true;
+      startRoastBtn.style.display = 'none';
+      stopRoastBtn.style.display = 'inline-block';
+
+      await director.playScenario({
+        type: 'roast',
+        title: 'Roast Battle',
+        description: `Roasting ${target}`,
+        config: { roastTarget: target }
+      });
+    });
+
+    stopRoastBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+
+    // --- Story Mode Listeners ---
+    storyModeBtn.addEventListener('click', () => {
+      resetModeUI();
+      storyModeBtn.classList.add('active');
+      chatModeControls.style.display = 'flex';
+      storyModeControls.style.display = 'block';
+      if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startStoryBtn.addEventListener('click', async () => {
+      if (!director) return;
+      const prompt = storyPromptInput.value.trim();
+
+      // UI Updates
+      storyPromptInput.disabled = true;
+      startStoryBtn.style.display = 'none';
+      stopStoryBtn.style.display = 'inline-block';
+
+      await director.playScenario({
+        type: 'story',
+        title: 'Collaborative Story',
+        description: 'Agents build a story sentence by sentence',
+        config: { initialPrompt: prompt }
+      });
+    });
+
+    stopStoryBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+
+    // --- Debate Mode Listeners ---
+    debateModeBtn.addEventListener('click', () => {
+      resetModeUI();
+      debateModeBtn.classList.add('active');
+      chatModeControls.style.display = 'flex';
+      debateModeControls.style.display = 'block';
+      if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startDebateBtn.addEventListener('click', async () => {
+      if (!director) return;
+      const topic = debateTopicInput.value.trim();
+
+      // UI Updates
+      debateTopicInput.disabled = true;
+      startDebateBtn.style.display = 'none';
+      stopDebateBtn.style.display = 'inline-block';
+
+      await director.playScenario({
+        type: 'debate',
+        title: 'The Debate Club',
+        description: `Debating: ${topic}`,
+        config: { debateTopic: topic }
+      });
+    });
+
+    stopDebateBtn.addEventListener('click', () => { if (director) director.stopScene(); });
 
     // Start Reporter button
     startReporterBtn.addEventListener('click', async () => {
