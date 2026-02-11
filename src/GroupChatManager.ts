@@ -407,6 +407,10 @@ export class GroupChatManager {
     return this.conversationHistory.length
   }
 
+  getHistory(): Message[] {
+    return this.conversationHistory
+  }
+
   resetConversation(): void {
     this.conversationHistory = []
     this.currentAgentIndex = 0

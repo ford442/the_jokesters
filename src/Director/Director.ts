@@ -26,7 +26,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate';
     title: string;
     description: string;
     config?: {
@@ -42,6 +42,9 @@ export interface Scenario {
         sources?: string[];
         scripted?: boolean;
         generatedScript?: ScriptBeat[];
+        roastTarget?: string;
+        storyContext?: string;
+        debateTopic?: string;
     };
 }
 
@@ -101,6 +104,12 @@ export class Director {
                 await this.runReporterLoop(scenario);
             } else if (scenario.type === 'script') {
                 await this.runScriptLoop(scenario);
+            } else if (scenario.type === 'roast') {
+                await this.runRoastLoop(scenario);
+            } else if (scenario.type === 'story') {
+                await this.runStoryLoop(scenario);
+            } else if (scenario.type === 'debate') {
+                await this.runDebateLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -271,6 +280,104 @@ export class Director {
         // Natural end of show
         if (this.isRunning) {
             this.callbacks.onMessage('Director', '📰 End of broadcast', '#888');
+        }
+    }
+
+    private async runRoastLoop(scenario: Scenario) {
+        const target = scenario.config?.roastTarget || 'The Audience';
+        this.callbacks.onMessage('Director', `🔥 ROAST BATTLE START! Target: ${target}`, '#ff6b6b');
+
+        let turnCount = 0;
+        while (this.isRunning) {
+            if (!this.isRunning) break;
+
+            const prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+
+            await this.processTurn(prompt);
+
+            // Audience Reaction (Simulated)
+            if (Math.random() > 0.5) {
+                const reactions = ['"OOOOOH!"', '"DAMN!"', '"APPLY COLD WATER!"', '"TOO FAR!"', '"LOL"'];
+                const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+                this.callbacks.onMessage('Audience', reaction, '#888');
+            }
+
+            turnCount++;
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    private async runStoryLoop(scenario: Scenario) {
+        let storySoFar = scenario.config?.initialPrompt || 'Once upon a time...';
+        this.callbacks.onMessage('Director', `📖 Story Time! "${storySoFar}"`, '#4ecdc4');
+
+        while (this.isRunning) {
+            if (!this.isRunning) break;
+
+            // For story mode, we want exactly one sentence that advances the plot
+            const prompt = `(COLLABORATIVE STORYTELLING: The story so far is: "${storySoFar}".
+Add exactly ONE sentence to continue the story. Be creative but consistent. Do not repeat the previous sentence.)`;
+
+            // We need to capture the output to append to storySoFar
+            // However, processTurn handles speaking and UI. We can hook into onSpeak but that's async.
+            // A better way for this mode might be to use manager.chat directly or rely on the memory which GroupChatManager handles.
+            // Since GroupChatManager maintains history, the agents "know" the story if we include history.
+            // But we want to explicitly track it for the prompt context.
+
+            // Let's rely on the chat history for context, but enforce the "one sentence" constraint via prompt.
+            await this.processTurn(prompt);
+
+            // We don't easily get the response text back from processTurn to update `storySoFar` locally variable here
+            // without modifying processTurn or listening to onMessage/onSpeak.
+            // However, since we re-inject "The story so far" in the prompt, we strictly need the text.
+            // The GroupChatManager history has it.
+            const history = this.manager.getHistory();
+            if (history.length > 0) {
+                const lastMsg = history[history.length - 1];
+                if (lastMsg.role === 'assistant') {
+                    storySoFar += ' ' + lastMsg.content;
+                }
+            }
+
+            await new Promise(r => setTimeout(r, 800));
+        }
+    }
+
+    private async runDebateLoop(scenario: Scenario) {
+        const topic = scenario.config?.debateTopic || 'Is a hotdog a sandwich?';
+        this.callbacks.onMessage('Director', `⚖️ DEBATE CLUB: ${topic}`, '#45b7d1');
+
+        // Roles
+        const moderator = 'scientist';
+        const pro = 'comedian';
+        const con = 'philosopher';
+
+        // Intro
+        this.callbacks.onTurnStart(moderator);
+        await this.manager.chatForAgent(moderator, `(You are the MODERATOR for the debate topic: "${topic}". Introduce the topic and the debaters (Comedian and Philosopher). Keep it professional but slightly annoyed.)`, async (sentence) => {
+             await this.callbacks.onSpeak(sentence, moderator, {});
+        });
+        await this.callbacks.onTurnEnd();
+
+        let round = 1;
+        while (this.isRunning) {
+            this.callbacks.onMessage('Director', `🔔 Round ${round}`, '#888');
+
+            // Pro Argument
+            if (!this.isRunning) break;
+            await this.manager.chatForAgent(pro, `(DEBATE ROUND ${round}: Argue FOR the topic: "${topic}". Be passionate and use absurd logic.)`, async (s) => await this.callbacks.onSpeak(s, pro, {}));
+
+            // Con Argument
+            if (!this.isRunning) break;
+            await this.manager.chatForAgent(con, `(DEBATE ROUND ${round}: Argue AGAINST the topic: "${topic}" and refute the previous point. Be philosophical and condescending.)`, async (s) => await this.callbacks.onSpeak(s, con, {}));
+
+            // Moderator Interjection (optional)
+            if (round % 2 === 0 && this.isRunning) {
+                await this.manager.chatForAgent(moderator, `(Briefly summarize the points so far and issue a point deduction to one of them for a fallacy.)`, async (s) => await this.callbacks.onSpeak(s, moderator, {}));
+            }
+
+            await new Promise(r => setTimeout(r, 1000));
+            round++;
         }
     }
 
