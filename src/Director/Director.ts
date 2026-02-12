@@ -16,6 +16,7 @@ export interface DirectorCallbacks {
         getTime: () => number;
         show: (visible: boolean) => void;
     };
+    onMusicControl?: (action: 'play' | 'stop' | 'tempo', value?: number) => void;
 }
 
 export interface ReporterSegment {
@@ -26,7 +27,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical';
     title: string;
     description: string;
     config?: {
@@ -45,6 +46,7 @@ export interface Scenario {
         roastTarget?: string;
         storyContext?: string;
         debateTopic?: string;
+        musicalStyle?: string;
     };
 }
 
@@ -59,6 +61,7 @@ export class Director {
     private isRunning: boolean = false;
     private chaosLevel: number = 30;
     private currentScenario: Scenario | null = null;
+    private interruptQueue: string[] = [];
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks) {
         this.manager = manager;
@@ -110,6 +113,8 @@ export class Director {
                 await this.runStoryLoop(scenario);
             } else if (scenario.type === 'debate') {
                 await this.runDebateLoop(scenario);
+            } else if (scenario.type === 'musical') {
+                await this.runMusicalLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -140,6 +145,13 @@ export class Director {
         if (this.isRunning) {
             this.isRunning = false;
             this.callbacks.onSceneStop();
+        }
+    }
+
+    public handleInterrupt(text: string) {
+        if (this.isRunning) {
+            this.interruptQueue.push(text);
+            this.callbacks.onMessage('System', `🗣️ Heckler detected!`, '#ff6b6b');
         }
     }
 
@@ -381,6 +393,30 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
         }
     }
 
+    private async runMusicalLoop(scenario: Scenario) {
+        const style = scenario.config?.musicalStyle || 'Freestyle';
+        this.callbacks.onMessage('Director', `🎵 Dropping the beat... (${style})`, '#888');
+
+        // Start Beat
+        if (this.callbacks.onMusicControl) {
+            this.callbacks.onMusicControl('play');
+        }
+
+        while (this.isRunning) {
+            if (!this.isRunning) break;
+
+            const prompt = `(MUSICAL IMPROV: You are rapping/singing to a beat. Style: ${style}. Keep a strict rhyme scheme. Keep it short (2-4 lines). End with ###)`;
+            await this.processTurn(prompt);
+
+            await new Promise(r => setTimeout(r, 800));
+        }
+
+        // Stop Beat
+        if (this.callbacks.onMusicControl) {
+            this.callbacks.onMusicControl('stop');
+        }
+    }
+
     private getDefaultReporterSegments(): ReporterSegment[] {
         return [
             {
@@ -548,9 +584,25 @@ Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. 
             // Notify start of turn (used for model swapping and UI setup)
             await this.callbacks.onTurnStart(currentAgent.id);
 
-            const pacing = this.calculatePacing();
+            let pacing = this.calculatePacing();
+            let effectivePrompt = inputText;
 
-            const effectivePrompt = inputText + pacing.promptSuffix + ' ###';
+            // Check for interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                this.callbacks.onMessage('Heckler', `"${heckle}"`, '#ff0000');
+                effectivePrompt = `(HECKLER INTERRUPT: A heckler just shouted: "${heckle}". React to this immediately! Ignore the previous topic for a moment.)`;
+
+                // Force a punchy response
+                pacing = {
+                     type: 'punchline',
+                     maxTokens: 80,
+                     ttsSteps: 20,
+                     promptSuffix: ' (Roast the heckler!)'
+                };
+            }
+
+            effectivePrompt += pacing.promptSuffix + ' ###';
 
             // Character speeds
             const characterSpeeds: Record<string, number> = {

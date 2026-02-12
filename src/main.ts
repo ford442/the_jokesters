@@ -211,6 +211,52 @@ export interface ScriptBeat {
   line: string;
 }
 
+// --- Simple Beat Generator ---
+let musicAudioContext: AudioContext | null = null;
+let nextNoteTime = 0.0;
+let beatTimerID: number | null = null;
+let isPlayingBeat = false;
+
+function scheduleNote(context: AudioContext, time: number) {
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    osc.connect(gain);
+    gain.connect(context.destination);
+
+    osc.frequency.value = 150; // Kick-ish
+    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+    gain.gain.setValueAtTime(0.3, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+    osc.start(time);
+    osc.stop(time + 0.5);
+}
+
+function scheduler() {
+    if (!musicAudioContext) return;
+    while (nextNoteTime < musicAudioContext.currentTime + 0.1) {
+        scheduleNote(musicAudioContext, nextNoteTime);
+        nextNoteTime += 0.5; // 120 BPM
+    }
+    beatTimerID = window.setTimeout(scheduler, 25);
+}
+
+const startBeat = () => {
+    if (isPlayingBeat) return;
+    if (!musicAudioContext) musicAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Resume context if suspended (browser policy)
+    if (musicAudioContext.state === 'suspended') musicAudioContext.resume();
+
+    isPlayingBeat = true;
+    nextNoteTime = musicAudioContext.currentTime;
+    scheduler();
+}
+
+const stopBeat = () => {
+    isPlayingBeat = false;
+    if (beatTimerID) clearTimeout(beatTimerID);
+}
+
 // Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
@@ -318,6 +364,18 @@ async function initApp() {
             <button id="roast-mode-btn" class="mode-btn">Roast Mode</button>
             <button id="story-mode-btn" class="mode-btn">Story Mode</button>
             <button id="debate-mode-btn" class="mode-btn">Debate Mode</button>
+            <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
+          </div>
+
+          <div id="musical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Music Style</label>
+              <input type="text" id="musical-style" placeholder="e.g., 'Old School Hip Hop', 'Jazz Scat'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-musical-btn" class="primary-btn" disabled>Drop the Beat</button>
+              <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
+            </div>
           </div>
 
           <div id="roast-mode-controls" class="improv-controls" style="display: none;">
@@ -385,6 +443,7 @@ async function initApp() {
               autocomplete="off"
               disabled
             />
+            <button id="voice-input-btn" title="Voice Input" style="margin-right: 5px;" disabled>🎤</button>
             <button id="send-btn" disabled>Send</button>
             <button id="save-episode-btn" style="margin-left: 5px; background: #0f3460; border-color: #444;" disabled title="Save to Cloud">💾</button>
           </div>
@@ -548,10 +607,12 @@ async function initApp() {
   const roastModeBtn = document.getElementById('roast-mode-btn') as HTMLButtonElement
   const storyModeBtn = document.getElementById('story-mode-btn') as HTMLButtonElement
   const debateModeBtn = document.getElementById('debate-mode-btn') as HTMLButtonElement
+  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
 
   const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement
   const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement
   const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement
+  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
 
   const roastTargetInput = document.getElementById('roast-target') as HTMLInputElement
   const startRoastBtn = document.getElementById('start-roast-btn') as HTMLButtonElement
@@ -564,6 +625,11 @@ async function initApp() {
   const debateTopicInput = document.getElementById('debate-topic') as HTMLInputElement
   const startDebateBtn = document.getElementById('start-debate-btn') as HTMLButtonElement
   const stopDebateBtn = document.getElementById('stop-debate-btn') as HTMLButtonElement
+
+  const musicalStyleInput = document.getElementById('musical-style') as HTMLInputElement
+  const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
+  const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
+  const voiceInputBtn = document.getElementById('voice-input-btn') as HTMLButtonElement
 
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
@@ -790,7 +856,12 @@ async function initApp() {
           console.error('Director Error:', error);
           addMessage('System', 'Error in director loop', '#ff0000');
         },
+        onMusicControl: (action) => {
+            if (action === 'play') startBeat();
+            else if (action === 'stop') stopBeat();
+        },
         onSceneStop: () => {
+          stopBeat(); // Ensure music stops
           addMessage('System', '鹿 Scene stopped by user', '#ff6b6b');
           sceneTitleInput.disabled = false;
           sceneDescriptionInput.disabled = false;
@@ -873,6 +944,9 @@ async function initApp() {
       startStoryBtn.disabled = false
       debateTopicInput.disabled = false
       startDebateBtn.disabled = false
+      musicalStyleInput.disabled = false
+      startMusicalBtn.disabled = false
+      voiceInputBtn.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -1287,6 +1361,14 @@ Suggestions:
       const text = userInput.value.trim()
       if (!text || !groupChatManager) return
 
+      // Check for interrupt
+      if (director && director.isSceneRunning()) {
+          addMessage('You (Heckler)', text, '#ff0000');
+          userInput.value = '';
+          director.handleInterrupt(text);
+          return;
+      }
+
       // Disable inputs
       userInput.disabled = true
       sendBtn.disabled = true
@@ -1338,8 +1420,8 @@ Suggestions:
 
     // Helper to hide all mode controls
     const resetModeUI = () => {
-      [chatModeBtn, improvModeBtn, watcherModeBtn, reporterModeBtn, scriptModeBtn, roastModeBtn, storyModeBtn, debateModeBtn].forEach(b => b.classList.remove('active'));
-      [improvModeControls, reporterModeControls, scriptModeControls, roastModeControls, storyModeControls, debateModeControls].forEach(c => c.style.display = 'none');
+      [chatModeBtn, improvModeBtn, watcherModeBtn, reporterModeBtn, scriptModeBtn, roastModeBtn, storyModeBtn, debateModeBtn, musicalModeBtn].forEach(b => b.classList.remove('active'));
+      [improvModeControls, reporterModeControls, scriptModeControls, roastModeControls, storyModeControls, debateModeControls, musicalModeControls].forEach(c => c.style.display = 'none');
       chatModeControls.style.display = 'none'; // Default hidden unless needed
     };
 
@@ -1642,6 +1724,72 @@ Suggestions:
     });
 
     stopDebateBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+    // --- Musical Mode Listeners ---
+    musicalModeBtn.addEventListener('click', () => {
+      resetModeUI();
+      musicalModeBtn.classList.add('active');
+      chatModeControls.style.display = 'flex';
+      musicalModeControls.style.display = 'block';
+      if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startMusicalBtn.addEventListener('click', async () => {
+      if (!director) return;
+      const style = musicalStyleInput.value.trim();
+
+      // UI Updates
+      musicalStyleInput.disabled = true;
+      startMusicalBtn.style.display = 'none';
+      stopMusicalBtn.style.display = 'inline-block';
+
+      await director.playScenario({
+        type: 'musical',
+        title: 'Musical Improv',
+        description: `Rapping/Singing to a beat${style ? ` (${style})` : ''}`,
+        config: { musicalStyle: style }
+      });
+    });
+
+    stopMusicalBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+    // --- Voice Input ---
+    voiceInputBtn.addEventListener('click', () => {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        addMessage('System', 'Voice input not supported in this browser.', '#ff6b6b');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      voiceInputBtn.style.color = '#ff6b6b'; // Red to indicate recording
+
+      recognition.start();
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        voiceInputBtn.style.color = ''; // Reset color
+        userInput.focus();
+        // Optional: Auto-send
+        // sendMessage();
+      };
+
+      recognition.onspeechend = () => {
+        recognition.stop();
+        voiceInputBtn.style.color = '';
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        voiceInputBtn.style.color = '';
+        addMessage('System', `Voice Error: ${event.error}`, '#ff6b6b');
+      };
+    });
 
     // Start Reporter button
     startReporterBtn.addEventListener('click', async () => {
