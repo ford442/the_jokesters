@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: Ahead of Schedule (Creative Modes Implemented)
+* **status**: On Fire! (Musical Mode + Voice Input)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -122,6 +122,11 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Topic Generator integration (via UI input).
 
 ### Phase 6: Audio & Interaction
-* [ ] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
-* [ ] **Musical Improv**: (Experimental) Sync TTS with audio beat.
-* [ ] **Voice Input**: Add STT (Whisper-tiny) to allow user to speak to agents.
+* [x] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
+* [x] **Musical Improv**: (Experimental) Sync TTS with audio beat.
+* [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
+
+### Phase 7: Advanced Intelligence & Polish (The "Interview" Phase)
+* [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
+* [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+* [ ] **The Interview Mode**: One agent interviews the user.
