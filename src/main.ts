@@ -8,6 +8,8 @@ import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
+import { VoiceInputManager } from './audio/VoiceInputManager'
+import { MusicEngine } from './audio/MusicEngine'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
 import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
@@ -318,6 +320,18 @@ async function initApp() {
             <button id="roast-mode-btn" class="mode-btn">Roast Mode</button>
             <button id="story-mode-btn" class="mode-btn">Story Mode</button>
             <button id="debate-mode-btn" class="mode-btn">Debate Mode</button>
+            <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
+          </div>
+
+          <div id="musical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Rap Topic</label>
+              <input type="text" id="musical-topic" placeholder="e.g., 'Life in the Matrix'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-musical-btn" class="primary-btn" disabled>Start Music</button>
+              <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
+            </div>
           </div>
 
           <div id="roast-mode-controls" class="improv-controls" style="display: none;">
@@ -378,6 +392,7 @@ async function initApp() {
           <div id="chat-log" class="chat-log"></div>
           
           <div id="chat-mode-controls" class="input-group">
+            <button id="mic-btn" style="margin-right: 5px; background: #0f3460; border-color: #444; width: 40px;" title="Voice Input" disabled>🎤</button>
             <input 
               type="text" 
               id="user-input" 
@@ -565,6 +580,14 @@ async function initApp() {
   const startDebateBtn = document.getElementById('start-debate-btn') as HTMLButtonElement
   const stopDebateBtn = document.getElementById('stop-debate-btn') as HTMLButtonElement
 
+  // Musical Mode Controls
+  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
+  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
+  const musicalTopicInput = document.getElementById('musical-topic') as HTMLInputElement
+  const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
+  const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
+  const micBtn = document.getElementById('mic-btn') as HTMLButtonElement
+
   // Refactor: Define managers using 'let' so they can be re-assigned on model change
   let groupChatManager: GroupChatManager;
   let director: Director;
@@ -574,6 +597,8 @@ async function initApp() {
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
   let speechQueue: SpeechQueue;
+  let voiceInputManager: VoiceInputManager = new VoiceInputManager();
+  let musicEngine: MusicEngine = new MusicEngine();
   let stage: Stage;
   let lipSync: LipSync;
   let audioInitializing = false;
@@ -828,12 +853,20 @@ async function initApp() {
           startDebateBtn.style.display = 'inline-block';
           debateTopicInput.disabled = false;
 
+          stopMusicalBtn.style.display = 'none';
+          startMusicalBtn.style.display = 'inline-block';
+          musicalTopicInput.disabled = false;
+
           // Ensure video is hidden/paused on stop
           videoElement.pause();
           videoContainer.style.display = 'none';
         },
         getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined,
-        videoControls: videoControls
+        videoControls: videoControls,
+        musicControls: {
+            startBeat: (bpm) => musicEngine.startBeat(bpm),
+            stopBeat: () => musicEngine.stopBeat()
+        }
       };
       director = new Director(groupChatManager, directorCallbacks);
       if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
@@ -877,6 +910,11 @@ async function initApp() {
       modelSelect.disabled = false
       loadModelBtn.disabled = false
       if (modelSelectMain) modelSelectMain.disabled = false
+
+      // Enable mic if supported
+      if (voiceInputManager.isSupported()) {
+          micBtn.disabled = false;
+      }
 
       // Update initial UI state
       updateNextAgentUI()
@@ -1287,6 +1325,14 @@ Suggestions:
       const text = userInput.value.trim()
       if (!text || !groupChatManager) return
 
+      // If scene is running, handle as interrupt/heckle
+      if (director && director.isSceneRunning()) {
+          addMessage('You (Heckle)', text, '#ffffff');
+          director.handleInterrupt(text);
+          userInput.value = '';
+          return;
+      }
+
       // Disable inputs
       userInput.disabled = true
       sendBtn.disabled = true
@@ -1338,8 +1384,8 @@ Suggestions:
 
     // Helper to hide all mode controls
     const resetModeUI = () => {
-      [chatModeBtn, improvModeBtn, watcherModeBtn, reporterModeBtn, scriptModeBtn, roastModeBtn, storyModeBtn, debateModeBtn].forEach(b => b.classList.remove('active'));
-      [improvModeControls, reporterModeControls, scriptModeControls, roastModeControls, storyModeControls, debateModeControls].forEach(c => c.style.display = 'none');
+      [chatModeBtn, improvModeBtn, watcherModeBtn, reporterModeBtn, scriptModeBtn, roastModeBtn, storyModeBtn, debateModeBtn, musicalModeBtn].forEach(b => b.classList.remove('active'));
+      [improvModeControls, reporterModeControls, scriptModeControls, roastModeControls, storyModeControls, debateModeControls, musicalModeControls].forEach(c => c.style.display = 'none');
       chatModeControls.style.display = 'none'; // Default hidden unless needed
     };
 
@@ -1642,6 +1688,64 @@ Suggestions:
     });
 
     stopDebateBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+    // --- Musical Mode Listeners ---
+    musicalModeBtn.addEventListener('click', () => {
+      resetModeUI();
+      musicalModeBtn.classList.add('active');
+      chatModeControls.style.display = 'flex';
+      musicalModeControls.style.display = 'block';
+      if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startMusicalBtn.addEventListener('click', async () => {
+      if (!director) return;
+      const topic = musicalTopicInput.value.trim() || 'Life in the Matrix';
+
+      musicalTopicInput.disabled = true;
+      startMusicalBtn.style.display = 'none';
+      stopMusicalBtn.style.display = 'inline-block';
+
+      await director.playScenario({
+        type: 'musical',
+        title: 'Musical Improv',
+        description: `Rapping about ${topic}`,
+        config: { musicalTopic: topic }
+      });
+    });
+
+    stopMusicalBtn.addEventListener('click', () => { if (director) director.stopScene(); });
+
+    // --- Voice Input Logic ---
+    if (voiceInputManager && voiceInputManager.isSupported()) {
+        voiceInputManager.setCallbacks(
+            (text) => {
+                userInput.value = text;
+                // If scene running, auto-send as heckle
+                if (director && director.isSceneRunning()) {
+                    sendMessage();
+                }
+            },
+            (err) => {
+                console.error("Voice Error", err);
+                micBtn.style.borderColor = '#ff6b6b';
+                setTimeout(() => micBtn.style.borderColor = '#444', 1000);
+            }
+        );
+
+        micBtn.addEventListener('click', () => {
+             voiceInputManager.toggle();
+             micBtn.classList.toggle('active');
+             if (micBtn.classList.contains('active')) {
+                 micBtn.style.background = '#4ecdc4';
+                 micBtn.style.color = '#000';
+             } else {
+                 micBtn.style.background = '#0f3460';
+                 micBtn.style.color = '#fff';
+             }
+        });
+    }
+
 
     // Start Reporter button
     startReporterBtn.addEventListener('click', async () => {

@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: Ahead of Schedule (Creative Modes Implemented)
+* **status**: Ahead of Schedule (Audio & Interaction Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -54,6 +54,7 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Heckler Interaction**: User interrupts, agents must handle it dynamically.
 *   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
     *   *Challenge*: syncing TTS with audio beat.
+*   **Voice Input**: User talks to agents naturally.
 
 ---
 
@@ -69,17 +70,6 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
     *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
 4.  **Vector Memory**: (Future) Use a local vector store (e.g. Voy or simple cosine similarity) to retrieve relevant past jokes.
-
----
-
-## 5. Audio & Interaction (Future)
-
-*   **Musical Improv**: Agents generate lyrics to a beat.
-    *   Requires: Audio analysis (BPM detection) or pre-set backing tracks.
-    *   Sync: TTS timing must be adjusted (maybe simple syllable counting).
-*   **Heckler Interaction**:
-    *   User input during an active `Director` loop should trigger an interrupt.
-    *   `Director` needs to listen to `GroupChatManager` events or UI input while running a loop.
 
 ---
 
@@ -122,6 +112,17 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Topic Generator integration (via UI input).
 
 ### Phase 6: Audio & Interaction
-* [ ] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
-* [ ] **Musical Improv**: (Experimental) Sync TTS with audio beat.
-* [ ] **Voice Input**: Add STT (Whisper-tiny) to allow user to speak to agents.
+* [x] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
+* [x] **Musical Improv**: (Experimental) Sync TTS with audio beat.
+* [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
+
+### Phase 7: Deep Immersion (Dreams)
+* [ ] **Podcast Mode**:
+    *   Agents interview the user or each other.
+    *   Requires: Long-form context management.
+* [ ] **Interactive Fiction / Dungeon Master**:
+    *   One agent acts as DM, others as players + User.
+    *   Requires: State tracking (Inventory, Health).
+* [ ] **Visual Context (Vision)**:
+    *   Agents react to user-uploaded images or webcam feed.
+    *   Requires: Vision-capable model (Llava, Phi-3-Vision).
