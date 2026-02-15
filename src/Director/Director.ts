@@ -17,6 +17,10 @@ export interface DirectorCallbacks {
         getTime: () => number;
         show: (visible: boolean) => void;
     };
+    musicControls?: {
+        startBeat: (bpm: number) => void;
+        stopBeat: () => void;
+    };
 }
 
 export interface ReporterSegment {
@@ -46,6 +50,7 @@ export interface Scenario {
         roastTarget?: string;
         storyContext?: string;
         debateTopic?: string;
+        musicalTopic?: string;
     };
 }
 
@@ -151,11 +156,26 @@ export class Director {
     public stopScene() {
         if (this.isRunning) {
             this.isRunning = false;
+            if (this.callbacks.musicControls) {
+                this.callbacks.musicControls.stopBeat();
+            }
             this.callbacks.onSceneStop();
             // Stop music if playing
             if (this.callbacks.onMusicControl) {
                 this.callbacks.onMusicControl('stop');
             }
+        }
+    }
+
+    public async handleInterrupt(text: string) {
+        if (!this.isRunning) return;
+
+        console.log(`Director received interrupt: ${text}`);
+        this.interruptQueue.push(text);
+
+        // Interrupt current generation
+        if (this.manager) {
+            await this.manager.interrupt();
         }
     }
 
@@ -167,6 +187,14 @@ export class Director {
         }
 
         while (this.isRunning) {
+            // Check for interruptions
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 HECKLER INTERRUPT: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(A HECKLER just shouted: "${heckle}". Stop what you are doing and ROAST them immediately!)`);
+                continue;
+            }
+
             await new Promise(r => setTimeout(r, 800));
             if (!this.isRunning) break;
 
@@ -332,6 +360,14 @@ export class Director {
 
         let turnCount = 0;
         while (this.isRunning) {
+            // Check for interruptions
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 HECKLER: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(The target just shouted back: "${heckle}". Destroy them for speaking!)`);
+                continue;
+            }
+
             if (!this.isRunning) break;
 
             let prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
@@ -361,6 +397,14 @@ export class Director {
         this.callbacks.onMessage('Director', `📖 Story Time! "${storySoFar}"`, '#4ecdc4');
 
         while (this.isRunning) {
+             // Check for interruptions
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 AUDIENCE SUGGESTION: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(The audience shouted a suggestion: "${heckle}". Incorporate this into the story seamlessly!)`);
+                // Note: We don't continue; we let the story update with this turn
+            }
+
             if (!this.isRunning) break;
 
             // For story mode, we want exactly one sentence that advances the plot
@@ -416,6 +460,14 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
 
         let round = 1;
         while (this.isRunning) {
+            // Check for interruptions (Heckler in debate)
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 AUDIENCE QUESTION: "${heckle}"`, '#ff6b6b');
+                await this.manager.chatForAgent(moderator, `(An audience member asked: "${heckle}". Address it and assign one debater to answer.)`, async (s) => await this.callbacks.onSpeak(s, moderator, {}));
+                continue;
+            }
+
             this.callbacks.onMessage('Director', `🔔 Round ${round}`, '#888');
 
             // Check interrupt before round starts
@@ -429,6 +481,9 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             if (!this.isRunning) break;
             await this.manager.chatForAgent(pro, `(DEBATE ROUND ${round}: Argue FOR the topic: "${topic}". Be passionate and use absurd logic.)`, async (s) => await this.callbacks.onSpeak(s, pro, {}));
 
+            // Check for interruptions mid-round
+            if (this.interruptQueue.length > 0) continue;
+
             // Con Argument
             if (!this.isRunning) break;
             await this.manager.chatForAgent(con, `(DEBATE ROUND ${round}: Argue AGAINST the topic: "${topic}" and refute the previous point. Be philosophical and condescending.)`, async (s) => await this.callbacks.onSpeak(s, con, {}));
@@ -441,6 +496,48 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             await new Promise(r => setTimeout(r, 1000));
             round++;
         }
+    }
+
+    private async runMusicalLoop(scenario: Scenario) {
+        const topic = scenario.config?.musicalTopic || 'Life in the Matrix';
+
+        if (!this.callbacks.musicControls) {
+            this.callbacks.onError('Musical mode requires music controls');
+            this.stopScene();
+            return;
+        }
+
+        this.callbacks.onMessage('Director', `🎵 DROPPING THE BEAT! Topic: ${topic}`, '#ff00ff');
+        this.callbacks.musicControls.startBeat(95); // 95 BPM
+
+        // Intro
+        this.callbacks.onTurnStart('comedian');
+        await this.manager.chatForAgent('comedian', `(You are about to rap about "${topic}". Hype up the crowd! Keep it short.)`, async (s) => await this.callbacks.onSpeak(s, 'comedian', {}));
+        await this.callbacks.onTurnEnd();
+
+        let round = 1;
+        while (this.isRunning) {
+            this.callbacks.onMessage('Director', `🎵 Verse ${round}`, '#888');
+
+            if (!this.isRunning) break;
+
+            // Rap Battle / Freestyle
+            // We want short lines to fit the beat ideally, but TTS is async.
+            // We just prompt for lyrics.
+
+            const agent = round % 2 === 1 ? 'comedian' : 'philosopher';
+
+            const prompt = `(MUSICAL IMPROV: Rap a 4-line verse about "${topic}". Keep a steady rhythm. Rhyme scheme AABB. End with "###")`;
+
+            await this.manager.chatForAgent(agent, prompt, async (s) => {
+                await this.callbacks.onSpeak(s, agent, { speed: 1.2 });
+            });
+
+            await new Promise(r => setTimeout(r, 2000)); // Wait for beat
+            round++;
+        }
+
+        this.callbacks.musicControls.stopBeat();
     }
 
     private getDefaultReporterSegments(): ReporterSegment[] {

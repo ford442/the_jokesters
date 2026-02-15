@@ -3,6 +3,8 @@ export class MusicEngine {
     private isPlaying: boolean = false;
     private bpm: number = 100;
     private nextNoteTime: number = 0;
+    private lookahead: number = 25.0; // ms
+    private scheduleAheadTime: number = 0.1; // s
     private timerID: number | null = null;
     private beatCount: number = 0;
 
@@ -11,6 +13,8 @@ export class MusicEngine {
     }
 
     public async startBeat(bpm: number = 100) {
+        if (this.isPlaying) return;
+
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
         }
@@ -18,7 +22,7 @@ export class MusicEngine {
         this.bpm = bpm;
         this.isPlaying = true;
         this.beatCount = 0;
-        this.nextNoteTime = this.audioContext.currentTime;
+        this.nextNoteTime = this.audioContext.currentTime + 0.1;
         this.scheduler();
     }
 
@@ -33,42 +37,51 @@ export class MusicEngine {
     private scheduler() {
         if (!this.isPlaying) return;
 
-        while (this.nextNoteTime < this.audioContext.currentTime + 0.1) {
-            this.playNote(this.nextNoteTime);
-            this.nextBeat();
+        while (this.nextNoteTime < this.audioContext.currentTime + this.scheduleAheadTime) {
+            this.scheduleNote(this.beatCount, this.nextNoteTime);
+            this.nextNote();
         }
-        this.timerID = window.setTimeout(() => this.scheduler(), 25);
+
+        this.timerID = window.setTimeout(() => this.scheduler(), this.lookahead);
     }
 
-    private nextBeat() {
+    private nextNote() {
         const secondsPerBeat = 60.0 / this.bpm;
         this.nextNoteTime += secondsPerBeat;
         this.beatCount++;
+        if (this.beatCount === 4) {
+            this.beatCount = 0;
+        }
     }
 
-    private playNote(time: number) {
+    private scheduleNote(beatNumber: number, time: number) {
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
 
         osc.connect(gain);
         gain.connect(this.audioContext.destination);
 
-        // Simple kick/snare pattern
-        if (this.beatCount % 2 === 0) {
-            // Kick
+        if (beatNumber === 0) {
+            // Kick (Beat 1)
             osc.frequency.setValueAtTime(150, time);
             osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
-            gain.gain.setValueAtTime(1, time);
+            gain.gain.setValueAtTime(0.8, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        } else if (beatNumber === 2) {
+             // Snare (Beat 3)
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(200, time);
+            gain.gain.setValueAtTime(0.4, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
         } else {
-            // Snare-ish (using high freq tone for now, noise is better but more code)
+            // Hi-hat (Beat 2 & 4)
             osc.type = 'square';
-            osc.frequency.setValueAtTime(800, time); // High noise-like
-            gain.gain.setValueAtTime(0.3, time);
-            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+            osc.frequency.setValueAtTime(2000, time);
+            gain.gain.setValueAtTime(0.1, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
         }
 
         osc.start(time);
-        osc.stop(time + 0.5);
+        osc.stop(time + 0.6);
     }
 }

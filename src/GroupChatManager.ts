@@ -416,6 +416,19 @@ export class GroupChatManager {
     this.currentAgentIndex = 0
   }
 
+  /**
+   * Interrupts the current generation if the engine supports it.
+   */
+  async interrupt(): Promise<void> {
+    if (this.engine && typeof this.engine.interruptGenerate === 'function') {
+      try {
+        await this.engine.interruptGenerate()
+      } catch (e) {
+        console.warn('Failed to interrupt engine:', e)
+      }
+    }
+  }
+
   getAgents(): Agent[] {
     return this.agents
   }

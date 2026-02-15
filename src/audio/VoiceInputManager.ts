@@ -1,29 +1,30 @@
 export class VoiceInputManager {
-    private recognition: any;
+    private recognition: any = null;
     private isListening: boolean = false;
-    private onResult: ((text: string) => void) | null = null;
-    private onError: ((error: any) => void) | null = null;
+    private onResultCallback: ((text: string) => void) | null = null;
+    private onErrorCallback: ((error: any) => void) | null = null;
 
     constructor() {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         if (SpeechRecognition) {
             this.recognition = new SpeechRecognition();
-            this.recognition.continuous = false; // Capture one sentence at a time
-            this.recognition.lang = 'en-US';
+            this.recognition.continuous = false;
             this.recognition.interimResults = false;
+            this.recognition.lang = 'en-US';
             this.recognition.maxAlternatives = 1;
 
             this.recognition.onresult = (event: any) => {
-                const text = event.results[0][0].transcript;
-                if (this.onResult) {
-                    this.onResult(text);
+                const transcript = event.results[0][0].transcript;
+                console.log('Voice Input:', transcript);
+                if (this.onResultCallback) {
+                    this.onResultCallback(transcript);
                 }
             };
 
             this.recognition.onerror = (event: any) => {
-                console.error('Voice input error:', event.error);
-                if (this.onError) {
-                    this.onError(event.error);
+                console.error('Voice Input Error:', event.error);
+                if (this.onErrorCallback) {
+                    this.onErrorCallback(event.error);
                 }
                 this.isListening = false;
             };
@@ -32,7 +33,42 @@ export class VoiceInputManager {
                 this.isListening = false;
             };
         } else {
-            console.warn('SpeechRecognition API not supported in this browser.');
+            console.warn('Speech Recognition API not supported in this browser.');
+        }
+    }
+
+    public setCallbacks(onResult: (text: string) => void, onError: (error: any) => void) {
+        this.onResultCallback = onResult;
+        this.onErrorCallback = onError;
+    }
+
+    public start() {
+        if (this.recognition && !this.isListening) {
+            try {
+                this.recognition.start();
+                this.isListening = true;
+            } catch (e) {
+                console.error('Failed to start recognition:', e);
+            }
+        }
+    }
+
+    public stop() {
+        if (this.recognition && this.isListening) {
+            try {
+                this.recognition.stop();
+            } catch (e) {
+                // Ignore
+            }
+            this.isListening = false;
+        }
+    }
+
+    public toggle() {
+        if (this.isListening) {
+            this.stop();
+        } else {
+            this.start();
         }
     }
 
@@ -40,30 +76,13 @@ export class VoiceInputManager {
         return !!this.recognition;
     }
 
+    // Convenience method that combines setCallbacks + start
     public startListening(onResult: (text: string) => void, onError?: (error: any) => void) {
-        if (!this.recognition) return;
-        if (this.isListening) {
-             try { this.recognition.stop(); } catch(e) {}
-        }
-
-        this.onResult = onResult;
-        this.onError = onError || null;
-
-        try {
-            this.recognition.start();
-            this.isListening = true;
-        } catch (e) {
-            console.error('Failed to start recognition:', e);
-        }
+        this.setCallbacks(onResult, onError || (() => {}));
+        this.start();
     }
 
     public stopListening() {
-        if (!this.recognition) return;
-        try {
-            this.recognition.stop();
-        } catch (e) {
-            // ignore
-        }
-        this.isListening = false;
+        this.stop();
     }
 }
