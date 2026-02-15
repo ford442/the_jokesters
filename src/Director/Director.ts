@@ -9,6 +9,7 @@ export interface DirectorCallbacks {
     onError: (error: any) => void;
     onSceneStop: () => void;
     getSeed: () => number | undefined;
+    onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
     videoControls?: {
         play: () => Promise<void>;
         pause: () => void;
@@ -79,6 +80,13 @@ export class Director {
         return this.isRunning;
     }
 
+    public handleInterrupt(text: string) {
+        if (this.isRunning) {
+            this.interruptQueue.push(text);
+            this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
+        }
+    }
+
     public getCurrentScenario(): Scenario | null {
         return this.currentScenario;
     }
@@ -91,6 +99,7 @@ export class Director {
 
         this.currentScenario = scenario;
         this.isRunning = true;
+        this.interruptQueue = []; // Reset interrupts
         this.manager.resetConversation();
 
         this.callbacks.onMessage('System', `🎬 Starting ${scenario.type} scene: "${scenario.title}"`, '#4ecdc4');
@@ -151,6 +160,10 @@ export class Director {
                 this.callbacks.musicControls.stopBeat();
             }
             this.callbacks.onSceneStop();
+            // Stop music if playing
+            if (this.callbacks.onMusicControl) {
+                this.callbacks.onMusicControl('stop');
+            }
         }
     }
 
@@ -189,14 +202,41 @@ export class Director {
             // Influence by chaos slider
             let prompt = '(Reply naturally to the last thing said)';
 
-            // Chaos logic
-            if (turnCount % 3 === 0 && Math.random() * 100 < this.chaosLevel) {
-                prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)';
-            } else if (turnCount % 4 === 0 && Math.random() * 100 < this.chaosLevel) {
-                prompt = '(Make a highbrow reference to history that completely misses the point.)';
+            // Check interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                prompt = `(SYSTEM: SUDDEN INTERRUPTION! The audience yells: "${heckle}". React to this IMMEDIATELY and integrate it into the scene!)`;
+                this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
+            } else {
+                // Chaos logic
+                if (turnCount % 3 === 0 && Math.random() * 100 < this.chaosLevel) {
+                    prompt = '(Suddenly, a physical disaster happens. React with panic and crass humor!)';
+                } else if (turnCount % 4 === 0 && Math.random() * 100 < this.chaosLevel) {
+                    prompt = '(Make a highbrow reference to history that completely misses the point.)';
+                }
             }
 
             await this.processTurn(prompt);
+        }
+    }
+
+    private async runMusicalLoop(_scenario: Scenario) {
+        this.callbacks.onMessage('Director', '🎵 Hit the beat!', '#4ecdc4');
+        if (this.callbacks.onMusicControl) {
+            this.callbacks.onMusicControl('start', 100);
+        }
+
+        while (this.isRunning) {
+            // Check for interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                await this.processTurn(`(SYSTEM: The audience interrupts your song: "${heckle}". Improvise a rhyme incorporating this heckle!)`);
+            } else {
+                const prompt = `(MUSICAL IMPROV: You are rapping/singing to a beat. Generate 4 lines of lyrics that rhyme. Keep it rhythmic! Do not repeat yourself.)`;
+                await this.processTurn(prompt);
+            }
+
+            await new Promise(r => setTimeout(r, 1000));
         }
     }
 
@@ -330,7 +370,13 @@ export class Director {
 
             if (!this.isRunning) break;
 
-            const prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+            let prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+
+            if (this.interruptQueue.length > 0) {
+                 const heckle = this.interruptQueue.shift();
+                 prompt = `(SYSTEM: A heckler yells: "${heckle}". Roast them back!)`;
+                 this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
+            }
 
             await this.processTurn(prompt);
 
@@ -362,8 +408,14 @@ export class Director {
             if (!this.isRunning) break;
 
             // For story mode, we want exactly one sentence that advances the plot
-            const prompt = `(COLLABORATIVE STORYTELLING: The story so far is: "${storySoFar}".
+            let prompt = `(COLLABORATIVE STORYTELLING: The story so far is: "${storySoFar}".
 Add exactly ONE sentence to continue the story. Be creative but consistent. Do not repeat the previous sentence.)`;
+
+            if (this.interruptQueue.length > 0) {
+                 const heckle = this.interruptQueue.shift();
+                 prompt = `(SYSTEM: Someone shouts "${heckle}". Incorporate this object or idea into the story immediately!)`;
+                 this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
+            }
 
             // We need to capture the output to append to storySoFar
             // However, processTurn handles speaking and UI. We can hook into onSpeak but that's async.
@@ -417,6 +469,13 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             }
 
             this.callbacks.onMessage('Director', `🔔 Round ${round}`, '#888');
+
+            // Check interrupt before round starts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
+                await this.manager.chatForAgent(moderator, `(SYSTEM: An audience member yells "${heckle}". Address this interruption firmly!)`, async (s) => await this.callbacks.onSpeak(s, moderator, {}));
+            }
 
             // Pro Argument
             if (!this.isRunning) break;
@@ -578,6 +637,13 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
                 if (turn > 0) {
                     prompt = segment.promptInjection + ' ' + panelPrompts[turn % panelPrompts.length];
                 }
+            }
+
+            // Check interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                prompt = `(SYSTEM: BREAKING INTERRUPTION! Someone yells: "${heckle}". React to this live on air!)`;
+                this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
             }
 
             await this.processTurn(prompt);

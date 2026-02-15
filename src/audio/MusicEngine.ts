@@ -1,28 +1,26 @@
-
 export class MusicEngine {
     private audioContext: AudioContext;
     private isPlaying: boolean = false;
+    private bpm: number = 100;
     private nextNoteTime: number = 0;
-    private bpm: number = 90;
     private lookahead: number = 25.0; // ms
     private scheduleAheadTime: number = 0.1; // s
     private timerID: number | null = null;
     private beatCount: number = 0;
 
     constructor() {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        this.audioContext = new AudioContextClass();
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
 
-    public startBeat(bpm: number = 90) {
+    public async startBeat(bpm: number = 100) {
         if (this.isPlaying) return;
 
         if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            await this.audioContext.resume();
         }
 
-        this.isPlaying = true;
         this.bpm = bpm;
+        this.isPlaying = true;
         this.beatCount = 0;
         this.nextNoteTime = this.audioContext.currentTime + 0.1;
         this.scheduler();
@@ -72,15 +70,13 @@ export class MusicEngine {
         } else if (beatNumber === 2) {
              // Snare (Beat 3)
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(200, time); // Lower tone snare base
-            // Noise burst simulation is hard with just oscillator, keeping it simple tonal snare
+            osc.frequency.setValueAtTime(200, time);
             gain.gain.setValueAtTime(0.4, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
         } else {
             // Hi-hat (Beat 2 & 4)
-            osc.type = 'square'; // Metadata says square, let's use high pitch square for metallic sound
+            osc.type = 'square';
             osc.frequency.setValueAtTime(2000, time);
-            // Very short decay
             gain.gain.setValueAtTime(0.1, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
         }

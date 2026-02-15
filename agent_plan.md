@@ -126,3 +126,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
     *   Requires: Vision-capable model (Llava, Phi-3-Vision).
+* [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
+
+### Phase 7: Advanced Intelligence & Polish (The "Interview" Phase)
+* [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
+* [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+* [ ] **The Interview Mode**: One agent interviews the user.
