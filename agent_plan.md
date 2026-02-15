@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
-* **status**: Ahead of Schedule (Audio & Interaction Implemented)
+* **tasks_per_run**: 2
+* **status**: On Track (Director Modes & UI Restoration Complete)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -98,6 +98,24 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   `loadLastEpisode()`
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
 
+#### Cloud Persistence Roadmap (Refined)
+1.  **Authentication**:
+    *   [x] Add "Hugging Face Token" and "Repo ID" fields to Settings Modal.
+    *   [x] Implement `HFStorageManager.validateToken(token)` calling `https://huggingface.co/api/whoami-v2`.
+    *   [x] Store encrypted/safe token in `localStorage` via `MemoryManager`.
+
+2.  **Episode Storage**:
+    *   [x] Define JSON schema for Episodes (History, Timestamp, Metadata).
+    *   [x] Implement `MemoryManager.saveEpisodeToCloud(id, data)`:
+        *   Construct filename: `episodes/episode-{id}.json`.
+        *   Call `HFStorageManager.saveFile` (POST to `/api/datasets/{repo}/commit/main`).
+    *   [x] Trigger save on "Save Episode" button click.
+
+3.  **Continuity**:
+    *   [ ] Fetch "Previous Episode Summaries" at boot.
+        *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
+        *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
+
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
     *   Implement `Director.runRoastLoop(scenario)`.
@@ -117,18 +135,19 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
-* [ ] **Podcast Mode**:
+* [x] **Podcast Mode (Interview)**:
     *   Agents interview the user or each other.
-    *   Requires: Long-form context management.
-* [ ] **Interactive Fiction / Dungeon Master**:
+    *   Implemented: `Director.runInterviewLoop` + UI controls.
+* [x] **Interactive Fiction / Dungeon Master**:
     *   One agent acts as DM, others as players + User.
-    *   Requires: State tracking (Inventory, Health).
+    *   Implemented: `Director.runDungeonMasterLoop` + UI controls.
 * [ ] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
     *   Requires: Vision-capable model (Llava, Phi-3-Vision).
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
-### Phase 7: Advanced Intelligence & Polish (The "Interview" Phase)
+### Phase 8: Advanced Intelligence & Polish
 * [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
-* [ ] **The Interview Mode**: One agent interviews the user.
+* [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
