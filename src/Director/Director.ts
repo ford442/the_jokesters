@@ -31,7 +31,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'interview' | 'dungeon_master';
     title: string;
     description: string;
     config?: {
@@ -51,6 +51,9 @@ export interface Scenario {
         storyContext?: string;
         debateTopic?: string;
         musicalTopic?: string;
+        interviewHost?: string;
+        interviewGuest?: string;
+        dmSetting?: string;
     };
 }
 
@@ -66,6 +69,7 @@ export class Director {
     private chaosLevel: number = 30;
     private currentScenario: Scenario | null = null;
     private interruptQueue: string[] = [];
+    private inputPromise: { resolve: (text: string) => void, reject: (reason?: any) => void } | null = null;
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks) {
         this.manager = manager;
@@ -78,13 +82,6 @@ export class Director {
 
     public isSceneRunning(): boolean {
         return this.isRunning;
-    }
-
-    public handleInterrupt(text: string) {
-        if (this.isRunning) {
-            this.interruptQueue.push(text);
-            this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
-        }
     }
 
     public getCurrentScenario(): Scenario | null {
@@ -127,6 +124,10 @@ export class Director {
                 await this.runDebateLoop(scenario);
             } else if (scenario.type === 'musical') {
                 await this.runMusicalLoop(scenario);
+            } else if (scenario.type === 'interview') {
+                await this.runInterviewLoop(scenario);
+            } else if (scenario.type === 'dungeon_master') {
+                await this.runDungeonMasterLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -172,11 +173,28 @@ export class Director {
 
         console.log(`Director received interrupt: ${text}`);
         this.interruptQueue.push(text);
+        this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
 
         // Interrupt current generation
         if (this.manager) {
             await this.manager.interrupt();
         }
+    }
+
+    public handleUserMessage(text: string) {
+        if (this.inputPromise) {
+            this.inputPromise.resolve(text);
+            this.inputPromise = null;
+        } else {
+            this.handleInterrupt(text);
+        }
+    }
+
+    public async waitForInput(): Promise<string> {
+        this.callbacks.onMessage('System', '(Waiting for your input...)', '#888');
+        return new Promise((resolve, reject) => {
+            this.inputPromise = { resolve, reject };
+        });
     }
 
     private async runImprovLoop(scenario: Scenario) {
@@ -217,26 +235,6 @@ export class Director {
             }
 
             await this.processTurn(prompt);
-        }
-    }
-
-    private async runMusicalLoop(_scenario: Scenario) {
-        this.callbacks.onMessage('Director', '🎵 Hit the beat!', '#4ecdc4');
-        if (this.callbacks.onMusicControl) {
-            this.callbacks.onMusicControl('start', 100);
-        }
-
-        while (this.isRunning) {
-            // Check for interrupts
-            if (this.interruptQueue.length > 0) {
-                const heckle = this.interruptQueue.shift();
-                await this.processTurn(`(SYSTEM: The audience interrupts your song: "${heckle}". Improvise a rhyme incorporating this heckle!)`);
-            } else {
-                const prompt = `(MUSICAL IMPROV: You are rapping/singing to a beat. Generate 4 lines of lyrics that rhyme. Keep it rhythmic! Do not repeat yourself.)`;
-                await this.processTurn(prompt);
-            }
-
-            await new Promise(r => setTimeout(r, 1000));
         }
     }
 
@@ -538,6 +536,61 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
         }
 
         this.callbacks.musicControls.stopBeat();
+    }
+
+    private async runInterviewLoop(scenario: Scenario) {
+        const host = scenario.config?.interviewHost || 'comedian';
+        const guestName = scenario.config?.interviewGuest || 'The User';
+
+        this.callbacks.onMessage('Director', `🎙️ PODCAST MODE: Host ${host} interviewing ${guestName}`, '#4ecdc4');
+
+        // Intro
+        this.callbacks.onTurnStart(host);
+        await this.manager.chatForAgent(host, `(You are hosting a podcast. Introduce yourself and your special guest, ${guestName}. Start by asking them a question about their life or opinions. Be charming and inquisitive.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+        await this.callbacks.onTurnEnd();
+
+        while (this.isRunning) {
+            // Wait for user input
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage(guestName, userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // Host Reacts
+            await this.manager.chatForAgent(host, `(PODCAST INTERVIEW: The guest (${guestName}) just said: "${userInput}". React to this, maybe crack a joke or make an observation, and then ask a follow-up question. Keep the conversation flowing naturally.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+        }
+    }
+
+    private async runDungeonMasterLoop(scenario: Scenario) {
+        const dm = 'scientist'; // Scientist makes a good DM (logical)
+        const setting = scenario.config?.dmSetting || 'a dark fantasy dungeon';
+
+        this.callbacks.onMessage('Director', `🎲 DUNGEON MASTER MODE: Setting - ${setting}`, '#9b59b6');
+
+        // Intro
+        this.callbacks.onTurnStart(dm);
+        await this.manager.chatForAgent(dm, `(You are the DUNGEON MASTER for a roleplaying game set in ${setting}. Describe the opening scene vividly to the players (User, Comedian, Philosopher). Ask them what they want to do.)`, async (s) => await this.callbacks.onSpeak(s, dm, {}));
+        await this.callbacks.onTurnEnd();
+
+        while (this.isRunning) {
+            // 1. Players react (Comedian/Philosopher)
+            // Random chance for agents to pipe up before user
+            if (Math.random() > 0.3 && this.isRunning) {
+                 await this.manager.chatForAgent('comedian', `(RPG PLAYER: You are playing the game. React to the scene or declare an action. Be chaotic and funny.)`, async (s) => await this.callbacks.onSpeak(s, 'comedian', {}));
+            }
+            if (Math.random() > 0.3 && this.isRunning) {
+                 await this.manager.chatForAgent('philosopher', `(RPG PLAYER: You are playing the game. Analyze the situation or declare a cautious, over-thought action.)`, async (s) => await this.callbacks.onSpeak(s, 'philosopher', {}));
+            }
+
+            // 2. Wait for User Input
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage('You', userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // 3. DM Resolves
+            await this.manager.chatForAgent(dm, `(DUNGEON MASTER: The user said: "${userInput}". The other players also acted. Resolve these actions. Describe the consequences and the new state of the world. Then ask "What do you do next?")`, async (s) => await this.callbacks.onSpeak(s, dm, {}));
+        }
     }
 
     private getDefaultReporterSegments(): ReporterSegment[] {
