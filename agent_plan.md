@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
-* **status**: Ahead of Schedule (Audio & Interaction Implemented)
+* **tasks_per_run**: 2
+* **status**: On Track (Podcast & DM Modes Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -55,6 +55,8 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
     *   *Challenge*: syncing TTS with audio beat.
 *   **Voice Input**: User talks to agents naturally.
+*   **Commentary Mode**: Agents comment on a live feed (simulated).
+*   **Tutorial Mode**: Agents teach the user how to use the app.
 
 ---
 
@@ -97,6 +99,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
+* [ ] **Cloud Persistence Refinement**:
+    *   [ ] **Authentication**: Ensure HF token validation is robust and user is prompted if token is invalid.
+    *   [ ] **Push Episode**: Implement background sync queue to push finished episodes to `user/jokesters-episodes` without blocking UI.
+    *   [ ] **Fetch Summaries**: On boot, fetch `summary.json` (or latest episode) from the dataset to seed `GroupChatManager` context.
 
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
@@ -117,18 +123,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
-* [ ] **Podcast Mode**:
+* [x] **Podcast Mode**:
     *   Agents interview the user or each other.
-    *   Requires: Long-form context management.
-* [ ] **Interactive Fiction / Dungeon Master**:
+    *   Implemented `Director.runPodcastLoop`.
+* [x] **Interactive Fiction / Dungeon Master**:
     *   One agent acts as DM, others as players + User.
-    *   Requires: State tracking (Inventory, Health).
+    *   Implemented `Director.runDungeonMasterLoop`.
 * [ ] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
     *   Requires: Vision-capable model (Llava, Phi-3-Vision).
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
-### Phase 7: Advanced Intelligence & Polish (The "Interview" Phase)
+### Phase 8: Advanced Intelligence & Polish (The "Interview" Phase)
 * [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
 * [ ] **The Interview Mode**: One agent interviews the user.

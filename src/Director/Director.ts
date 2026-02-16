@@ -31,7 +31,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' | 'dungeon_master';
     title: string;
     description: string;
     config?: {
@@ -51,6 +51,15 @@ export interface Scenario {
         storyContext?: string;
         debateTopic?: string;
         musicalTopic?: string;
+        podcastConfig?: {
+            host: string;
+            guest: string;
+            topic: string;
+        };
+        dungeonMasterConfig?: {
+            dmName: string;
+            campaignSetting: string;
+        };
     };
 }
 
@@ -78,13 +87,6 @@ export class Director {
 
     public isSceneRunning(): boolean {
         return this.isRunning;
-    }
-
-    public handleInterrupt(text: string) {
-        if (this.isRunning) {
-            this.interruptQueue.push(text);
-            this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
-        }
     }
 
     public getCurrentScenario(): Scenario | null {
@@ -127,6 +129,10 @@ export class Director {
                 await this.runDebateLoop(scenario);
             } else if (scenario.type === 'musical') {
                 await this.runMusicalLoop(scenario);
+            } else if (scenario.type === 'podcast') {
+                await this.runPodcastLoop(scenario);
+            } else if (scenario.type === 'dungeon_master') {
+                await this.runDungeonMasterLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -217,26 +223,6 @@ export class Director {
             }
 
             await this.processTurn(prompt);
-        }
-    }
-
-    private async runMusicalLoop(_scenario: Scenario) {
-        this.callbacks.onMessage('Director', '🎵 Hit the beat!', '#4ecdc4');
-        if (this.callbacks.onMusicControl) {
-            this.callbacks.onMusicControl('start', 100);
-        }
-
-        while (this.isRunning) {
-            // Check for interrupts
-            if (this.interruptQueue.length > 0) {
-                const heckle = this.interruptQueue.shift();
-                await this.processTurn(`(SYSTEM: The audience interrupts your song: "${heckle}". Improvise a rhyme incorporating this heckle!)`);
-            } else {
-                const prompt = `(MUSICAL IMPROV: You are rapping/singing to a beat. Generate 4 lines of lyrics that rhyme. Keep it rhythmic! Do not repeat yourself.)`;
-                await this.processTurn(prompt);
-            }
-
-            await new Promise(r => setTimeout(r, 1000));
         }
     }
 
@@ -402,7 +388,6 @@ export class Director {
                 const heckle = this.interruptQueue.shift()!;
                 this.callbacks.onMessage('Director', `📢 AUDIENCE SUGGESTION: "${heckle}"`, '#ff6b6b');
                 await this.processTurn(`(The audience shouted a suggestion: "${heckle}". Incorporate this into the story seamlessly!)`);
-                // Note: We don't continue; we let the story update with this turn
             }
 
             if (!this.isRunning) break;
@@ -417,19 +402,8 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
                  this.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
             }
 
-            // We need to capture the output to append to storySoFar
-            // However, processTurn handles speaking and UI. We can hook into onSpeak but that's async.
-            // A better way for this mode might be to use manager.chat directly or rely on the memory which GroupChatManager handles.
-            // Since GroupChatManager maintains history, the agents "know" the story if we include history.
-            // But we want to explicitly track it for the prompt context.
-
-            // Let's rely on the chat history for context, but enforce the "one sentence" constraint via prompt.
             await this.processTurn(prompt);
 
-            // We don't easily get the response text back from processTurn to update `storySoFar` locally variable here
-            // without modifying processTurn or listening to onMessage/onSpeak.
-            // However, since we re-inject "The story so far" in the prompt, we strictly need the text.
-            // The GroupChatManager history has it.
             const history = this.manager.getHistory();
             if (history.length > 0) {
                 const lastMsg = history[history.length - 1];
@@ -498,6 +472,107 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
         }
     }
 
+    private async runDungeonMasterLoop(scenario: Scenario) {
+        const config = scenario.config?.dungeonMasterConfig;
+        const dmName = config?.dmName || 'The Philosopher'; // Default DM
+        const setting = config?.campaignSetting || 'A dark, damp cave filled with goblins.';
+
+        // Identify DM agent ID based on name or default
+        let dmId = 'philosopher';
+        if (dmName.toLowerCase().includes('comedian')) dmId = 'comedian';
+        if (dmName.toLowerCase().includes('scientist')) dmId = 'scientist';
+
+        const players = ['comedian', 'scientist', 'philosopher'].filter(id => id !== dmId);
+
+        this.callbacks.onMessage('Director', `🐉 DUNGEON MASTER MODE: ${setting}`, '#ffd700');
+
+        // Intro
+        await this.callbacks.onTurnStart(dmId);
+        await this.manager.chatForAgent(dmId, `(DUNGEON MASTER INTRO: You are the DM. The setting is: "${setting}". Describe the scene to the players (User + others) and ask what they do. Be atmospheric.)`, async (s) => await this.callbacks.onSpeak(s, dmId, {}));
+        await this.callbacks.onTurnEnd();
+
+        while (this.isRunning) {
+            // Wait for User Input
+            this.callbacks.onMessage('System', '(What do you want to do?)', '#888');
+            let userAction = '';
+            while (this.interruptQueue.length === 0 && this.isRunning) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+            if (!this.isRunning) break;
+            userAction = this.interruptQueue.shift()!;
+            this.callbacks.onMessage('You', userAction, '#ffffff');
+
+            // Players React
+            for (const playerId of players) {
+                if (!this.isRunning) break;
+                await this.manager.chatForAgent(playerId, `(RPG PLAYER: The user just did: "${userAction}". The scene is "${setting}". Decide on your own action to help or hinder. Keep it short.)`, async (s) => await this.callbacks.onSpeak(s, playerId, {}));
+            }
+
+            if (!this.isRunning) break;
+
+            // DM Resolves
+            await this.manager.chatForAgent(dmId, `(DUNGEON MASTER RESOLUTION: The user did "${userAction}". The other players reacted. Describe the consequences, roll some virtual dice, and set up the next challenge.)`, async (s) => await this.callbacks.onSpeak(s, dmId, {}));
+
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    private async runPodcastLoop(scenario: Scenario) {
+        const config = scenario.config?.podcastConfig;
+        if (!config) {
+            this.callbacks.onError('Podcast mode requires podcastConfig');
+            this.stopScene();
+            return;
+        }
+
+        const host = config.host;
+        const guest = config.guest;
+        const topic = config.topic;
+
+        this.callbacks.onMessage('Director', `🎙️ LIVE PODCAST: ${topic}`, '#ff00ff');
+
+        // Intro
+        await this.manager.chatForAgent(host, `(PODCAST INTRO: You are the host of a podcast about "${topic}". Introduce yourself and your guest, ${guest}. Be charismatic and energetic!)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+        let round = 1;
+        while (this.isRunning) {
+            // Host asks question
+            const prompt = `(PODCAST ROUND ${round}: Ask ${guest} a provocative question about "${topic}". Keep it short and engaging.)`;
+            await this.manager.chatForAgent(host, prompt, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            if (!this.isRunning) break;
+
+            // Guest answers
+            if (guest.toLowerCase() === 'user') {
+                this.callbacks.onMessage('System', '(Waiting for your response...)', '#888');
+                // Wait for user input
+                let response = '';
+                while (this.interruptQueue.length === 0 && this.isRunning) {
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                if (!this.isRunning) break;
+
+                // Consume the interrupt
+                response = this.interruptQueue.shift()!;
+
+                // Host Follow-up
+                await this.manager.chatForAgent(host, `(The user answered: "${response}". React to this and segue to the next point!)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            } else {
+                // Agent Guest
+                await this.manager.chatForAgent(guest, `(PODCAST GUEST: Answer the host's question about "${topic}". Be opinionated.)`, async (s) => await this.callbacks.onSpeak(s, guest, {}));
+
+                // Host Follow-up (optional)
+                if (Math.random() > 0.5 && this.isRunning) {
+                     await this.manager.chatForAgent(host, `(React to that answer briefly.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+                }
+            }
+
+            round++;
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
     private async runMusicalLoop(scenario: Scenario) {
         const topic = scenario.config?.musicalTopic || 'Life in the Matrix';
 
@@ -522,11 +597,7 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             if (!this.isRunning) break;
 
             // Rap Battle / Freestyle
-            // We want short lines to fit the beat ideally, but TTS is async.
-            // We just prompt for lyrics.
-
             const agent = round % 2 === 1 ? 'comedian' : 'philosopher';
-
             const prompt = `(MUSICAL IMPROV: Rap a 4-line verse about "${topic}". Keep a steady rhythm. Rhyme scheme AABB. End with "###")`;
 
             await this.manager.chatForAgent(agent, prompt, async (s) => {

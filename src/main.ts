@@ -25,11 +25,23 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
   { level: 'UNCENSORED', label: 'Uncensored', color: '#ff0000' }
 ]
 
-// ... (all the model configs remain the same) ...
+
+const hermesModelConfig = {
+    "model_id": "Hermes-3-Llama-3.1-8B-q4f32_1-MLC",
+    "model_lib": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Hermes-3-Llama-3.1-8B-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    "model": "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.1-8B-q4f32_1-MLC",
+    "model_type": "llm"
+};
+
 
 const defaultModelId = hermesModelConfig.model_id;
 
-// ... (applyModelConfigsToEngine function remains the same) ...
+
+function applyModelConfigsToEngine(engine: any) {
+    if (!engine.prebuiltAppConfig) engine.prebuiltAppConfig = { model_list: [] };
+    engine.prebuiltAppConfig.model_list.push(hermesModelConfig);
+}
+
 
 // Apply configs to the default imported engine (webllm)
 applyModelConfigsToEngine(webllm)
@@ -184,12 +196,63 @@ async function initApp() {
             <button id="reporter-mode-btn" class="mode-btn">Reporter Mode</button>
             <button id="script-mode-btn" class="mode-btn">Script Mode</button>
             <button id="roast-mode-btn" class="mode-btn">Roast Mode</button>
+
             <button id="story-mode-btn" class="mode-btn">Story Mode</button>
             <button id="debate-mode-btn" class="mode-btn">Debate Mode</button>
             <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
+            <button id="podcast-mode-btn" class="mode-btn">Podcast Mode</button>
+            <button id="dm-mode-btn" class="mode-btn">Dungeon Master</button>
+          </div>
+
+          <div id="podcast-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Podcast Topic</label>
+              <input type="text" id="podcast-topic" placeholder="e.g., 'The Future of AI'" autocomplete="off" disabled />
+            </div>
+            <div class="input-group">
+               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Host</label>
+               <select id="podcast-host" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                 <option value="comedian">The Comedian</option>
+                 <option value="philosopher">The Philosopher</option>
+                 <option value="scientist">The Scientist</option>
+               </select>
+            </div>
+            <div class="input-group">
+               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Guest</label>
+               <select id="podcast-guest" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                 <option value="user">You (The User)</option>
+                 <option value="comedian">The Comedian</option>
+                 <option value="philosopher">The Philosopher</option>
+                 <option value="scientist">The Scientist</option>
+               </select>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-podcast-btn" class="primary-btn" disabled>Start Podcast</button>
+              <button id="stop-podcast-btn" class="secondary-btn" style="display: none;" disabled>Stop Podcast</button>
+            </div>
+          </div>
+
+          <div id="dm-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Campaign Setting</label>
+              <input type="text" id="dm-setting" placeholder="e.g., 'A cyberpunk city ruled by cats'" autocomplete="off" disabled />
+            </div>
+            <div class="input-group">
+               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Dungeon Master</label>
+               <select id="dm-name" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                 <option value="philosopher">The Philosopher (Classic)</option>
+                 <option value="comedian">The Comedian (Chaotic)</option>
+                 <option value="scientist">The Scientist (Rules Lawyer)</option>
+               </select>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-dm-btn" class="primary-btn" disabled>Start Campaign</button>
+              <button id="stop-dm-btn" class="secondary-btn" style="display: none;" disabled>Stop Campaign</button>
+            </div>
           </div>
 
           <div id="musical-mode-controls" class="improv-controls" style="display: none;">
+
             <div class="improv-buttons">
               <button id="start-musical-btn" class="primary-btn" disabled>Start Musical Improv</button>
               <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
@@ -468,11 +531,37 @@ async function initApp() {
 
   let addMessage: (sender: string, message: string, color: string) => void;
   let speakAndVisualize: (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
+    speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
+        if(stage) stage.setActiveActor(agentId);
+        if(audioEngine && speechQueue) {
+            const audio = await audioEngine.synthesize(text, agentId, options);
+            speechQueue.add(audio);
+        }
+    };
+
 
   // Active engine module state
   let activeEngineModule: any = webllm;
 
-  // ... (populateModelSelect and getAvailableModels functions remain the same) ...
+
+function getAvailableModels(engine: any): string[] {
+    if (!engine || !engine.prebuiltAppConfig || !engine.prebuiltAppConfig.model_list) return [];
+    return engine.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
+}
+
+function populateModelSelect(engine: any) {
+    const models = getAvailableModels(engine);
+    const select = document.getElementById('model-select') as HTMLSelectElement;
+    if (!select) return;
+    select.innerHTML = '';
+    models.forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = id;
+        select.appendChild(option);
+    });
+}
+
 
   // Initial population with default engine
   populateModelSelect(webllm)
@@ -784,7 +873,152 @@ async function initApp() {
       }
     }
 
-    // ... (rest of the event listeners and initialization code remains largely the same,
+
+    const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
+    const improvModeControls = document.getElementById('improv-mode-controls') as HTMLDivElement;
+    const reporterModeControls = document.getElementById('reporter-mode-controls') as HTMLDivElement;
+    const scriptModeControls = document.getElementById('script-mode-controls') as HTMLDivElement;
+    const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement;
+    const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement;
+    const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement;
+    const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement;
+    const podcastModeControls = document.getElementById('podcast-mode-controls') as HTMLDivElement;
+    const dmModeControls = document.getElementById('dm-mode-controls') as HTMLDivElement;
+
+    const resetModeUI = () => {
+        const controls = [
+            chatModeControls, improvModeControls, reporterModeControls,
+            scriptModeControls, musicalModeControls, roastModeControls,
+            storyModeControls, debateModeControls, podcastModeControls, dmModeControls
+        ];
+        controls.forEach(c => { if(c) c.style.display = 'none'; });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+
+        if(sceneTitleInput) sceneTitleInput.value = '';
+        if(sceneDescriptionInput) sceneDescriptionInput.value = '';
+    };
+
+    // Chat Mode
+    const chatModeBtn = document.getElementById('chat-mode-btn') as HTMLButtonElement;
+    if(chatModeBtn) {
+        chatModeBtn.addEventListener('click', () => {
+            resetModeUI();
+            chatModeBtn.classList.add('active');
+            chatModeControls.style.display = 'flex';
+            if (director && director.isSceneRunning()) director.stopScene();
+        });
+    }
+
+    // Podcast Mode
+    const podcastModeBtn = document.getElementById('podcast-mode-btn') as HTMLButtonElement;
+    if(podcastModeBtn) {
+        podcastModeBtn.addEventListener('click', () => {
+            resetModeUI();
+            podcastModeBtn.classList.add('active');
+            chatModeControls.style.display = 'flex';
+            podcastModeControls.style.display = 'block';
+            if (director && director.isSceneRunning()) director.stopScene();
+        });
+    }
+
+    const startPodcastBtn = document.getElementById('start-podcast-btn') as HTMLButtonElement;
+    const stopPodcastBtn = document.getElementById('stop-podcast-btn') as HTMLButtonElement;
+    if(startPodcastBtn) {
+        startPodcastBtn.addEventListener('click', async () => {
+            const topic = (document.getElementById('podcast-topic') as HTMLInputElement).value;
+            const host = (document.getElementById('podcast-host') as HTMLSelectElement).value;
+            const guest = (document.getElementById('podcast-guest') as HTMLSelectElement).value;
+
+            if(!topic) return alert('Please enter a topic');
+
+            startPodcastBtn.style.display = 'none';
+            stopPodcastBtn.style.display = 'inline-block';
+
+            await director.playScenario({
+                type: 'podcast',
+                title: 'Podcast',
+                description: 'Live Podcast',
+                config: {
+                    podcastConfig: { host, guest, topic }
+                }
+            });
+        });
+    }
+
+    if(stopPodcastBtn) {
+        stopPodcastBtn.addEventListener('click', () => {
+            if(director) director.stopScene();
+        });
+    }
+
+    // Dungeon Master Mode
+    const dmModeBtn = document.getElementById('dm-mode-btn') as HTMLButtonElement;
+    if(dmModeBtn) {
+        dmModeBtn.addEventListener('click', () => {
+            resetModeUI();
+            dmModeBtn.classList.add('active');
+            chatModeControls.style.display = 'flex';
+            dmModeControls.style.display = 'block';
+            if (director && director.isSceneRunning()) director.stopScene();
+        });
+    }
+
+    const startDmBtn = document.getElementById('start-dm-btn') as HTMLButtonElement;
+    const stopDmBtn = document.getElementById('stop-dm-btn') as HTMLButtonElement;
+    if(startDmBtn) {
+        startDmBtn.addEventListener('click', async () => {
+            const setting = (document.getElementById('dm-setting') as HTMLInputElement).value;
+            const dmName = (document.getElementById('dm-name') as HTMLSelectElement).value;
+
+            if(!setting) return alert('Please enter a setting');
+
+            startDmBtn.style.display = 'none';
+            stopDmBtn.style.display = 'inline-block';
+
+            await director.playScenario({
+                type: 'dungeon_master',
+                title: 'Dungeon Master',
+                description: 'RPG Session',
+                config: {
+                    dungeonMasterConfig: { dmName, campaignSetting: setting }
+                }
+            });
+        });
+    }
+
+    if(stopDmBtn) {
+        stopDmBtn.addEventListener('click', () => {
+            if(director) director.stopScene();
+        });
+    }
+
+    // Wire up send button for interrupt
+    sendBtn.addEventListener('click', async () => {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        if (director && director.isSceneRunning()) {
+            director.handleInterrupt(text);
+            addMessage('You', `(Interrupt) ${text}`, '#ffffff');
+            userInput.value = '';
+        } else {
+            // Chat mode
+            if (!groupChatManager) return;
+            userInput.value = '';
+            addMessage('You', text, '#ffffff');
+            try {
+                await groupChatManager.chat(text, async (sentence) => {
+                    await speakAndVisualize(sentence, groupChatManager.getCurrentAgent().id);
+                });
+                updateNextAgentUI();
+            } catch (e) {
+                console.error(e);
+                addMessage('System', 'Error generating response.', '#ff0000');
+            }
+        }
+    });
+
     //      with the musical mode using the simpler version without topic input,
     //      and voice input using the consolidated voiceBtn approach) ...
 
@@ -814,6 +1048,11 @@ async function initApp() {
     });
 
     // ... (rest of the file continues with the consolidated code) ...
+
+    // Initial load
+    if (defaultModelId) {
+        await initializeManagers(defaultModelId, activeEngineModule);
+    }
 
     userInput.focus()
   } catch (error: any) {
