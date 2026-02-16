@@ -25,23 +25,71 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
   { level: 'UNCENSORED', label: 'Uncensored', color: '#ff0000' }
 ]
 
-
+// Model Configuration - Using main's newer 3.2 models with better config structure
 const hermesModelConfig = {
-    "model_id": "Hermes-3-Llama-3.1-8B-q4f32_1-MLC",
-    "model_lib": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Hermes-3-Llama-3.1-8B-q4f32_1-ctx4k_cs1k-webgpu.wasm",
-    "model": "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.1-8B-q4f32_1-MLC",
-    "model_type": "llm"
+  model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
+  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Hermes-3-Llama-3.2-3B-q4f32_1-MLC-webgpu.wasm",
+  overrides: {
+    context_window_size: 4096,
+  },
 };
 
+const appConfig = {
+  model_list: [
+    {
+      model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
+      model_id: hermesModelConfig.model_id,
+      model_lib: hermesModelConfig.model_lib,
+      overrides: hermesModelConfig.overrides,
+    },
+    {
+      model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC",
+      model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
+      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Llama-3.2-3B-Instruct-q4f32_1-MLC-webgpu.wasm",
+    }
+  ],
+  useIndexedDBCache: true,
+};
 
 const defaultModelId = hermesModelConfig.model_id;
 
-
 function applyModelConfigsToEngine(engine: any) {
-    if (!engine.prebuiltAppConfig) engine.prebuiltAppConfig = { model_list: [] };
-    engine.prebuiltAppConfig.model_list.push(hermesModelConfig);
+  if (engine && engine.prebuiltAppConfig) {
+      const existing = engine.prebuiltAppConfig.model_list || [];
+      // Prioritize our config
+      engine.prebuiltAppConfig.model_list = [...appConfig.model_list, ...existing];
+  }
 }
 
+function getAvailableModels(engine: any): string[] {
+    if (!engine || !engine.prebuiltAppConfig || !engine.prebuiltAppConfig.model_list) return [];
+    return engine.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
+}
+
+function populateModelSelect(engine: any) {
+    const select = document.getElementById('model-select') as HTMLSelectElement;
+    const mainSelect = document.getElementById('model-select-main') as HTMLSelectElement;
+
+    if (!select) return;
+
+    const models = getAvailableModels(engine);
+    const optionsHTML = models.map((m: string) => `<option value="${m}">${m}</option>`).join('');
+
+    select.innerHTML = optionsHTML;
+    select.value = defaultModelId;
+
+    if (mainSelect) {
+        mainSelect.innerHTML = optionsHTML;
+        mainSelect.value = defaultModelId;
+
+        mainSelect.addEventListener('change', () => {
+            select.value = mainSelect.value;
+        });
+        select.addEventListener('change', () => {
+            if (mainSelect) mainSelect.value = select.value;
+        });
+    }
+}
 
 // Apply configs to the default imported engine (webllm)
 applyModelConfigsToEngine(webllm)
@@ -196,63 +244,44 @@ async function initApp() {
             <button id="reporter-mode-btn" class="mode-btn">Reporter Mode</button>
             <button id="script-mode-btn" class="mode-btn">Script Mode</button>
             <button id="roast-mode-btn" class="mode-btn">Roast Mode</button>
-
             <button id="story-mode-btn" class="mode-btn">Story Mode</button>
             <button id="debate-mode-btn" class="mode-btn">Debate Mode</button>
             <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
-            <button id="podcast-mode-btn" class="mode-btn">Podcast Mode</button>
-            <button id="dm-mode-btn" class="mode-btn">Dungeon Master</button>
+            <button id="interview-mode-btn" class="mode-btn">Podcast Mode</button>
+            <button id="dm-mode-btn" class="mode-btn">DM Mode</button>
           </div>
 
-          <div id="podcast-mode-controls" class="improv-controls" style="display: none;">
-            <div class="input-group">
-              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Podcast Topic</label>
-              <input type="text" id="podcast-topic" placeholder="e.g., 'The Future of AI'" autocomplete="off" disabled />
+          <div id="interview-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Podcast Host</label>
+              <select id="interview-host" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
+                <option value="comedian">The Comedian</option>
+                <option value="philosopher">The Philosopher</option>
+                <option value="scientist">The Scientist</option>
+              </select>
             </div>
             <div class="input-group">
-               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Host</label>
-               <select id="podcast-host" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
-                 <option value="comedian">The Comedian</option>
-                 <option value="philosopher">The Philosopher</option>
-                 <option value="scientist">The Scientist</option>
-               </select>
-            </div>
-            <div class="input-group">
-               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Guest</label>
-               <select id="podcast-guest" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
-                 <option value="user">You (The User)</option>
-                 <option value="comedian">The Comedian</option>
-                 <option value="philosopher">The Philosopher</option>
-                 <option value="scientist">The Scientist</option>
-               </select>
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Guest Name</label>
+              <input type="text" id="interview-guest" placeholder="The User" value="The User" autocomplete="off" disabled />
             </div>
             <div class="improv-buttons">
-              <button id="start-podcast-btn" class="primary-btn" disabled>Start Podcast</button>
-              <button id="stop-podcast-btn" class="secondary-btn" style="display: none;" disabled>Stop Podcast</button>
+              <button id="start-interview-btn" class="primary-btn" disabled>Start Podcast</button>
+              <button id="stop-interview-btn" class="secondary-btn" style="display: none;" disabled>Stop Podcast</button>
             </div>
           </div>
 
           <div id="dm-mode-controls" class="improv-controls" style="display: none;">
-            <div class="input-group">
-              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Campaign Setting</label>
-              <input type="text" id="dm-setting" placeholder="e.g., 'A cyberpunk city ruled by cats'" autocomplete="off" disabled />
-            </div>
-            <div class="input-group">
-               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Dungeon Master</label>
-               <select id="dm-name" style="background: #0f3460; border: 1px solid #444; color: white; padding: 8px;" disabled>
-                 <option value="philosopher">The Philosopher (Classic)</option>
-                 <option value="comedian">The Comedian (Chaotic)</option>
-                 <option value="scientist">The Scientist (Rules Lawyer)</option>
-               </select>
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Adventure Setting</label>
+              <input type="text" id="dm-setting" placeholder="e.g., 'A cyberpunk noodle shop in 2099'" autocomplete="off" disabled />
             </div>
             <div class="improv-buttons">
-              <button id="start-dm-btn" class="primary-btn" disabled>Start Campaign</button>
-              <button id="stop-dm-btn" class="secondary-btn" style="display: none;" disabled>Stop Campaign</button>
+              <button id="start-dm-btn" class="primary-btn" disabled>Start Adventure</button>
+              <button id="stop-dm-btn" class="secondary-btn" style="display: none;" disabled>Stop Adventure</button>
             </div>
           </div>
 
           <div id="musical-mode-controls" class="improv-controls" style="display: none;">
-
             <div class="improv-buttons">
               <button id="start-musical-btn" class="primary-btn" disabled>Start Musical Improv</button>
               <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
@@ -511,6 +540,22 @@ async function initApp() {
   const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
   const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
 
+  // Interview Mode (Podcast)
+  const interviewModeBtn = document.getElementById('interview-mode-btn') as HTMLButtonElement
+  const interviewModeControls = document.getElementById('interview-mode-controls') as HTMLDivElement
+  const interviewHostSelect = document.getElementById('interview-host') as HTMLSelectElement
+  const interviewGuestInput = document.getElementById('interview-guest') as HTMLInputElement
+  const startInterviewBtn = document.getElementById('start-interview-btn') as HTMLButtonElement
+  const stopInterviewBtn = document.getElementById('stop-interview-btn') as HTMLButtonElement
+
+  // DM Mode
+  const dmModeBtn = document.getElementById('dm-mode-btn') as HTMLButtonElement
+  const dmModeControls = document.getElementById('dm-mode-controls') as HTMLDivElement
+  const dmSettingInput = document.getElementById('dm-setting') as HTMLInputElement
+  const startDmBtn = document.getElementById('start-dm-btn') as HTMLButtonElement
+  const stopDmBtn = document.getElementById('stop-dm-btn') as HTMLButtonElement
+
+  const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
   // Voice Input
   const voiceBtn = document.getElementById('voice-btn') as HTMLButtonElement
 
@@ -518,7 +563,7 @@ async function initApp() {
   let groupChatManager: GroupChatManager;
   let director: Director;
   let scriptGenerator: ScriptGenerator;
-  let memoryManager: MemoryManager;
+  let memoryManager: MemoryManager | null = null;
   let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
   let audioEngine: AudioEngine;
@@ -543,26 +588,6 @@ async function initApp() {
   // Active engine module state
   let activeEngineModule: any = webllm;
 
-
-function getAvailableModels(engine: any): string[] {
-    if (!engine || !engine.prebuiltAppConfig || !engine.prebuiltAppConfig.model_list) return [];
-    return engine.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
-}
-
-function populateModelSelect(engine: any) {
-    const models = getAvailableModels(engine);
-    const select = document.getElementById('model-select') as HTMLSelectElement;
-    if (!select) return;
-    select.innerHTML = '';
-    models.forEach(id => {
-        const option = document.createElement('option');
-        option.value = id;
-        option.textContent = id;
-        select.appendChild(option);
-    });
-}
-
-
   // Initial population with default engine
   populateModelSelect(webllm)
 
@@ -574,6 +599,24 @@ function populateModelSelect(engine: any) {
     chatLog.appendChild(div)
     chatLog.scrollTop = chatLog.scrollHeight
   }
+
+  speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
+      const opts = {
+          speed: options?.speed || 1.3,
+          steps: options?.steps || 10,
+          seed: options?.seed
+      };
+
+      try {
+          if (audioEngine) {
+              const audio = await audioEngine.synthesize(text, agentId, opts);
+              speechQueue.add(audio);
+              stage.setActiveActor(agentId);
+          }
+      } catch (e) {
+          console.error('TTS Error:', e);
+      }
+  };
 
   // Helper to update the UI for the next agent
   const updateNextAgentUI = () => {
@@ -650,6 +693,7 @@ function populateModelSelect(engine: any) {
       // 2. Instantiate new managers
       groupChatManager = new GroupChatManager(agents)
       scriptGenerator = new ScriptGenerator(groupChatManager)
+      memoryManager = new MemoryManager();
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
       await groupChatManager.initialize(modelId, (progress: any) => {
@@ -752,6 +796,15 @@ function populateModelSelect(engine: any) {
           stopMusicalBtn.style.display = 'none';
           startMusicalBtn.style.display = 'inline-block';
 
+          stopInterviewBtn.style.display = 'none';
+          startInterviewBtn.style.display = 'inline-block';
+          interviewHostSelect.disabled = false;
+          interviewGuestInput.disabled = false;
+
+          stopDmBtn.style.display = 'none';
+          startDmBtn.style.display = 'inline-block';
+          dmSettingInput.disabled = false;
+
           videoElement.pause();
           videoContainer.style.display = 'none';
         },
@@ -802,6 +855,11 @@ function populateModelSelect(engine: any) {
       debateTopicInput.disabled = false
       startDebateBtn.disabled = false
       startMusicalBtn.disabled = false
+      startInterviewBtn.disabled = false
+      interviewHostSelect.disabled = false
+      interviewGuestInput.disabled = false
+      startDmBtn.disabled = false
+      dmSettingInput.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -873,181 +931,377 @@ function populateModelSelect(engine: any) {
       }
     }
 
+    loadModelBtn.addEventListener('click', async () => {
+        const modelId = modelSelect.value;
+        loadingDiv.style.display = 'flex'; // Show loading
+        loadModelBtn.disabled = true;
 
-    const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
-    const improvModeControls = document.getElementById('improv-mode-controls') as HTMLDivElement;
-    const reporterModeControls = document.getElementById('reporter-mode-controls') as HTMLDivElement;
-    const scriptModeControls = document.getElementById('script-mode-controls') as HTMLDivElement;
-    const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement;
-    const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement;
-    const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement;
-    const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement;
-    const podcastModeControls = document.getElementById('podcast-mode-controls') as HTMLDivElement;
-    const dmModeControls = document.getElementById('dm-mode-controls') as HTMLDivElement;
+        try {
+            await initializeManagers(modelId, webllm);
+        } catch (e) {
+            console.error(e);
+            addMessage('System', 'Failed to load model: ' + e, '#ff0000');
+        } finally {
+            loadingDiv.style.display = 'none';
+            loadModelBtn.disabled = false;
+        }
+    });
 
+    // --- EVENT LISTENERS ---
+
+    // Define UI Reset Helper
     const resetModeUI = () => {
-        const controls = [
-            chatModeControls, improvModeControls, reporterModeControls,
-            scriptModeControls, musicalModeControls, roastModeControls,
-            storyModeControls, debateModeControls, podcastModeControls, dmModeControls
-        ];
-        controls.forEach(c => { if(c) c.style.display = 'none'; });
+        // Hide all control panels
+        chatModeControls.style.display = 'none';
+        const panels = document.querySelectorAll('.improv-controls');
+        panels.forEach(p => (p as HTMLElement).style.display = 'none');
 
-        document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-
-        if(sceneTitleInput) sceneTitleInput.value = '';
-        if(sceneDescriptionInput) sceneDescriptionInput.value = '';
+        // Deactivate all mode buttons
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        modeBtns.forEach(b => b.classList.remove('active'));
     };
 
     // Chat Mode
     const chatModeBtn = document.getElementById('chat-mode-btn') as HTMLButtonElement;
-    if(chatModeBtn) {
-        chatModeBtn.addEventListener('click', () => {
-            resetModeUI();
-            chatModeBtn.classList.add('active');
-            chatModeControls.style.display = 'flex';
-            if (director && director.isSceneRunning()) director.stopScene();
+    chatModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        chatModeBtn.classList.add('active');
+        chatModeControls.style.display = 'flex';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    // Improv Mode
+    const improvModeBtn = document.getElementById('improv-mode-btn') as HTMLButtonElement;
+    const improvModeControls = document.getElementById('improv-mode-controls') as HTMLDivElement;
+    improvModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        improvModeBtn.classList.add('active');
+        improvModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startImprovBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startImprovBtn.style.display = 'none';
+        stopImprovBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'improv',
+            title: sceneTitleInput.value || 'Untitled Scene',
+            description: sceneDescriptionInput.value || 'A random improv scene.',
+            config: { chaosLevel: parseInt(chaosSlider.value) }
         });
-    }
+    });
 
-    // Podcast Mode
-    const podcastModeBtn = document.getElementById('podcast-mode-btn') as HTMLButtonElement;
-    if(podcastModeBtn) {
-        podcastModeBtn.addEventListener('click', () => {
-            resetModeUI();
-            podcastModeBtn.classList.add('active');
-            chatModeControls.style.display = 'flex';
-            podcastModeControls.style.display = 'block';
-            if (director && director.isSceneRunning()) director.stopScene();
+    stopImprovBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Watcher Mode (Media Reaction)
+    const watcherModeBtn = document.getElementById('watcher-mode-btn') as HTMLButtonElement;
+    watcherModeBtn.addEventListener('click', async () => {
+        resetModeUI();
+        watcherModeBtn.classList.add('active');
+        chatModeControls.style.display = 'flex';
+
+        if (director && director.isSceneRunning()) director.stopScene();
+
+        await director.playScenario({
+            type: 'reaction',
+            title: 'Reaction to Video',
+            description: 'Agents watching a video.',
+            config: {
+                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                triggers: [
+                    { timestamp: 10, prompt: '(Video: The bunny wakes up. Comment on how cute/annoying it is.)', executed: false },
+                    { timestamp: 30, prompt: '(Video: The bunny throws an apple. Laugh at the slapstick humor.)', executed: false }
+                ]
+            }
         });
-    }
+    });
 
-    const startPodcastBtn = document.getElementById('start-podcast-btn') as HTMLButtonElement;
-    const stopPodcastBtn = document.getElementById('stop-podcast-btn') as HTMLButtonElement;
-    if(startPodcastBtn) {
-        startPodcastBtn.addEventListener('click', async () => {
-            const topic = (document.getElementById('podcast-topic') as HTMLInputElement).value;
-            const host = (document.getElementById('podcast-host') as HTMLSelectElement).value;
-            const guest = (document.getElementById('podcast-guest') as HTMLSelectElement).value;
+    // Reporter Mode
+    const reporterModeBtn = document.getElementById('reporter-mode-btn') as HTMLButtonElement;
+    const reporterModeControls = document.getElementById('reporter-mode-controls') as HTMLDivElement;
+    reporterModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        reporterModeBtn.classList.add('active');
+        reporterModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
 
-            if(!topic) return alert('Please enter a topic');
+    startReporterBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startReporterBtn.style.display = 'none';
+        stopReporterBtn.style.display = 'inline-block';
 
-            startPodcastBtn.style.display = 'none';
-            stopPodcastBtn.style.display = 'inline-block';
+        await director.playScenario({
+            type: 'reporter',
+            title: reporterTopicInput.value || 'Breaking News',
+            description: 'A news report.',
+            config: {
+                reporterTopic: reporterTopicInput.value,
+                reporterContext: articleTextTextarea.value || 'No context provided.',
+                reporterCategory: reporterCategorySelect.value as any
+            }
+        });
+    });
+
+    stopReporterBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Script Mode
+    const scriptModeBtn = document.getElementById('script-mode-btn') as HTMLButtonElement;
+    const scriptModeControls = document.getElementById('script-mode-controls') as HTMLDivElement;
+    scriptModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        scriptModeBtn.classList.add('active');
+        scriptModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    generateScriptBtn.addEventListener('click', async () => {
+        if (!director) return;
+        generateScriptBtn.disabled = true;
+        generateScriptBtn.textContent = 'Generating...';
+
+        try {
+            const topic = scriptTopicInput.value || 'A funny situation';
+            const script = await scriptGenerator.generate(topic);
+
+            generateScriptBtn.textContent = 'Generate & Play';
+            generateScriptBtn.disabled = false;
+            generateScriptBtn.style.display = 'none';
+            stopScriptBtn.style.display = 'inline-block';
 
             await director.playScenario({
-                type: 'podcast',
-                title: 'Podcast',
-                description: 'Live Podcast',
-                config: {
-                    podcastConfig: { host, guest, topic }
-                }
+                type: 'script',
+                title: topic,
+                description: 'A generated script.',
+                config: { generatedScript: script }
             });
+        } catch (e) {
+            console.error(e);
+            generateScriptBtn.disabled = false;
+            generateScriptBtn.textContent = 'Generate & Play';
+            addMessage('System', 'Failed to generate script.', '#ff0000');
+        }
+    });
+
+    stopScriptBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Roast Mode
+    roastModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        roastModeBtn.classList.add('active');
+        roastModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startRoastBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startRoastBtn.style.display = 'none';
+        stopRoastBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'roast',
+            title: 'Roast Battle',
+            description: 'Agents roasting a target.',
+            config: { roastTarget: roastTargetInput.value || 'The Audience' }
         });
-    }
+    });
 
-    if(stopPodcastBtn) {
-        stopPodcastBtn.addEventListener('click', () => {
-            if(director) director.stopScene();
+    stopRoastBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Story Mode
+    storyModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        storyModeBtn.classList.add('active');
+        storyModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startStoryBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startStoryBtn.style.display = 'none';
+        stopStoryBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'story',
+            title: 'Collaborative Story',
+            description: 'Agents telling a story.',
+            config: { initialPrompt: storyPromptInput.value }
         });
-    }
+    });
 
-    // Dungeon Master Mode
-    const dmModeBtn = document.getElementById('dm-mode-btn') as HTMLButtonElement;
-    if(dmModeBtn) {
-        dmModeBtn.addEventListener('click', () => {
-            resetModeUI();
-            dmModeBtn.classList.add('active');
-            chatModeControls.style.display = 'flex';
-            dmModeControls.style.display = 'block';
-            if (director && director.isSceneRunning()) director.stopScene();
+    stopStoryBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Debate Mode
+    debateModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        debateModeBtn.classList.add('active');
+        debateModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startDebateBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startDebateBtn.style.display = 'none';
+        stopDebateBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'debate',
+            title: 'Debate Club',
+            description: 'Agents debating a topic.',
+            config: { debateTopic: debateTopicInput.value }
         });
-    }
+    });
 
-    const startDmBtn = document.getElementById('start-dm-btn') as HTMLButtonElement;
-    const stopDmBtn = document.getElementById('stop-dm-btn') as HTMLButtonElement;
-    if(startDmBtn) {
-        startDmBtn.addEventListener('click', async () => {
-            const setting = (document.getElementById('dm-setting') as HTMLInputElement).value;
-            const dmName = (document.getElementById('dm-name') as HTMLSelectElement).value;
+    stopDebateBtn.addEventListener('click', () => director && director.stopScene());
 
-            if(!setting) return alert('Please enter a setting');
+    // Musical Mode
+    musicalModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        musicalModeBtn.classList.add('active');
+        musicalModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
 
-            startDmBtn.style.display = 'none';
-            stopDmBtn.style.display = 'inline-block';
+    startMusicalBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startMusicalBtn.style.display = 'none';
+        stopMusicalBtn.style.display = 'inline-block';
 
-            await director.playScenario({
-                type: 'dungeon_master',
-                title: 'Dungeon Master',
-                description: 'RPG Session',
-                config: {
-                    dungeonMasterConfig: { dmName, campaignSetting: setting }
-                }
-            });
+        await director.playScenario({
+            type: 'musical',
+            title: 'Musical Improv',
+            description: 'Agents rapping to a beat',
         });
-    }
+    });
 
-    if(stopDmBtn) {
-        stopDmBtn.addEventListener('click', () => {
-            if(director) director.stopScene();
+    stopMusicalBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Podcast Mode (Interview)
+    interviewModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        interviewModeBtn.classList.add('active');
+        interviewModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startInterviewBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startInterviewBtn.style.display = 'none';
+        stopInterviewBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'interview',
+            title: 'The Podcast',
+            description: 'An interview session.',
+            config: {
+                interviewHost: interviewHostSelect.value,
+                interviewGuest: interviewGuestInput.value
+            }
         });
-    }
+    });
 
-    // Wire up send button for interrupt
-    sendBtn.addEventListener('click', async () => {
+    stopInterviewBtn.addEventListener('click', () => director && director.stopScene());
+
+    // DM Mode
+    dmModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        dmModeBtn.classList.add('active');
+        dmModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startDmBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startDmBtn.style.display = 'none';
+        stopDmBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'dungeon_master',
+            title: 'Dungeon Master',
+            description: 'An interactive RPG session.',
+            config: { dmSetting: dmSettingInput.value }
+        });
+    });
+
+    stopDmBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Handle Send (User Input)
+    const handleSend = async () => {
         const text = userInput.value.trim();
         if (!text) return;
+        userInput.value = '';
 
         if (director && director.isSceneRunning()) {
-            director.handleInterrupt(text);
-            addMessage('You', `(Interrupt) ${text}`, '#ffffff');
-            userInput.value = '';
+            director.handleUserMessage(text);
+            addMessage('You', text, '#ffffff');
         } else {
-            // Chat mode
-            if (!groupChatManager) return;
-            userInput.value = '';
             addMessage('You', text, '#ffffff');
             try {
-                await groupChatManager.chat(text, async (sentence) => {
-                    await speakAndVisualize(sentence, groupChatManager.getCurrentAgent().id);
-                });
-                updateNextAgentUI();
+                 await groupChatManager.chat(text, (sentence) => {
+                     const agent = groupChatManager.getCurrentAgent();
+                     speakAndVisualize(sentence, agent.id);
+                 });
             } catch (e) {
                 console.error(e);
                 addMessage('System', 'Error generating response.', '#ff0000');
             }
         }
+    };
+
+    sendBtn.addEventListener('click', handleSend);
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleSend();
     });
 
-    //      with the musical mode using the simpler version without topic input,
-    //      and voice input using the consolidated voiceBtn approach) ...
-
-    // Musical Mode Listeners (simplified version from main)
-    musicalModeBtn.addEventListener('click', () => {
-      resetModeUI();
-      musicalModeBtn.classList.add('active');
-      chatModeControls.style.display = 'flex';
-      musicalModeControls.style.display = 'block';
-      if (director && director.isSceneRunning()) director.stopScene();
+    // Settings Modal
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'block';
+        if (memoryManager) {
+            const creds = memoryManager.getCloudCredentials();
+            if (creds.token) hfTokenInput.value = creds.token;
+            if (creds.repoId) hfRepoInput.value = creds.repoId;
+        }
     });
 
-    startMusicalBtn.addEventListener('click', async () => {
-      if (!director) return;
-      startMusicalBtn.style.display = 'none';
-      stopMusicalBtn.style.display = 'inline-block';
-
-      await director.playScenario({
-        type: 'musical',
-        title: 'Musical Improv',
-        description: 'Agents rapping to a beat',
-      });
+    closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
     });
 
-    stopMusicalBtn.addEventListener('click', () => {
-      if (director) director.stopScene();
+    saveSettingsBtn.addEventListener('click', async () => {
+        const token = hfTokenInput.value.trim();
+        const repo = hfRepoInput.value.trim();
+
+        settingsStatus.textContent = 'Validating...';
+        settingsStatus.style.color = '#ffd700';
+
+        if (memoryManager) {
+             memoryManager.setCloudCredentials(token, repo);
+             const valid = await memoryManager.validateCloudCredentials();
+             if (valid) {
+                 settingsStatus.textContent = 'Success! Credentials valid.';
+                 settingsStatus.style.color = '#4ecdc4';
+                 setTimeout(() => settingsModal.style.display = 'none', 1000);
+             } else {
+                 settingsStatus.textContent = 'Invalid Token.';
+                 settingsStatus.style.color = '#ff6b6b';
+             }
+        }
     });
 
-    // ... (rest of the file continues with the consolidated code) ...
+    // Save Episode
+    saveEpisodeBtn.addEventListener('click', () => {
+        if (memoryManager) {
+            const history = groupChatManager.getHistory();
+            const id = new Date().toISOString().replace(/[:.]/g, '-');
+            memoryManager.saveEpisode(id, {
+                timestamp: new Date().toISOString(),
+                history: history
+            });
+            addMessage('System', `Episode saved locally (and to cloud if configured). ID: ${id}`, '#4ecdc4');
+        }
+    });
 
     // Initial load
     if (defaultModelId) {

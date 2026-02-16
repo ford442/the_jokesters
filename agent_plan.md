@@ -104,6 +104,24 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   [ ] **Push Episode**: Implement background sync queue to push finished episodes to `user/jokesters-episodes` without blocking UI.
     *   [ ] **Fetch Summaries**: On boot, fetch `summary.json` (or latest episode) from the dataset to seed `GroupChatManager` context.
 
+#### Cloud Persistence Roadmap (Refined)
+1.  **Authentication**:
+    *   [x] Add "Hugging Face Token" and "Repo ID" fields to Settings Modal.
+    *   [x] Implement `HFStorageManager.validateToken(token)` calling `https://huggingface.co/api/whoami-v2`.
+    *   [x] Store encrypted/safe token in `localStorage` via `MemoryManager`.
+
+2.  **Episode Storage**:
+    *   [x] Define JSON schema for Episodes (History, Timestamp, Metadata).
+    *   [x] Implement `MemoryManager.saveEpisodeToCloud(id, data)`:
+        *   Construct filename: `episodes/episode-{id}.json`.
+        *   Call `HFStorageManager.saveFile` (POST to `/api/datasets/{repo}/commit/main`).
+    *   [x] Trigger save on "Save Episode" button click.
+
+3.  **Continuity**:
+    *   [ ] Fetch "Previous Episode Summaries" at boot.
+        *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
+        *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
+
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
     *   Implement `Director.runRoastLoop(scenario)`.
@@ -137,4 +155,5 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 8: Advanced Intelligence & Polish (The "Interview" Phase)
 * [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
-* [ ] **The Interview Mode**: One agent interviews the user.
+* [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
