@@ -249,6 +249,14 @@ async function initApp() {
             <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
             <button id="interview-mode-btn" class="mode-btn">Podcast Mode</button>
             <button id="dm-mode-btn" class="mode-btn">DM Mode</button>
+            <button id="autonomous-mode-btn" class="mode-btn">Auto Mode</button>
+          </div>
+
+          <div id="autonomous-mode-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-autonomous-btn" class="primary-btn" disabled>Start Autonomous</button>
+              <button id="stop-autonomous-btn" class="secondary-btn" style="display: none;" disabled>Stop Autonomous</button>
+            </div>
           </div>
 
           <div id="interview-mode-controls" class="improv-controls" style="display: none;">
@@ -555,6 +563,12 @@ async function initApp() {
   const startDmBtn = document.getElementById('start-dm-btn') as HTMLButtonElement
   const stopDmBtn = document.getElementById('stop-dm-btn') as HTMLButtonElement
 
+  // Autonomous Mode
+  const autonomousModeBtn = document.getElementById('autonomous-mode-btn') as HTMLButtonElement
+  const autonomousModeControls = document.getElementById('autonomous-mode-controls') as HTMLDivElement
+  const startAutonomousBtn = document.getElementById('start-autonomous-btn') as HTMLButtonElement
+  const stopAutonomousBtn = document.getElementById('stop-autonomous-btn') as HTMLButtonElement
+
   const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
   // Voice Input
   const voiceBtn = document.getElementById('voice-btn') as HTMLButtonElement
@@ -688,11 +702,20 @@ async function initApp() {
       groupChatManager = new GroupChatManager(agents)
       scriptGenerator = new ScriptGenerator(groupChatManager)
       memoryManager = new MemoryManager();
+
+      // Load previous episode context
+      const previousContext = await memoryManager.loadLastEpisode();
+
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
       await groupChatManager.initialize(modelId, (progress: any) => {
         statusText.textContent = progress.text
       }, engineModule)
+
+      if (previousContext) {
+          groupChatManager.setGlobalContext(previousContext);
+          addMessage('System', 'Loaded context from previous episode.', '#4ecdc4');
+      }
 
       // 4. Initialize AgentModelManager
       agentModelManager = new AgentModelManager(
@@ -799,6 +822,9 @@ async function initApp() {
           startDmBtn.style.display = 'inline-block';
           dmSettingInput.disabled = false;
 
+          stopAutonomousBtn.style.display = 'none';
+          startAutonomousBtn.style.display = 'inline-block';
+
           videoElement.pause();
           videoContainer.style.display = 'none';
         },
@@ -854,6 +880,7 @@ async function initApp() {
       interviewGuestInput.disabled = false
       startDmBtn.disabled = false
       dmSettingInput.disabled = false
+      startAutonomousBtn.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -1220,6 +1247,28 @@ async function initApp() {
     });
 
     stopDmBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Autonomous Mode
+    autonomousModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        autonomousModeBtn.classList.add('active');
+        autonomousModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startAutonomousBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startAutonomousBtn.style.display = 'none';
+        stopAutonomousBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'autonomous',
+            title: 'Autonomous Mode',
+            description: 'Agents chattering autonomously.',
+        });
+    });
+
+    stopAutonomousBtn.addEventListener('click', () => director && director.stopScene());
 
     // Handle Send (User Input)
     const handleSend = async () => {

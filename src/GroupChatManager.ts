@@ -48,8 +48,18 @@ export class GroupChatManager {
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
   private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
 
+  // Global context injected into system prompt
+  private globalContext: string = '';
+
   constructor(agents: Agent[]) {
     this.agents = agents
+  }
+
+  /**
+   * Set global context (e.g. previous episode summary)
+   */
+  setGlobalContext(context: string): void {
+    this.globalContext = context;
   }
 
   /**
@@ -253,7 +263,7 @@ export class GroupChatManager {
     const currentAgent = this.agents[this.currentAgentIndex]
 
     // Build merged system prompt: agent persona + style guide
-    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
+    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}\n\n${this.globalContext}`
 
     // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
     const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
