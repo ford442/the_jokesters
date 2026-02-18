@@ -31,7 +31,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'interview' | 'dungeon_master';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'interview' | 'dungeon_master' | 'autonomous';
     title: string;
     description: string;
     config?: {
@@ -128,6 +128,8 @@ export class Director {
                 await this.runInterviewLoop(scenario);
             } else if (scenario.type === 'dungeon_master') {
                 await this.runDungeonMasterLoop(scenario);
+            } else if (scenario.type === 'autonomous') {
+                await this.runAutonomousLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -195,6 +197,56 @@ export class Director {
         return new Promise((resolve, reject) => {
             this.inputPromise = { resolve, reject };
         });
+    }
+
+    private async runAutonomousLoop(scenario: Scenario) {
+        const topics = [
+            "What if we are all living in a simulation?",
+            "The pros and cons of owning a pet dragon.",
+            "Why is pizza the perfect food?",
+            "Explain quantum physics using only food metaphors.",
+            "The worst possible time to start a dance party.",
+            "If animals could talk, which one would be the rudest?",
+        ];
+
+        let turnCount = 0;
+        this.callbacks.onMessage('Director', '🤖 Autonomous Mode Activated', '#4ecdc4');
+
+        if (this.manager.getHistoryLength() === 0) {
+            const seed = scenario.config?.initialPrompt || topics[Math.floor(Math.random() * topics.length)];
+            this.callbacks.onMessage('Director', `Topic: "${seed}"`, '#888');
+            await this.processTurn(seed);
+        }
+
+        while (this.isRunning) {
+             // Check for interruptions
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 INTERRUPT: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: SUDDEN INTERRUPTION! Someone said: "${heckle}". React to this naturally.)`);
+                continue;
+            }
+
+            await new Promise(r => setTimeout(r, 1000));
+            if (!this.isRunning) break;
+
+            let prompt = '(Continue the conversation naturally. Be funny or insightful.)';
+
+            // Inject random topic shift every 5 turns
+            if (turnCount > 0 && turnCount % 5 === 0) {
+                const newTopic = topics[Math.floor(Math.random() * topics.length)];
+                prompt = `(SYSTEM: The conversation is getting stale. Smoothly transition the topic to: "${newTopic}")`;
+                this.callbacks.onMessage('Director', `➡️ Shift to: ${newTopic}`, '#888');
+            }
+
+            // Chaos injection
+            if (Math.random() * 100 < this.chaosLevel && turnCount % 3 === 0) {
+                 prompt = '(SYSTEM: Something unexpected happens or someone makes a controversial statement. React!)';
+            }
+
+            await this.processTurn(prompt);
+            turnCount++;
+        }
     }
 
     private async runImprovLoop(scenario: Scenario) {

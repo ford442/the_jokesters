@@ -59,12 +59,48 @@ export class MemoryManager {
     public saveEpisode(episodeId: string, data: any): void {
         this.save(`episode-${episodeId}`, data);
 
+        // Save summary locally
+        if (data.history && Array.isArray(data.history)) {
+             const lastFew = data.history.slice(-5).map((m: any) => `${m.role}: ${m.content}`).join('\n');
+             localStorage.setItem(this.prefix + 'last-episode-summary', lastFew);
+        }
+
         // Background cloud sync
         if (this.hfToken && this.hfRepoId) {
              this.saveEpisodeToCloud(episodeId, data)
                  .then(() => console.log(`Episode ${episodeId} synced to cloud.`))
                  .catch(err => console.error(`Failed to sync episode ${episodeId} to cloud:`, err));
+
+             // Also update latest.json
+             const content = JSON.stringify(data, null, 2);
+             this.hfStorage.saveFile(this.hfToken, this.hfRepoId, 'episodes/latest.json', content)
+                 .catch(err => console.error(`Failed to update latest.json:`, err));
         }
+    }
+
+    public async loadLastEpisode(): Promise<string | null> {
+        // 1. Try to fetch from cloud if configured
+        if (this.hfToken && this.hfRepoId) {
+            try {
+                const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
+                if (content) {
+                    const data = JSON.parse(content);
+                    // Generate a simple summary from the last few messages
+                    if (data.history && Array.isArray(data.history)) {
+                         const lastFew = data.history.slice(-5).map((m: any) => `${m.role}: ${m.content}`).join('\n');
+                         return `PREVIOUSLY ON THE JOKESTERS:\n${lastFew}`;
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to load last episode from cloud:', e);
+            }
+        }
+
+        // 2. Fallback to local storage
+        const localSummary = localStorage.getItem(this.prefix + 'last-episode-summary');
+        if (localSummary) return `PREVIOUSLY ON THE JOKESTERS (Local):\n${localSummary}`;
+
+        return null;
     }
 
     public async saveEpisodeToCloud(episodeId: string, data: any): Promise<void> {

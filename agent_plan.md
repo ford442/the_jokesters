@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 2
-* **status**: On Track (Director Modes & UI Restoration Complete)
+* **tasks_per_run**: 3
+* **status**: Cruising (Autonomous Mode & Cloud Persistence Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -55,6 +55,7 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
     *   *Challenge*: syncing TTS with audio beat.
 *   **Voice Input**: User talks to agents naturally.
+*   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
 
 ---
 
@@ -112,7 +113,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   [x] Trigger save on "Save Episode" button click.
 
 3.  **Continuity**:
-    *   [ ] Fetch "Previous Episode Summaries" at boot.
+    *   [x] Fetch "Previous Episode Summaries" at boot.
         *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
         *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
 
@@ -147,7 +148,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
 ### Phase 8: Advanced Intelligence & Polish
+* [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
 * [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
-* [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
-* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+
+### Phase 9: New Horizons (The Dream)
+* [ ] **Trivia Night Mode**: Agents host a quiz show for the user.
+    *   *Logic*: Fetch questions from an API or generate them. Keep score.
+* [ ] **Dream Mode**: Agents describe a surreal dream they shared.
+    *   *Visuals*: Use generative AI (if possible) or abstract visualizer effects.
+* [ ] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
