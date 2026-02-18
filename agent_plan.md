@@ -142,9 +142,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Interactive Fiction / Dungeon Master**:
     *   One agent acts as DM, others as players + User.
     *   Implemented: `Director.runDungeonMasterLoop` + UI controls.
-* [ ] **Visual Context (Vision)**:
+* [x] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
-    *   Requires: Vision-capable model (Llava, Phi-3-Vision).
+    *   Implemented: `Director.runVisionLoop` + Multimodal support in `GroupChatManager`.
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
 ### Phase 8: Advanced Intelligence & Polish
@@ -154,8 +154,11 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
 
 ### Phase 9: New Horizons (The Dream)
-* [ ] **Trivia Night Mode**: Agents host a quiz show for the user.
-    *   *Logic*: Fetch questions from an API or generate them. Keep score.
-* [ ] **Dream Mode**: Agents describe a surreal dream they shared.
-    *   *Visuals*: Use generative AI (if possible) or abstract visualizer effects.
+* [x] **Trivia Night Mode**: Agents host a quiz show for the user.
+    *   *Logic*: `Director.runTriviaLoop` asks questions and evaluates answers.
+* [x] **Dream Mode**: Agents describe a surreal dream they shared.
+    *   *Logic*: `Director.runDreamLoop` collaborative storytelling with dream logic.
 * [ ] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
+* [ ] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
+* [ ] **Tech Support**: Agents act as frustrated tech support vs confused user.
+* [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.

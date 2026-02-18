@@ -31,7 +31,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'interview' | 'dungeon_master' | 'autonomous';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision';
     title: string;
     description: string;
     config?: {
@@ -54,6 +54,9 @@ export interface Scenario {
         interviewHost?: string;
         interviewGuest?: string;
         dmSetting?: string;
+        triviaTopic?: string;
+        dreamTheme?: string;
+        imageUrl?: string;
     };
 }
 
@@ -130,6 +133,12 @@ export class Director {
                 await this.runDungeonMasterLoop(scenario);
             } else if (scenario.type === 'autonomous') {
                 await this.runAutonomousLoop(scenario);
+            } else if (scenario.type === 'trivia') {
+                await this.runTriviaLoop(scenario);
+            } else if (scenario.type === 'dream') {
+                await this.runDreamLoop(scenario);
+            } else if (scenario.type === 'vision') {
+                await this.runVisionLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -351,6 +360,54 @@ export class Director {
         this.callbacks.videoControls.show(false);
     }
 
+    private async runVisionLoop(scenario: Scenario) {
+        const imageUrl = scenario.config?.imageUrl;
+        if (!imageUrl) {
+            this.callbacks.onError('Vision mode requires an imageUrl');
+            this.stopScene();
+            return;
+        }
+
+        this.callbacks.onMessage('Director', `👁️ VISION MODE: Analyzing Image...`, '#4ecdc4');
+
+        // Construct multimodal message
+        const content = [
+            { type: "text", text: "(VISION ANALYSIS: Look at this image. Describe what you see in detail and make a funny observation about it.)" },
+            { type: "image_url", image_url: { url: imageUrl } }
+        ];
+
+        // 1. First turn: Analysis (Handled manually to pass object content)
+        if (this.isRunning) {
+             const currentAgent = this.manager.getCurrentAgent();
+             await this.callbacks.onTurnStart(currentAgent.id);
+
+             // We use chat directly because processTurn expects string
+             // Using higher maxTokens for image description
+             await this.manager.chat(content, async (sentence) => {
+                 await this.callbacks.onSpeak(sentence, currentAgent.id, { steps: 20 });
+             }, { maxTokens: 256 });
+
+             await this.callbacks.onTurnEnd();
+        }
+
+        // 2. Subsequent turns: Discussion
+        while (this.isRunning) {
+            await new Promise(r => setTimeout(r, 1000));
+            if (!this.isRunning) break;
+
+            // Check interrupts
+             if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 COMMENT: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: Someone commented on the image: "${heckle}". React to this!)`);
+                continue;
+            }
+
+            // Continue discussion
+            await this.processTurn(`(Continue discussing the image. Point out another detail or make a connection to something else.)`);
+        }
+    }
+
     private async runScriptLoop(scenario: Scenario) {
         const script = scenario.config?.generatedScript;
         if (!script || script.length === 0) {
@@ -439,6 +496,36 @@ export class Director {
 
             turnCount++;
             await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    private async runDreamLoop(scenario: Scenario) {
+        const theme = scenario.config?.dreamTheme || 'A flying toaster';
+        this.callbacks.onMessage('Director', `🌙 SHARED DREAM: Theme - ${theme}`, '#9b59b6');
+
+        let turnCount = 0;
+
+        // Seeding the dream
+        if (this.manager.getHistoryLength() === 0) {
+             await this.processTurn(`(SHARED DREAM: We are all sharing a vivid, surreal dream about "${theme}". Start by describing what you see. Be abstract and weird.)`);
+        }
+
+        while (this.isRunning) {
+            // Check for interruptions (Lucid Dreaming)
+            if (this.interruptQueue.length > 0) {
+                const lucidity = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `✨ LUCID INTERRUPT: "${lucidity}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: The dream suddenly shifts! "${lucidity}". Incorporate this new element into the dream logic immediately.)`);
+                continue;
+            }
+
+            if (!this.isRunning) break;
+
+            const prompt = `(SHARED DREAM: Continue the dream description. Build upon the previous surreal imagery. Keep it flowy and strange.)`;
+            await this.processTurn(prompt);
+
+            turnCount++;
+            await new Promise(r => setTimeout(r, 1200));
         }
     }
 
@@ -642,6 +729,45 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
 
             // 3. DM Resolves
             await this.manager.chatForAgent(dm, `(DUNGEON MASTER: The user said: "${userInput}". The other players also acted. Resolve these actions. Describe the consequences and the new state of the world. Then ask "What do you do next?")`, async (s) => await this.callbacks.onSpeak(s, dm, {}));
+        }
+    }
+
+    private async runTriviaLoop(scenario: Scenario) {
+        const topic = scenario.config?.triviaTopic || 'General Knowledge';
+        const host = 'scientist';
+        this.callbacks.onMessage('Director', `❓ TRIVIA NIGHT: Topic - ${topic}`, '#f1c40f');
+
+        // Intro
+        this.callbacks.onTurnStart(host);
+        await this.manager.chatForAgent(host, `(You are hosting a Trivia Night. The topic is "${topic}". Welcome the player (User) and explain the rules. Keep it brief.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+        await this.callbacks.onTurnEnd();
+
+        let round = 1;
+        while (this.isRunning) {
+            this.callbacks.onMessage('Director', `🔔 Question ${round}`, '#888');
+
+            // 1. Generate Question
+            // We ask the host to ask a question.
+            if (!this.isRunning) break;
+
+            await this.manager.chatForAgent(host, `(TRIVIA HOST: Ask a challenging trivia question about "${topic}". Do not reveal the answer yet. Wait for the user to guess.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            // 2. Wait for User Answer
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage('You', userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // 3. Evaluate
+            await this.manager.chatForAgent(host, `(TRIVIA HOST: The user answered: "${userInput}". Reveal the correct answer and tell them if they were right or wrong. Be strict but fair. Then ask if they are ready for the next question.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            // Optional: Other agents react
+             if (Math.random() > 0.5 && this.isRunning) {
+                 await this.manager.chatForAgent('comedian', `(React to the user's answer or the host's strictness. Make a joke about it.)`, async (s) => await this.callbacks.onSpeak(s, 'comedian', {}));
+            }
+
+            round++;
+            await new Promise(r => setTimeout(r, 1000));
         }
     }
 

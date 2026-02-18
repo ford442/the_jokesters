@@ -250,12 +250,52 @@ async function initApp() {
             <button id="interview-mode-btn" class="mode-btn">Podcast Mode</button>
             <button id="dm-mode-btn" class="mode-btn">DM Mode</button>
             <button id="autonomous-mode-btn" class="mode-btn">Auto Mode</button>
+            <button id="trivia-mode-btn" class="mode-btn">Trivia Mode</button>
+            <button id="dream-mode-btn" class="mode-btn">Dream Mode</button>
+            <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
           </div>
 
           <div id="autonomous-mode-controls" class="improv-controls" style="display: none;">
             <div class="improv-buttons">
               <button id="start-autonomous-btn" class="primary-btn" disabled>Start Autonomous</button>
               <button id="stop-autonomous-btn" class="secondary-btn" style="display: none;" disabled>Stop Autonomous</button>
+            </div>
+          </div>
+
+          <div id="trivia-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Trivia Topic</label>
+              <input type="text" id="trivia-topic" placeholder="e.g., 'Science Fiction Movies'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-trivia-btn" class="primary-btn" disabled>Start Trivia</button>
+              <button id="stop-trivia-btn" class="secondary-btn" style="display: none;" disabled>Stop Trivia</button>
+            </div>
+          </div>
+
+          <div id="dream-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Dream Theme</label>
+              <input type="text" id="dream-theme" placeholder="e.g., 'Flying through a candy city'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-dream-btn" class="primary-btn" disabled>Start Dream</button>
+              <button id="stop-dream-btn" class="secondary-btn" style="display: none;" disabled>Stop Dream</button>
+            </div>
+          </div>
+
+          <div id="vision-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Image URL (Direct Link)</label>
+              <input type="text" id="vision-url" placeholder="https://example.com/image.jpg" autocomplete="off" disabled />
+            </div>
+             <div class="input-group" style="margin-top:5px;">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Or Upload Image</label>
+              <input type="file" id="vision-file" accept="image/*" style="color: #ccc;" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-vision-btn" class="primary-btn" disabled>Analyze Image</button>
+              <button id="stop-vision-btn" class="secondary-btn" style="display: none;" disabled>Stop Vision</button>
             </div>
           </div>
 
@@ -569,6 +609,28 @@ async function initApp() {
   const startAutonomousBtn = document.getElementById('start-autonomous-btn') as HTMLButtonElement
   const stopAutonomousBtn = document.getElementById('stop-autonomous-btn') as HTMLButtonElement
 
+  // Trivia Mode
+  const triviaModeBtn = document.getElementById('trivia-mode-btn') as HTMLButtonElement
+  const triviaModeControls = document.getElementById('trivia-mode-controls') as HTMLDivElement
+  const triviaTopicInput = document.getElementById('trivia-topic') as HTMLInputElement
+  const startTriviaBtn = document.getElementById('start-trivia-btn') as HTMLButtonElement
+  const stopTriviaBtn = document.getElementById('stop-trivia-btn') as HTMLButtonElement
+
+  // Dream Mode
+  const dreamModeBtn = document.getElementById('dream-mode-btn') as HTMLButtonElement
+  const dreamModeControls = document.getElementById('dream-mode-controls') as HTMLDivElement
+  const dreamThemeInput = document.getElementById('dream-theme') as HTMLInputElement
+  const startDreamBtn = document.getElementById('start-dream-btn') as HTMLButtonElement
+  const stopDreamBtn = document.getElementById('stop-dream-btn') as HTMLButtonElement
+
+  // Vision Mode
+  const visionModeBtn = document.getElementById('vision-mode-btn') as HTMLButtonElement
+  const visionModeControls = document.getElementById('vision-mode-controls') as HTMLDivElement
+  const visionUrlInput = document.getElementById('vision-url') as HTMLInputElement
+  const visionFileInput = document.getElementById('vision-file') as HTMLInputElement
+  const startVisionBtn = document.getElementById('start-vision-btn') as HTMLButtonElement
+  const stopVisionBtn = document.getElementById('stop-vision-btn') as HTMLButtonElement
+
   const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
   // Voice Input
   const voiceBtn = document.getElementById('voice-btn') as HTMLButtonElement
@@ -825,6 +887,19 @@ async function initApp() {
           stopAutonomousBtn.style.display = 'none';
           startAutonomousBtn.style.display = 'inline-block';
 
+          stopTriviaBtn.style.display = 'none';
+          startTriviaBtn.style.display = 'inline-block';
+          triviaTopicInput.disabled = false;
+
+          stopDreamBtn.style.display = 'none';
+          startDreamBtn.style.display = 'inline-block';
+          dreamThemeInput.disabled = false;
+
+          stopVisionBtn.style.display = 'none';
+          startVisionBtn.style.display = 'inline-block';
+          visionUrlInput.disabled = false;
+          visionFileInput.disabled = false;
+
           videoElement.pause();
           videoContainer.style.display = 'none';
         },
@@ -881,6 +956,14 @@ async function initApp() {
       startDmBtn.disabled = false
       dmSettingInput.disabled = false
       startAutonomousBtn.disabled = false
+
+      startTriviaBtn.disabled = false
+      triviaTopicInput.disabled = false
+      startDreamBtn.disabled = false
+      dreamThemeInput.disabled = false
+      startVisionBtn.disabled = false
+      visionUrlInput.disabled = false
+      visionFileInput.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -1269,6 +1352,101 @@ async function initApp() {
     });
 
     stopAutonomousBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Trivia Mode
+    triviaModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        triviaModeBtn.classList.add('active');
+        triviaModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startTriviaBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startTriviaBtn.style.display = 'none';
+        stopTriviaBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'trivia',
+            title: 'Trivia Night',
+            description: 'A trivia game show.',
+            config: { triviaTopic: triviaTopicInput.value }
+        });
+    });
+
+    stopTriviaBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Dream Mode
+    dreamModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        dreamModeBtn.classList.add('active');
+        dreamModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startDreamBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startDreamBtn.style.display = 'none';
+        stopDreamBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'dream',
+            title: 'Shared Dream',
+            description: 'A surreal collaborative dream.',
+            config: { dreamTheme: dreamThemeInput.value }
+        });
+    });
+
+    stopDreamBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Vision Mode
+    visionModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        visionModeBtn.classList.add('active');
+        visionModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startVisionBtn.addEventListener('click', async () => {
+        if (!director) return;
+
+        // Handle image source (URL or File)
+        let imageUrl = visionUrlInput.value.trim();
+        const file = visionFileInput.files?.[0];
+
+        if (!imageUrl && file) {
+            // Convert file to base64 data URL
+            try {
+                imageUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target?.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            } catch (e) {
+                console.error(e);
+                addMessage('System', 'Failed to read image file.', '#ff0000');
+                return;
+            }
+        }
+
+        if (!imageUrl) {
+            addMessage('System', 'Please provide an image URL or upload a file.', '#ff6b6b');
+            return;
+        }
+
+        startVisionBtn.style.display = 'none';
+        stopVisionBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'vision',
+            title: 'Visual Analysis',
+            description: 'Agents analyzing an image.',
+            config: { imageUrl: imageUrl }
+        });
+    });
+
+    stopVisionBtn.addEventListener('click', () => director && director.stopScene());
 
     // Handle Send (User Input)
     const handleSend = async () => {

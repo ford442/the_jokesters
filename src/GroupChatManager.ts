@@ -34,7 +34,7 @@ export interface Agent {
 
 export interface Message {
   role: 'system' | 'user' | 'assistant'
-  content: string
+  content: string | Array<any>
 }
 
 export class GroupChatManager {
@@ -245,7 +245,7 @@ export class GroupChatManager {
   }
 
   async chat(
-    userMessage: string,
+    userMessage: string | Array<any>,
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
@@ -383,7 +383,7 @@ export class GroupChatManager {
    */
   async chatForAgent(
     agentId: string,
-    userMessage: string,
+    userMessage: string | Array<any>,
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
