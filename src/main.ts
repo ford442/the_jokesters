@@ -12,9 +12,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { VoiceInputManager } from './audio/VoiceInputManager'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
-import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
-import { ScriptParser } from './Director/ScriptParser'
-import { DataFetchService } from './services/DataFetchService'
+import { Director, type DirectorCallbacks } from './Director/Director'
 import { ScriptGenerator } from './Director/ScriptGenerator'
 import { MemoryManager } from './Director/MemoryManager'
 
@@ -532,28 +530,20 @@ async function initApp() {
   const saveEpisodeBtn = document.getElementById('save-episode-btn') as HTMLButtonElement
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null
-  const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement
   const loadModelBtn = document.getElementById('load-model-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
-  const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
-  const ttsStepsVal = document.getElementById('tts-steps-val')!
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
-  const chaosVal = document.getElementById('director-chaos-val')!
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
-  const profanityVal = document.getElementById('profanity-val')!
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
-  const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
   const reporterCategorySelect = document.getElementById('reporter-category') as HTMLSelectElement
   const reporterTopicInput = document.getElementById('reporter-topic') as HTMLInputElement
   const reporterQuickTopicsSelect = document.getElementById('reporter-quick-topics') as HTMLSelectElement
   const startReporterBtn = document.getElementById('start-reporter-btn') as HTMLButtonElement
   const stopReporterBtn = document.getElementById('stop-reporter-btn') as HTMLButtonElement
-  const useCustomArticleCheckbox = document.getElementById('use-custom-article') as HTMLInputElement
-  const articleTitleInput = document.getElementById('article-title') as HTMLInputElement
   const articleTextTextarea = document.getElementById('article-text') as HTMLTextAreaElement
 
   const scriptTopicInput = document.getElementById('script-topic') as HTMLInputElement
