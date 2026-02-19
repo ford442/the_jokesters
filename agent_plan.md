@@ -149,9 +149,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 8: Advanced Intelligence & Polish
 * [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
-* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
-* [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
-* [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+* [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+* [x] **Memory Recall (Simple RAG)**: Search local episode history for keywords and inject into context.
+* [x] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
 
 ### Phase 9: New Horizons (The Dream)
 * [x] **Trivia Night Mode**: Agents host a quiz show for the user.
@@ -162,3 +162,5 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
 * [ ] **Tech Support**: Agents act as frustrated tech support vs confused user.
 * [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.
+* [ ] **The Time Machine**: Agents pretend to be from different historical eras.
+* [ ] **Rap Battle Arena**: Dedicated visual mode for musical battles with scoring.

@@ -1,8 +1,10 @@
 import { GroupChatManager } from '../GroupChatManager';
 import { MediaReactionManager, type ReactionTrigger } from './MediaReactionManager';
+import { MemoryManager } from './MemoryManager';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
+    onTicker?: (text: string) => void;
     onSpeak: (sentence: string, agentId: string, options: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
     onTurnStart: (agentId: string) => Promise<void>;
     onTurnEnd: () => Promise<void>;
@@ -24,7 +26,7 @@ export interface DirectorCallbacks {
 }
 
 export interface ReporterSegment {
-    type: 'intro' | 'headlines' | 'main_story' | 'panel_discussion' | 'fact_check' | 'breaking' | 'closing';
+    type: 'intro' | 'headlines' | 'main_story' | 'panel_discussion' | 'fact_check' | 'breaking' | 'closing' | 'weather' | 'commercial' | 'interview';
     speakerRole?: 'anchor' | 'reporter' | 'analyst' | 'expert' | 'host';
     promptInjection: string;
     maxTurns: number;
@@ -73,10 +75,12 @@ export class Director {
     private currentScenario: Scenario | null = null;
     private interruptQueue: string[] = [];
     private inputPromise: { resolve: (text: string) => void, reject: (reason?: any) => void } | null = null;
+    private memoryManager: MemoryManager | null = null;
 
-    constructor(manager: GroupChatManager, callbacks: DirectorCallbacks) {
+    constructor(manager: GroupChatManager, callbacks: DirectorCallbacks, memoryManager?: MemoryManager) {
         this.manager = manager;
         this.callbacks = callbacks;
+        this.memoryManager = memoryManager || null;
     }
 
     public setChaosLevel(level: number) {
@@ -260,7 +264,15 @@ export class Director {
 
     private async runImprovLoop(scenario: Scenario) {
         if (this.manager.getHistoryLength() === 0) {
-            const seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
+            let seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
+
+            // Memory Recall
+            const recall = await this.searchAndRecall(seed);
+            if (recall) {
+                this.callbacks.onMessage('System', '🧠 Memory Recall Active', '#4ecdc4');
+                seed += '\n' + recall;
+            }
+
             this.callbacks.onMessage('Director', `Action! "${seed}"`, '#888');
             await this.processTurn(seed);
         }
@@ -433,7 +445,7 @@ export class Director {
 
     private async runReporterLoop(scenario: Scenario) {
         const topic = scenario.config?.reporterTopic || scenario.title;
-        const context = scenario.config?.reporterContext;
+        let context = scenario.config?.reporterContext || '';
         const segments = scenario.config?.reporterSegments || this.getDefaultReporterSegments();
         const enableBreakingNews = scenario.config?.enableBreakingNews ?? true;
 
@@ -441,6 +453,13 @@ export class Director {
             this.callbacks.onError('Reporter mode requires context data in config.reporterContext');
             this.stopScene();
             return;
+        }
+
+        // Memory Recall
+        const recall = await this.searchAndRecall(topic);
+        if (recall) {
+             this.callbacks.onMessage('System', '🧠 Memory Recall Active', '#4ecdc4');
+             context += '\n' + recall;
         }
 
         // Show topic and sources
@@ -452,6 +471,12 @@ export class Director {
         // Execute each segment
         for (const segment of segments) {
             if (!this.isRunning) break;
+
+            if (this.callbacks.onTicker) {
+                const headline = await this.generateTickerHeadline(topic);
+                this.callbacks.onTicker(headline);
+            }
+
             await this.executeReporterSegment(segment, context, topic, enableBreakingNews);
         }
 
@@ -820,7 +845,10 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             panel_discussion: '💬',
             fact_check: '✅',
             breaking: '🚨',
-            closing: '👋'
+            closing: '👋',
+            weather: '☀️',
+            commercial: '📺',
+            interview: '🎙️'
         };
 
         const segmentNames: Record<string, string> = {
@@ -830,7 +858,10 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             panel_discussion: 'Panel Discussion',
             fact_check: 'Fact Check',
             breaking: 'Breaking News',
-            closing: 'Closing'
+            closing: 'Closing',
+            weather: 'Weather Report',
+            commercial: 'Commercial Break',
+            interview: 'Exclusive Interview'
         };
 
         // Optional: Random breaking news interruption (controlled by chaos level)
@@ -974,5 +1005,33 @@ Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. 
             this.callbacks.onError(error);
             this.stopScene();
         }
+    }
+
+    private async searchAndRecall(topic: string): Promise<string | null> {
+        if (!this.memoryManager) return null;
+        try {
+            const results = this.memoryManager.searchLocalEpisodes(topic);
+            if (results.length > 0) {
+                const snippets = results.map(r => `(Episode ${r.episodeId}): ${r.snippet}`).join('\n');
+                return `(MEMORY RECALL: You vaguely remember discussing "${topic}" before. Reference these past moments if relevant:\n${snippets})`;
+            }
+        } catch (e) {
+            console.warn('Memory search failed:', e);
+        }
+        return null;
+    }
+
+    private async generateTickerHeadline(topic: string): Promise<string> {
+        const templates = [
+            `BREAKING: ${topic} causes minor confusion`,
+            `UPDATE: Experts say ${topic} is "mostly harmless"`,
+            `LIVE: People still talking about ${topic}`,
+            `NEWS: ${topic} - What does it mean for your lunch?`,
+            `ALERT: ${topic} confirmed to be a thing`,
+            `SCANDAL: ${topic} involved in controversy`,
+            `DEVELOPING: ${topic} rumored to be part of simulation`,
+            `TRENDING: ${topic} goes viral for wrong reasons`
+        ];
+        return templates[Math.floor(Math.random() * templates.length)];
     }
 }

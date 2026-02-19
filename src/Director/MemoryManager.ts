@@ -132,4 +132,34 @@ export class MemoryManager {
         }
         return episodes;
     }
+
+    public searchLocalEpisodes(query: string): { episodeId: string, snippet: string }[] {
+        const results: { episodeId: string, snippet: string }[] = [];
+        const normalizedQuery = query.toLowerCase();
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith(this.prefix + 'episode-')) {
+                const episodeId = key.replace(this.prefix + 'episode-', '');
+                const content = this.load<any>(`episode-${episodeId}`);
+
+                if (content && content.history && Array.isArray(content.history)) {
+                    // Check history for keyword
+                    for (const msg of content.history) {
+                        if (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(normalizedQuery)) {
+                            // Extract a snippet (max 100 chars around the match)
+                            const idx = msg.content.toLowerCase().indexOf(normalizedQuery);
+                            const start = Math.max(0, idx - 50);
+                            const end = Math.min(msg.content.length, idx + 50 + query.length);
+                            const snippet = (start > 0 ? '...' : '') + msg.content.substring(start, end) + (end < msg.content.length ? '...' : '');
+
+                            results.push({ episodeId, snippet: `[${msg.role}]: ${snippet}` });
+                            break; // One match per episode is enough
+                        }
+                    }
+                }
+            }
+        }
+        return results.slice(0, 3);
+    }
 }

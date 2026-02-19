@@ -655,9 +655,48 @@ async function initApp() {
   addMessage = (sender: string, text: string, color: string) => {
     const div = document.createElement('div')
     div.className = 'message'
-    div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}`
+
+    // Check if sender is an agent
+    const agent = agents.find(a => a.name === sender || a.id === sender);
+    let buttonsHtml = '';
+
+    if (agent) {
+         buttonsHtml = `
+         <span class="feedback-controls" style="float:right; opacity:0.5;">
+            <button class="feedback-btn" data-agent="${agent.id}" data-type="positive" title="Encourage Chaos">👍</button>
+            <button class="feedback-btn" data-agent="${agent.id}" data-type="negative" title="Reduce Chaos">👎</button>
+         </span>
+         `;
+    }
+
+    div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}${buttonsHtml}`
     chatLog.appendChild(div)
     chatLog.scrollTop = chatLog.scrollHeight
+
+    // Add listeners
+    if (agent) {
+        const btns = div.querySelectorAll('.feedback-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const agentId = target.getAttribute('data-agent');
+                const type = target.getAttribute('data-type') as 'positive' | 'negative';
+                if (agentId && groupChatManager) {
+                    groupChatManager.adjustAgentPersonality(agentId, type);
+
+                    // Show toast
+                    const toast = document.createElement('div');
+                    toast.className = 'toast';
+                    toast.textContent = `Adjusted ${agentId}: ${type === 'positive' ? '+Chaos' : '-Chaos'}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2000);
+
+                    // Remove buttons
+                    target.parentElement?.remove();
+                }
+            });
+        });
+    }
   }
 
   speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
@@ -795,6 +834,14 @@ async function initApp() {
       // Initialize Director
       const directorCallbacks: DirectorCallbacks = {
         onMessage: (sender, message, color) => addMessage(sender, message, color),
+        onTicker: (text) => {
+            const container = document.getElementById('news-ticker-container');
+            const content = document.getElementById('news-ticker-content');
+            if (container && content) {
+                container.style.display = 'block';
+                content.textContent = text;
+            }
+        },
         onSpeak: async (sentence, agentId, options) => {
           await speakAndVisualize(sentence, agentId, options);
           if (currentMessageContentSpan) {
@@ -829,6 +876,10 @@ async function initApp() {
         },
         onSceneStop: () => {
           addMessage('System', '🛑 Scene stopped by user', '#ff6b6b');
+
+          const ticker = document.getElementById('news-ticker-container');
+          if (ticker) ticker.style.display = 'none';
+
           sceneTitleInput.disabled = false;
           sceneDescriptionInput.disabled = false;
           startImprovBtn.style.display = 'inline-block';
@@ -902,7 +953,7 @@ async function initApp() {
         },
         videoControls: videoControls
       };
-      director = new Director(groupChatManager, directorCallbacks);
+      director = new Director(groupChatManager, directorCallbacks, memoryManager);
       if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
 
       // Re-apply settings to the new manager instance
