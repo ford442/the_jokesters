@@ -25,7 +25,7 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
 
 const hermesModelConfig = {
   model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Hermes-3-Llama-3.2-3B-q4f32_1-MLC-webgpu.wasm",
+  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
   overrides: {
     context_window_size: 4096,
   },
@@ -42,7 +42,7 @@ const appConfig = {
     {
       model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC",
       model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Llama-3.2-3B-Instruct-q4f32_1-MLC-webgpu.wasm",
+      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
     }
   ],
   useIndexedDBCache: true,
