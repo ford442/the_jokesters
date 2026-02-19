@@ -50,9 +50,52 @@ export class GroupChatManager {
 
   // Global context injected into system prompt
   private globalContext: string = '';
+  private adjustmentsKey = 'jokesters-agent-adjustments';
 
   constructor(agents: Agent[]) {
     this.agents = agents
+    this.loadPersonalityAdjustments();
+  }
+
+  private loadPersonalityAdjustments() {
+      try {
+          const stored = localStorage.getItem(this.adjustmentsKey);
+          if (stored) {
+              const adjustments = JSON.parse(stored);
+              this.agents.forEach(agent => {
+                  if (adjustments[agent.id]) {
+                      agent.temperature = adjustments[agent.id].temperature;
+                      agent.top_p = adjustments[agent.id].top_p;
+                  }
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to load personality adjustments', e);
+      }
+  }
+
+  private savePersonalityAdjustments() {
+      const data: Record<string, { temperature: number, top_p: number }> = {};
+      this.agents.forEach(a => {
+          data[a.id] = { temperature: a.temperature, top_p: a.top_p };
+      });
+      localStorage.setItem(this.adjustmentsKey, JSON.stringify(data));
+  }
+
+  public adjustAgentPersonality(agentId: string, feedback: 'positive' | 'negative') {
+      const agent = this.agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      if (feedback === 'positive') {
+          // Increase chaos slightly
+          agent.temperature = Math.min(1.2, agent.temperature + 0.05);
+          agent.top_p = Math.min(1.0, agent.top_p + 0.02);
+      } else {
+          // Decrease chaos
+          agent.temperature = Math.max(0.1, agent.temperature - 0.05);
+          agent.top_p = Math.max(0.1, agent.top_p - 0.02);
+      }
+      this.savePersonalityAdjustments();
   }
 
   /**
