@@ -199,9 +199,22 @@ async function initApp() {
             </div>
             
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
-              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <label style="color: #888; font-size: 0.8em;">Profanity</label>
               <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
               <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🤬 Gritty</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <select id="language-select" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
+                <option value="English">English</option>
+                <option value="Spanish">Spanish</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Russian">Russian</option>
+              </select>
             </div>
             
             <div class="model-assignment-panel" style="margin-top: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
@@ -251,6 +264,8 @@ async function initApp() {
             <button id="trivia-mode-btn" class="mode-btn">Trivia Mode</button>
             <button id="dream-mode-btn" class="mode-btn">Dream Mode</button>
             <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
+            <button id="trial-mode-btn" class="mode-btn">The Trial</button>
+            <button id="tech-mode-btn" class="mode-btn">Tech Support</button>
           </div>
 
           <div id="autonomous-mode-controls" class="improv-controls" style="display: none;">
@@ -294,6 +309,28 @@ async function initApp() {
             <div class="improv-buttons">
               <button id="start-vision-btn" class="primary-btn" disabled>Analyze Image</button>
               <button id="stop-vision-btn" class="secondary-btn" style="display: none;" disabled>Stop Vision</button>
+            </div>
+          </div>
+
+          <div id="trial-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">The Crime</label>
+              <input type="text" id="trial-topic" placeholder="e.g., 'Eating the last cookie'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-trial-btn" class="primary-btn" disabled>Start Trial</button>
+              <button id="stop-trial-btn" class="secondary-btn" style="display: none;" disabled>Stop Trial</button>
+            </div>
+          </div>
+
+          <div id="tech-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Tech Issue</label>
+              <input type="text" id="tech-issue" placeholder="e.g., 'My printer is on fire'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-tech-btn" class="primary-btn" disabled>Start Tech Support</button>
+              <button id="stop-tech-btn" class="secondary-btn" style="display: none;" disabled>Hang Up</button>
             </div>
           </div>
 
@@ -535,6 +572,7 @@ async function initApp() {
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
+  const languageSelect = document.getElementById('language-select') as HTMLSelectElement
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
@@ -620,6 +658,20 @@ async function initApp() {
   const visionFileInput = document.getElementById('vision-file') as HTMLInputElement
   const startVisionBtn = document.getElementById('start-vision-btn') as HTMLButtonElement
   const stopVisionBtn = document.getElementById('stop-vision-btn') as HTMLButtonElement
+
+  // Trial Mode
+  const trialModeBtn = document.getElementById('trial-mode-btn') as HTMLButtonElement
+  const trialModeControls = document.getElementById('trial-mode-controls') as HTMLDivElement
+  const trialTopicInput = document.getElementById('trial-topic') as HTMLInputElement
+  const startTrialBtn = document.getElementById('start-trial-btn') as HTMLButtonElement
+  const stopTrialBtn = document.getElementById('stop-trial-btn') as HTMLButtonElement
+
+  // Tech Mode
+  const techModeBtn = document.getElementById('tech-mode-btn') as HTMLButtonElement
+  const techModeControls = document.getElementById('tech-mode-controls') as HTMLDivElement
+  const techIssueInput = document.getElementById('tech-issue') as HTMLInputElement
+  const startTechBtn = document.getElementById('start-tech-btn') as HTMLButtonElement
+  const stopTechBtn = document.getElementById('stop-tech-btn') as HTMLButtonElement
 
   const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
   // Voice Input
@@ -960,6 +1012,7 @@ async function initApp() {
       const idx = parseInt(profanitySlider.value)
       const { level } = profanityLevels[idx]
       groupChatManager.setProfanityLevel(level)
+      groupChatManager.setLanguage(languageSelect.value)
 
       statusText.textContent = 'Ready! Select a mode to begin.'
       statusText.style.color = '#4ecdc4'
@@ -1005,6 +1058,12 @@ async function initApp() {
       startVisionBtn.disabled = false
       visionUrlInput.disabled = false
       visionFileInput.disabled = false
+
+      startTrialBtn.disabled = false
+      trialTopicInput.disabled = false
+
+      startTechBtn.disabled = false
+      techIssueInput.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -1093,6 +1152,14 @@ async function initApp() {
     });
 
     // --- EVENT LISTENERS ---
+
+    // Language Change
+    languageSelect.addEventListener('change', () => {
+        if (groupChatManager) {
+            groupChatManager.setLanguage(languageSelect.value);
+            addMessage('System', `Language set to ${languageSelect.value}`, '#4ecdc4');
+        }
+    });
 
     // Define UI Reset Helper
     const resetModeUI = () => {
@@ -1488,6 +1555,52 @@ async function initApp() {
     });
 
     stopVisionBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Trial Mode
+    trialModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        trialModeBtn.classList.add('active');
+        trialModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startTrialBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startTrialBtn.style.display = 'none';
+        stopTrialBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'trial',
+            title: 'The Trial',
+            description: 'The User is on trial!',
+            config: { trialTopic: trialTopicInput.value }
+        });
+    });
+
+    stopTrialBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Tech Mode
+    techModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        techModeBtn.classList.add('active');
+        techModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startTechBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startTechBtn.style.display = 'none';
+        stopTechBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'tech_support',
+            title: 'Tech Support Hell',
+            description: 'Terrible tech support experience.',
+            config: { techIssue: techIssueInput.value }
+        });
+    });
+
+    stopTechBtn.addEventListener('click', () => director && director.stopScene());
 
     // Handle Send (User Input)
     const handleSend = async () => {

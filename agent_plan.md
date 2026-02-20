@@ -56,6 +56,8 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
     *   *Challenge*: syncing TTS with audio beat.
 *   **Voice Input**: User talks to agents naturally.
 *   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
+*   **The Trial**: Agents act as courtroom figures judging the user.
+*   **Tech Support**: Agents act as unhelpful tech support.
 
 ---
 
@@ -158,9 +160,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Logic*: `Director.runTriviaLoop` asks questions and evaluates answers.
 * [x] **Dream Mode**: Agents describe a surreal dream they shared.
     *   *Logic*: `Director.runDreamLoop` collaborative storytelling with dream logic.
-* [ ] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
-* [ ] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
-* [ ] **Tech Support**: Agents act as frustrated tech support vs confused user.
+* [x] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
+* [x] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
+* [x] **Tech Support**: Agents act as frustrated tech support vs confused user.
+* [ ] **Historical Reenactment**: Agents act as historical figures debating a modern topic.
 * [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.
-* [ ] **The Time Machine**: Agents pretend to be from different historical eras.
-* [ ] **Rap Battle Arena**: Dedicated visual mode for musical battles with scoring.
+* [ ] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
+
+### Phase 10: Advanced Cloud Features
+* [ ] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
+* [ ] **User Profile Sync**: Sync user preferences and custom scenarios to the cloud.
+* [ ] **Community Scripts**: Allow users to share scripts to a public HF Dataset.

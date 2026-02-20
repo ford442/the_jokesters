@@ -47,6 +47,7 @@ export class GroupChatManager {
   // Style instruction - can be changed at runtime via setProfanityLevel()
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
   private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
+  private languageInstruction: string = ''
 
   // Global context injected into system prompt
   private globalContext: string = '';
@@ -103,6 +104,17 @@ export class GroupChatManager {
    */
   setGlobalContext(context: string): void {
     this.globalContext = context;
+  }
+
+  /**
+   * Set the language instruction
+   */
+  setLanguage(language: string): void {
+    if (!language || language === 'English') {
+      this.languageInstruction = '';
+    } else {
+      this.languageInstruction = `(SYSTEM: You MUST speak in ${language}.)`;
+    }
   }
 
   /**
@@ -305,8 +317,8 @@ export class GroupChatManager {
     // Get current agent
     const currentAgent = this.agents[this.currentAgentIndex]
 
-    // Build merged system prompt: agent persona + style guide
-    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}\n\n${this.globalContext}`
+    // Build merged system prompt: agent persona + style guide + language
+    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}\n\n${this.languageInstruction}\n\n${this.globalContext}`
 
     // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
     const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
