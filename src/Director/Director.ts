@@ -246,8 +246,8 @@ export class Director {
         try {
             await this.callbacks.onTurnStart(beat.speaker);
 
-            const prompt = `(SCRIPT PERFORMANCE: Deliver this scripted line authentically in your character's voice and style: "${beat.line.replace(/"/g, '\\"')}" \
-Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. ###)`;
+            const escapedLine = beat.line.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+            const prompt = `(SCRIPT PERFORMANCE: Deliver this scripted line authentically in your character's voice and style: "${escapedLine}" Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. ###)`;
 
             await this.manager.chatForAgent(beat.speaker, prompt, async (sentence: string) => {
                 await this.callbacks.onSpeak(sentence, beat.speaker, {});
