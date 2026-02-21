@@ -1,40 +1,53 @@
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright
 
-def run():
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        page.goto("http://localhost:5173")
+def run(playwright):
+    browser = playwright.chromium.launch(headless=True)
+    page = browser.new_page(viewport={'width': 1920, 'height': 1080})
 
-        # Force hide the loading screen and enable interactivity
-        page.wait_for_timeout(2000)
-        page.evaluate("""
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('chat-container').style.pointerEvents = 'auto';
-            document.getElementById('chat-container').style.opacity = '1';
-        """)
+    print("Navigating to app...")
+    page.goto("http://localhost:5173/")
 
-        # Check for Language Select
-        expect(page.locator("#language-select")).to_be_visible()
+    # Wait for loading to disappear or just hide it
+    print("Waiting for app to load...")
+    try:
+        page.wait_for_selector("#loading", state="hidden", timeout=5000)
+    except:
+        print("Loading screen didn't disappear, forcing hide...")
+        page.eval_on_selector("#loading", "el => el.style.display = 'none'")
 
-        # Check for New Mode Buttons
-        expect(page.locator("#trial-mode-btn")).to_be_visible()
-        expect(page.locator("#tech-mode-btn")).to_be_visible()
+    # Hide status overlay if present
+    try:
+        page.eval_on_selector("#status", "el => el.style.display = 'none'")
+    except:
+        pass
 
-        # Click Trial Mode and check controls
-        page.click("#trial-mode-btn")
-        expect(page.locator("#trial-mode-controls")).to_be_visible()
-        expect(page.locator("#trial-topic")).to_be_visible()
+    print("Taking initial screenshot...")
+    page.screenshot(path="verification/initial_state.png")
 
-        # Click Tech Support Mode and check controls
-        page.click("#tech-mode-btn")
-        expect(page.locator("#tech-mode-controls")).to_be_visible()
-        expect(page.locator("#tech-issue")).to_be_visible()
+    # Verify Historical Mode
+    print("Testing Historical Mode...")
+    # Force click if blocked
+    page.click("#historical-mode-btn", force=True)
 
-        # Take screenshot
-        page.screenshot(path="verification/ui_verification.png")
+    # Wait for controls to be visible
+    page.wait_for_selector("#historical-mode-controls", state="visible")
+    page.wait_for_selector("#historical-figure-1", state="visible")
 
-        browser.close()
+    page.screenshot(path="verification/historical_mode.png")
+    print("Screenshot saved: verification/historical_mode.png")
 
-if __name__ == "__main__":
-    run()
+    # Verify Commentary Mode
+    print("Testing Commentary Mode...")
+    page.click("#commentary-mode-btn", force=True)
+
+    # Wait for controls to be visible
+    page.wait_for_selector("#commentary-mode-controls", state="visible")
+    page.wait_for_selector("#commentary-target", state="visible")
+
+    page.screenshot(path="verification/commentary_mode.png")
+    print("Screenshot saved: verification/commentary_mode.png")
+
+    browser.close()
+
+with sync_playwright() as playwright:
+    run(playwright)

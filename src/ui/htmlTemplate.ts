@@ -127,6 +127,38 @@ export function getAppTemplate(): string {
             <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
             <button id="trial-mode-btn" class="mode-btn">The Trial</button>
             <button id="tech-mode-btn" class="mode-btn">Tech Support</button>
+            <button id="historical-mode-btn" class="mode-btn">Historical</button>
+            <button id="commentary-mode-btn" class="mode-btn">Commentary</button>
+          </div>
+
+          <div id="historical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Figure 1 (for Comedian)</label>
+              <input type="text" id="historical-figure-1" placeholder="e.g., 'Napoleon'" autocomplete="off" disabled />
+            </div>
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Figure 2 (for Philosopher)</label>
+              <input type="text" id="historical-figure-2" placeholder="e.g., 'Genghis Khan'" autocomplete="off" disabled />
+            </div>
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Debate Topic</label>
+              <input type="text" id="historical-topic" placeholder="e.g., 'The best strategy for world domination'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-historical-btn" class="primary-btn" disabled>Start Reenactment</button>
+              <button id="stop-historical-btn" class="secondary-btn" style="display: none;" disabled>Stop Reenactment</button>
+            </div>
+          </div>
+
+          <div id="commentary-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Commentary Target</label>
+              <input type="text" id="commentary-target" placeholder="e.g., 'The User\'s Code', 'A Chess Game'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-commentary-btn" class="primary-btn" disabled>Start Commentary</button>
+              <button id="stop-commentary-btn" class="secondary-btn" style="display: none;" disabled>Stop Commentary</button>
+            </div>
           </div>
 
           <div id="autonomous-mode-controls" class="improv-controls" style="display: none;">

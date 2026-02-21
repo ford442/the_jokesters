@@ -57,6 +57,14 @@ export interface ModeElements {
   techIssueInput: HTMLInputElement;
   startTechBtn: HTMLButtonElement;
   stopTechBtn: HTMLButtonElement;
+  historicalFigure1Input: HTMLInputElement;
+  historicalFigure2Input: HTMLInputElement;
+  historicalTopicInput: HTMLInputElement;
+  startHistoricalBtn: HTMLButtonElement;
+  stopHistoricalBtn: HTMLButtonElement;
+  commentaryTargetInput: HTMLInputElement;
+  startCommentaryBtn: HTMLButtonElement;
+  stopCommentaryBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -114,6 +122,14 @@ export function collectModeElements(): ModeElements {
     techIssueInput: document.getElementById('tech-issue') as HTMLInputElement,
     startTechBtn: document.getElementById('start-tech-btn') as HTMLButtonElement,
     stopTechBtn: document.getElementById('stop-tech-btn') as HTMLButtonElement,
+    historicalFigure1Input: document.getElementById('historical-figure-1') as HTMLInputElement,
+    historicalFigure2Input: document.getElementById('historical-figure-2') as HTMLInputElement,
+    historicalTopicInput: document.getElementById('historical-topic') as HTMLInputElement,
+    startHistoricalBtn: document.getElementById('start-historical-btn') as HTMLButtonElement,
+    stopHistoricalBtn: document.getElementById('stop-historical-btn') as HTMLButtonElement,
+    commentaryTargetInput: document.getElementById('commentary-target') as HTMLInputElement,
+    startCommentaryBtn: document.getElementById('start-commentary-btn') as HTMLButtonElement,
+    stopCommentaryBtn: document.getElementById('stop-commentary-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -169,6 +185,12 @@ export function enableModeControls(el: ModeElements) {
   el.trialTopicInput.disabled = false;
   el.startTechBtn.disabled = false;
   el.techIssueInput.disabled = false;
+  el.startHistoricalBtn.disabled = false;
+  el.historicalFigure1Input.disabled = false;
+  el.historicalFigure2Input.disabled = false;
+  el.historicalTopicInput.disabled = false;
+  el.startCommentaryBtn.disabled = false;
+  el.commentaryTargetInput.disabled = false;
 }
 
 /**
@@ -500,4 +522,39 @@ export function registerModeHandlers(
     });
   });
   el.stopTechBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Historical Mode
+  switchMode('historical-mode-btn', 'historical-mode-controls');
+  el.startHistoricalBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startHistoricalBtn.style.display = 'none';
+    el.stopHistoricalBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'historical', title: 'Historical Debate', description: 'Historical figures debating.',
+      config: {
+        historicalFigures: [
+          { agentId: 'comedian', figureName: el.historicalFigure1Input.value || 'Napoleon' },
+          { agentId: 'philosopher', figureName: el.historicalFigure2Input.value || 'Genghis Khan' },
+          { agentId: 'scientist', figureName: 'The Moderator' }
+        ],
+        historicalTopic: el.historicalTopicInput.value
+      }
+    });
+  });
+  el.stopHistoricalBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Commentary Mode
+  switchMode('commentary-mode-btn', 'commentary-mode-controls');
+  el.startCommentaryBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startCommentaryBtn.style.display = 'none';
+    el.stopCommentaryBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'commentary', title: 'Commentary Track', description: 'Agents commentating on user input.',
+      config: { commentaryTarget: el.commentaryTargetInput.value }
+    });
+  });
+  el.stopCommentaryBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }

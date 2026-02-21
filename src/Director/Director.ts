@@ -5,8 +5,8 @@ import type { ModeContext } from './modes/ModeContext';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop } from './modes/ReporterMode';
-import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop } from './modes/InteractiveMode';
-import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop } from './modes/PerformanceMode';
+import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop } from './modes/InteractiveMode';
+import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -39,7 +39,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary';
     title: string;
     description: string;
     config?: {
@@ -77,6 +77,9 @@ export interface Scenario {
         imageUrl?: string;
         trialTopic?: string;
         techIssue?: string;
+        historicalFigures?: { agentId: string, figureName: string }[];
+        historicalTopic?: string;
+        commentaryTarget?: string;
     };
 }
 
@@ -106,6 +109,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     podcast: runPodcastLoop,
     script: runScriptLoop,
     dream: runDreamLoop,
+    historical: runHistoricalLoop,
+    commentary: runCommentaryLoop,
 };
 
 export class Director {
