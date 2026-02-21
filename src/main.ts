@@ -23,9 +23,10 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
   { level: 'UNCENSORED', label: 'Uncensored', color: '#ff0000' }
 ]
 
+// Model Configuration - Using main's newer 3.2 models with better config structure
 const hermesModelConfig = {
   model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm ",
   overrides: {
     context_window_size: 4096,
   },
@@ -34,15 +35,15 @@ const hermesModelConfig = {
 const appConfig = {
   model_list: [
     {
-      model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
+      model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC ",
       model_id: hermesModelConfig.model_id,
       model_lib: hermesModelConfig.model_lib,
       overrides: hermesModelConfig.overrides,
     },
     {
-      model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC",
+      model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC ",
       model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm ",
     }
   ],
   useIndexedDBCache: true,
@@ -59,9 +60,8 @@ function applyModelConfigsToEngine(engine: any) {
 }
 
 function getAvailableModels(engine: any): string[] {
-    const list = (engine.prebuiltAppConfig?.model_list || []).map((m: any) => m.model_id);
-    // Deduplicate
-    return Array.from(new Set(list));
+    if (!engine || !engine.prebuiltAppConfig || !engine.prebuiltAppConfig.model_list) return [];
+    return engine.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
 }
 
 function populateModelSelect(engine: any) {
@@ -135,6 +135,52 @@ const defaultAgentModelMappings: AgentModelMapping[] = [
 export interface ScriptBeat {
   speaker: string;
   line: string;
+}
+
+// --- Simple Beat Generator ---
+let musicAudioContext: AudioContext | null = null;
+let nextNoteTime = 0.0;
+let beatTimerID: number | null = null;
+let isPlayingBeat = false;
+
+function scheduleNote(context: AudioContext, time: number) {
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    osc.connect(gain);
+    gain.connect(context.destination);
+
+    osc.frequency.value = 150; // Kick-ish
+    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+    gain.gain.setValueAtTime(0.3, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+    osc.start(time);
+    osc.stop(time + 0.5);
+}
+
+function scheduler() {
+    if (!musicAudioContext) return;
+    while (nextNoteTime < musicAudioContext.currentTime + 0.1) {
+        scheduleNote(musicAudioContext, nextNoteTime);
+        nextNoteTime += 0.5; // 120 BPM
+    }
+    beatTimerID = window.setTimeout(scheduler, 25);
+}
+
+const startBeat = () => {
+    if (isPlayingBeat) return;
+    if (!musicAudioContext) musicAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Resume context if suspended (browser policy)
+    if (musicAudioContext.state === 'suspended') musicAudioContext.resume();
+
+    isPlayingBeat = true;
+    nextNoteTime = musicAudioContext.currentTime;
+    scheduler();
+}
+
+const stopBeat = () => {
+    isPlayingBeat = false;
+    if (beatTimerID) clearTimeout(beatTimerID);
 }
 
 // Initialize the app
@@ -300,7 +346,7 @@ async function initApp() {
           <div id="vision-mode-controls" class="improv-controls" style="display: none;">
              <div class="input-group">
               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Image URL (Direct Link)</label>
-              <input type="text" id="vision-url" placeholder="https://example.com/image.jpg" autocomplete="off" disabled />
+              <input type="text" id="vision-url" placeholder="https://example.com/image.jpg " autocomplete="off" disabled />
             </div>
              <div class="input-group" style="margin-top:5px;">
               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Or Upload Image</label>
@@ -365,6 +411,10 @@ async function initApp() {
           </div>
 
           <div id="musical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Music Style</label>
+              <input type="text" id="musical-style" placeholder="e.g., 'Old School Hip Hop', 'Jazz Scat'" autocomplete="off" disabled />
+            </div>
             <div class="improv-buttons">
               <button id="start-musical-btn" class="primary-btn" disabled>Start Musical Improv</button>
               <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
@@ -437,6 +487,7 @@ async function initApp() {
               autocomplete="off"
               disabled
             />
+            <button id="voice-input-btn" title="Voice Input" style="margin-right: 5px;" disabled>🎤</button>
             <button id="send-btn" disabled>Send</button>
             <button id="save-episode-btn" style="margin-left: 5px; background: #0f3460; border-color: #444;" disabled title="Save to Cloud">💾</button>
           </div>
@@ -593,10 +644,12 @@ async function initApp() {
   const roastModeBtn = document.getElementById('roast-mode-btn') as HTMLButtonElement
   const storyModeBtn = document.getElementById('story-mode-btn') as HTMLButtonElement
   const debateModeBtn = document.getElementById('debate-mode-btn') as HTMLButtonElement
+  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
 
   const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement
   const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement
   const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement
+  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
 
   const roastTargetInput = document.getElementById('roast-target') as HTMLInputElement
   const startRoastBtn = document.getElementById('start-roast-btn') as HTMLButtonElement
@@ -611,12 +664,11 @@ async function initApp() {
   const stopDebateBtn = document.getElementById('stop-debate-btn') as HTMLButtonElement
 
   // Musical Mode
-  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
-  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
+  const musicalStyleInput = document.getElementById('musical-style') as HTMLInputElement
   const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
   const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
 
-  // Interview Mode
+  // Interview Mode (Podcast)
   const interviewModeBtn = document.getElementById('interview-mode-btn') as HTMLButtonElement
   const interviewModeControls = document.getElementById('interview-mode-controls') as HTMLDivElement
   const interviewHostSelect = document.getElementById('interview-host') as HTMLSelectElement
@@ -694,11 +746,17 @@ async function initApp() {
 
   let addMessage: (sender: string, message: string, color: string) => void;
   let speakAndVisualize: (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
+    speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
+        if(stage) stage.setActiveActor(agentId);
+        if(audioEngine && speechQueue) {
+            const audio = await audioEngine.synthesize(text, agentId, options);
+            speechQueue.add(audio);
+        }
+    };
+
 
   // Active engine module state
   let activeEngineModule: any = webllm;
-
-  // ... (populateModelSelect and getAvailableModels functions remain the same) ...
 
   // Initial population with default engine
   populateModelSelect(webllm)
@@ -926,6 +984,10 @@ async function initApp() {
           console.error('Director Error:', error);
           addMessage('System', 'Error in director loop', '#ff0000');
         },
+        onMusicControl: (action) => {
+            if (action === 'play') startBeat();
+            else if (action === 'stop') stopBeat();
+        },
         onSceneStop: () => {
           addMessage('System', '🛑 Scene stopped by user', '#ff6b6b');
 
@@ -967,6 +1029,7 @@ async function initApp() {
 
           stopMusicalBtn.style.display = 'none';
           startMusicalBtn.style.display = 'inline-block';
+          musicalStyleInput.disabled = false;
 
           stopInterviewBtn.style.display = 'none';
           startInterviewBtn.style.display = 'inline-block';
@@ -1043,6 +1106,7 @@ async function initApp() {
       startStoryBtn.disabled = false
       debateTopicInput.disabled = false
       startDebateBtn.disabled = false
+      musicalStyleInput.disabled = false
       startMusicalBtn.disabled = false
       startInterviewBtn.disabled = false
       interviewHostSelect.disabled = false
@@ -1221,7 +1285,7 @@ async function initApp() {
             title: 'Reaction to Video',
             description: 'Agents watching a video.',
             config: {
-                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4 ',
                 triggers: [
                     { timestamp: 10, prompt: '(Video: The bunny wakes up. Comment on how cute/annoying it is.)', executed: false },
                     { timestamp: 30, prompt: '(Video: The bunny throws an apple. Laugh at the slapstick humor.)', executed: false }
@@ -1378,19 +1442,26 @@ async function initApp() {
 
     startMusicalBtn.addEventListener('click', async () => {
         if (!director) return;
+        const style = musicalStyleInput.value.trim();
+
         startMusicalBtn.style.display = 'none';
         stopMusicalBtn.style.display = 'inline-block';
+        musicalStyleInput.disabled = true;
 
         await director.playScenario({
             type: 'musical',
             title: 'Musical Improv',
-            description: 'Agents rapping to a beat',
+            description: `Rapping/Singing to a beat${style ? ` (${style})` : ''}`,
+            config: { 
+                musicalStyle: style,
+                musicalTopic: style || 'Life in the Matrix'
+            }
         });
     });
 
     stopMusicalBtn.addEventListener('click', () => director && director.stopScene());
 
-    // Podcast Mode
+    // Podcast Mode (Interview)
     interviewModeBtn.addEventListener('click', () => {
         resetModeUI();
         interviewModeBtn.classList.add('active');
@@ -1677,6 +1748,11 @@ async function initApp() {
             addMessage('System', `Episode saved locally (and to cloud if configured). ID: ${id}`, '#4ecdc4');
         }
     });
+
+    // Initial load
+    if (defaultModelId) {
+        await initializeManagers(defaultModelId, activeEngineModule);
+    }
 
     userInput.focus()
   } catch (error: any) {
