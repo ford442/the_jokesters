@@ -57,6 +57,7 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Voice Input**: User talks to agents naturally.
 *   **Commentary Mode**: Agents comment on a live feed (simulated).
 *   **Tutorial Mode**: Agents teach the user how to use the app.
+*   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
 
 ---
 
@@ -118,7 +119,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   [x] Trigger save on "Save Episode" button click.
 
 3.  **Continuity**:
-    *   [ ] Fetch "Previous Episode Summaries" at boot.
+    *   [x] Fetch "Previous Episode Summaries" at boot.
         *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
         *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
 
@@ -138,6 +139,12 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 6: Audio & Interaction
 * [x] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
 * [x] **Musical Improv**: (Experimental) Sync TTS with audio beat.
+* [x] **Voice Input**: Add STT (Web Speech API) to allow user to speak to agents.
+
+### Phase 7: Deep Cloud Integration (The "Dream")
+* [ ] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
+* [ ] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
+* [ ] **Community Scripts**: Load scripts from a shared/public HF dataset.
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
@@ -149,7 +156,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Implemented `Director.runDungeonMasterLoop`.
 * [ ] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
-    *   Requires: Vision-capable model (Llava, Phi-3-Vision).
+    *   Implemented: `Director.runVisionLoop` + Multimodal support in `GroupChatManager`.
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
 ### Phase 8: Advanced Intelligence & Polish (The "Interview" Phase)
@@ -157,3 +164,20 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
 * [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
 * [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+### Phase 8: Advanced Intelligence & Polish
+* [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+* [x] **Memory Recall (Simple RAG)**: Search local episode history for keywords and inject into context.
+* [x] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+
+### Phase 9: New Horizons (The Dream)
+* [x] **Trivia Night Mode**: Agents host a quiz show for the user.
+    *   *Logic*: `Director.runTriviaLoop` asks questions and evaluates answers.
+* [x] **Dream Mode**: Agents describe a surreal dream they shared.
+    *   *Logic*: `Director.runDreamLoop` collaborative storytelling with dream logic.
+* [ ] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
+* [ ] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
+* [ ] **Tech Support**: Agents act as frustrated tech support vs confused user.
+* [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.
+* [ ] **The Time Machine**: Agents pretend to be from different historical eras.
+* [ ] **Rap Battle Arena**: Dedicated visual mode for musical battles with scoring.

@@ -12,9 +12,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { VoiceInputManager } from './audio/VoiceInputManager'
 import { AgentModelManager } from './AgentModelManager'
 import type { AgentModelMapping } from './AgentModelManager'
-import { Director, type DirectorCallbacks, type Scenario } from './Director/Director'
-import { ScriptParser } from './Director/ScriptParser'
-import { DataFetchService } from './services/DataFetchService'
+import { Director, type DirectorCallbacks } from './Director/Director'
 import { ScriptGenerator } from './Director/ScriptGenerator'
 import { MemoryManager } from './Director/MemoryManager'
 
@@ -28,7 +26,7 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
 // Model Configuration - Using main's newer 3.2 models with better config structure
 const hermesModelConfig = {
   model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Hermes-3-Llama-3.2-3B-q4f32_1-MLC-webgpu.wasm",
+  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm ",
   overrides: {
     context_window_size: 4096,
   },
@@ -37,15 +35,15 @@ const hermesModelConfig = {
 const appConfig = {
   model_list: [
     {
-      model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
+      model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC ",
       model_id: hermesModelConfig.model_id,
       model_lib: hermesModelConfig.model_lib,
       overrides: hermesModelConfig.overrides,
     },
     {
-      model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC",
+      model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC ",
       model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_48/Llama-3.2-3B-Instruct-q4f32_1-MLC-webgpu.wasm",
+      model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm ",
     }
   ],
   useIndexedDBCache: true,
@@ -137,6 +135,52 @@ const defaultAgentModelMappings: AgentModelMapping[] = [
 export interface ScriptBeat {
   speaker: string;
   line: string;
+}
+
+// --- Simple Beat Generator ---
+let musicAudioContext: AudioContext | null = null;
+let nextNoteTime = 0.0;
+let beatTimerID: number | null = null;
+let isPlayingBeat = false;
+
+function scheduleNote(context: AudioContext, time: number) {
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+    osc.connect(gain);
+    gain.connect(context.destination);
+
+    osc.frequency.value = 150; // Kick-ish
+    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+    gain.gain.setValueAtTime(0.3, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+    osc.start(time);
+    osc.stop(time + 0.5);
+}
+
+function scheduler() {
+    if (!musicAudioContext) return;
+    while (nextNoteTime < musicAudioContext.currentTime + 0.1) {
+        scheduleNote(musicAudioContext, nextNoteTime);
+        nextNoteTime += 0.5; // 120 BPM
+    }
+    beatTimerID = window.setTimeout(scheduler, 25);
+}
+
+const startBeat = () => {
+    if (isPlayingBeat) return;
+    if (!musicAudioContext) musicAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Resume context if suspended (browser policy)
+    if (musicAudioContext.state === 'suspended') musicAudioContext.resume();
+
+    isPlayingBeat = true;
+    nextNoteTime = musicAudioContext.currentTime;
+    scheduler();
+}
+
+const stopBeat = () => {
+    isPlayingBeat = false;
+    if (beatTimerID) clearTimeout(beatTimerID);
 }
 
 // Initialize the app
@@ -249,6 +293,54 @@ async function initApp() {
             <button id="musical-mode-btn" class="mode-btn">Musical Mode</button>
             <button id="interview-mode-btn" class="mode-btn">Podcast Mode</button>
             <button id="dm-mode-btn" class="mode-btn">DM Mode</button>
+            <button id="autonomous-mode-btn" class="mode-btn">Auto Mode</button>
+            <button id="trivia-mode-btn" class="mode-btn">Trivia Mode</button>
+            <button id="dream-mode-btn" class="mode-btn">Dream Mode</button>
+            <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
+          </div>
+
+          <div id="autonomous-mode-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-autonomous-btn" class="primary-btn" disabled>Start Autonomous</button>
+              <button id="stop-autonomous-btn" class="secondary-btn" style="display: none;" disabled>Stop Autonomous</button>
+            </div>
+          </div>
+
+          <div id="trivia-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Trivia Topic</label>
+              <input type="text" id="trivia-topic" placeholder="e.g., 'Science Fiction Movies'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-trivia-btn" class="primary-btn" disabled>Start Trivia</button>
+              <button id="stop-trivia-btn" class="secondary-btn" style="display: none;" disabled>Stop Trivia</button>
+            </div>
+          </div>
+
+          <div id="dream-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Dream Theme</label>
+              <input type="text" id="dream-theme" placeholder="e.g., 'Flying through a candy city'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-dream-btn" class="primary-btn" disabled>Start Dream</button>
+              <button id="stop-dream-btn" class="secondary-btn" style="display: none;" disabled>Stop Dream</button>
+            </div>
+          </div>
+
+          <div id="vision-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Image URL (Direct Link)</label>
+              <input type="text" id="vision-url" placeholder="https://example.com/image.jpg " autocomplete="off" disabled />
+            </div>
+             <div class="input-group" style="margin-top:5px;">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Or Upload Image</label>
+              <input type="file" id="vision-file" accept="image/*" style="color: #ccc;" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-vision-btn" class="primary-btn" disabled>Analyze Image</button>
+              <button id="stop-vision-btn" class="secondary-btn" style="display: none;" disabled>Stop Vision</button>
+            </div>
           </div>
 
           <div id="interview-mode-controls" class="improv-controls" style="display: none;">
@@ -282,6 +374,10 @@ async function initApp() {
           </div>
 
           <div id="musical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Music Style</label>
+              <input type="text" id="musical-style" placeholder="e.g., 'Old School Hip Hop', 'Jazz Scat'" autocomplete="off" disabled />
+            </div>
             <div class="improv-buttons">
               <button id="start-musical-btn" class="primary-btn" disabled>Start Musical Improv</button>
               <button id="stop-musical-btn" class="secondary-btn" style="display: none;" disabled>Stop Music</button>
@@ -354,6 +450,7 @@ async function initApp() {
               autocomplete="off"
               disabled
             />
+            <button id="voice-input-btn" title="Voice Input" style="margin-right: 5px;" disabled>🎤</button>
             <button id="send-btn" disabled>Send</button>
             <button id="save-episode-btn" style="margin-left: 5px; background: #0f3460; border-color: #444;" disabled title="Save to Cloud">💾</button>
           </div>
@@ -484,28 +581,20 @@ async function initApp() {
   const saveEpisodeBtn = document.getElementById('save-episode-btn') as HTMLButtonElement
   const modelSelect = document.getElementById('model-select') as HTMLSelectElement
   const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null
-  const autoLoadVicunaCheckbox = document.getElementById('auto-load-vicuna') as HTMLInputElement
   const loadModelBtn = document.getElementById('load-model-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
-  const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
-  const ttsStepsVal = document.getElementById('tts-steps-val')!
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
-  const chaosVal = document.getElementById('director-chaos-val')!
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
-  const profanityVal = document.getElementById('profanity-val')!
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
   const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
   const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
-  const modelErrorDiv = document.getElementById('model-error') as HTMLDivElement | null
   const reporterCategorySelect = document.getElementById('reporter-category') as HTMLSelectElement
   const reporterTopicInput = document.getElementById('reporter-topic') as HTMLInputElement
   const reporterQuickTopicsSelect = document.getElementById('reporter-quick-topics') as HTMLSelectElement
   const startReporterBtn = document.getElementById('start-reporter-btn') as HTMLButtonElement
   const stopReporterBtn = document.getElementById('stop-reporter-btn') as HTMLButtonElement
-  const useCustomArticleCheckbox = document.getElementById('use-custom-article') as HTMLInputElement
-  const articleTitleInput = document.getElementById('article-title') as HTMLInputElement
   const articleTextTextarea = document.getElementById('article-text') as HTMLTextAreaElement
 
   const scriptTopicInput = document.getElementById('script-topic') as HTMLInputElement
@@ -517,10 +606,12 @@ async function initApp() {
   const roastModeBtn = document.getElementById('roast-mode-btn') as HTMLButtonElement
   const storyModeBtn = document.getElementById('story-mode-btn') as HTMLButtonElement
   const debateModeBtn = document.getElementById('debate-mode-btn') as HTMLButtonElement
+  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
 
   const roastModeControls = document.getElementById('roast-mode-controls') as HTMLDivElement
   const storyModeControls = document.getElementById('story-mode-controls') as HTMLDivElement
   const debateModeControls = document.getElementById('debate-mode-controls') as HTMLDivElement
+  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
 
   const roastTargetInput = document.getElementById('roast-target') as HTMLInputElement
   const startRoastBtn = document.getElementById('start-roast-btn') as HTMLButtonElement
@@ -535,8 +626,7 @@ async function initApp() {
   const stopDebateBtn = document.getElementById('stop-debate-btn') as HTMLButtonElement
 
   // Musical Mode
-  const musicalModeBtn = document.getElementById('musical-mode-btn') as HTMLButtonElement
-  const musicalModeControls = document.getElementById('musical-mode-controls') as HTMLDivElement
+  const musicalStyleInput = document.getElementById('musical-style') as HTMLInputElement
   const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
   const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
 
@@ -554,6 +644,34 @@ async function initApp() {
   const dmSettingInput = document.getElementById('dm-setting') as HTMLInputElement
   const startDmBtn = document.getElementById('start-dm-btn') as HTMLButtonElement
   const stopDmBtn = document.getElementById('stop-dm-btn') as HTMLButtonElement
+
+  // Autonomous Mode
+  const autonomousModeBtn = document.getElementById('autonomous-mode-btn') as HTMLButtonElement
+  const autonomousModeControls = document.getElementById('autonomous-mode-controls') as HTMLDivElement
+  const startAutonomousBtn = document.getElementById('start-autonomous-btn') as HTMLButtonElement
+  const stopAutonomousBtn = document.getElementById('stop-autonomous-btn') as HTMLButtonElement
+
+  // Trivia Mode
+  const triviaModeBtn = document.getElementById('trivia-mode-btn') as HTMLButtonElement
+  const triviaModeControls = document.getElementById('trivia-mode-controls') as HTMLDivElement
+  const triviaTopicInput = document.getElementById('trivia-topic') as HTMLInputElement
+  const startTriviaBtn = document.getElementById('start-trivia-btn') as HTMLButtonElement
+  const stopTriviaBtn = document.getElementById('stop-trivia-btn') as HTMLButtonElement
+
+  // Dream Mode
+  const dreamModeBtn = document.getElementById('dream-mode-btn') as HTMLButtonElement
+  const dreamModeControls = document.getElementById('dream-mode-controls') as HTMLDivElement
+  const dreamThemeInput = document.getElementById('dream-theme') as HTMLInputElement
+  const startDreamBtn = document.getElementById('start-dream-btn') as HTMLButtonElement
+  const stopDreamBtn = document.getElementById('stop-dream-btn') as HTMLButtonElement
+
+  // Vision Mode
+  const visionModeBtn = document.getElementById('vision-mode-btn') as HTMLButtonElement
+  const visionModeControls = document.getElementById('vision-mode-controls') as HTMLDivElement
+  const visionUrlInput = document.getElementById('vision-url') as HTMLInputElement
+  const visionFileInput = document.getElementById('vision-file') as HTMLInputElement
+  const startVisionBtn = document.getElementById('start-vision-btn') as HTMLButtonElement
+  const stopVisionBtn = document.getElementById('stop-vision-btn') as HTMLButtonElement
 
   const chatModeControls = document.getElementById('chat-mode-controls') as HTMLDivElement;
   // Voice Input
@@ -595,9 +713,48 @@ async function initApp() {
   addMessage = (sender: string, text: string, color: string) => {
     const div = document.createElement('div')
     div.className = 'message'
-    div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}`
+
+    // Check if sender is an agent
+    const agent = agents.find(a => a.name === sender || a.id === sender);
+    let buttonsHtml = '';
+
+    if (agent) {
+         buttonsHtml = `
+         <span class="feedback-controls" style="float:right; opacity:0.5;">
+            <button class="feedback-btn" data-agent="${agent.id}" data-type="positive" title="Encourage Chaos">👍</button>
+            <button class="feedback-btn" data-agent="${agent.id}" data-type="negative" title="Reduce Chaos">👎</button>
+         </span>
+         `;
+    }
+
+    div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}${buttonsHtml}`
     chatLog.appendChild(div)
     chatLog.scrollTop = chatLog.scrollHeight
+
+    // Add listeners
+    if (agent) {
+        const btns = div.querySelectorAll('.feedback-btn');
+        btns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget as HTMLButtonElement;
+                const agentId = target.getAttribute('data-agent');
+                const type = target.getAttribute('data-type') as 'positive' | 'negative';
+                if (agentId && groupChatManager) {
+                    groupChatManager.adjustAgentPersonality(agentId, type);
+
+                    // Show toast
+                    const toast = document.createElement('div');
+                    toast.className = 'toast';
+                    toast.textContent = `Adjusted ${agentId}: ${type === 'positive' ? '+Chaos' : '-Chaos'}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2000);
+
+                    // Remove buttons
+                    target.parentElement?.remove();
+                }
+            });
+        });
+    }
   }
 
   speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
@@ -694,11 +851,20 @@ async function initApp() {
       groupChatManager = new GroupChatManager(agents)
       scriptGenerator = new ScriptGenerator(groupChatManager)
       memoryManager = new MemoryManager();
+
+      // Load previous episode context
+      const previousContext = await memoryManager.loadLastEpisode();
+
       // 3. Initialize the chat manager with progress callback, passing the new modelId and selected engine module
       statusText.textContent = `Initializing model: ${modelId}...`
       await groupChatManager.initialize(modelId, (progress: any) => {
         statusText.textContent = progress.text
       }, engineModule)
+
+      if (previousContext) {
+          groupChatManager.setGlobalContext(previousContext);
+          addMessage('System', 'Loaded context from previous episode.', '#4ecdc4');
+      }
 
       // 4. Initialize AgentModelManager
       agentModelManager = new AgentModelManager(
@@ -726,6 +892,14 @@ async function initApp() {
       // Initialize Director
       const directorCallbacks: DirectorCallbacks = {
         onMessage: (sender, message, color) => addMessage(sender, message, color),
+        onTicker: (text) => {
+            const container = document.getElementById('news-ticker-container');
+            const content = document.getElementById('news-ticker-content');
+            if (container && content) {
+                container.style.display = 'block';
+                content.textContent = text;
+            }
+        },
         onSpeak: async (sentence, agentId, options) => {
           await speakAndVisualize(sentence, agentId, options);
           if (currentMessageContentSpan) {
@@ -758,8 +932,16 @@ async function initApp() {
           console.error('Director Error:', error);
           addMessage('System', 'Error in director loop', '#ff0000');
         },
+        onMusicControl: (action) => {
+            if (action === 'play') startBeat();
+            else if (action === 'stop') stopBeat();
+        },
         onSceneStop: () => {
           addMessage('System', '🛑 Scene stopped by user', '#ff6b6b');
+
+          const ticker = document.getElementById('news-ticker-container');
+          if (ticker) ticker.style.display = 'none';
+
           sceneTitleInput.disabled = false;
           sceneDescriptionInput.disabled = false;
           startImprovBtn.style.display = 'inline-block';
@@ -795,6 +977,7 @@ async function initApp() {
 
           stopMusicalBtn.style.display = 'none';
           startMusicalBtn.style.display = 'inline-block';
+          musicalStyleInput.disabled = false;
 
           stopInterviewBtn.style.display = 'none';
           startInterviewBtn.style.display = 'inline-block';
@@ -804,6 +987,22 @@ async function initApp() {
           stopDmBtn.style.display = 'none';
           startDmBtn.style.display = 'inline-block';
           dmSettingInput.disabled = false;
+
+          stopAutonomousBtn.style.display = 'none';
+          startAutonomousBtn.style.display = 'inline-block';
+
+          stopTriviaBtn.style.display = 'none';
+          startTriviaBtn.style.display = 'inline-block';
+          triviaTopicInput.disabled = false;
+
+          stopDreamBtn.style.display = 'none';
+          startDreamBtn.style.display = 'inline-block';
+          dreamThemeInput.disabled = false;
+
+          stopVisionBtn.style.display = 'none';
+          startVisionBtn.style.display = 'inline-block';
+          visionUrlInput.disabled = false;
+          visionFileInput.disabled = false;
 
           videoElement.pause();
           videoContainer.style.display = 'none';
@@ -817,7 +1016,7 @@ async function initApp() {
         },
         videoControls: videoControls
       };
-      director = new Director(groupChatManager, directorCallbacks);
+      director = new Director(groupChatManager, directorCallbacks, memoryManager);
       if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
 
       // Re-apply settings to the new manager instance
@@ -854,12 +1053,22 @@ async function initApp() {
       startStoryBtn.disabled = false
       debateTopicInput.disabled = false
       startDebateBtn.disabled = false
+      musicalStyleInput.disabled = false
       startMusicalBtn.disabled = false
       startInterviewBtn.disabled = false
       interviewHostSelect.disabled = false
       interviewGuestInput.disabled = false
       startDmBtn.disabled = false
       dmSettingInput.disabled = false
+      startAutonomousBtn.disabled = false
+
+      startTriviaBtn.disabled = false
+      triviaTopicInput.disabled = false
+      startDreamBtn.disabled = false
+      dreamThemeInput.disabled = false
+      startVisionBtn.disabled = false
+      visionUrlInput.disabled = false
+      visionFileInput.disabled = false
 
       modelSelect.disabled = false
       loadModelBtn.disabled = false
@@ -1009,7 +1218,7 @@ async function initApp() {
             title: 'Reaction to Video',
             description: 'Agents watching a video.',
             config: {
-                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4 ',
                 triggers: [
                     { timestamp: 10, prompt: '(Video: The bunny wakes up. Comment on how cute/annoying it is.)', executed: false },
                     { timestamp: 30, prompt: '(Video: The bunny throws an apple. Laugh at the slapstick humor.)', executed: false }
@@ -1166,13 +1375,20 @@ async function initApp() {
 
     startMusicalBtn.addEventListener('click', async () => {
         if (!director) return;
+        const style = musicalStyleInput.value.trim();
+
         startMusicalBtn.style.display = 'none';
         stopMusicalBtn.style.display = 'inline-block';
+        musicalStyleInput.disabled = true;
 
         await director.playScenario({
             type: 'musical',
             title: 'Musical Improv',
-            description: 'Agents rapping to a beat',
+            description: `Rapping/Singing to a beat${style ? ` (${style})` : ''}`,
+            config: { 
+                musicalStyle: style,
+                musicalTopic: style || 'Life in the Matrix'
+            }
         });
     });
 
@@ -1226,6 +1442,123 @@ async function initApp() {
     });
 
     stopDmBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Autonomous Mode
+    autonomousModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        autonomousModeBtn.classList.add('active');
+        autonomousModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startAutonomousBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startAutonomousBtn.style.display = 'none';
+        stopAutonomousBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'autonomous',
+            title: 'Autonomous Mode',
+            description: 'Agents chattering autonomously.',
+        });
+    });
+
+    stopAutonomousBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Trivia Mode
+    triviaModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        triviaModeBtn.classList.add('active');
+        triviaModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startTriviaBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startTriviaBtn.style.display = 'none';
+        stopTriviaBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'trivia',
+            title: 'Trivia Night',
+            description: 'A trivia game show.',
+            config: { triviaTopic: triviaTopicInput.value }
+        });
+    });
+
+    stopTriviaBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Dream Mode
+    dreamModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        dreamModeBtn.classList.add('active');
+        dreamModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startDreamBtn.addEventListener('click', async () => {
+        if (!director) return;
+        startDreamBtn.style.display = 'none';
+        stopDreamBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'dream',
+            title: 'Shared Dream',
+            description: 'A surreal collaborative dream.',
+            config: { dreamTheme: dreamThemeInput.value }
+        });
+    });
+
+    stopDreamBtn.addEventListener('click', () => director && director.stopScene());
+
+    // Vision Mode
+    visionModeBtn.addEventListener('click', () => {
+        resetModeUI();
+        visionModeBtn.classList.add('active');
+        visionModeControls.style.display = 'block';
+        if (director && director.isSceneRunning()) director.stopScene();
+    });
+
+    startVisionBtn.addEventListener('click', async () => {
+        if (!director) return;
+
+        // Handle image source (URL or File)
+        let imageUrl = visionUrlInput.value.trim();
+        const file = visionFileInput.files?.[0];
+
+        if (!imageUrl && file) {
+            // Convert file to base64 data URL
+            try {
+                imageUrl = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target?.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            } catch (e) {
+                console.error(e);
+                addMessage('System', 'Failed to read image file.', '#ff0000');
+                return;
+            }
+        }
+
+        if (!imageUrl) {
+            addMessage('System', 'Please provide an image URL or upload a file.', '#ff6b6b');
+            return;
+        }
+
+        startVisionBtn.style.display = 'none';
+        stopVisionBtn.style.display = 'inline-block';
+
+        await director.playScenario({
+            type: 'vision',
+            title: 'Visual Analysis',
+            description: 'Agents analyzing an image.',
+            config: { imageUrl: imageUrl }
+        });
+    });
+
+    stopVisionBtn.addEventListener('click', () => director && director.stopScene());
 
     // Handle Send (User Input)
     const handleSend = async () => {

@@ -1,8 +1,10 @@
 import { GroupChatManager } from '../GroupChatManager';
 import { MediaReactionManager, type ReactionTrigger } from './MediaReactionManager';
+import { MemoryManager } from './MemoryManager';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
+    onTicker?: (text: string) => void;
     onSpeak: (sentence: string, agentId: string, options: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
     onTurnStart: (agentId: string) => Promise<void>;
     onTurnEnd: () => Promise<void>;
@@ -24,14 +26,14 @@ export interface DirectorCallbacks {
 }
 
 export interface ReporterSegment {
-    type: 'intro' | 'headlines' | 'main_story' | 'panel_discussion' | 'fact_check' | 'breaking' | 'closing';
+    type: 'intro' | 'headlines' | 'main_story' | 'panel_discussion' | 'fact_check' | 'breaking' | 'closing' | 'weather' | 'commercial' | 'interview';
     speakerRole?: 'anchor' | 'reporter' | 'analyst' | 'expert' | 'host';
     promptInjection: string;
     maxTurns: number;
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' | 'dungeon_master';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision';
     title: string;
     description: string;
     config?: {
@@ -50,6 +52,7 @@ export interface Scenario {
         roastTarget?: string;
         storyContext?: string;
         debateTopic?: string;
+        musicalStyle?: string;
         musicalTopic?: string;
         podcastConfig?: {
             host: string;
@@ -60,6 +63,12 @@ export interface Scenario {
             dmName: string;
             campaignSetting: string;
         };
+        interviewHost?: string;
+        interviewGuest?: string;
+        dmSetting?: string;
+        triviaTopic?: string;
+        dreamTheme?: string;
+        imageUrl?: string;
     };
 }
 
@@ -76,10 +85,12 @@ export class Director {
     private currentScenario: Scenario | null = null;
     private interruptQueue: string[] = [];
     private inputPromise: { resolve: (text: string) => void, reject: (reason?: any) => void } | null = null;
+    private memoryManager: MemoryManager | null = null;
 
-    constructor(manager: GroupChatManager, callbacks: DirectorCallbacks) {
+    constructor(manager: GroupChatManager, callbacks: DirectorCallbacks, memoryManager?: MemoryManager) {
         this.manager = manager;
         this.callbacks = callbacks;
+        this.memoryManager = memoryManager || null;
     }
 
     public setChaosLevel(level: number) {
@@ -136,6 +147,14 @@ export class Director {
                 await this.runInterviewLoop(scenario);
             } else if (scenario.type === 'dungeon_master') {
                 await this.runDungeonMasterLoop(scenario);
+            } else if (scenario.type === 'autonomous') {
+                await this.runAutonomousLoop(scenario);
+            } else if (scenario.type === 'trivia') {
+                await this.runTriviaLoop(scenario);
+            } else if (scenario.type === 'dream') {
+                await this.runDreamLoop(scenario);
+            } else if (scenario.type === 'vision') {
+                await this.runVisionLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -181,7 +200,7 @@ export class Director {
 
         console.log(`Director received interrupt: ${text}`);
         this.interruptQueue.push(text);
-        this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
+        this.callbacks.onMessage('System', `🗣️ Heckler detected: "${text}"`, '#ff6b6b');
 
         // Interrupt current generation
         if (this.manager) {
@@ -205,9 +224,67 @@ export class Director {
         });
     }
 
+    private async runAutonomousLoop(scenario: Scenario) {
+        const topics = [
+            "What if we are all living in a simulation?",
+            "The pros and cons of owning a pet dragon.",
+            "Why is pizza the perfect food?",
+            "Explain quantum physics using only food metaphors.",
+            "The worst possible time to start a dance party.",
+            "If animals could talk, which one would be the rudest?",
+        ];
+
+        let turnCount = 0;
+        this.callbacks.onMessage('Director', '🤖 Autonomous Mode Activated', '#4ecdc4');
+
+        if (this.manager.getHistoryLength() === 0) {
+            const seed = scenario.config?.initialPrompt || topics[Math.floor(Math.random() * topics.length)];
+            this.callbacks.onMessage('Director', `Topic: "${seed}"`, '#888');
+            await this.processTurn(seed);
+        }
+
+        while (this.isRunning) {
+             // Check for interruptions
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 INTERRUPT: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: SUDDEN INTERRUPTION! Someone said: "${heckle}". React to this naturally.)`);
+                continue;
+            }
+
+            await new Promise(r => setTimeout(r, 1000));
+            if (!this.isRunning) break;
+
+            let prompt = '(Continue the conversation naturally. Be funny or insightful.)';
+
+            // Inject random topic shift every 5 turns
+            if (turnCount > 0 && turnCount % 5 === 0) {
+                const newTopic = topics[Math.floor(Math.random() * topics.length)];
+                prompt = `(SYSTEM: The conversation is getting stale. Smoothly transition the topic to: "${newTopic}")`;
+                this.callbacks.onMessage('Director', `➡️ Shift to: ${newTopic}`, '#888');
+            }
+
+            // Chaos injection
+            if (Math.random() * 100 < this.chaosLevel && turnCount % 3 === 0) {
+                 prompt = '(SYSTEM: Something unexpected happens or someone makes a controversial statement. React!)';
+            }
+
+            await this.processTurn(prompt);
+            turnCount++;
+        }
+    }
+
     private async runImprovLoop(scenario: Scenario) {
         if (this.manager.getHistoryLength() === 0) {
-            const seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
+            let seed = scenario.config?.initialPrompt || scenario.title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?';
+
+            // Memory Recall
+            const recall = await this.searchAndRecall(seed);
+            if (recall) {
+                this.callbacks.onMessage('System', '🧠 Memory Recall Active', '#4ecdc4');
+                seed += '\n' + recall;
+            }
+
             this.callbacks.onMessage('Director', `Action! "${seed}"`, '#888');
             await this.processTurn(seed);
         }
@@ -307,6 +384,54 @@ export class Director {
         this.callbacks.videoControls.show(false);
     }
 
+    private async runVisionLoop(scenario: Scenario) {
+        const imageUrl = scenario.config?.imageUrl;
+        if (!imageUrl) {
+            this.callbacks.onError('Vision mode requires an imageUrl');
+            this.stopScene();
+            return;
+        }
+
+        this.callbacks.onMessage('Director', `👁️ VISION MODE: Analyzing Image...`, '#4ecdc4');
+
+        // Construct multimodal message
+        const content = [
+            { type: "text", text: "(VISION ANALYSIS: Look at this image. Describe what you see in detail and make a funny observation about it.)" },
+            { type: "image_url", image_url: { url: imageUrl } }
+        ];
+
+        // 1. First turn: Analysis (Handled manually to pass object content)
+        if (this.isRunning) {
+             const currentAgent = this.manager.getCurrentAgent();
+             await this.callbacks.onTurnStart(currentAgent.id);
+
+             // We use chat directly because processTurn expects string
+             // Using higher maxTokens for image description
+             await this.manager.chat(content, async (sentence) => {
+                 await this.callbacks.onSpeak(sentence, currentAgent.id, { steps: 20 });
+             }, { maxTokens: 256 });
+
+             await this.callbacks.onTurnEnd();
+        }
+
+        // 2. Subsequent turns: Discussion
+        while (this.isRunning) {
+            await new Promise(r => setTimeout(r, 1000));
+            if (!this.isRunning) break;
+
+            // Check interrupts
+             if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `📢 COMMENT: "${heckle}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: Someone commented on the image: "${heckle}". React to this!)`);
+                continue;
+            }
+
+            // Continue discussion
+            await this.processTurn(`(Continue discussing the image. Point out another detail or make a connection to something else.)`);
+        }
+    }
+
     private async runScriptLoop(scenario: Scenario) {
         const script = scenario.config?.generatedScript;
         if (!script || script.length === 0) {
@@ -332,7 +457,7 @@ export class Director {
 
     private async runReporterLoop(scenario: Scenario) {
         const topic = scenario.config?.reporterTopic || scenario.title;
-        const context = scenario.config?.reporterContext;
+        let context = scenario.config?.reporterContext || '';
         const segments = scenario.config?.reporterSegments || this.getDefaultReporterSegments();
         const enableBreakingNews = scenario.config?.enableBreakingNews ?? true;
 
@@ -340,6 +465,13 @@ export class Director {
             this.callbacks.onError('Reporter mode requires context data in config.reporterContext');
             this.stopScene();
             return;
+        }
+
+        // Memory Recall
+        const recall = await this.searchAndRecall(topic);
+        if (recall) {
+             this.callbacks.onMessage('System', '🧠 Memory Recall Active', '#4ecdc4');
+             context += '\n' + recall;
         }
 
         // Show topic and sources
@@ -351,6 +483,12 @@ export class Director {
         // Execute each segment
         for (const segment of segments) {
             if (!this.isRunning) break;
+
+            if (this.callbacks.onTicker) {
+                const headline = await this.generateTickerHeadline(topic);
+                this.callbacks.onTicker(headline);
+            }
+
             await this.executeReporterSegment(segment, context, topic, enableBreakingNews);
         }
 
@@ -395,6 +533,36 @@ export class Director {
 
             turnCount++;
             await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    private async runDreamLoop(scenario: Scenario) {
+        const theme = scenario.config?.dreamTheme || 'A flying toaster';
+        this.callbacks.onMessage('Director', `🌙 SHARED DREAM: Theme - ${theme}`, '#9b59b6');
+
+        let turnCount = 0;
+
+        // Seeding the dream
+        if (this.manager.getHistoryLength() === 0) {
+             await this.processTurn(`(SHARED DREAM: We are all sharing a vivid, surreal dream about "${theme}". Start by describing what you see. Be abstract and weird.)`);
+        }
+
+        while (this.isRunning) {
+            // Check for interruptions (Lucid Dreaming)
+            if (this.interruptQueue.length > 0) {
+                const lucidity = this.interruptQueue.shift()!;
+                this.callbacks.onMessage('Director', `✨ LUCID INTERRUPT: "${lucidity}"`, '#ff6b6b');
+                await this.processTurn(`(SYSTEM: The dream suddenly shifts! "${lucidity}". Incorporate this new element into the dream logic immediately.)`);
+                continue;
+            }
+
+            if (!this.isRunning) break;
+
+            const prompt = `(SHARED DREAM: Continue the dream description. Build upon the previous surreal imagery. Keep it flowy and strange.)`;
+            await this.processTurn(prompt);
+
+            turnCount++;
+            await new Promise(r => setTimeout(r, 1200));
         }
     }
 
@@ -594,7 +762,7 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
     }
 
     private async runMusicalLoop(scenario: Scenario) {
-        const topic = scenario.config?.musicalTopic || 'Life in the Matrix';
+        const topic = scenario.config?.musicalTopic || scenario.config?.musicalStyle || 'Life in the Matrix';
 
         if (!this.callbacks.musicControls) {
             this.callbacks.onError('Musical mode requires music controls');
@@ -686,6 +854,45 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
         }
     }
 
+    private async runTriviaLoop(scenario: Scenario) {
+        const topic = scenario.config?.triviaTopic || 'General Knowledge';
+        const host = 'scientist';
+        this.callbacks.onMessage('Director', `❓ TRIVIA NIGHT: Topic - ${topic}`, '#f1c40f');
+
+        // Intro
+        this.callbacks.onTurnStart(host);
+        await this.manager.chatForAgent(host, `(You are hosting a Trivia Night. The topic is "${topic}". Welcome the player (User) and explain the rules. Keep it brief.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+        await this.callbacks.onTurnEnd();
+
+        let round = 1;
+        while (this.isRunning) {
+            this.callbacks.onMessage('Director', `🔔 Question ${round}`, '#888');
+
+            // 1. Generate Question
+            // We ask the host to ask a question.
+            if (!this.isRunning) break;
+
+            await this.manager.chatForAgent(host, `(TRIVIA HOST: Ask a challenging trivia question about "${topic}". Do not reveal the answer yet. Wait for the user to guess.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            // 2. Wait for User Answer
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage('You', userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // 3. Evaluate
+            await this.manager.chatForAgent(host, `(TRIVIA HOST: The user answered: "${userInput}". Reveal the correct answer and tell them if they were right or wrong. Be strict but fair. Then ask if they are ready for the next question.)`, async (s) => await this.callbacks.onSpeak(s, host, {}));
+
+            // Optional: Other agents react
+             if (Math.random() > 0.5 && this.isRunning) {
+                 await this.manager.chatForAgent('comedian', `(React to the user's answer or the host's strictness. Make a joke about it.)`, async (s) => await this.callbacks.onSpeak(s, 'comedian', {}));
+            }
+
+            round++;
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
     private getDefaultReporterSegments(): ReporterSegment[] {
         return [
             {
@@ -735,7 +942,10 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             panel_discussion: '💬',
             fact_check: '✅',
             breaking: '🚨',
-            closing: '👋'
+            closing: '👋',
+            weather: '☀️',
+            commercial: '📺',
+            interview: '🎙️'
         };
 
         const segmentNames: Record<string, string> = {
@@ -745,7 +955,10 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
             panel_discussion: 'Panel Discussion',
             fact_check: 'Fact Check',
             breaking: 'Breaking News',
-            closing: 'Closing'
+            closing: 'Closing',
+            weather: 'Weather Report',
+            commercial: 'Commercial Break',
+            interview: 'Exclusive Interview'
         };
 
         // Optional: Random breaking news interruption (controlled by chaos level)
@@ -860,9 +1073,25 @@ Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. 
             // Notify start of turn (used for model swapping and UI setup)
             await this.callbacks.onTurnStart(currentAgent.id);
 
-            const pacing = this.calculatePacing();
+            let pacing = this.calculatePacing();
+            let effectivePrompt = inputText;
 
-            const effectivePrompt = inputText + pacing.promptSuffix + ' ###';
+            // Check for interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                this.callbacks.onMessage('Heckler', `"${heckle}"`, '#ff0000');
+                effectivePrompt = `(HECKLER INTERRUPT: A heckler just shouted: "${heckle}". React to this immediately! Ignore the previous topic for a moment.)`;
+
+                // Force a punchy response
+                pacing = {
+                     type: 'punchline',
+                     maxTokens: 80,
+                     ttsSteps: 20,
+                     promptSuffix: ' (Roast the heckler!)'
+                };
+            }
+
+            effectivePrompt += pacing.promptSuffix + ' ###';
 
             // Character speeds
             const characterSpeeds: Record<string, number> = {
@@ -889,5 +1118,33 @@ Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. 
             this.callbacks.onError(error);
             this.stopScene();
         }
+    }
+
+    private async searchAndRecall(topic: string): Promise<string | null> {
+        if (!this.memoryManager) return null;
+        try {
+            const results = this.memoryManager.searchLocalEpisodes(topic);
+            if (results.length > 0) {
+                const snippets = results.map(r => `(Episode ${r.episodeId}): ${r.snippet}`).join('\n');
+                return `(MEMORY RECALL: You vaguely remember discussing "${topic}" before. Reference these past moments if relevant:\n${snippets})`;
+            }
+        } catch (e) {
+            console.warn('Memory search failed:', e);
+        }
+        return null;
+    }
+
+    private async generateTickerHeadline(topic: string): Promise<string> {
+        const templates = [
+            `BREAKING: ${topic} causes minor confusion`,
+            `UPDATE: Experts say ${topic} is "mostly harmless"`,
+            `LIVE: People still talking about ${topic}`,
+            `NEWS: ${topic} - What does it mean for your lunch?`,
+            `ALERT: ${topic} confirmed to be a thing`,
+            `SCANDAL: ${topic} involved in controversy`,
+            `DEVELOPING: ${topic} rumored to be part of simulation`,
+            `TRENDING: ${topic} goes viral for wrong reasons`
+        ];
+        return templates[Math.floor(Math.random() * templates.length)];
     }
 }
