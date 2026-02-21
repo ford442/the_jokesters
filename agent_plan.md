@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
-* **status**: On Track (Audio & Interaction Implemented)
+* **tasks_per_run**: 2
+* **status**: On Track (Podcast & DM Modes Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -55,6 +55,8 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
     *   *Challenge*: syncing TTS with audio beat.
 *   **Voice Input**: User talks to agents naturally.
+*   **Commentary Mode**: Agents comment on a live feed (simulated).
+*   **Tutorial Mode**: Agents teach the user how to use the app.
 *   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
 
 ---
@@ -98,6 +100,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
+* [ ] **Cloud Persistence Refinement**:
+    *   [ ] **Authentication**: Ensure HF token validation is robust and user is prompted if token is invalid.
+    *   [ ] **Push Episode**: Implement background sync queue to push finished episodes to `user/jokesters-episodes` without blocking UI.
+    *   [ ] **Fetch Summaries**: On boot, fetch `summary.json` (or latest episode) from the dataset to seed `GroupChatManager` context.
 
 #### Cloud Persistence Roadmap (Refined)
 1.  **Authentication**:
@@ -142,17 +148,22 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
-* [x] **Podcast Mode (Interview)**:
+* [x] **Podcast Mode**:
     *   Agents interview the user or each other.
-    *   Implemented: `Director.runInterviewLoop` + UI controls.
+    *   Implemented `Director.runPodcastLoop`.
 * [x] **Interactive Fiction / Dungeon Master**:
     *   One agent acts as DM, others as players + User.
-    *   Implemented: `Director.runDungeonMasterLoop` + UI controls.
-* [x] **Visual Context (Vision)**:
+    *   Implemented `Director.runDungeonMasterLoop`.
+* [ ] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
     *   Implemented: `Director.runVisionLoop` + Multimodal support in `GroupChatManager`.
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
+### Phase 8: Advanced Intelligence & Polish (The "Interview" Phase)
+* [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
+* [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+* [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
 ### Phase 8: Advanced Intelligence & Polish
 * [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
 * [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.

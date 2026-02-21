@@ -23,6 +23,7 @@ const profanityLevels: { level: ProfanityLevel, label: string, color: string }[]
   { level: 'UNCENSORED', label: 'Uncensored', color: '#ff0000' }
 ]
 
+// Model Configuration - Using main's newer 3.2 models with better config structure
 const hermesModelConfig = {
   model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
   model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm ",
@@ -59,9 +60,8 @@ function applyModelConfigsToEngine(engine: any) {
 }
 
 function getAvailableModels(engine: any): string[] {
-    const list = (engine.prebuiltAppConfig?.model_list || []).map((m: any) => m.model_id);
-    // Deduplicate
-    return Array.from(new Set(list));
+    if (!engine || !engine.prebuiltAppConfig || !engine.prebuiltAppConfig.model_list) return [];
+    return engine.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
 }
 
 function populateModelSelect(engine: any) {
@@ -630,7 +630,7 @@ async function initApp() {
   const startMusicalBtn = document.getElementById('start-musical-btn') as HTMLButtonElement
   const stopMusicalBtn = document.getElementById('stop-musical-btn') as HTMLButtonElement
 
-  // Interview Mode
+  // Interview Mode (Podcast)
   const interviewModeBtn = document.getElementById('interview-mode-btn') as HTMLButtonElement
   const interviewModeControls = document.getElementById('interview-mode-controls') as HTMLDivElement
   const interviewHostSelect = document.getElementById('interview-host') as HTMLSelectElement
@@ -694,11 +694,17 @@ async function initApp() {
 
   let addMessage: (sender: string, message: string, color: string) => void;
   let speakAndVisualize: (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => Promise<void>;
+    speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
+        if(stage) stage.setActiveActor(agentId);
+        if(audioEngine && speechQueue) {
+            const audio = await audioEngine.synthesize(text, agentId, options);
+            speechQueue.add(audio);
+        }
+    };
+
 
   // Active engine module state
   let activeEngineModule: any = webllm;
-
-  // ... (populateModelSelect and getAvailableModels functions remain the same) ...
 
   // Initial population with default engine
   populateModelSelect(webllm)
@@ -1388,7 +1394,7 @@ async function initApp() {
 
     stopMusicalBtn.addEventListener('click', () => director && director.stopScene());
 
-    // Podcast Mode
+    // Podcast Mode (Interview)
     interviewModeBtn.addEventListener('click', () => {
         resetModeUI();
         interviewModeBtn.classList.add('active');
@@ -1629,6 +1635,11 @@ async function initApp() {
             addMessage('System', `Episode saved locally (and to cloud if configured). ID: ${id}`, '#4ecdc4');
         }
     });
+
+    // Initial load
+    if (defaultModelId) {
+        await initializeManagers(defaultModelId, activeEngineModule);
+    }
 
     userInput.focus()
   } catch (error: any) {
