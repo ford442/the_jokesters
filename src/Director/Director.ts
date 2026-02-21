@@ -33,7 +33,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support';
     title: string;
     description: string;
     config?: {
@@ -69,6 +69,8 @@ export interface Scenario {
         triviaTopic?: string;
         dreamTheme?: string;
         imageUrl?: string;
+        trialTopic?: string;
+        techIssue?: string;
     };
 }
 
@@ -155,6 +157,10 @@ export class Director {
                 await this.runDreamLoop(scenario);
             } else if (scenario.type === 'vision') {
                 await this.runVisionLoop(scenario);
+            } else if (scenario.type === 'trial') {
+                await this.runTrialLoop(scenario);
+            } else if (scenario.type === 'tech_support') {
+                await this.runTechSupportLoop(scenario);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -533,6 +539,91 @@ export class Director {
 
             turnCount++;
             await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+
+    private async runTrialLoop(scenario: Scenario) {
+        const crime = scenario.config?.trialTopic || 'Eating the last slice of pizza';
+        this.callbacks.onMessage('Director', `⚖️ THE TRIAL: The Case of ${crime}`, '#f39c12');
+
+        const judge = 'philosopher';
+        const prosecutor = 'scientist';
+        const defense = 'comedian';
+
+        // 1. Bailiff / Judge Intro
+        this.callbacks.onTurnStart(judge);
+        await this.manager.chatForAgent(judge, `(You are the JUDGE in a courtroom. The defendant (User) is accused of: "${crime}". Call the court to order, demand silence, and ask the Prosecutor for the opening statement. Be extremely formal and pompous.)`, async (s) => await this.callbacks.onSpeak(s, judge, {}));
+        await this.callbacks.onTurnEnd();
+
+        if (!this.isRunning) return;
+
+        // 2. Prosecutor Opening
+        this.callbacks.onTurnStart(prosecutor);
+        await this.manager.chatForAgent(prosecutor, `(You are the PROSECUTOR. Present the charges against the defendant (User) regarding "${crime}". Use made-up evidence and sound very clinical and harsh.)`, async (s) => await this.callbacks.onSpeak(s, prosecutor, {}));
+        await this.callbacks.onTurnEnd();
+
+        if (!this.isRunning) return;
+
+        // 3. Defense Opening (Incompetent)
+        this.callbacks.onTurnStart(defense);
+        await this.manager.chatForAgent(defense, `(You are the PUBLIC DEFENDER for the User. Make an opening statement but be totally incompetent, distracted, or admit you lost the paperwork. Try to defend them but fail hilariously.)`, async (s) => await this.callbacks.onSpeak(s, defense, {}));
+        await this.callbacks.onTurnEnd();
+
+        while (this.isRunning) {
+             // 4. User Defense
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage('Defendant (You)', userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // 5. Prosecutor Cross-Examination
+             await this.manager.chatForAgent(prosecutor, `(PROSECUTOR: The defendant just said: "${userInput}". Twist their words, shout "OBJECTION!", and make them look guilty based on this statement.)`, async (s) => await this.callbacks.onSpeak(s, prosecutor, {}));
+
+             if (!this.isRunning) break;
+
+             // 6. Judge Ruling / Comment
+             await this.manager.chatForAgent(judge, `(JUDGE: React to the testimony. Maintain order. Ask the Defense if they have anything to add.)`, async (s) => await this.callbacks.onSpeak(s, judge, {}));
+
+             if (!this.isRunning) break;
+
+             // 7. Defense "Help"
+             await this.manager.chatForAgent(defense, `(DEFENSE ATTORNEY: Try to help your client but make it worse. Maybe bring up an irrelevant witness or legal precedent involving ducks.)`, async (s) => await this.callbacks.onSpeak(s, defense, {}));
+        }
+    }
+
+    private async runTechSupportLoop(scenario: Scenario) {
+        const issue = scenario.config?.techIssue || 'My internet is down';
+        this.callbacks.onMessage('Director', `📞 TECH SUPPORT: Ticket #829 - ${issue}`, '#e74c3c');
+
+        const agent = 'comedian'; // Incompetent Tier 1
+        const manager = 'philosopher'; // Bureaucratic Manager
+        const expert = 'scientist'; // Condescending Senior Tech
+
+        // 1. Agent Answers
+        this.callbacks.onTurnStart(agent);
+        await this.manager.chatForAgent(agent, `(You are a Tier 1 Tech Support Agent at a terrible ISP. Answer the phone. You are eating chips and very unhelpful. The customer has an issue: "${issue}". Ask them if they turned it off and on again.)`, async (s) => await this.callbacks.onSpeak(s, agent, {}));
+        await this.callbacks.onTurnEnd();
+
+        while (this.isRunning) {
+            // 2. Customer Complains
+            const userInput = await this.waitForInput();
+            this.callbacks.onMessage('Customer (You)', userInput, '#ffffff');
+
+            if (!this.isRunning) break;
+
+            // 3. Agent Tries to Help (Badly)
+            await this.manager.chatForAgent(agent, `(TECH SUPPORT: The customer said: "${userInput}". Give them terrible, unrelated advice. Maybe ask them to check the flux capacitor or reinstall Windows 95.)`, async (s) => await this.callbacks.onSpeak(s, agent, {}));
+
+            if (!this.isRunning) break;
+
+            // 4. Escalation / Manager Interaction
+            if (Math.random() > 0.6) {
+                // Manager steps in
+                await this.manager.chatForAgent(manager, `(MANAGER: Interject on the call. Scold the agent for not following protocol script #42. Apologize to the customer but explain that due to policy, you can't actually help them.)`, async (s) => await this.callbacks.onSpeak(s, manager, {}));
+            } else if (Math.random() > 0.5) {
+                 // Senior Tech steps in
+                await this.manager.chatForAgent(expert, `(SENIOR TECH: Join the call. Be extremely condescending. Explain why the user's problem is actually their own fault because they don't understand quantum networking.)`, async (s) => await this.callbacks.onSpeak(s, expert, {}));
+            }
         }
     }
 
