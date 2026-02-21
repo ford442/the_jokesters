@@ -54,6 +54,8 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Heckler Interaction**: User interrupts, agents must handle it dynamically.
 *   **Musical Improv**: Agents generate lyrics to a beat (requires TTS timing sync).
     *   *Challenge*: syncing TTS with audio beat.
+*   **Voice Input**: User talks to agents naturally.
+*   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
 
 ---
 
@@ -69,17 +71,6 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
     *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
 4.  **Vector Memory**: (Future) Use a local vector store (e.g. Voy or simple cosine similarity) to retrieve relevant past jokes.
-
----
-
-## 5. Audio & Interaction (Future)
-
-*   **Musical Improv**: Agents generate lyrics to a beat.
-    *   Requires: Audio analysis (BPM detection) or pre-set backing tracks.
-    *   Sync: TTS timing must be adjusted (maybe simple syllable counting).
-*   **Heckler Interaction**:
-    *   User input during an active `Director` loop should trigger an interrupt.
-    *   `Director` needs to listen to `GroupChatManager` events or UI input while running a loop.
 
 ---
 
@@ -108,6 +99,24 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   `loadLastEpisode()`
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
 
+#### Cloud Persistence Roadmap (Refined)
+1.  **Authentication**:
+    *   [x] Add "Hugging Face Token" and "Repo ID" fields to Settings Modal.
+    *   [x] Implement `HFStorageManager.validateToken(token)` calling `https://huggingface.co/api/whoami-v2`.
+    *   [x] Store encrypted/safe token in `localStorage` via `MemoryManager`.
+
+2.  **Episode Storage**:
+    *   [x] Define JSON schema for Episodes (History, Timestamp, Metadata).
+    *   [x] Implement `MemoryManager.saveEpisodeToCloud(id, data)`:
+        *   Construct filename: `episodes/episode-{id}.json`.
+        *   Call `HFStorageManager.saveFile` (POST to `/api/datasets/{repo}/commit/main`).
+    *   [x] Trigger save on "Save Episode" button click.
+
+3.  **Continuity**:
+    *   [x] Fetch "Previous Episode Summaries" at boot.
+        *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
+        *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
+
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
     *   Implement `Director.runRoastLoop(scenario)`.
@@ -130,3 +139,34 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
 * [ ] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
 * [ ] **Community Scripts**: Load scripts from a shared/public HF dataset.
+* [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
+
+### Phase 7: Deep Immersion (Dreams)
+* [x] **Podcast Mode (Interview)**:
+    *   Agents interview the user or each other.
+    *   Implemented: `Director.runInterviewLoop` + UI controls.
+* [x] **Interactive Fiction / Dungeon Master**:
+    *   One agent acts as DM, others as players + User.
+    *   Implemented: `Director.runDungeonMasterLoop` + UI controls.
+* [x] **Visual Context (Vision)**:
+    *   Agents react to user-uploaded images or webcam feed.
+    *   Implemented: `Director.runVisionLoop` + Multimodal support in `GroupChatManager`.
+* [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
+
+### Phase 8: Advanced Intelligence & Polish
+* [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+* [x] **Memory Recall (Simple RAG)**: Search local episode history for keywords and inject into context.
+* [x] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+
+### Phase 9: New Horizons (The Dream)
+* [x] **Trivia Night Mode**: Agents host a quiz show for the user.
+    *   *Logic*: `Director.runTriviaLoop` asks questions and evaluates answers.
+* [x] **Dream Mode**: Agents describe a surreal dream they shared.
+    *   *Logic*: `Director.runDreamLoop` collaborative storytelling with dream logic.
+* [ ] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
+* [ ] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
+* [ ] **Tech Support**: Agents act as frustrated tech support vs confused user.
+* [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.
+* [ ] **The Time Machine**: Agents pretend to be from different historical eras.
+* [ ] **Rap Battle Arena**: Dedicated visual mode for musical battles with scoring.

@@ -34,7 +34,7 @@ export interface Agent {
 
 export interface Message {
   role: 'system' | 'user' | 'assistant'
-  content: string
+  content: string | Array<any>
 }
 
 export class GroupChatManager {
@@ -48,8 +48,61 @@ export class GroupChatManager {
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
   private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
 
+  // Global context injected into system prompt
+  private globalContext: string = '';
+  private adjustmentsKey = 'jokesters-agent-adjustments';
+
   constructor(agents: Agent[]) {
     this.agents = agents
+    this.loadPersonalityAdjustments();
+  }
+
+  private loadPersonalityAdjustments() {
+      try {
+          const stored = localStorage.getItem(this.adjustmentsKey);
+          if (stored) {
+              const adjustments = JSON.parse(stored);
+              this.agents.forEach(agent => {
+                  if (adjustments[agent.id]) {
+                      agent.temperature = adjustments[agent.id].temperature;
+                      agent.top_p = adjustments[agent.id].top_p;
+                  }
+              });
+          }
+      } catch (e) {
+          console.warn('Failed to load personality adjustments', e);
+      }
+  }
+
+  private savePersonalityAdjustments() {
+      const data: Record<string, { temperature: number, top_p: number }> = {};
+      this.agents.forEach(a => {
+          data[a.id] = { temperature: a.temperature, top_p: a.top_p };
+      });
+      localStorage.setItem(this.adjustmentsKey, JSON.stringify(data));
+  }
+
+  public adjustAgentPersonality(agentId: string, feedback: 'positive' | 'negative') {
+      const agent = this.agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      if (feedback === 'positive') {
+          // Increase chaos slightly
+          agent.temperature = Math.min(1.2, agent.temperature + 0.05);
+          agent.top_p = Math.min(1.0, agent.top_p + 0.02);
+      } else {
+          // Decrease chaos
+          agent.temperature = Math.max(0.1, agent.temperature - 0.05);
+          agent.top_p = Math.max(0.1, agent.top_p - 0.02);
+      }
+      this.savePersonalityAdjustments();
+  }
+
+  /**
+   * Set global context (e.g. previous episode summary)
+   */
+  setGlobalContext(context: string): void {
+    this.globalContext = context;
   }
 
   /**
@@ -235,7 +288,7 @@ export class GroupChatManager {
   }
 
   async chat(
-    userMessage: string,
+    userMessage: string | Array<any>,
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
@@ -253,7 +306,7 @@ export class GroupChatManager {
     const currentAgent = this.agents[this.currentAgentIndex]
 
     // Build merged system prompt: agent persona + style guide
-    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
+    const fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}\n\n${this.globalContext}`
 
     // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
     const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
@@ -373,7 +426,7 @@ export class GroupChatManager {
    */
   async chatForAgent(
     agentId: string,
-    userMessage: string,
+    userMessage: string | Array<any>,
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number } = {}
   ): Promise<{ agentId: string; response: string }> {
@@ -414,6 +467,19 @@ export class GroupChatManager {
   resetConversation(): void {
     this.conversationHistory = []
     this.currentAgentIndex = 0
+  }
+
+  /**
+   * Interrupts the current generation if the engine supports it.
+   */
+  async interrupt(): Promise<void> {
+    if (this.engine && typeof this.engine.interruptGenerate === 'function') {
+      try {
+        await this.engine.interruptGenerate()
+      } catch (e) {
+        console.warn('Failed to interrupt engine:', e)
+      }
+    }
   }
 
   getAgents(): Agent[] {
