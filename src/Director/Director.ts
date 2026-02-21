@@ -52,6 +52,7 @@ export interface Scenario {
         roastTarget?: string;
         storyContext?: string;
         debateTopic?: string;
+        musicalStyle?: string;
         musicalTopic?: string;
         interviewHost?: string;
         interviewGuest?: string;
@@ -188,7 +189,7 @@ export class Director {
 
         console.log(`Director received interrupt: ${text}`);
         this.interruptQueue.push(text);
-        this.callbacks.onMessage('System', `(Interrupt Queued): ${text}`, '#ff6b6b');
+        this.callbacks.onMessage('System', `🗣️ Heckler detected: "${text}"`, '#ff6b6b');
 
         // Interrupt current generation
         if (this.manager) {
@@ -661,7 +662,7 @@ Add exactly ONE sentence to continue the story. Be creative but consistent. Do n
     }
 
     private async runMusicalLoop(scenario: Scenario) {
-        const topic = scenario.config?.musicalTopic || 'Life in the Matrix';
+        const topic = scenario.config?.musicalTopic || scenario.config?.musicalStyle || 'Life in the Matrix';
 
         if (!this.callbacks.musicControls) {
             this.callbacks.onError('Musical mode requires music controls');
@@ -976,9 +977,25 @@ Make it natural, add flair if fits, but stay true to the line. 1-2 breaths max. 
             // Notify start of turn (used for model swapping and UI setup)
             await this.callbacks.onTurnStart(currentAgent.id);
 
-            const pacing = this.calculatePacing();
+            let pacing = this.calculatePacing();
+            let effectivePrompt = inputText;
 
-            const effectivePrompt = inputText + pacing.promptSuffix + ' ###';
+            // Check for interrupts
+            if (this.interruptQueue.length > 0) {
+                const heckle = this.interruptQueue.shift();
+                this.callbacks.onMessage('Heckler', `"${heckle}"`, '#ff0000');
+                effectivePrompt = `(HECKLER INTERRUPT: A heckler just shouted: "${heckle}". React to this immediately! Ignore the previous topic for a moment.)`;
+
+                // Force a punchy response
+                pacing = {
+                     type: 'punchline',
+                     maxTokens: 80,
+                     ttsSteps: 20,
+                     promptSuffix: ' (Roast the heckler!)'
+                };
+            }
+
+            effectivePrompt += pacing.promptSuffix + ' ###';
 
             // Character speeds
             const characterSpeeds: Record<string, number> = {

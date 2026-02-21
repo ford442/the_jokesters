@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: Cruising (Autonomous Mode & Cloud Persistence Implemented)
+* **status**: On Track (Audio & Interaction Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -133,6 +133,12 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 6: Audio & Interaction
 * [x] **Heckler Interaction**: Implement dynamic handling in `Director` loop (Input interrupt).
 * [x] **Musical Improv**: (Experimental) Sync TTS with audio beat.
+* [x] **Voice Input**: Add STT (Web Speech API) to allow user to speak to agents.
+
+### Phase 7: Deep Cloud Integration (The "Dream")
+* [ ] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
+* [ ] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
+* [ ] **Community Scripts**: Load scripts from a shared/public HF dataset.
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
