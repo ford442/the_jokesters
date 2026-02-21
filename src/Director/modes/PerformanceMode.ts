@@ -1,0 +1,234 @@
+import type { Scenario } from '../Director';
+import type { ModeContext } from './ModeContext';
+
+export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
+    const target = scenario.config?.roastTarget || 'The Audience';
+    ctx.callbacks.onMessage('Director', `🔥 ROAST BATTLE START! Target: ${target}`, '#ff6b6b');
+
+    let turnCount = 0;
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Director', `📢 HECKLER: "${heckle}"`, '#ff6b6b');
+            await ctx.processTurn(`(The target just shouted back: "${heckle}". Destroy them for speaking!)`);
+            continue;
+        }
+
+        if (!ctx.isRunning()) break;
+
+        const prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+
+        await ctx.processTurn(prompt);
+
+        if (Math.random() > 0.5) {
+            const reactions = ['"OOOOOH!"', '"DAMN!"', '"APPLY COLD WATER!"', '"TOO FAR!"', '"LOL"'];
+            const reaction = reactions[Math.floor(Math.random() * reactions.length)];
+            ctx.callbacks.onMessage('Audience', reaction, '#888');
+        }
+
+        turnCount++;
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
+export async function runStoryLoop(scenario: Scenario, ctx: ModeContext) {
+    let storySoFar = scenario.config?.initialPrompt || 'Once upon a time...';
+    ctx.callbacks.onMessage('Director', `📖 Story Time! "${storySoFar}"`, '#4ecdc4');
+
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Director', `📢 AUDIENCE SUGGESTION: "${heckle}"`, '#ff6b6b');
+            await ctx.processTurn(`(The audience shouted a suggestion: "${heckle}". Incorporate this into the story seamlessly!)`);
+        }
+
+        if (!ctx.isRunning()) break;
+
+        const prompt = `(COLLABORATIVE STORYTELLING: The story so far is: "${storySoFar}".
+Add exactly ONE sentence to continue the story. Be creative but consistent. Do not repeat the previous sentence.)`;
+
+        await ctx.processTurn(prompt);
+
+        const history = ctx.manager.getHistory();
+        if (history.length > 0) {
+            const lastMsg = history[history.length - 1];
+            if (lastMsg.role === 'assistant') {
+                storySoFar += ' ' + lastMsg.content;
+            }
+        }
+
+        await new Promise(r => setTimeout(r, 800));
+    }
+}
+
+export async function runDebateLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.debateTopic || 'Is a hotdog a sandwich?';
+    ctx.callbacks.onMessage('Director', `⚖️ DEBATE CLUB: ${topic}`, '#45b7d1');
+
+    const moderator = 'scientist';
+    const pro = 'comedian';
+    const con = 'philosopher';
+
+    ctx.callbacks.onTurnStart(moderator);
+    await ctx.manager.chatForAgent(moderator, `(You are the MODERATOR for the debate topic: "${topic}". Introduce the topic and the debaters (Comedian and Philosopher). Keep it professional but slightly annoyed.)`, async (sentence) => {
+        await ctx.callbacks.onSpeak(sentence, moderator, {});
+    });
+    await ctx.callbacks.onTurnEnd();
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Director', `📢 AUDIENCE QUESTION: "${heckle}"`, '#ff6b6b');
+            await ctx.manager.chatForAgent(moderator, `(An audience member asked: "${heckle}". Address it and assign one debater to answer.)`, async (s) => await ctx.callbacks.onSpeak(s, moderator, {}));
+            continue;
+        }
+
+        ctx.callbacks.onMessage('Director', `🔔 Round ${round}`, '#888');
+
+        if (!ctx.isRunning()) break;
+        await ctx.manager.chatForAgent(pro, `(DEBATE ROUND ${round}: Argue FOR the topic: "${topic}". Be passionate and use absurd logic.)`, async (s) => await ctx.callbacks.onSpeak(s, pro, {}));
+
+        if (ctx.interruptQueue.length > 0) continue;
+
+        if (!ctx.isRunning()) break;
+        await ctx.manager.chatForAgent(con, `(DEBATE ROUND ${round}: Argue AGAINST the topic: "${topic}" and refute the previous point. Be philosophical and condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, con, {}));
+
+        if (round % 2 === 0 && ctx.isRunning()) {
+            await ctx.manager.chatForAgent(moderator, `(Briefly summarize the points so far and issue a point deduction to one of them for a fallacy.)`, async (s) => await ctx.callbacks.onSpeak(s, moderator, {}));
+        }
+
+        await new Promise(r => setTimeout(r, 1000));
+        round++;
+    }
+}
+
+export async function runMusicalLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.musicalTopic || scenario.config?.musicalStyle || 'Life in the Matrix';
+
+    if (!ctx.callbacks.musicControls) {
+        ctx.callbacks.onError('Musical mode requires music controls');
+        ctx.stopScene();
+        return;
+    }
+
+    ctx.callbacks.onMessage('Director', `🎵 DROPPING THE BEAT! Topic: ${topic}`, '#ff00ff');
+    ctx.callbacks.musicControls.startBeat(95);
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', `(You are about to rap about "${topic}". Hype up the crowd! Keep it short.)`, async (s) => await ctx.callbacks.onSpeak(s, 'comedian', {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        ctx.callbacks.onMessage('Director', `🎵 Verse ${round}`, '#888');
+
+        if (!ctx.isRunning()) break;
+
+        const agent = round % 2 === 1 ? 'comedian' : 'philosopher';
+        const prompt = `(MUSICAL IMPROV: Rap a 4-line verse about "${topic}". Keep a steady rhythm. Rhyme scheme AABB. End with "###")`;
+
+        await ctx.manager.chatForAgent(agent, prompt, async (s) => {
+            await ctx.callbacks.onSpeak(s, agent, { speed: 1.2 });
+        });
+
+        await new Promise(r => setTimeout(r, 2000));
+        round++;
+    }
+
+    ctx.callbacks.musicControls.stopBeat();
+}
+
+export async function runPodcastLoop(scenario: Scenario, ctx: ModeContext) {
+    const config = scenario.config?.podcastConfig;
+    if (!config) {
+        ctx.callbacks.onError('Podcast mode requires podcastConfig');
+        ctx.stopScene();
+        return;
+    }
+
+    const host = config.host;
+    const guest = config.guest;
+    const topic = config.topic;
+
+    ctx.callbacks.onMessage('Director', `🎙️ LIVE PODCAST: ${topic}`, '#ff00ff');
+
+    await ctx.manager.chatForAgent(host, `(PODCAST INTRO: You are the host of a podcast about "${topic}". Introduce yourself and your guest, ${guest}. Be charismatic and energetic!)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        const prompt = `(PODCAST ROUND ${round}: Ask ${guest} a provocative question about "${topic}". Keep it short and engaging.)`;
+        await ctx.manager.chatForAgent(host, prompt, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+
+        if (!ctx.isRunning()) break;
+
+        if (guest.toLowerCase() === 'user') {
+            ctx.callbacks.onMessage('System', '(Waiting for your response...)', '#888');
+            let response = '';
+            while (ctx.interruptQueue.length === 0 && ctx.isRunning()) {
+                await new Promise(r => setTimeout(r, 100));
+            }
+            if (!ctx.isRunning()) break;
+            response = ctx.interruptQueue.shift()!;
+            await ctx.manager.chatForAgent(host, `(The user answered: "${response}". React to this and segue to the next point!)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+        } else {
+            await ctx.manager.chatForAgent(guest, `(PODCAST GUEST: Answer the host's question about "${topic}". Be opinionated.)`, async (s) => await ctx.callbacks.onSpeak(s, guest, {}));
+            if (Math.random() > 0.5 && ctx.isRunning()) {
+                await ctx.manager.chatForAgent(host, `(React to that answer briefly.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+            }
+        }
+
+        round++;
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
+export async function runScriptLoop(scenario: Scenario, ctx: ModeContext) {
+    const script = scenario.config?.generatedScript;
+    if (!script || script.length === 0) {
+        ctx.callbacks.onError('Script mode requires a script in config.generatedScript');
+        ctx.stopScene();
+        return;
+    }
+
+    ctx.callbacks.onMessage('Director', `🎭 Performing ${script.length} scripted beats...`, '#888');
+
+    for (let i = 0; i < script.length && ctx.isRunning(); i++) {
+        const beat = script[i];
+        await ctx.processScriptBeat(beat);
+        await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 800));
+    }
+
+    if (ctx.isRunning()) {
+        ctx.callbacks.onMessage('Director', '🎭 Scene Fin.', '#888');
+        ctx.stopScene();
+    }
+}
+
+export async function runDreamLoop(scenario: Scenario, ctx: ModeContext) {
+    const theme = scenario.config?.dreamTheme || 'A flying toaster';
+    ctx.callbacks.onMessage('Director', `🌙 SHARED DREAM: Theme - ${theme}`, '#9b59b6');
+
+    let turnCount = 0;
+
+    if (ctx.manager.getHistoryLength() === 0) {
+        await ctx.processTurn(`(SHARED DREAM: We are all sharing a vivid, surreal dream about "${theme}". Start by describing what you see. Be abstract and weird.)`);
+    }
+
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const lucidity = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Director', `✨ LUCID INTERRUPT: "${lucidity}"`, '#ff6b6b');
+            await ctx.processTurn(`(SYSTEM: The dream suddenly shifts! "${lucidity}". Incorporate this new element into the dream logic immediately.)`);
+            continue;
+        }
+
+        if (!ctx.isRunning()) break;
+
+        const prompt = `(SHARED DREAM: Continue the dream description. Build upon the previous surreal imagery. Keep it flowy and strange.)`;
+        await ctx.processTurn(prompt);
+
+        turnCount++;
+        await new Promise(r => setTimeout(r, 1200));
+    }
+}
