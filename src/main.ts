@@ -67,6 +67,11 @@ async function initApp() {
   let groupChatManager: GroupChatManager;
   let director: Director;
   let scriptGenerator: ScriptGenerator;
+
+  // Expose for debugging/testing
+  (window as any).getDirector = () => director;
+  (window as any).getGroupChatManager = () => groupChatManager;
+  (window as any).getMemoryManager = () => memoryManager;
   let memoryManager: MemoryManager | null = null;
   let currentMessageContentSpan: HTMLElement | null = null;
   let agentModelManager: AgentModelManager;
@@ -193,7 +198,12 @@ async function initApp() {
         audioInitializing = true
         statusText.textContent = 'Initializing Audio Engine...'
         audioEngine = new AudioEngine()
-        await audioEngine.init()
+        try {
+          await audioEngine.init()
+        } catch (e) {
+          console.warn('AudioEngine init failed, proceeding without TTS:', e);
+          addMessage('System', 'TTS failed to load. Audio disabled.', '#ff6b6b');
+        }
 
         musicEngine = new MusicEngine()
         voiceInput = new VoiceInputManager()
@@ -219,17 +229,6 @@ async function initApp() {
       memoryManager = new MemoryManager();
 
       const previousContext = await memoryManager.loadLastEpisode();
-
-      // 2c. Load LLM model with progress
-      statusText.textContent = `Loading model: ${modelId}...`
-      await groupChatManager.initialize(modelId, (progress: any) => {
-        statusText.textContent = progress.text
-      }, engineModule)
-
-      if (previousContext) {
-        groupChatManager.setGlobalContext(previousContext);
-        addMessage('System', 'Loaded context from previous episode.', '#4ecdc4');
-      }
 
       // 2d. Initialize AgentModelManager
       agentModelManager = new AgentModelManager(
@@ -408,6 +407,20 @@ async function initApp() {
       const { level } = profanityLevels[idx]
       groupChatManager.setProfanityLevel(level)
       groupChatManager.setLanguage(languageSelect.value)
+
+      // 2c. Load LLM model with progress (Moved to end to allow Director access during load)
+      statusText.textContent = `Loading model: ${modelId}...`
+
+      // Note: We await this LAST so that 'director' and other managers are instantiated
+      // and exposed to window even if loading hangs (useful for testing).
+      await groupChatManager.initialize(modelId, (progress: any) => {
+        statusText.textContent = progress.text
+      }, engineModule)
+
+      if (previousContext) {
+        groupChatManager.setGlobalContext(previousContext);
+        addMessage('System', 'Loaded context from previous episode.', '#4ecdc4');
+      }
 
       // --- Stage 3: Enable Mode Selection ---
       statusText.textContent = 'Ready! Select a mode to begin.'

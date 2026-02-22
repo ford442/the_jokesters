@@ -212,6 +212,25 @@ export class Director {
             if (this.callbacks.musicControls) {
                 this.callbacks.musicControls.stopBeat();
             }
+
+            // Auto-save episode if meaningful content exists
+            if (this.memoryManager && this.manager.getHistoryLength() > 2) {
+                try {
+                    const id = new Date().toISOString().replace(/[:.]/g, '-');
+                    const history = this.manager.getHistory();
+
+                    this.memoryManager.saveEpisode(id, {
+                        timestamp: new Date().toISOString(),
+                        history: history,
+                        scenario: this.currentScenario
+                    });
+
+                    this.callbacks.onMessage('System', `💾 Episode auto-saved (ID: ${id})`, '#4ecdc4');
+                } catch (e) {
+                    console.error('Failed to auto-save episode:', e);
+                }
+            }
+
             this.callbacks.onSceneStop();
             if (this.callbacks.onMusicControl) {
                 this.callbacks.onMusicControl('stop');

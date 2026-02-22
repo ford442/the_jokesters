@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 2
-* **status**: On Track (Historical & Commentary Modes Implemented)
+* **status**: On Track (Auto-Sync & Continuity Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -102,10 +102,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   `saveEpisode(data)`
     *   `loadLastEpisode()`
 * [x] Add "Save/Load" buttons to the UI (Cloud Sync).
-* [ ] **Cloud Persistence Refinement**:
-    *   [ ] **Authentication**: Ensure HF token validation is robust and user is prompted if token is invalid.
-    *   [ ] **Push Episode**: Implement background sync queue to push finished episodes to `user/jokesters-episodes` without blocking UI.
-    *   [ ] **Fetch Summaries**: On boot, fetch `summary.json` (or latest episode) from the dataset to seed `GroupChatManager` context.
+* [x] **Cloud Persistence Refinement**:
+    *   [x] **Authentication**: Ensure HF token validation is robust and user is prompted if token is invalid.
+    *   [x] **Push Episode**: Implement background sync queue to push finished episodes to `user/jokesters-episodes` without blocking UI.
+    *   [x] **Fetch Summaries**: On boot, fetch `summary.json` (or latest episode) from the dataset to seed `GroupChatManager` context.
 
 #### Cloud Persistence Roadmap (Refined)
 1.  **Authentication**:
@@ -144,8 +144,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (Web Speech API) to allow user to speak to agents.
 
 ### Phase 7: Deep Cloud Integration (The "Dream")
-* [ ] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
-* [ ] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
+* [x] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
+* [x] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
 * [ ] **Community Scripts**: Load scripts from a shared/public HF dataset.
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
@@ -182,6 +182,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Tech Support**: Agents act as frustrated tech support vs confused user.
 * [x] **Historical Reenactment**: Agents act as historical figures debating a modern topic.
 * [x] **Commentary Track**: Agents commentate on the user's input like esports casters.
+* [ ] **Mystery Mode**: Agents act as detectives solving a crime (or being interrogated).
+    *   *Model Pairing*: Qwen2.5-Coder (Detective) vs Hermes-3 (Suspect).
 * [ ] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
 
 ### Phase 10: Advanced Cloud Features
