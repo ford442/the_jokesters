@@ -232,3 +232,56 @@ export async function runDreamLoop(scenario: Scenario, ctx: ModeContext) {
         await new Promise(r => setTimeout(r, 1200));
     }
 }
+
+export async function runHistoricalLoop(scenario: Scenario, ctx: ModeContext) {
+    const figures = scenario.config?.historicalFigures || [];
+    const topic = scenario.config?.historicalTopic || 'The future of humanity';
+
+    const mapping: Record<string, string> = {
+        'comedian': 'Napoleon',
+        'philosopher': 'Genghis Khan',
+        'scientist': 'The Moderator'
+    };
+
+    if (figures.length > 0) {
+        figures.forEach(f => mapping[f.agentId] = f.figureName);
+    }
+
+    const moderator = 'scientist';
+    const debater1 = 'comedian';
+    const debater2 = 'philosopher';
+
+    const fig1 = mapping[debater1];
+    const fig2 = mapping[debater2];
+    const modName = mapping[moderator];
+
+    ctx.callbacks.onMessage('Director', `📜 HISTORICAL DEBATE: ${fig1} vs ${fig2}`, '#d35400');
+    ctx.callbacks.onMessage('Director', `Topic: ${topic}`, '#d35400');
+
+    // Moderator Intro
+    ctx.callbacks.onTurnStart(moderator);
+    await ctx.manager.chatForAgent(moderator, `(You are playing the role of ${modName}. You are hosting a historical debate. Introduce the topic "${topic}" and the guests: ${fig1} and ${fig2}. Be formal and set the stage.)`, async (s) => await ctx.callbacks.onSpeak(s, moderator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('System', `Time Traveler Heckle: "${heckle}"`, '#ff6b6b');
+             await ctx.manager.chatForAgent(moderator, `(A time traveler just shouted "${heckle}". Address this anomaly briefly as ${modName}.)`, async (s) => await ctx.callbacks.onSpeak(s, moderator, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // Debater 1
+        await ctx.manager.chatForAgent(debater1, `(ROLEPLAY: You are ${fig1}. Debate the topic "${topic}" from your historical perspective. Respond to previous points. Stay in character! 2-3 sentences.)`, async (s) => await ctx.callbacks.onSpeak(s, debater1, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Debater 2
+        await ctx.manager.chatForAgent(debater2, `(ROLEPLAY: You are ${fig2}. Debate the topic "${topic}" from your historical perspective. Rebut ${fig1}. Stay in character! 2-3 sentences.)`, async (s) => await ctx.callbacks.onSpeak(s, debater2, {}));
+
+        round++;
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}

@@ -155,3 +155,38 @@ export async function runInterviewLoop(scenario: Scenario, ctx: ModeContext) {
         await ctx.manager.chatForAgent(host, `(PODCAST INTERVIEW: The guest (${guestName}) just said: "${userInput}". React to this, maybe crack a joke or make an observation, and then ask a follow-up question. Keep the conversation flowing naturally.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
     }
 }
+
+export async function runCommentaryLoop(scenario: Scenario, ctx: ModeContext) {
+    const target = scenario.config?.commentaryTarget || 'User Input';
+
+    const hypeMan = 'comedian';
+    const analyst = 'scientist';
+    const color = 'philosopher';
+
+    ctx.callbacks.onMessage('Director', `🎙️ COMMENTARY TRACK: Watching ${target}`, '#8e44ad');
+
+    // Intro
+    ctx.callbacks.onTurnStart(hypeMan);
+    await ctx.manager.chatForAgent(hypeMan, `(You are an Esports Caster. Welcome the viewers to the commentary stream of "${target}". Be super high energy! Introduce your co-casters: The Analyst (Scientist) and The Color Commentator (Philosopher).)`, async (s) => await ctx.callbacks.onSpeak(s, hypeMan, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Player (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Hype Man Reaction
+        await ctx.manager.chatForAgent(hypeMan, `(ESPORTS CASTER: The player just did this: "${userInput}". React with massive HYPE! Shout about the mechanics!)`, async (s) => await ctx.callbacks.onSpeak(s, hypeMan, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Analyst Reaction
+        await ctx.manager.chatForAgent(analyst, `(ESPORTS ANALYST: Analyze the player's move: "${userInput}". Explain why it was technically brilliant or a huge mistake using complex jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Color Reaction
+        await ctx.manager.chatForAgent(color, `(COLOR COMMENTATOR: Add a deep, philosophical, or completely unrelated observation about the move "${userInput}". Maybe mention the meta-game.)`, async (s) => await ctx.callbacks.onSpeak(s, color, {}));
+    }
+}

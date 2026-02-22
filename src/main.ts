@@ -380,6 +380,16 @@ async function initApp() {
           modeEl.startTechBtn.style.display = 'inline-block';
           modeEl.techIssueInput.disabled = false;
 
+          modeEl.stopHistoricalBtn.style.display = 'none';
+          modeEl.startHistoricalBtn.style.display = 'inline-block';
+          modeEl.historicalFigure1Input.disabled = false;
+          modeEl.historicalFigure2Input.disabled = false;
+          modeEl.historicalTopicInput.disabled = false;
+
+          modeEl.stopCommentaryBtn.style.display = 'none';
+          modeEl.startCommentaryBtn.style.display = 'inline-block';
+          modeEl.commentaryTargetInput.disabled = false;
+
           videoElement.pause();
           videoContainer.style.display = 'none';
         },

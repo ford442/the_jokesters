@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 2
-* **status**: On Track (Podcast & DM Modes Implemented)
+* **status**: On Track (Historical & Commentary Modes Implemented)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -180,11 +180,17 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Multilingual Support**: Allow agents to speak in other languages based on user preference.
 * [x] **The Trial**: Agents act as Judge, Prosecutor, and Defendant.
 * [x] **Tech Support**: Agents act as frustrated tech support vs confused user.
-* [ ] **Historical Reenactment**: Agents act as historical figures debating a modern topic.
-* [ ] **Commentary Track**: Agents commentate on the user's input like esports casters.
+* [x] **Historical Reenactment**: Agents act as historical figures debating a modern topic.
+* [x] **Commentary Track**: Agents commentate on the user's input like esports casters.
 * [ ] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
 
 ### Phase 10: Advanced Cloud Features
 * [ ] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
 * [ ] **User Profile Sync**: Sync user preferences and custom scenarios to the cloud.
 * [ ] **Community Scripts**: Allow users to share scripts to a public HF Dataset.
+
+### Phase 11: Experimental AI (Dream Ideas)
+* [ ] **Code Review Mode**: Agents review code pasted by the user, roasting or praising it (using specialized coding models).
+* [ ] **Movie Pitch Mode**: Agents collaboratively pitch a movie idea to a "Producer" (the User).
+* [ ] **Therapy Session**: Agents act as different schools of psychology analyzing the user's problems.
+* [ ] **Local RAG with Voy**: Implement client-side vector search for episode recall without external dependencies.
