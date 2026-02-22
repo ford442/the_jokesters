@@ -1,0 +1,9 @@
+gradio
+soundfile
+numpy
+transformers==4.44.1
+torch==2.8.0
+torchaudio==2.8.0
+safetensors==0.4.4
+sentencepiece==0.2.0
+librosa==0.10.2.post1

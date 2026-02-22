@@ -1,0 +1,1 @@
+pip install git+http://github.com/ford442/Kimi-Audio.git
