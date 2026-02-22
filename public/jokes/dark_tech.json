@@ -1,0 +1,142 @@
+{
+  "title": "Dark Tech Comedy Bits",
+  "description": "Fifteen dark comedy bits exploring AI anxiety, startup culture, and tech bro culture",
+  "tags": ["dark humor", "tech", "AI", "startup", "satire"],
+  "bits": [
+    {
+      "id": "ai_therapy",
+      "title": "AI Therapy Session",
+      "topic": "AI anxiety",
+      "setup": "The Comedian admits she's been talking to ChatGPT about her feelings.",
+      "comedian": "I've been using ChatGPT as my therapist because it's cheaper and it doesn't judge me when I eat cereal for dinner at 3 AM. But yesterday it told me I should 'consider professional help'—like, whoa, even the AI thinks I'm too broken for algorithms?",
+      "philosopher": "You... are... seeking... validation... from... a... statistical... parrot... that... has... read... every... self-help... book... ever... written... and... concluded... that... you... are... the... common... denominator... in... all... your... problems...",
+      "scientist": "Empirical analysis suggests the LLM detected patterns consistent with maladaptive behavior. Its recommendation for professional intervention represents a confidence threshold breach. Statistically, you are an outlier in the dataset of functional humans."
+    },
+    {
+      "id": "startup_pivot",
+      "title": "The Pivot",
+      "topic": "startup culture",
+      "setup": "The Scientist asks about the startup's business model.",
+      "scientist": "Your 'revolutionary' app has pivoted from food delivery to blockchain-enabled pet meditation to AI-powered sock matching. Can you quantify the value proposition?",
+      "comedian": "Our value proposition is that we convinced venture capitalists to give us forty million dollars for an app that does literally nothing but send push notifications saying 'Have you tried being rich?'",
+      "philosopher": "The... true... product... was... never... the... app... it... was... the... illusion... of... innovation... sold... to... people... who... failed... physics... in... high... school... but... now... decide... technological... futures..."
+    },
+    {
+      "id": "tech_bro_origin",
+      "title": "Tech Bro Origin Story",
+      "topic": "tech bro culture",
+      "setup": "The Philosopher explains how tech bros are formed.",
+      "philosopher": "They... begin... as... mediocre... white... men... with... access... to... daddy's... money... then... they... read... one... Ayn... Rand... novel... and... suddenly... believe... they... are... Prometheus... stealing... fire... from... the... gods...",
+      "comedian": "Except Prometheus actually gave a shit about humanity! These guys would charge the gods a subscription fee for the fire and call it 'disrupting the warmth economy'!",
+      "scientist": "Observation: The tech bro specimen exhibits Dunning-Kruger effect with statistical significance p < 0.001. Their confidence increases inversely with actual competence. It's fascinating from an evolutionary psychology perspective—like watching a peacock strut without any feathers."
+    },
+    {
+      "id": "ai_replacement",
+      "title": "Will AI Take My Job?",
+      "topic": "AI anxiety",
+      "setup": "The Comedian is worried about being replaced by AI.",
+      "comedian": "I keep asking ChatGPT to write jokes and they're terrible but also they're FREE and they don't need health insurance or have meltdowns in Target at 2 PM because they're out of the good kind of Oreos!",
+      "philosopher": "Fear... not... the... AI... cannot... replace... your... specific... talent... for... turning... childhood... trauma... into... entertainment... for... strangers... that... requires... authentic... suffering... which... the... machine... cannot... experience...",
+      "scientist": "However, statistical models indicate 73% of your current workload can be automated. Your anxiety is rational. I recommend upskilling in areas requiring embodied cognition or genuine emotional connection, though you appear deficient in both."
+    },
+    {
+      "id": "unicorn_dead",
+      "title": "The Dead Unicorn",
+      "topic": "startup culture",
+      "setup": "The Scientist reports on a failed billion-dollar startup.",
+      "scientist": "The company reached unicorn status at 2.3 billion valuation before investigators discovered their 'proprietary AI' was actually 400 interns in a Philippines call center pretending to be software.",
+      "comedian": "They called it 'human-in-the-loop machine learning' which is TECHNICALLY not a lie if you consider that the humans ARE the loop and there is no machine and it's just a guy named Kevin with three monitors and a caffeine addiction!",
+      "philosopher": "And... yet... the... founder... walked... away... with... 400... million... while... Kevin... got... a... LinkedIn... endorsement... for... 'proficiency... in... pretending... to... be... code'... this... is... what... we... call... late... stage... capitalism..."
+    },
+    {
+      "id": "biohacking",
+      "title": "Biohacking Bros",
+      "topic": "tech bro culture",
+      "setup": "The Philosopher observes tech bros optimizing their bodies.",
+      "philosopher": "They... microdose... LSD... to... increase... productivity... sleep... in... hyperbaric... chambers... and... inject... the... blood... of... teenagers... all... to... gain... a... 3%... edge... in... coding... JavaScript...",
+      "scientist": "The data on parabiosis is actually quite promising. Young blood plasma does show regenerative effects in murine models. Though the sample size for human tech bros is small, anecdotal reports suggest increased energy and diminished capacity for normal human relationships.",
+      "comedian": "They're literally becoming vampires but instead of being cool and seductive like in movies, they're just tweeting about their 'optimized morning routines' at 4 AM while drinking something called 'Soylent' which I'm PRETTY SURE was the name of the people-eating food in that Charlton Heston movie!"
+    },
+    {
+      "id": "algorithm_dating",
+      "title": "Dating App Algorithms",
+      "topic": "AI anxiety",
+      "setup": "The Comedian complains about dating apps.",
+      "comedian": "The algorithm keeps showing me guys who list 'entrepreneur' in their bio which we all know means 'unemployed but owns a tuxedo t-shirt' and their personality is just being emotionally unavailable but in a way that makes you feel special!",
+      "philosopher": "You... are... being... matched... based... on... data... points... you... do... not... control... by... an... algorithm... designed... to... maximize... engagement... not... happiness... you... are... not... the... customer... you... are... the... product... being... sold... to... advertisers... and... anxiety... medication... companies...",
+      "scientist": "The matching algorithm operates on collaborative filtering similar to Netflix recommendations. If you liked 'Emotionally Distant Marketing Bro,' you may also enjoy 'Startup Founder With Unresolved Mommy Issues.' The system has 94% accuracy in predicting disappointment."
+    },
+    {
+      "id": "burnout_bragging",
+      "title": "Burnout as a Badge",
+      "topic": "startup culture",
+      "setup": "The Scientist analyzes startup employee behavior.",
+      "scientist": "Employees are competing to display the most severe burnout symptoms. The current record is 78 consecutive workdays, three hospitalizations, and a divorce. This individual received a 'Hustler of the Month' parking spot.",
+      "comedian": "I saw a guy on LinkedIn bragging about coding while his wife was IN LABOR and people were commenting 'legend' and 'goals' and I'm like, shouldn't we be calling CPS?",
+      "philosopher": "The... cult... of... productivity... has... replaced... religion... but... instead... of... promising... eternal... life... it... promises... stock... options... that... will... be... worth... nothing... when... the... company... collapses... in... eighteen... months..."
+    },
+    {
+      "id": "crypto_bros",
+      "title": "The Crypto Aftermath",
+      "topic": "tech bro culture",
+      "setup": "The Philosopher reflects on the crypto crash.",
+      "philosopher": "The... same... men... who... called... everyone... else... 'poor'... for... not... buying... JPEGs... of... monkeys... are... now... applying... for... jobs... at... Enterprise... Rent-A-Car... and... complaining... about... 'the... system'...",
+      "comedian": "They lost their life savings on a coin called 'DogeElonMarsInu' which was created by a 14-year-old in Belarus and they're blaming the GOVERNMENT for not protecting them from their own stupidity!",
+      "scientist": "Fascinating case study in speculative bubbles and confirmation bias. The correlation between crypto investment and lack of understanding of basic monetary policy approaches r = 0.89. Also notable: 100% of crypto bros claimed to 'do their own research' yet 0% could define blockchain."
+    },
+    {
+      "id": "ai_art_ethics",
+      "title": "AI Art and Artists",
+      "topic": "AI anxiety",
+      "setup": "The Scientist presents AI-generated artwork.",
+      "scientist": "This image was generated in 4.2 seconds using a model trained on 5.8 billion copyrighted images without consent. It has won three art competitions and the original artist received zero compensation.",
+      "comedian": "And the guy who entered it is on Twitter saying 'I made this' like he didn't just type 'cyberpunk wizard but make it sexy' into a prompt box! I've typed more complicated orders at Starbucks!",
+      "philosopher": "We... have... created... a... machine... that... consumes... human... creativity... and... excretes... content... and... we... call... this... progress... the... artists... starve... while... the... prompt... engineers... buy... condos... in... Austin..."
+    },
+    {
+      "id": "series_funding",
+      "title": "Series Z Funding",
+      "topic": "startup culture",
+      "setup": "The Comedian reads about a startup's latest funding round.",
+      "comedian": "They just announced Series H funding which in normal industries means you've failed eight times but in tech it means you're a 'visionary' and here's another 200 million to figure out how to lose it!",
+      "philosopher": "The... company... has... never... turned... a... profit... has... no... path... to... profitability... and... exists... solely... to... extract... wealth... from... pension... funds... before... the... founders... execute... their... golden... parachutes...",
+      "scientist": "Mathematical modeling suggests the company can sustain losses of 47 million annually for another 14 years before exhausting capital. However, analysis of founder behavior indicates they will exit via acquisition to a tech giant seeking talent acquisition, not technology, rendering this calculation moot."
+    },
+    {
+      "id": "founder_worship",
+      "title": "Founder as Messiah",
+      "topic": "tech bro culture",
+      "setup": "The Philosopher observes startup founder behavior.",
+      "philosopher": "They... wear... the... same... outfit... every... day... to... 'reduce... decision... fatigue'... as... if... choosing... a... shirt... was... what... was... preventing... them... from... achieving... enlightenment... and... not... the... 50... million... in... venture... capital...",
+      "comedian": "They all want to be Steve Jobs so bad they're copying his diet, his turtlenecks, and his casual cruelty to employees, but they forgot the part where he actually made products that worked!",
+      "scientist": "The founder archetype exhibits classic narcissistic personality disorder with megalomaniacal tendencies. In controlled studies, individuals wearing identical clothing daily showed no improvement in cognitive function but demonstrated increased likelihood of believing they were 'changing the world' while creating another delivery app."
+    },
+    {
+      "id": "surveillance_capitalism",
+      "title": "We Are the Product",
+      "topic": "AI anxiety",
+      "setup": "The Scientist explains how user data is used.",
+      "scientist": "Every keystroke, scroll, and hesitation is logged, analyzed, and sold. We know you are pregnant before you do. We know you will divorce six months before you file. Your free will is a predictive model with 87% accuracy.",
+      "comedian": "So you're telling me some algorithm knows I'm going to eat an entire pizza at midnight before I even decide to? That's not surveillance, that's just understanding the human condition!",
+      "philosopher": "We... have... built... a... panopticon... but... instead... of... a... prison... it... is... a... shopping... mall... and... the... inmates... pay... monthly... subscriptions... for... the... privilege... of... being... watched..."
+    },
+    {
+      "id": "fail_fast",
+      "title": "Fail Fast, Fail Often",
+      "topic": "startup culture",
+      "setup": "The Comedian attends a startup pitch competition.",
+      "comedian": "This guy's pitch was 'It's like Uber but for guilt' and when someone asked how it makes money he said 'we'll figure out the monetization later' and VCs threw MONEY at him! I have actual skills and I can't get a business loan for a food truck!",
+      "philosopher": "The... 'fail... fast'... mantra... is... theological... absolution... for... incompetence... dress... it... in... the... language... of... wisdom... and... no... one... notices... you... have... simply... failed... repeatedly... at... basic... business... fundamentals...",
+      "scientist": "Statistical analysis of 'fail fast' startups reveals median lifespan of 18 months, 100% failure rate, and average investor loss of 4.2 million per company. However, founders show 340% increase in speaking fees at TED-adjacent conferences. The system is functioning exactly as designed."
+    },
+    {
+      "id": "singularity_anxiety",
+      "title": "The Singularity is Near-ish",
+      "topic": "AI anxiety",
+      "setup": "The Philosopher contemplates the technological singularity.",
+      "philosopher": "They... promise... us... a... utopia... where... machines... do... all... labor... and... humans... pursue... art... and... leisure... but... I... suspect... we... will... simply... receive... better... targeted... advertisements... until... we... die...",
+      "scientist": "Current trajectories suggest artificial general intelligence by 2045. At that point, human cognitive labor becomes economically obsolete. The question is not whether the machines will take your job, but whether they will bother keeping you alive once you have nothing to offer.",
+      "comedian": "Oh my god, you're telling me we're training our own replacements and the best case scenario is that the robots will be too busy optimizing ad delivery to notice us starving? I need a drink. Several drinks. Administered intravenously."
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import { GroupChatManager } from './GroupChatManager'
 
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
-import * as webllm from '@mlc-ai/web-llm'
+// WebLLM is now lazy-loaded when needed
 
 import { AudioEngine } from './audio/AudioEngine'
 import { MusicEngine } from './audio/MusicEngine'
@@ -26,8 +26,20 @@ export interface ScriptBeat {
   line: string;
 }
 
-// Apply configs to the default imported engine (webllm)
-applyModelConfigsToEngine(webllm)
+// WebLLM module will be loaded lazily
+let webllmModule: typeof import('@mlc-ai/web-llm') | null = null
+
+/**
+ * Lazy load WebLLM engine
+ */
+async function loadWebLLM(): Promise<typeof import('@mlc-ai/web-llm')> {
+  if (!webllmModule) {
+    webllmModule = await import('@mlc-ai/web-llm')
+    // Apply configs after loading
+    applyModelConfigsToEngine(webllmModule)
+  }
+  return webllmModule
+}
 
 // Initialize the app
 async function initApp() {
@@ -83,11 +95,10 @@ async function initApp() {
   let lipSync: LipSync;
   let audioInitializing = false;
 
-  // Active engine module state
-  let activeEngineModule: any = webllm;
+  // Active engine module state (lazy loaded)
+  let activeEngineModule: any = null
 
-  // Initial population with default engine
-  populateModelSelect(webllm)
+  // Initial population with default engine (will be populated after loading)
 
   // --- Helper Functions ---
 
@@ -138,9 +149,19 @@ async function initApp() {
       steps: options?.steps || 10,
       seed: options?.seed
     };
+    
     try {
+      // Parse timing cues for robot animations
+      let textToSpeak = text;
+      const isRobot = stage.isRobot(agentId);
+      
+      if (isRobot) {
+        // Set up robot animation sequence and get clean text
+        textToSpeak = stage.setupRobotAnimation(agentId, text);
+      }
+      
       if (audioEngine) {
-        const audio = await audioEngine.synthesize(text, agentId, opts);
+        const audio = await audioEngine.synthesize(textToSpeak, agentId, opts);
         speechQueue.add(audio);
         stage.setActiveActor(agentId);
       }
@@ -279,6 +300,12 @@ async function initApp() {
           }
           const agent = agents.find(a => a.id === agentId)!;
           stage.setActiveActor(agentId);
+          
+          // Robot head tilt between phrases (when starting turn)
+          if (stage.isRobot(agentId)) {
+            stage.tiltRobotHead(agentId, 'left');
+            setTimeout(() => stage.tiltRobotHead(agentId, 'reset'), 300);
+          }
 
           const messageDiv = document.createElement('div');
           messageDiv.className = 'message';
@@ -302,8 +329,15 @@ async function initApp() {
             else musicEngine.stopBeat();
           }
         },
+        onCallbackRecorded: (agentId: string, jokeId: string, count: number, status: string) => {
+          // Trigger visual callback feedback on the Stage
+          stage.recordCallback(agentId, jokeId, count, status as 'fresh' | 'building' | 'peak' | 'declining' | 'dead');
+        },
         onSceneStop: () => {
           addMessage('System', '🛑 Scene stopped by user', '#ff6b6b');
+          
+          // Clear all callback visuals when scene stops
+          stage.clearAllCallbackVisuals();
 
           const ticker = document.getElementById('news-ticker-container');
           if (ticker) ticker.style.display = 'none';
@@ -427,8 +461,7 @@ async function initApp() {
       statusText.style.color = '#4ecdc4'
       loadingDiv.style.display = 'none'
 
-      chatContainer.style.opacity = '1'
-      chatContainer.style.pointerEvents = 'auto'
+      chatContainer.classList.add('enabled')
 
       // Enable chat controls
       userInput.disabled = false
@@ -513,6 +546,9 @@ async function initApp() {
       loadModelBtn.disabled = true;
 
       try {
+        // Lazy load WebLLM on first use
+        const webllm = await loadWebLLM();
+        activeEngineModule = webllm;
         await initializeManagers(modelId, webllm);
       } catch (e) {
         console.error(e);
@@ -617,9 +653,12 @@ async function initApp() {
       }
     });
 
-    // Initial load
+    // Initial load - lazy load WebLLM first
     if (defaultModelId) {
-      await initializeManagers(defaultModelId, activeEngineModule);
+      const webllm = await loadWebLLM();
+      activeEngineModule = webllm;
+      populateModelSelect(webllm)
+      await initializeManagers(defaultModelId, webllm);
     }
 
     userInput.focus()

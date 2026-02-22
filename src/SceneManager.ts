@@ -1,41 +1,56 @@
-import * as THREE from 'three'
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  Color,
+  AmbientLight,
+  DirectionalLight,
+  Mesh,
+  Group,
+  Vector3,
+  CylinderGeometry,
+  SphereGeometry,
+  Clock,
+  PlaneGeometry,
+  MeshPhongMaterial,
+} from 'three'
 import type { Agent } from './GroupChatManager'
 
 export class AgentVisual {
-  mesh: THREE.Mesh
+  mesh: Mesh
   agent: Agent
   targetY: number
   currentY: number
   isJumping: boolean
 
-  constructor(agent: Agent, position: THREE.Vector3) {
+  constructor(agent: Agent, position: Vector3) {
     this.agent = agent
     this.targetY = position.y
     this.currentY = position.y
     this.isJumping = false
 
     // Create a capsule shape (cylinder with spheres on ends)
-    const capsuleGroup = new THREE.Group()
+    const capsuleGroup = new Group()
 
     // Main cylinder body
-    const cylinderGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 16)
-    const material = new THREE.MeshPhongMaterial({ color: agent.color })
-    const cylinder = new THREE.Mesh(cylinderGeometry, material)
+    const cylinderGeometry = new CylinderGeometry(0.3, 0.3, 1, 16)
+    const material = new MeshPhongMaterial({ color: agent.color })
+    const cylinder = new Mesh(cylinderGeometry, material)
 
     // Top sphere
-    const sphereGeometry = new THREE.SphereGeometry(0.3, 16, 16)
-    const topSphere = new THREE.Mesh(sphereGeometry, material)
+    const sphereGeometry = new SphereGeometry(0.3, 16, 16)
+    const topSphere = new Mesh(sphereGeometry, material)
     topSphere.position.y = 0.5
 
     // Bottom sphere
-    const bottomSphere = new THREE.Mesh(sphereGeometry, material)
+    const bottomSphere = new Mesh(sphereGeometry, material)
     bottomSphere.position.y = -0.5
 
     capsuleGroup.add(cylinder)
     capsuleGroup.add(topSphere)
     capsuleGroup.add(bottomSphere)
 
-    this.mesh = new THREE.Mesh()
+    this.mesh = new Mesh()
     this.mesh.add(capsuleGroup)
     this.mesh.position.copy(position)
   }
@@ -68,17 +83,17 @@ export class AgentVisual {
 }
 
 export class SceneManager {
-  private scene: THREE.Scene
-  private camera: THREE.PerspectiveCamera
-  private renderer: THREE.WebGLRenderer
+  private scene: Scene
+  private camera: PerspectiveCamera
+  private renderer: WebGLRenderer
   private agentVisuals: Map<string, AgentVisual>
-  private clock: THREE.Clock
+  private clock: Clock
 
   constructor(canvas: HTMLCanvasElement) {
-    this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x1a1a2e)
+    this.scene = new Scene()
+    this.scene.background = new Color(0x1a1a2e)
 
-    this.camera = new THREE.PerspectiveCamera(
+    this.camera = new PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
@@ -87,12 +102,12 @@ export class SceneManager {
     this.camera.position.set(0, 3, 8)
     this.camera.lookAt(0, 1, 0)
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
+    this.renderer = new WebGLRenderer({ canvas, antialias: true })
     this.renderer.setSize(window.innerWidth, window.innerHeight)
     this.renderer.setPixelRatio(window.devicePixelRatio)
 
     this.agentVisuals = new Map()
-    this.clock = new THREE.Clock()
+    this.clock = new Clock()
 
     this.setupLights()
     this.setupGround()
@@ -101,18 +116,18 @@ export class SceneManager {
   }
 
   private setupLights(): void {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    const ambientLight = new AmbientLight(0xffffff, 0.6)
     this.scene.add(ambientLight)
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    const directionalLight = new DirectionalLight(0xffffff, 0.8)
     directionalLight.position.set(5, 10, 5)
     this.scene.add(directionalLight)
   }
 
   private setupGround(): void {
-    const groundGeometry = new THREE.PlaneGeometry(20, 20)
-    const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x0f3460 })
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial)
+    const groundGeometry = new PlaneGeometry(20, 20)
+    const groundMaterial = new MeshPhongMaterial({ color: 0x0f3460 })
+    const ground = new Mesh(groundGeometry, groundMaterial)
     ground.rotation.x = -Math.PI / 2
     ground.position.y = 0
     this.scene.add(ground)
@@ -124,7 +139,7 @@ export class SceneManager {
     const startX = -totalWidth / 2
 
     agents.forEach((agent, index) => {
-      const position = new THREE.Vector3(startX + index * spacing, 1, 0)
+      const position = new Vector3(startX + index * spacing, 1, 0)
       const agentVisual = new AgentVisual(agent, position)
       this.agentVisuals.set(agent.id, agentVisual)
       this.scene.add(agentVisual.mesh)

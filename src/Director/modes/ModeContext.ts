@@ -17,6 +17,8 @@ export interface ModeContext {
     waitForInput: () => Promise<string>;
     searchAndRecall: (topic: string) => Promise<string | null>;
     memoryManager: MemoryManager | null;
+    /** Record a callback for visual feedback - triggers Actor visual effects */
+    recordCallbackVisual: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
 }
 
 export type ModeLoop = (scenario: Scenario, ctx: ModeContext) => Promise<void>;

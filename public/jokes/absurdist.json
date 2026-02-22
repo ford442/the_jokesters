@@ -1,0 +1,86 @@
+{
+  "description": "Absurdist and surreal comedy bits for multi-agent performance",
+  "style": "absurdist",
+  "bits": [
+    {
+      "setup": "The Comedian claims she invented a new color that's invisible but smells like Tuesday. The Philosopher questions whether Tuesday even has an odor. The Scientist pulls out a spectrophotometer.",
+      "punchline": "Scientist: 'According to my calculations, the wavelength of Tuesday is approximately 3.7 regrets per square apology.'",
+      "tags": ["color", "time", "invention", "nonsense"],
+      "timing_cues": {
+        "setup_duration": "slow_burn",
+        "punchline_delay": "2s",
+        "reaction_type": "confused_silence_then_laugh"
+      }
+    },
+    {
+      "setup": "The Philosopher announces he's been communicating with his furniture and they've unionized. The Comedian asks if the couch is demanding better working conditions. The Scientist takes notes.",
+      "punchline": "Philosopher: 'The... ottoman... demands... we... stop... calling... it... a... foot... rest. It... prefers... ottoman American... and... a... 401k.'",
+      "tags": ["furniture", "labor", "identity", "wordplay"],
+      "timing_cues": {
+        "setup_duration": "rapid_fire",
+        "punchline_delay": "3s",
+        "reaction_type": "stunned_then_applause"
+      }
+    },
+    {
+      "setup": "The Scientist presents a jar of quantum pickles that exist in all states of freshness simultaneously. The Comedian wants to eat them. The Philosopher questions the ethics of consuming superposition.",
+      "punchline": "Comedian: 'I'm gonna eat them so fast they'll collapse into a single state of REGRET!'",
+      "tags": ["quantum", "food", "physics", "gluttony"],
+      "timing_cues": {
+        "setup_duration": "medium",
+        "punchline_delay": "1s",
+        "reaction_type": "high_energy_laugh"
+      }
+    },
+    {
+      "setup": "The Comedian found a door in her refrigerator that leads to a dimension where all the missing socks go. The Philosopher wonders if that's where his dignity went. The Scientist calculates sock velocity.",
+      "punchline": "Scientist: 'Based on lint accumulation rates, I'd estimate 47% of socks achieve escape velocity during the spin cycle and enter what I call the Dryer Event Horizon.'",
+      "tags": ["dimension", "laundry", "socks", "portal"],
+      "timing_cues": {
+        "setup_duration": "build_up",
+        "punchline_delay": "2.5s",
+        "reaction_type": "nerd_laugh_then_sigh"
+      }
+    },
+    {
+      "setup": "The Philosopher claims time is just a flat circle, but the Comedian insists it's more of a confused triangle. The Scientist argues it's actually a Mobius strip made of anxiety.",
+      "punchline": "Philosopher: 'I... tried... to... be... on... time... today... but... I... got... stuck... in... the... acute... angle... of... 3... PM... and... now... I... am... permanently... brunch.'",
+      "tags": ["time", "geometry", "existential", "lateness"],
+      "timing_cues": {
+        "setup_duration": "philosophical_pacing",
+        "punchline_delay": "4s",
+        "reaction_type": "confused_chuckle"
+      }
+    },
+    {
+      "setup": "The Scientist has bred a species of emotional support spiders that provide therapy by silently judging your life choices from the corner. The Comedian is terrified but intrigued.",
+      "punchline": "Comedian: 'So instead of tell me about your mother it's just eight eyes staring at me while I explain why I'm still single?! SIGN ME UP!'",
+      "tags": ["therapy", "spiders", "judgment", "dating"],
+      "timing_cues": {
+        "setup_duration": "creepy_slow",
+        "punchline_delay": "1.5s",
+        "reaction_type": "horrified_laughter"
+      }
+    },
+    {
+      "setup": "The Comedian announces she's been legally declared a seasoning by the FDA. The Philosopher asks if that makes her sage or just salty. The Scientist demands to see the paperwork.",
+      "punchline": "Scientist: 'The classification appears to be artificial flavoring with 0% nutritional value but 100% emotional damage.'",
+      "tags": ["food", "regulation", "insult", "identity"],
+      "timing_cues": {
+        "setup_duration": "quick_setup",
+        "punchline_delay": "1s",
+        "reaction_type": "roast_laugh"
+      }
+    },
+    {
+      "setup": "The Philosopher claims he's solved the trolley problem by replacing the tracks with a lazy river. The Comedian wants to know if the trolley has a pool bar. The Scientist calculates splash radius.",
+      "punchline": "Philosopher: 'The... ethical... dilemma... dissolves... when... everyone... agrees... to... float... downstream... and... blame... the... current... for... everything... including... why... we... are... late... to... ethics... class.'",
+      "tags": ["ethics", "trolley_problem", "water", "avoidance"],
+      "timing_cues": {
+        "setup_duration": "slow_build",
+        "punchline_delay": "4s",
+        "reaction_type": "philosophical_giggle"
+      }
+    }
+  ]
+}

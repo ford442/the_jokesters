@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Jokesters - Performance Test Runner</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    
+    h1 {
+      color: #4ecdc4;
+      border-bottom: 2px solid #4ecdc4;
+      padding-bottom: 0.5rem;
+    }
+    
+    .controls {
+      background: #252542;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+    
+    .control-group {
+      margin: 1rem 0;
+    }
+    
+    label {
+      display: inline-block;
+      width: 150px;
+      font-weight: bold;
+    }
+    
+    select, button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      border: 1px solid #444;
+      background: #333;
+      color: #fff;
+    }
+    
+    button {
+      background: #4ecdc4;
+      color: #1a1a2e;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+    
+    button:hover {
+      background: #3dbdb4;
+    }
+    
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .checkbox-group label {
+      width: auto;
+      font-weight: normal;
+    }
+    
+    #status {
+      background: #252542;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      font-family: monospace;
+      white-space: pre-wrap;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    #results {
+      background: #252542;
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      display: none;
+    }
+    
+    #results.visible {
+      display: block;
+    }
+    
+    .metric-card {
+      background: #1a1a2e;
+      padding: 1rem;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+    }
+    
+    .metric-card.passed {
+      border-left: 4px solid #4ecdc4;
+    }
+    
+    .metric-card.failed {
+      border-left: 4px solid #ff6b6b;
+    }
+    
+    .metric-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .metric-value {
+      font-family: monospace;
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      font-weight: bold;
+    }
+    
+    .status-badge.passed {
+      background: #4ecdc4;
+      color: #1a1a2e;
+    }
+    
+    .status-badge.failed {
+      background: #ff6b6b;
+      color: #fff;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #333;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: #4ecdc4;
+      transition: width 0.3s ease;
+    }
+    
+    .violation {
+      background: #ff6b6b22;
+      border: 1px solid #ff6b6b;
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin: 0.5rem 0;
+    }
+    
+    canvas {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎭 The Jokesters - Performance Test Runner</h1>
+  
+  <div class="controls">
+    <div class="control-group">
+      <label>Duration:</label>
+      <select id="duration">
+        <option value="quick">Quick (30s)</option>
+        <option value="ci" selected>CI (1-2min)</option>
+        <option value="full">Full (5min)</option>
+      </select>
+    </div>
+    
+    <div class="control-group">
+      <label>Tests to Run:</label>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="fps" checked> FPS</label>
+        <label><input type="checkbox" id="memory" checked> Memory</label>
+        <label><input type="checkbox" id="tts" checked> TTS Latency</label>
+        <label><input type="checkbox" id="llm" checked> LLM Throughput</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <button id="runBtn" onclick="runTests()">▶ Run Tests</button>
+      <button id="stopBtn" onclick="stopTests()" disabled>⏹ Stop</button>
+      <button onclick="clearResults()">🗑 Clear</button>
+    </div>
+  </div>
+  
+  <div id="status">Ready to run tests. Click "Run Tests" to begin.</div>
+  
+  <div id="results">
+    <h2>Test Results</h2>
+    <div id="resultsContent"></div>
+  </div>
+
+  <canvas id="benchmarkCanvas" width="1280" height="720"></canvas>
+
+  <script type="module">
+    import { runAllBenchmarks } from './index.ts';
+    
+    let abortController = null;
+    
+    window.runTests = async function() {
+      const runBtn = document.getElementById('runBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const status = document.getElementById('status');
+      const results = document.getElementById('results');
+      const resultsContent = document.getElementById('resultsContent');
+      
+      runBtn.disabled = true;
+      stopBtn.disabled = false;
+      status.textContent = 'Initializing tests...\n';
+      results.classList.remove('visible');
+      resultsContent.innerHTML = '';
+      
+      abortController = new AbortController();
+      
+      const duration = document.getElementById('duration').value;
+      const include = [];
+      if (document.getElementById('fps').checked) include.push('fps');
+      if (document.getElementById('memory').checked) include.push('memory');
+      if (document.getElementById('tts').checked) include.push('tts');
+      if (document.getElementById('llm').checked) include.push('llm');
+      
+      // Capture console output
+      const originalLog = console.log;
+      const originalError = console.error;
+      const logs = [];
+      
+      console.log = (...args) => {
+        const msg = args.join(' ');
+        logs.push(msg);
+        status.textContent = logs.slice(-20).join('\n');
+        originalLog.apply(console, args);
+      };
+      
+      console.error = (...args) => {
+        const msg = args.join(' ');
+        logs.push('ERROR: ' + msg);
+        status.textContent = logs.slice(-20).join('\n');
+        originalError.apply(console, args);
+      };
+      
+      try {
+        const result = await runAllBenchmarks({
+          duration,
+          output: 'console',
+          include
+        });
+        
+        // Display results
+        displayResults(result);
+        
+      } catch (e) {
+        status.textContent += '\n\n❌ Error: ' + e.message;
+        console.error(e);
+      } finally {
+        console.log = originalLog;
+        console.error = originalError;
+        runBtn.disabled = false;
+        stopBtn.disabled = true;
+        abortController = null;
+      }
+    };
+    
+    window.stopTests = function() {
+      if (abortController) {
+        abortController.abort();
+        document.getElementById('status').textContent += '\n\n⚠️ Tests aborted by user';
+      }
+    };
+    
+    window.clearResults = function() {
+      document.getElementById('status').textContent = 'Ready to run tests. Click "Run Tests" to begin.';
+      document.getElementById('results').classList.remove('visible');
+      document.getElementById('resultsContent').innerHTML = '';
+    };
+    
+    function displayResults(result) {
+      const resultsContent = document.getElementById('resultsContent');
+      const results = document.getElementById('results');
+      
+      let html = `<div style="margin-bottom: 1rem;">`;
+      html += `<span class="status-badge ${result.passed ? 'passed' : 'failed'}">`;
+      html += result.passed ? '✅ PASSED' : '❌ FAILED';
+      html += `</span>`;
+      html += ` <span style="color: #888;">Duration: ${result.duration}</span>`;
+      html += `</div>`;
+      
+      // FPS
+      if (result.fps) {
+        html += createMetricCard('FPS', result.fps.passed, {
+          'P95 FPS': result.fps.p95FPS.toFixed(1),
+          'Average FPS': result.fps.averageFPS.toFixed(1),
+          'Min FPS': result.fps.minFPS.toFixed(1),
+          'Frame Drops': result.fps.frameDrops.toString()
+        }, '>= 30 FPS');
+      }
+      
+      // Memory
+      if (result.memory) {
+        html += createMetricCard('Memory', result.memory.passed, {
+          'Growth': `${result.memory.growthMB.toFixed(2)} MB`,
+          'Growth Rate': `${result.memory.growthRateMBPerMinute.toFixed(2)} MB/min`,
+          'Leak Detected': result.memory.leakDetected ? 'YES' : 'NO'
+        }, '<= 50 MB');
+      }
+      
+      // TTS
+      if (result.tts) {
+        html += createMetricCard('TTS Latency', result.tts.passed, {
+          'P95 Latency': `${result.tts.p95Latency.toFixed(2)} ms`,
+          'Average Latency': `${result.tts.averageLatency.toFixed(2)} ms`,
+          'Max Latency': `${result.tts.maxLatency.toFixed(2)} ms`,
+          'Target Met': result.tts.targetMet ? 'YES' : 'NO'
+        }, '<= 50 ms');
+      }
+      
+      // LLM
+      if (result.llm) {
+        html += createMetricCard('LLM Throughput', result.llm.passed, {
+          'P95 Tokens/sec': result.llm.p95TokensPerSec.toFixed(2),
+          'Average Tokens/sec': result.llm.averageTokensPerSec.toFixed(2),
+          'Min Tokens/sec': result.llm.minTokensPerSec.toFixed(2),
+          'Total Tokens': result.llm.totalTokens.toString()
+        }, '>= 40 tok/sec');
+      }
+      
+      // Violations
+      if (result.violations.length > 0) {
+        html += `<h3>⚠️ Violations</h3>`;
+        result.violations.forEach(v => {
+          html += `<div class="violation">`;
+          html += `<strong>${v.test}.${v.metric}</strong><br>`;
+          html += `Expected: ${v.expected}, Actual: ${v.actual}`;
+          html += `</div>`;
+        });
+      }
+      
+      resultsContent.innerHTML = html;
+      results.classList.add('visible');
+    }
+    
+    function createMetricCard(title, passed, metrics, threshold) {
+      let html = `<div class="metric-card ${passed ? 'passed' : 'failed'}">`;
+      html += `<div class="metric-title">${passed ? '✅' : '❌'} ${title}</div>`;
+      html += `<div style="color: #888; font-size: 0.875rem; margin-bottom: 0.5rem;">Threshold: ${threshold}</div>`;
+      
+      for (const [key, value] of Object.entries(metrics)) {
+        html += `<div class="metric-value">${key}: ${value}</div>`;
+      }
+      
+      html += `</div>`;
+      return html;
+    }
+  </script>
+</body>
+</html>

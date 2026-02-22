@@ -1,0 +1,106 @@
+{
+  "name": "The Jokesters Performance Budget",
+  "version": "1.0.0",
+  "description": "Performance thresholds for automated CI/CD guardrails",
+  "environments": {
+    "ci": {
+      "note": "Headless/limited GPU environment - more lenient thresholds",
+      "adjustments": {
+        "fps": { "tolerance": 0.7 },
+        "tokensPerSec": { "tolerance": 0.6 },
+        "ttsLatency": { "multiplier": 2.0 }
+      }
+    },
+    "production": {
+      "note": "Full GPU acceleration expected",
+      "adjustments": {}
+    }
+  },
+  "thresholds": {
+    "fps": {
+      "min": 30,
+      "target": 60,
+      "warning": 45,
+      "description": "Minimum acceptable frames per second during 5-minute improv scene",
+      "measurement": {
+        "duration": "5m",
+        "sampleRate": "60fps",
+        "aggregation": "percentile",
+        "percentile": 95
+      }
+    },
+    "memoryLeak": {
+      "maxHeapGrowthMB": 50,
+      "targetHeapGrowthMB": 20,
+      "description": "Maximum allowed JavaScript heap growth during 5-minute session",
+      "measurement": {
+        "duration": "5m",
+        "sampleInterval": "5s",
+        "baselineWindow": "30s"
+      }
+    },
+    "ttsLatency": {
+      "max": 50,
+      "target": 30,
+      "warning": 40,
+      "unit": "ms",
+      "description": "Text-to-speech latency from text input to audio buffer ready",
+      "measurement": {
+        "iterations": 100,
+        "warmupIterations": 10,
+        "aggregation": "percentile",
+        "percentile": 95
+      }
+    },
+    "llmTokensPerSec": {
+      "min": 40,
+      "target": 60,
+      "warning": 45,
+      "unit": "tokens/sec",
+      "description": "LLM token generation throughput (decode speed)",
+      "measurement": {
+        "iterations": 20,
+        "warmupIterations": 3,
+        "maxTokens": 64,
+        "aggregation": "average"
+      }
+    },
+    "bundleSize": {
+      "max": 5000000,
+      "target": 3000000,
+      "unit": "bytes",
+      "description": "Total JavaScript bundle size (gzipped)",
+      "files": [
+        "dist/assets/*.js"
+      ]
+    },
+    "firstContentfulPaint": {
+      "max": 2000,
+      "target": 1000,
+      "unit": "ms",
+      "description": "Time to first meaningful content render"
+    },
+    "timeToInteractive": {
+      "max": 5000,
+      "target": 3000,
+      "unit": "ms",
+      "description": "Time until main thread is idle and input can be handled"
+    }
+  },
+  "budgetGroups": {
+    "critical": ["fps", "memoryLeak", "ttsLatency", "llmTokensPerSec"],
+    "important": ["bundleSize", "firstContentfulPaint"],
+    "informational": ["timeToInteractive"]
+  },
+  "failureConditions": {
+    "critical": "fail",
+    "important": "warn",
+    "informational": "ignore"
+  },
+  "reporting": {
+    "outputFormats": ["json", "html", "markdown"],
+    "retainHistory": true,
+    "historyLimit": 50,
+    "compareWithBaseline": true
+  }
+}

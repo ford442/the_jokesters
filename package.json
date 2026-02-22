@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "perf": "tsx tests/perf/ci-runner.ts",
+    "perf:quick": "tsx tests/perf/ci-runner.ts --duration=quick",
+    "perf:full": "tsx tests/perf/ci-runner.ts --duration=full",
+    "perf:ci": "tsx tests/perf/ci-runner.ts --duration=ci --format=json",
+    "perf:browser": "vite tests/perf/browser-runner.html"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

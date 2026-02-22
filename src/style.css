@@ -19,6 +19,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #app {
@@ -26,6 +27,13 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  position: relative;
+  width: 100%;
 }
 
 h1 {
@@ -71,17 +79,27 @@ button:focus-visible {
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .visualizer {
   flex: 1;
   background: #000;
   position: relative;
-}
-
-canvas {
   width: 100%;
   height: 100%;
+  min-height: 300px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.visualizer canvas {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .status-overlay {
@@ -92,6 +110,8 @@ canvas {
   color: #4ecdc4;
   font-size: 1.2em;
   text-align: center;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .chat-container {
@@ -99,11 +119,21 @@ canvas {
   display: flex;
   flex-direction: column;
   padding: 20px;
-  background: #1a1a2e;
+  background: transparent;
   border-left: 1px solid #0f3460;
   opacity: 0.5;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  position: relative;
+  z-index: 10;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.chat-container.enabled {
+  opacity: 1;
+  pointer-events: auto;
+  background: #1a1a2e;
 }
 
 .chat-log {
@@ -111,6 +141,7 @@ canvas {
   overflow-y: auto;
   margin-bottom: 20px;
   padding-right: 10px;
+  max-height: calc(100% - 200px);
 }
 
 .message {

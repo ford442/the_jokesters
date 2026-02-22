@@ -5,9 +5,135 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Jokesters - Multi-Agent Chat</title>
+    <style>
+      #webgpu-error {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        z-index: 9999;
+        padding: 40px;
+        text-align: center;
+      }
+      #webgpu-error.visible {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      #webgpu-error h1 {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        color: #ff6b6b;
+      }
+      #webgpu-error p {
+        font-size: 1.2rem;
+        max-width: 600px;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        color: #e0e0e0;
+      }
+      #webgpu-error .browser-list {
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        padding: 25px 40px;
+        margin: 20px 0;
+        text-align: left;
+      }
+      #webgpu-error .browser-list li {
+        margin: 10px 0;
+        color: #b8b8b8;
+      }
+      #webgpu-error .browser-list strong {
+        color: #4ecdc4;
+      }
+      #webgpu-error .tech-info {
+        margin-top: 30px;
+        padding: 15px 25px;
+        background: rgba(255,255,255,0.03);
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        color: #888;
+      }
+    </style>
   </head>
   <body>
+    <!-- WebGPU Error Screen -->
+    <div id="webgpu-error">
+      <h1>⚠️ WebGPU Not Available</h1>
+      <p>The Jokesters requires <strong>WebGPU</strong> to run AI models directly in your browser.</p>
+      <p>Your current browser or device does not support WebGPU.</p>
+      
+      <div class="browser-list">
+        <p><strong>Supported Browsers:</strong></p>
+        <ul>
+          <li><strong>Chrome</strong> 113+ (recommended)</li>
+          <li><strong>Edge</strong> 113+</li>
+          <li><strong>Opera</strong> 99+</li>
+          <li><strong>Chrome Android</strong> 121+</li>
+          <li><strong>Safari</strong> - WebGPU support coming soon</li>
+          <li><strong>Firefox</strong> - WebGPU support in development</li>
+        </ul>
+      </div>
+      
+      <p>Please update your browser or switch to a supported browser to continue.</p>
+      
+      <div class="tech-info" id="browser-info">
+        Detecting browser capabilities...
+      </div>
+    </div>
+
     <div id="app"></div>
+    
+    <script>
+      // WebGPU Detection
+      (function() {
+        const browserInfo = document.getElementById('browser-info');
+        const webgpuError = document.getElementById('webgpu-error');
+        
+        // Get browser info
+        const ua = navigator.userAgent;
+        const browserName = (function() {
+          if (ua.includes('Chrome')) return 'Chrome';
+          if (ua.includes('Firefox')) return 'Firefox';
+          if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+          if (ua.includes('Edge')) return 'Edge';
+          if (ua.includes('Opera')) return 'Opera';
+          return 'Unknown';
+        })();
+        
+        browserInfo.textContent = `Browser: ${browserName} | User Agent: ${ua.substring(0, 100)}...`;
+        
+        // Check for WebGPU support
+        if (!navigator.gpu) {
+          webgpuError.classList.add('visible');
+          console.error('WebGPU is not supported in this browser');
+          return;
+        }
+        
+        // Additional check: try to request adapter
+        navigator.gpu.requestAdapter().then(adapter => {
+          if (!adapter) {
+            webgpuError.classList.add('visible');
+            browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
+            console.error('WebGPU adapter not available');
+          } else {
+            console.log('WebGPU is supported:', adapter);
+          }
+        }).catch(err => {
+          webgpuError.classList.add('visible');
+          browserInfo.innerHTML += `<br><br>Error requesting WebGPU adapter: ${err.message}`;
+          console.error('Error requesting WebGPU adapter:', err);
+        });
+      })();
+    </script>
+    
     <script>
       // Surface runtime errors directly in the page to help diagnose missing UI
       window.addEventListener('error', e => {

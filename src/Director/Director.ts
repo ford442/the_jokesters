@@ -18,6 +18,8 @@ export interface DirectorCallbacks {
     onSceneStop: () => void;
     getSeed: () => number | undefined;
     onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
+    /** Called when a callback/running gag is recorded for visual feedback */
+    onCallbackRecorded?: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
     videoControls?: {
         play: () => Promise<void>;
         pause: () => void;
@@ -157,6 +159,11 @@ export class Director {
             waitForInput: () => this.waitForInput(),
             searchAndRecall: (topic: string) => this.searchAndRecall(topic),
             memoryManager: this.memoryManager,
+            recordCallbackVisual: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => {
+                if (this.callbacks.onCallbackRecorded) {
+                    this.callbacks.onCallbackRecorded(agentId, jokeId, count, status);
+                }
+            },
         };
     }
 

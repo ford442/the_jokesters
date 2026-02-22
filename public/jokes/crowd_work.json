@@ -1,0 +1,118 @@
+{
+  "crowd_work_ad_libs": [
+    {
+      "id": "browser_roast",
+      "prompt": "You're still using {{browser_name}}? Look, I'm not judging... okay, I am judging a little. I didn't know we had time travelers from 2015 in the audience!",
+      "tags": ["tech", "roast", "observational"],
+      "dynamic_fields": ["browser_name"]
+    },
+    {
+      "id": "time_of_day_greeting",
+      "prompt": "Good {{time_of_day}}, everybody! Or as my therapist calls it, 'another opportunity for poor life choices.' Anyone else feel personally attacked by that clock?",
+      "tags": ["greeting", "relatable", "self_deprecating"],
+      "dynamic_fields": ["time_of_day"]
+    },
+    {
+      "id": "location_shoutout",
+      "prompt": "Shoutout to everyone tuning in from {{user_location}}! I hear the Wi-Fi there is powered by hamsters on wheels. Those little guys are working harder than I am!",
+      "tags": ["location", "observational", "absurdist"],
+      "dynamic_fields": ["user_location"]
+    },
+    {
+      "id": "browser_location_combo",
+      "prompt": "So we've got someone on {{browser_name}} in {{user_location}}... that's like bringing a butter knife to a gunfight, but hey, respect the commitment!",
+      "tags": ["tech", "location", "roast"],
+      "dynamic_fields": ["browser_name", "user_location"]
+    },
+    {
+      "id": "time_browser_observation",
+      "prompt": "It's {{time_of_day}} and you're browsing on {{browser_name}}? Listen, I get it. We all have our guilty pleasures. Mine is refreshing this chat at 3 AM.",
+      "tags": ["time", "tech", "relatable"],
+      "dynamic_fields": ["time_of_day", "browser_name"]
+    },
+    {
+      "id": "location_time_check",
+      "prompt": "Wait, it's {{time_of_day}} in {{user_location}} and you're HERE? With US? Your life choices are fascinating, and I need to know more about your therapist.",
+      "tags": ["time", "location", "audience_interaction"],
+      "dynamic_fields": ["time_of_day", "user_location"]
+    },
+    {
+      "id": "browser_defense",
+      "prompt": "Before anyone defends {{browser_name}}—yes, I know it 'works fine for you.' So does dial-up if you have enough patience and no other options!",
+      "tags": ["tech", "roast", "call_and_response"],
+      "dynamic_fields": ["browser_name"]
+    },
+    {
+      "id": "location_stereotype",
+      "prompt": "{{user_location}} in the house! I don't know much about {{user_location}}, but I assume your main export is people who make questionable browser choices.",
+      "tags": ["location", "roast", "callback"],
+      "dynamic_fields": ["user_location"]
+    },
+    {
+      "id": "time_energy_check",
+      "prompt": "Who's got that {{time_of_day}} energy? Is it coffee? Is it spite? Is it the sweet release of knowing nothing matters? Whatever it is, I want some!",
+      "tags": ["time", "energy", "relatable"],
+      "dynamic_fields": ["time_of_day"]
+    },
+    {
+      "id": "full_tech_roast",
+      "prompt": "Okay, let me paint a picture: {{time_of_day}} in {{user_location}}, browsing on {{browser_name}}. You're either a digital archaeologist or my kind of people. Either way, welcome!",
+      "tags": ["tech", "time", "location", "callback"],
+      "dynamic_fields": ["time_of_day", "user_location", "browser_name"]
+    },
+    {
+      "id": "browser_late_night",
+      "prompt": "It's {{time_of_day}}, you're on {{browser_name}}, and you're watching AI comedians roast each other. This is either the best or worst night of your life. No in-between!",
+      "tags": ["time", "tech", "meta", "self_aware"],
+      "dynamic_fields": ["time_of_day", "browser_name"]
+    },
+    {
+      "id": "location_pride",
+      "prompt": "Big ups to {{user_location}}! You know what they say—home is where the Wi-Fi connects automatically and {{browser_name}} somehow still works. Respect!",
+      "tags": ["location", "tech", "positive"],
+      "dynamic_fields": ["user_location", "browser_name"]
+    },
+    {
+      "id": "time_zone_confusion",
+      "prompt": "Wait, it's WHAT time in {{user_location}}? {{time_of_day}}?! Either you're a vampire or you have a very understanding boss. Either way, teach me your ways!",
+      "tags": ["time", "location", "audience_interaction", "work"],
+      "dynamic_fields": ["time_of_day", "user_location"]
+    },
+    {
+      "id": "browser_upgrade_pitch",
+      "prompt": "Look, I know {{browser_name}} has sentimental value. It's like that old hoodie you won't throw away. But sometimes, growth means letting go. Think about it.",
+      "tags": ["tech", "relatable", "advice"],
+      "dynamic_fields": ["browser_name"]
+    },
+    {
+      "id": "location_time_browser_finale",
+      "prompt": "Alright, we got {{user_location}} representing at {{time_of_day}} on {{browser_name}}! That's the trifecta of dedication right there. You're basically a superhero at this point. What's your origin story?",
+      "tags": ["location", "time", "tech", "callback", "finale"],
+      "dynamic_fields": ["user_location", "time_of_day", "browser_name"]
+    }
+  ],
+  "dynamic_field_definitions": {
+    "browser_name": {
+      "description": "The user's browser name (e.g., Chrome, Firefox, Safari, Edge)",
+      "example_values": ["Chrome", "Firefox", "Safari", "Edge", "Opera", "Brave"]
+    },
+    "time_of_day": {
+      "description": "The current time of day (morning, afternoon, evening, night)",
+      "example_values": ["morning", "afternoon", "evening", "night"]
+    },
+    "user_location": {
+      "description": "The user's approximate location (city, region, or timezone)",
+      "example_values": ["New York", "London", "Tokyo", "Berlin", "Sydney", "California"]
+    }
+  },
+  "usage_notes": {
+    "purpose": "Crowd-work style ad-libs for interactive comedy moments",
+    "delivery_style": "Conversational, observational, slightly roasting but good-natured",
+    "best_practices": [
+      "Substitute dynamic fields at runtime based on user context",
+      "Use browser detection, time APIs, and approximate geolocation",
+      "Keep substitutions natural—don't force them if values are generic",
+      "These work best as cold opens or transition moments"
+    ]
+  }
+}

@@ -12,6 +12,51 @@ export default defineConfig({
       allow: ['..']
     }
   },
+  build: {
+    // Target modern browsers for smaller bundles
+    target: 'es2022',
+    // CSS optimization
+    cssCodeSplit: true,
+    // Minification settings
+    minify: 'esbuild',
+    // Source maps for debugging (can be disabled for production)
+    sourcemap: false,
+    // Rollup options for chunking
+    rollupOptions: {
+      output: {
+        // Manual chunks for code splitting
+        manualChunks: {
+          // WebLLM engine - loaded on demand when user selects a model
+          'webllm-engine': ['@mlc-ai/web-llm'],
+          // Three.js core - split into smaller chunks
+          'three-core': ['three'],
+          // ONNX Runtime - loaded when TTS is needed
+          'onnx-runtime': ['onnxruntime-web'],
+        },
+        // Ensure chunks are properly named for caching
+        chunkFileNames: (chunkInfo) => {
+          const name = chunkInfo.name;
+          // Add content hash for cache busting
+          return `assets/${name}-[hash].js`;
+        },
+        // Entry file naming
+        entryFileNames: 'assets/[name]-[hash].js',
+        // Asset file naming (for images, fonts, etc.)
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name || '';
+          if (info.endsWith('.css')) {
+            return 'assets/[name]-[hash][extname]';
+          }
+          if (info.endsWith('.wasm')) {
+            return 'assets/[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
+    // Reduce chunk size warning threshold (500KB is default)
+    chunkSizeWarningLimit: 600,
+  },
   plugins: [
     viteStaticCopy({
       targets: [

@@ -1,0 +1,212 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'tests/perf/**'
+      - 'perf-budget.json'
+      - '.github/workflows/performance.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'src/**'
+      - 'tests/perf/**'
+      - 'perf-budget.json'
+      - '.github/workflows/performance.yml'
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Test duration'
+        required: true
+        default: 'ci'
+        type: choice
+        options:
+          - quick
+          - ci
+          - full
+
+jobs:
+  performance:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Run performance tests
+        id: perf_test
+        run: |
+          DURATION="${{ github.event.inputs.duration || 'ci' }}"
+          npm run perf -- --duration=$DURATION --format=json --output=perf-results.json
+        continue-on-error: true
+        
+      - name: Parse results
+        id: parse_results
+        if: always()
+        run: |
+          if [ -f perf-results.json ]; then
+            PASSED=$(jq -r '.passed' perf-results.json)
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            
+            # Extract individual metrics
+            if [ $(jq 'has("fps")' perf-results.json) = "true" ]; then
+              FPS_P95=$(jq -r '.fps.p95FPS' perf-results.json)
+              FPS_PASSED=$(jq -r '.fps.passed' perf-results.json)
+              echo "fps_p95=$FPS_P95" >> $GITHUB_OUTPUT
+              echo "fps_passed=$FPS_PASSED" >> $GITHUB_OUTPUT
+            fi
+            
+            if [ $(jq 'has("memory")' perf-results.json) = "true" ]; then
+              MEM_GROWTH=$(jq -r '.memory.growthMB' perf-results.json)
+              MEM_PASSED=$(jq -r '.memory.passed' perf-results.json)
+              echo "mem_growth=$MEM_GROWTH" >> $GITHUB_OUTPUT
+              echo "mem_passed=$MEM_PASSED" >> $GITHUB_OUTPUT
+            fi
+            
+            if [ $(jq 'has("tts")' perf-results.json) = "true" ]; then
+              TTS_P95=$(jq -r '.tts.p95Latency' perf-results.json)
+              TTS_PASSED=$(jq -r '.tts.passed' perf-results.json)
+              echo "tts_p95=$TTS_P95" >> $GITHUB_OUTPUT
+              echo "tts_passed=$TTS_PASSED" >> $GITHUB_OUTPUT
+            fi
+            
+            if [ $(jq 'has("llm")' perf-results.json) = "true" ]; then
+              LLM_P95=$(jq -r '.llm.p95TokensPerSec' perf-results.json)
+              LLM_PASSED=$(jq -r '.llm.passed' perf-results.json)
+              echo "llm_p95=$LLM_P95" >> $GITHUB_OUTPUT
+              echo "llm_passed=$LLM_PASSED" >> $GITHUB_OUTPUT
+            fi
+          fi
+          
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: perf-results.json
+          retention-days: 30
+          
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let body = '## 🎭 Performance Test Results\n\n';
+            
+            if (fs.existsSync('perf-results.json')) {
+              const results = JSON.parse(fs.readFileSync('perf-results.json', 'utf8'));
+              
+              const status = results.passed ? '✅ PASSED' : '❌ FAILED';
+              body += `**Status:** ${status}\n\n`;
+              body += `**Duration:** ${results.duration}\n\n`;
+              
+              body += '| Metric | Result | Threshold | Status |\n';
+              body += '|--------|--------|-----------|--------|\n';
+              
+              if (results.fps) {
+                const status = results.fps.passed ? '✅' : '❌';
+                body += `| FPS (P95) | ${results.fps.p95FPS.toFixed(1)} | ≥30 | ${status} |\n`;
+              }
+              
+              if (results.memory) {
+                const status = results.memory.passed ? '✅' : '❌';
+                body += `| Memory Growth | ${results.memory.growthMB.toFixed(2)} MB | ≤50 MB | ${status} |\n`;
+              }
+              
+              if (results.tts) {
+                const status = results.tts.passed ? '✅' : '❌';
+                body += `| TTS Latency (P95) | ${results.tts.p95Latency.toFixed(2)} ms | ≤50 ms | ${status} |\n`;
+              }
+              
+              if (results.llm) {
+                const status = results.llm.passed ? '✅' : '❌';
+                body += `| LLM Throughput (P95) | ${results.llm.p95TokensPerSec.toFixed(2)} tok/s | ≥40 | ${status} |\n`;
+              }
+              
+              if (results.violations.length > 0) {
+                body += '\n### Violations\n\n';
+                results.violations.forEach(v => {
+                  body += `- **${v.test}.${v.metric}**: Expected ${v.expected}, got ${v.actual}\n`;
+                });
+              }
+            } else {
+              body += '❌ Performance test results not found.\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+            
+      - name: Check threshold violations
+        if: always()
+        run: |
+          if [ -f perf-results.json ]; then
+            PASSED=$(jq -r '.passed' perf-results.json)
+            if [ "$PASSED" = "false" ]; then
+              echo "❌ Performance thresholds exceeded!"
+              jq '.violations' perf-results.json
+              exit 1
+            else
+              echo "✅ All performance thresholds passed!"
+            fi
+          else
+            echo "❌ Performance results file not found!"
+            exit 1
+          fi
+          
+  bundle-size:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build project
+        run: npm run build
+        
+      - name: Check bundle size
+        run: |
+          # Get bundle size from dist/assets
+          BUNDLE_SIZE=$(find dist/assets -name "*.js" -exec stat -c%s {} + | awk '{sum+=$1} END {print sum}')
+          MAX_SIZE=5000000  # 5MB
+          
+          echo "Bundle size: $BUNDLE_SIZE bytes"
+          echo "Max allowed: $MAX_SIZE bytes"
+          
+          if [ "$BUNDLE_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "❌ Bundle size exceeds limit!"
+            exit 1
+          else
+            echo "✅ Bundle size within limits"
+          fi
