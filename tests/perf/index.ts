@@ -14,17 +14,19 @@
  * ```
  */
 
-import { FPSBenchmark, FPSBenchmarkResult } from './FPSBenchmark';
-import { MemoryLeakTest, MemoryLeakResult } from './MemoryLeakTest';
-import { TTSLatencyBenchmark, TTSLatencyResult } from './TTSLatencyBenchmark';
-import { LLMThroughputBenchmark, LLMThroughputResult } from './LLMThroughputBenchmark';
-import { PerformanceMonitor, PerformanceReport } from './PerformanceMonitor';
+import { PerformanceMonitor } from './PerformanceMonitor';
+import type { FPSBenchmarkResult } from './FPSBenchmark';
+import type { MemoryLeakResult } from './MemoryLeakTest';
+import type { TTSLatencyResult } from './TTSLatencyBenchmark';
+import type { LLMThroughputResult } from './LLMThroughputBenchmark';
 
 export * from './PerformanceMonitor';
-export * from './FPSBenchmark';
-export * from './MemoryLeakTest';
-export * from './TTSLatencyBenchmark';
-export * from './LLMThroughputBenchmark';
+
+// Export types but NOT classes statically to avoid importing browser dependencies in Node
+export type { FPSBenchmarkResult } from './FPSBenchmark';
+export type { MemoryLeakResult } from './MemoryLeakTest';
+export type { TTSLatencyResult } from './TTSLatencyBenchmark';
+export type { LLMThroughputResult } from './LLMThroughputBenchmark';
 
 export interface BenchmarkSuiteOptions {
   /** Test duration mode */
@@ -84,10 +86,11 @@ export async function runAllBenchmarks(
     violations: []
   };
 
-  // FPS Benchmark
+  // FPS Benchmark (Dynamic Import)
   if (opts.include.includes('fps')) {
     console.log('\n📊 Running FPS Benchmark...');
     try {
+      const { FPSBenchmark } = await import('./FPSBenchmark');
       const fpsBenchmark = new FPSBenchmark({
         durationMinutes: opts.duration === 'full' ? 5 : opts.duration === 'ci' ? 1 : 0.5,
         targetFPS: 30
@@ -116,10 +119,11 @@ export async function runAllBenchmarks(
     }
   }
 
-  // Memory Leak Test
+  // Memory Leak Test (Dynamic Import)
   if (opts.include.includes('memory')) {
     console.log('\n🧠 Running Memory Leak Test...');
     try {
+      const { MemoryLeakTest } = await import('./MemoryLeakTest');
       const memoryTest = new MemoryLeakTest({
         durationMinutes: opts.duration === 'full' ? 5 : opts.duration === 'ci' ? 2 : 1,
         maxGrowthMB: 50
@@ -146,10 +150,11 @@ export async function runAllBenchmarks(
     }
   }
 
-  // TTS Latency Benchmark
+  // TTS Latency Benchmark (Dynamic Import)
   if (opts.include.includes('tts')) {
     console.log('\n🔊 Running TTS Latency Benchmark...');
     try {
+      const { TTSLatencyBenchmark } = await import('./TTSLatencyBenchmark');
       const ttsBenchmark = new TTSLatencyBenchmark({
         iterations: opts.duration === 'full' ? 100 : opts.duration === 'ci' ? 50 : 20,
         maxLatencyMs: 50
@@ -178,16 +183,17 @@ export async function runAllBenchmarks(
     }
   }
 
-  // LLM Throughput Benchmark
+  // LLM Throughput Benchmark (Dynamic Import)
   if (opts.include.includes('llm')) {
     console.log('\n🤖 Running LLM Throughput Benchmark...');
     try {
+      const { LLMThroughputBenchmark } = await import('./LLMThroughputBenchmark');
       const llmBenchmark = new LLMThroughputBenchmark({
         iterations: opts.duration === 'full' ? 20 : opts.duration === 'ci' ? 10 : 5,
         minTokensPerSec: 40
       });
       
-      await llmBenchmark.init((progress) => {
+      await llmBenchmark.init((progress: any) => {
         if (progress.progress % 0.25 < 0.01) {
           console.log(`  Model loading: ${(progress.progress * 100).toFixed(0)}%`);
         }
@@ -411,10 +417,7 @@ if (typeof window !== 'undefined') {
   (window as any).PerfTests = {
     runAllBenchmarks,
     runCIBenchmarks,
-    FPSBenchmark,
-    MemoryLeakTest,
-    TTSLatencyBenchmark,
-    LLMThroughputBenchmark,
+    // Note: Classes are not exported statically anymore, but dynamic imports in runAllBenchmarks will work
     PerformanceMonitor
   };
 }

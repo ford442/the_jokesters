@@ -19,7 +19,9 @@
  *   --skip-llm                 Skip LLM throughput benchmark
  */
 
-import { runAllBenchmarks, isCI, BenchmarkSuiteResult } from './index';
+import './setup-env'; // Mock browser environment
+import { runAllBenchmarks, isCI } from './index';
+import type { BenchmarkSuiteResult } from './index';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -33,10 +35,14 @@ interface CLIOptions {
 
 function parseArgs(): CLIOptions {
   const args = process.argv.slice(2);
+  // Default to only memory test in Node environment (others require browser)
+  const defaultInclude: Array<'fps' | 'memory' | 'tts' | 'llm'> =
+    typeof window === 'undefined' ? ['memory'] : ['fps', 'memory', 'tts', 'llm'];
+
   const options: CLIOptions = {
     duration: 'ci',
     format: isCI() ? 'json' : 'console',
-    include: ['fps', 'memory', 'tts', 'llm']
+    include: defaultInclude
   };
 
   for (const arg of args) {
