@@ -309,8 +309,15 @@ async function outputJSON(result: BenchmarkSuiteResult, path?: string): Promise<
   const json = JSON.stringify(result, null, 2);
   
   if (path) {
-    // In browser environment, trigger download
-    if (typeof document !== 'undefined') {
+    // Detect Node.js environment vs Browser
+    const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+    if (isNode) {
+      // Node.js environment - write to file
+      const fs = await import('fs');
+      fs.writeFileSync(path, json);
+    } else if (typeof document !== 'undefined') {
+      // Browser environment - trigger download
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -318,10 +325,6 @@ async function outputJSON(result: BenchmarkSuiteResult, path?: string): Promise<
       a.download = path;
       a.click();
       URL.revokeObjectURL(url);
-    } else {
-      // Node.js environment
-      const fs = await import('fs');
-      fs.writeFileSync(path, json);
     }
   } else {
     console.log(json);
@@ -357,7 +360,9 @@ async function outputHTML(result: BenchmarkSuiteResult, path?: string): Promise<
 </body>
 </html>`;
 
-  if (path && typeof document === 'undefined') {
+  const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+  if (path && isNode) {
     const fs = await import('fs');
     fs.writeFileSync(path, html);
   } else {
@@ -381,7 +386,9 @@ async function outputMarkdown(result: BenchmarkSuiteResult, path?: string): Prom
     md += `\n`;
   }
   
-  if (path && typeof document === 'undefined') {
+  const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
+
+  if (path && isNode) {
     const fs = await import('fs');
     fs.writeFileSync(path, md);
   } else {
