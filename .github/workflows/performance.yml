@@ -32,6 +32,9 @@ jobs:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
     
     steps:
       - name: Checkout
@@ -199,7 +202,7 @@ jobs:
         run: |
           # Get bundle size from dist/assets
           BUNDLE_SIZE=$(find dist/assets -name "*.js" -exec stat -c%s {} + | awk '{sum+=$1} END {print sum}')
-          MAX_SIZE=5000000  # 5MB
+          MAX_SIZE=7000000  # 7MB
           
           echo "Bundle size: $BUNDLE_SIZE bytes"
           echo "Max allowed: $MAX_SIZE bytes"

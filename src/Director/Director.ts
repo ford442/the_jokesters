@@ -6,6 +6,7 @@ import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop } from './modes/ReporterMode';
 import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop } from './modes/InteractiveMode';
+import { runMysteryLoop, runPitchLoop } from './modes/CreativeMode';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 
 export interface DirectorCallbacks {
@@ -41,7 +42,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch';
     title: string;
     description: string;
     config?: {
@@ -82,6 +83,8 @@ export interface Scenario {
         historicalFigures?: { agentId: string, figureName: string }[];
         historicalTopic?: string;
         commentaryTarget?: string;
+        mysterySetting?: string;
+        pitchGenre?: string;
     };
 }
 
@@ -113,6 +116,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     dream: runDreamLoop,
     historical: runHistoricalLoop,
     commentary: runCommentaryLoop,
+    mystery: runMysteryLoop,
+    pitch: runPitchLoop,
 };
 
 export class Director {

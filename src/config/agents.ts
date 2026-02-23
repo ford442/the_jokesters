@@ -3,8 +3,8 @@ import type { AgentModelMapping } from '../AgentModelManager'
 import { hermesModelConfig } from './models'
 
 // Import persona prompts from text files
-import techBroPrompt from '../prompts/techBro.txt?raw'
-import robotPrompt from '../prompts/robot.txt?raw'
+import techBroPrompt from '../prompts/techBro'
+import robotPrompt from '../prompts/robot'
 
 export const profanityLevels: { level: ProfanityLevel, label: string, color: string }[] = [
   { level: 'PG', label: 'Safe', color: '#4ecdc4' },

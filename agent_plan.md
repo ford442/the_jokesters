@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 2
-* **status**: On Track (Auto-Sync & Continuity Implemented)
+* **status**: On Track (Creative Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -182,8 +182,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Tech Support**: Agents act as frustrated tech support vs confused user.
 * [x] **Historical Reenactment**: Agents act as historical figures debating a modern topic.
 * [x] **Commentary Track**: Agents commentate on the user's input like esports casters.
-* [ ] **Mystery Mode**: Agents act as detectives solving a crime (or being interrogated).
+* [x] **Mystery Mode**: Agents act as detectives solving a crime (or being interrogated).
     *   *Model Pairing*: Qwen2.5-Coder (Detective) vs Hermes-3 (Suspect).
+    *   *Implementation*: `Director.runMysteryLoop` (CreativeMode).
 * [ ] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
 
 ### Phase 10: Advanced Cloud Features
@@ -193,6 +194,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 11: Experimental AI (Dream Ideas)
 * [ ] **Code Review Mode**: Agents review code pasted by the user, roasting or praising it (using specialized coding models).
-* [ ] **Movie Pitch Mode**: Agents collaboratively pitch a movie idea to a "Producer" (the User).
+* [x] **Movie Pitch Mode**: Agents collaboratively pitch a movie idea to a "Producer" (the User).
+    *   *Implementation*: `Director.runPitchLoop` (CreativeMode).
 * [ ] **Therapy Session**: Agents act as different schools of psychology analyzing the user's problems.
-* [ ] **Local RAG with Voy**: Implement client-side vector search for episode recall without external dependencies.
+* [ ] **Philosopher's Stone**: Agents debate a paradox (e.g., Trolley Problem) with increasing intensity until one "crashes" (simulated).
+* [ ] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
+
+### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
+* [ ] **IndexedDB Migration**: Move local storage from `localStorage` (5MB limit) to `IndexedDB` to support years of conversation history.
+* [ ] **Semantic Search (RAG)**:
+    *   Integrate `voy` (WASM Vector DB) to index past episodes.
+    *   Allow agents to recall specific jokes or facts from weeks ago ("Remember when you said you liked pineapples?").
+* [ ] **Multi-Profile Support**: Allow different users to login and have separate memory banks on the same device.
+* [ ] **Hugging Face Dataset Mirroring**:
+    *   Implement a full two-way sync (Pull all history on new device login).
+    *   Handle merge conflicts if played on multiple devices.
