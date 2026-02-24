@@ -423,6 +423,14 @@ async function initApp() {
           modeEl.startCommentaryBtn.style.display = 'inline-block';
           modeEl.commentaryTargetInput.disabled = false;
 
+          modeEl.stopCodeBtn.style.display = 'none';
+          modeEl.startCodeBtn.style.display = 'inline-block';
+          modeEl.codeLanguageInput.disabled = false;
+
+          modeEl.stopTherapyBtn.style.display = 'none';
+          modeEl.startTherapyBtn.style.display = 'inline-block';
+          modeEl.therapyTopicInput.disabled = false;
+
           videoElement.pause();
           videoContainer.style.display = 'none';
         },
