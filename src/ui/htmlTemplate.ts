@@ -129,6 +129,30 @@ export function getAppTemplate(): string {
             <button id="tech-mode-btn" class="mode-btn">Tech Support</button>
             <button id="historical-mode-btn" class="mode-btn">Historical</button>
             <button id="commentary-mode-btn" class="mode-btn">Commentary</button>
+            <button id="code-mode-btn" class="mode-btn">Code Review</button>
+            <button id="therapy-mode-btn" class="mode-btn">Therapy</button>
+          </div>
+
+          <div id="code-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Programming Language</label>
+              <input type="text" id="code-language" placeholder="e.g., 'TypeScript', 'Python'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-code-btn" class="primary-btn" disabled>Start Code Review</button>
+              <button id="stop-code-btn" class="secondary-btn" style="display: none;" disabled>Stop Review</button>
+            </div>
+          </div>
+
+          <div id="therapy-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">What's on your mind?</label>
+              <input type="text" id="therapy-topic" placeholder="e.g., 'Imposter Syndrome', 'Burnout'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-therapy-btn" class="primary-btn" disabled>Start Session</button>
+              <button id="stop-therapy-btn" class="secondary-btn" style="display: none;" disabled>End Session</button>
+            </div>
           </div>
 
           <div id="historical-mode-controls" class="improv-controls" style="display: none;">

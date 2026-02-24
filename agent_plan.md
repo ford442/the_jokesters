@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 2
-* **status**: On Track (Creative Modes Added)
+* **status**: On Track (Code Review & Therapy Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -193,11 +193,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Community Scripts**: Allow users to share scripts to a public HF Dataset.
 
 ### Phase 11: Experimental AI (Dream Ideas)
-* [ ] **Code Review Mode**: Agents review code pasted by the user, roasting or praising it (using specialized coding models).
+* [x] **Code Review Mode**: Agents review code pasted by the user, roasting or praising it (using specialized coding models).
+    *   *Implementation*: `Director.runCodeReviewLoop`.
 * [x] **Movie Pitch Mode**: Agents collaboratively pitch a movie idea to a "Producer" (the User).
     *   *Implementation*: `Director.runPitchLoop` (CreativeMode).
-* [ ] **Therapy Session**: Agents act as different schools of psychology analyzing the user's problems.
+* [x] **Therapy Session**: Agents act as different schools of psychology analyzing the user's problems.
+    *   *Implementation*: `Director.runTherapyLoop`.
 * [ ] **Philosopher's Stone**: Agents debate a paradox (e.g., Trolley Problem) with increasing intensity until one "crashes" (simulated).
+* [ ] **Alien First Contact**: Agents try to communicate with an alien entity (the User) using math, music, or mime.
 * [ ] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
 
 ### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
@@ -209,3 +212,6 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Hugging Face Dataset Mirroring**:
     *   Implement a full two-way sync (Pull all history on new device login).
     *   Handle merge conflicts if played on multiple devices.
+    *   **Authentication**: Ensure strict token validation and error handling on startup.
+    *   **Push**: Implement a reliable background queue for pushing episode scripts to avoid blocking UI.
+    *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud.

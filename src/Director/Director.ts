@@ -7,6 +7,8 @@ import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop } from './modes/ReporterMode';
 import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop } from './modes/InteractiveMode';
 import { runMysteryLoop, runPitchLoop } from './modes/CreativeMode';
+import { runCodeReviewLoop } from './modes/CodeReviewMode';
+import { runTherapyLoop } from './modes/TherapyMode';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 
 export interface DirectorCallbacks {
@@ -42,7 +44,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy';
     title: string;
     description: string;
     config?: {
@@ -85,6 +87,8 @@ export interface Scenario {
         commentaryTarget?: string;
         mysterySetting?: string;
         pitchGenre?: string;
+        codeLanguage?: string;
+        therapyTopic?: string;
     };
 }
 
@@ -118,6 +122,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     commentary: runCommentaryLoop,
     mystery: runMysteryLoop,
     pitch: runPitchLoop,
+    code_review: runCodeReviewLoop,
+    therapy: runTherapyLoop,
 };
 
 export class Director {

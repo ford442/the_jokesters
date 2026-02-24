@@ -65,6 +65,12 @@ export interface ModeElements {
   commentaryTargetInput: HTMLInputElement;
   startCommentaryBtn: HTMLButtonElement;
   stopCommentaryBtn: HTMLButtonElement;
+  codeLanguageInput: HTMLInputElement;
+  startCodeBtn: HTMLButtonElement;
+  stopCodeBtn: HTMLButtonElement;
+  therapyTopicInput: HTMLInputElement;
+  startTherapyBtn: HTMLButtonElement;
+  stopTherapyBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -130,6 +136,12 @@ export function collectModeElements(): ModeElements {
     commentaryTargetInput: document.getElementById('commentary-target') as HTMLInputElement,
     startCommentaryBtn: document.getElementById('start-commentary-btn') as HTMLButtonElement,
     stopCommentaryBtn: document.getElementById('stop-commentary-btn') as HTMLButtonElement,
+    codeLanguageInput: document.getElementById('code-language') as HTMLInputElement,
+    startCodeBtn: document.getElementById('start-code-btn') as HTMLButtonElement,
+    stopCodeBtn: document.getElementById('stop-code-btn') as HTMLButtonElement,
+    therapyTopicInput: document.getElementById('therapy-topic') as HTMLInputElement,
+    startTherapyBtn: document.getElementById('start-therapy-btn') as HTMLButtonElement,
+    stopTherapyBtn: document.getElementById('stop-therapy-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -191,6 +203,10 @@ export function enableModeControls(el: ModeElements) {
   el.historicalTopicInput.disabled = false;
   el.startCommentaryBtn.disabled = false;
   el.commentaryTargetInput.disabled = false;
+  el.startCodeBtn.disabled = false;
+  el.codeLanguageInput.disabled = false;
+  el.startTherapyBtn.disabled = false;
+  el.therapyTopicInput.disabled = false;
 }
 
 /**
@@ -557,4 +573,32 @@ export function registerModeHandlers(
     });
   });
   el.stopCommentaryBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Code Review Mode
+  switchMode('code-mode-btn', 'code-mode-controls');
+  el.startCodeBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startCodeBtn.style.display = 'none';
+    el.stopCodeBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'code_review', title: 'Code Review', description: 'Agents roasting your code.',
+      config: { codeLanguage: el.codeLanguageInput.value }
+    });
+  });
+  el.stopCodeBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Therapy Mode
+  switchMode('therapy-mode-btn', 'therapy-mode-controls');
+  el.startTherapyBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startTherapyBtn.style.display = 'none';
+    el.stopTherapyBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'therapy', title: 'Group Therapy', description: 'Agents analyzing your problems.',
+      config: { therapyTopic: el.therapyTopicInput.value }
+    });
+  });
+  el.stopTherapyBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }
