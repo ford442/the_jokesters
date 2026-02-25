@@ -9,6 +9,8 @@ import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, 
 import { runMysteryLoop, runPitchLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
+import { runPhilosopherLoop } from './modes/PhilosopherMode';
+import { runAlienLoop } from './modes/AlienMode';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 
 export interface DirectorCallbacks {
@@ -44,7 +46,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien';
     title: string;
     description: string;
     config?: {
@@ -89,6 +91,7 @@ export interface Scenario {
         pitchGenre?: string;
         codeLanguage?: string;
         therapyTopic?: string;
+        philosopherTopic?: string;
     };
 }
 
@@ -124,6 +127,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     pitch: runPitchLoop,
     code_review: runCodeReviewLoop,
     therapy: runTherapyLoop,
+    philosopher: runPhilosopherLoop,
+    alien: runAlienLoop,
 };
 
 export class Director {
@@ -227,6 +232,13 @@ export class Director {
     public stopScene() {
         if (this.isRunning) {
             this.isRunning = false;
+
+            // Cancel any pending input
+            if (this.inputPromise) {
+                this.inputPromise.resolve(''); // Resolve with empty string instead of rejecting to avoid unhandled rejections
+                this.inputPromise = null;
+            }
+
             if (this.callbacks.musicControls) {
                 this.callbacks.musicControls.stopBeat();
             }

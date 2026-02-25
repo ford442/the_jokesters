@@ -71,6 +71,12 @@ export interface ModeElements {
   therapyTopicInput: HTMLInputElement;
   startTherapyBtn: HTMLButtonElement;
   stopTherapyBtn: HTMLButtonElement;
+  philosopherTopicInput: HTMLInputElement;
+  startPhilosopherBtn: HTMLButtonElement;
+  stopPhilosopherBtn: HTMLButtonElement;
+  alienTopicInput: HTMLInputElement;
+  startAlienBtn: HTMLButtonElement;
+  stopAlienBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -142,6 +148,12 @@ export function collectModeElements(): ModeElements {
     therapyTopicInput: document.getElementById('therapy-topic') as HTMLInputElement,
     startTherapyBtn: document.getElementById('start-therapy-btn') as HTMLButtonElement,
     stopTherapyBtn: document.getElementById('stop-therapy-btn') as HTMLButtonElement,
+    philosopherTopicInput: document.getElementById('philosopher-topic') as HTMLInputElement,
+    startPhilosopherBtn: document.getElementById('start-philosopher-btn') as HTMLButtonElement,
+    stopPhilosopherBtn: document.getElementById('stop-philosopher-btn') as HTMLButtonElement,
+    alienTopicInput: document.getElementById('alien-topic') as HTMLInputElement,
+    startAlienBtn: document.getElementById('start-alien-btn') as HTMLButtonElement,
+    stopAlienBtn: document.getElementById('stop-alien-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -207,6 +219,10 @@ export function enableModeControls(el: ModeElements) {
   el.codeLanguageInput.disabled = false;
   el.startTherapyBtn.disabled = false;
   el.therapyTopicInput.disabled = false;
+  el.startPhilosopherBtn.disabled = false;
+  el.philosopherTopicInput.disabled = false;
+  el.startAlienBtn.disabled = false;
+  el.alienTopicInput.disabled = false;
 }
 
 /**
@@ -601,4 +617,32 @@ export function registerModeHandlers(
     });
   });
   el.stopTherapyBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Philosopher Mode
+  switchMode('philosopher-mode-btn', 'philosopher-mode-controls');
+  el.startPhilosopherBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startPhilosopherBtn.style.display = 'none';
+    el.stopPhilosopherBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'philosopher', title: 'Philosopher\'s Stone', description: 'A high-intensity paradox debate.',
+      config: { philosopherTopic: el.philosopherTopicInput.value }
+    });
+  });
+  el.stopPhilosopherBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Alien Mode
+  switchMode('alien-mode-btn', 'alien-mode-controls');
+  el.startAlienBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startAlienBtn.style.display = 'none';
+    el.stopAlienBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'alien', title: 'Alien Contact', description: 'Agents communicating with an alien entity.',
+      config: { initialPrompt: el.alienTopicInput.value }
+    });
+  });
+  el.stopAlienBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }

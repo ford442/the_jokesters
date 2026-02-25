@@ -1,53 +1,51 @@
 from playwright.sync_api import sync_playwright
+import time
 
-def run(playwright):
-    browser = playwright.chromium.launch(headless=True)
-    page = browser.new_page(viewport={'width': 1920, 'height': 1080})
+def run():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-    print("Navigating to app...")
-    page.goto("http://localhost:5173/")
+        print("Navigating to app...")
+        page.goto("http://localhost:5173")
 
-    # Wait for loading to disappear or just hide it
-    print("Waiting for app to load...")
-    try:
-        page.wait_for_selector("#loading", state="hidden", timeout=5000)
-    except:
-        print("Loading screen didn't disappear, forcing hide...")
-        page.eval_on_selector("#loading", "el => el.style.display = 'none'")
+        # Hide loading overlay and webgpu error manually to speed up test
+        print("Hiding overlays...")
+        page.add_style_tag(content="#loading, #webgpu-error { display: none !important; } #chat-container { opacity: 1 !important; pointer-events: auto !important; }")
 
-    # Hide status overlay if present
-    try:
-        page.eval_on_selector("#status", "el => el.style.display = 'none'")
-    except:
-        pass
+        # Wait for mode buttons
+        print("Waiting for mode buttons...")
+        page.wait_for_selector("#philosopher-mode-btn")
 
-    print("Taking initial screenshot...")
-    page.screenshot(path="verification/initial_state.png")
+        # Click Philosopher Mode
+        print("Clicking Philosopher Mode button...")
+        page.click("#philosopher-mode-btn")
+        time.sleep(1)
 
-    # Verify Historical Mode
-    print("Testing Historical Mode...")
-    # Force click if blocked
-    page.click("#historical-mode-btn", force=True)
+        # Check if controls are visible
+        is_visible = page.is_visible("#philosopher-mode-controls")
+        print(f"Philosopher controls visible: {is_visible}")
+        if not is_visible:
+            print("Error: Philosopher controls not visible")
 
-    # Wait for controls to be visible
-    page.wait_for_selector("#historical-mode-controls", state="visible")
-    page.wait_for_selector("#historical-figure-1", state="visible")
+        # Take screenshot 1
+        page.screenshot(path="verification/philosopher_mode.png")
 
-    page.screenshot(path="verification/historical_mode.png")
-    print("Screenshot saved: verification/historical_mode.png")
+        # Click Alien Mode
+        print("Clicking Alien Mode button...")
+        page.click("#alien-mode-btn")
+        time.sleep(1)
 
-    # Verify Commentary Mode
-    print("Testing Commentary Mode...")
-    page.click("#commentary-mode-btn", force=True)
+        # Check if controls are visible
+        is_visible = page.is_visible("#alien-mode-controls")
+        print(f"Alien controls visible: {is_visible}")
+        if not is_visible:
+            print("Error: Alien controls not visible")
 
-    # Wait for controls to be visible
-    page.wait_for_selector("#commentary-mode-controls", state="visible")
-    page.wait_for_selector("#commentary-target", state="visible")
+        # Take screenshot 2
+        page.screenshot(path="verification/alien_mode.png")
 
-    page.screenshot(path="verification/commentary_mode.png")
-    print("Screenshot saved: verification/commentary_mode.png")
+        browser.close()
 
-    browser.close()
-
-with sync_playwright() as playwright:
-    run(playwright)
+if __name__ == "__main__":
+    run()

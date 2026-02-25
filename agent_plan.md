@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 2
-* **status**: On Track (Code Review & Therapy Modes Added)
+* **tasks_per_run**: 3
+* **status**: On Track (Philosopher's Stone & Alien Contact Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -199,8 +199,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Implementation*: `Director.runPitchLoop` (CreativeMode).
 * [x] **Therapy Session**: Agents act as different schools of psychology analyzing the user's problems.
     *   *Implementation*: `Director.runTherapyLoop`.
-* [ ] **Philosopher's Stone**: Agents debate a paradox (e.g., Trolley Problem) with increasing intensity until one "crashes" (simulated).
-* [ ] **Alien First Contact**: Agents try to communicate with an alien entity (the User) using math, music, or mime.
+* [x] **Philosopher's Stone**: Agents debate a paradox (e.g., Trolley Problem) with increasing intensity until one "crashes" (simulated).
+    *   *Implementation*: `Director.runPhilosopherLoop`.
+* [x] **Alien First Contact**: Agents try to communicate with an alien entity (the User) using math, music, or mime.
+    *   *Implementation*: `Director.runAlienLoop`.
 * [ ] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
 
 ### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
@@ -215,3 +217,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   **Authentication**: Ensure strict token validation and error handling on startup.
     *   **Push**: Implement a reliable background queue for pushing episode scripts to avoid blocking UI.
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud.
+
+### Phase 13: New Creative Modes (Dream Ideas)
+* [ ] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
+* [ ] **Chef's Kitchen**: Agents act as a head chef, sous chef, and health inspector critiquing a dish.
+* [ ] **Medical Drama**: Agents enact a high-stakes surgery scene with absurd medical jargon.
