@@ -131,6 +131,8 @@ export function getAppTemplate(): string {
             <button id="commentary-mode-btn" class="mode-btn">Commentary</button>
             <button id="code-mode-btn" class="mode-btn">Code Review</button>
             <button id="therapy-mode-btn" class="mode-btn">Therapy</button>
+            <button id="philosopher-mode-btn" class="mode-btn">Phil. Stone</button>
+            <button id="alien-mode-btn" class="mode-btn">Alien Contact</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -152,6 +154,28 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-therapy-btn" class="primary-btn" disabled>Start Session</button>
               <button id="stop-therapy-btn" class="secondary-btn" style="display: none;" disabled>End Session</button>
+            </div>
+          </div>
+
+          <div id="philosopher-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Paradox Topic</label>
+              <input type="text" id="philosopher-topic" placeholder="e.g., 'The Trolley Problem', 'Ship of Theseus'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-philosopher-btn" class="primary-btn" disabled>Start Debate</button>
+              <button id="stop-philosopher-btn" class="secondary-btn" style="display: none;" disabled>Stop Debate</button>
+            </div>
+          </div>
+
+          <div id="alien-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Scenario Title</label>
+              <input type="text" id="alien-topic" placeholder="e.g., 'Signal from Kepler-22b'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-alien-btn" class="primary-btn" disabled>Open Channel</button>
+              <button id="stop-alien-btn" class="secondary-btn" style="display: none;" disabled>Close Channel</button>
             </div>
           </div>
 
