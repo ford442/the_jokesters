@@ -41,10 +41,11 @@ def setup():
     ], check=True)
     
     # 4. Install other deps
-    print("📚 Installing transformers, gradio, etc...")
+    # Pin transformers to 4.42.4: v5.x breaks apply_rotary_pos_emb signature used by Kimi-Audio
+    print("📚 Installing transformers==4.42.4, gradio, etc...")
     subprocess.run([
         sys.executable, '-m', 'pip', 'install', '-q',
-        'transformers>=4.36.0', 'accelerate', 'huggingface_hub',
+        'transformers==4.42.4', 'accelerate>=0.27.0', 'huggingface_hub',
         'soundfile', 'gradio', 'spaces', 'torch', 'torchaudio',
         'pillow', 'numpy', 'scipy'
     ], check=True)
@@ -62,6 +63,68 @@ from huggingface_hub import snapshot_download
 import soundfile as sf
 from PIL import Image
 import numpy as np
+
+# ====================== TRANSFORMERS VERSION CHECK ======================
+try:
+    import transformers as _transformers
+    _tv = _transformers.__version__
+    print(f"Transformers version: {_tv}")
+    if _tv.startswith("5."):
+        raise RuntimeError(
+            f"Transformers {_tv} is incompatible with Kimi-Audio. "
+            "Please ensure transformers==4.42.4 is installed and restart the process."
+        )
+except ImportError:
+    pass
+
+# ====================== COMPATIBILITY PATCHES ======================
+# Patch 1: EncoderDecoderCache — may be absent in some 4.x builds
+try:
+    import transformers.cache_utils as _cache_utils
+    if not hasattr(_cache_utils, "EncoderDecoderCache"):
+        print("🔧 Patching transformers.cache_utils.EncoderDecoderCache...")
+
+        class _EncoderDecoderCache(torch.nn.Module):
+            def __init__(self, self_attention_cache, cross_attention_cache):
+                super().__init__()
+                self.self_attention_cache = self_attention_cache
+                self.cross_attention_cache = cross_attention_cache
+
+            def get_seq_length(self, layer_idx=0):
+                return self.self_attention_cache.get_seq_length(layer_idx)
+
+            def to(self, device):
+                self.self_attention_cache.to(device)
+                self.cross_attention_cache.to(device)
+                return self
+
+        _cache_utils.EncoderDecoderCache = _EncoderDecoderCache
+        sys.modules["transformers.cache_utils"].EncoderDecoderCache = _EncoderDecoderCache
+        print("✅ EncoderDecoderCache patch applied.")
+except Exception as _e:
+    print(f"⚠️ EncoderDecoderCache patch failed: {_e}")
+
+# Patch 2: apply_rotary_pos_emb signature changed in transformers v5+.
+# Kimi-Audio calls it as (q, k, cos, sin, position_ids) but the installed
+# version expects (q, k, cos, sin, unsqueeze_dim=1). Wrap to bridge both.
+try:
+    from transformers.models.qwen2 import modeling_qwen2 as _mq2
+    _orig_rope = _mq2.apply_rotary_pos_emb
+
+    def _patched_apply_rotary_pos_emb(q, k, cos, sin, *args, **kwargs):
+        # Ignore extra positional arg (position_ids from older calling convention)
+        return _orig_rope(q, k, cos, sin, unsqueeze_dim=1)
+
+    _mq2.apply_rotary_pos_emb = _patched_apply_rotary_pos_emb
+    # Also patch any already-loaded kimia model modules
+    _patched = sum(
+        1 for _name, _mod in list(sys.modules.items())
+        if "modeling_moonshot_kimia" in _name and hasattr(_mod, "apply_rotary_pos_emb")
+        and not setattr(_mod, "apply_rotary_pos_emb", _patched_apply_rotary_pos_emb)
+    )
+    print(f"✅ apply_rotary_pos_emb patch applied (+ {_patched} kimia module(s)).")
+except Exception as _e:
+    print(f"⚠️ apply_rotary_pos_emb patch failed: {_e}")
 
 # Now safe to import kimia
 try:
