@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: On Track (Philosopher's Stone & Alien Contact Modes Added)
+* **status**: On Track (Time Travel, Chef, & Medical Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -214,11 +214,20 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Hugging Face Dataset Mirroring**:
     *   Implement a full two-way sync (Pull all history on new device login).
     *   Handle merge conflicts if played on multiple devices.
-    *   **Authentication**: Ensure strict token validation and error handling on startup.
-    *   **Push**: Implement a reliable background queue for pushing episode scripts to avoid blocking UI.
-    *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud.
+    *   **Authentication**: Ensure strict token validation and error handling on startup. Verify token scope permissions (write access).
+    *   **Push**: Implement a reliable background queue for pushing episode scripts to `user/jokesters-episodes` to avoid blocking UI. Use `HFStorageManager.saveFile` with retry logic.
+    *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
-* [ ] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
-* [ ] **Chef's Kitchen**: Agents act as a head chef, sous chef, and health inspector critiquing a dish.
-* [ ] **Medical Drama**: Agents enact a high-stakes surgery scene with absurd medical jargon.
+* [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
+    *   *Implementation*: `Director.runTimeTravelLoop`.
+* [x] **Chef's Kitchen**: Agents act as a head chef, sous chef, and health inspector critiquing a dish.
+    *   *Implementation*: `Director.runChefLoop`.
+* [x] **Medical Drama**: Agents enact a high-stakes surgery scene with absurd medical jargon.
+    *   *Implementation*: `Director.runMedicalLoop`.
+
+### Phase 14: Expanded Reality (New Dreams)
+* [ ] **Haunted House Mode**: Agents investigate a spooky noise (Skeptic vs Believer).
+* [ ] **Sports Commentary Mode**: Agents narrate a mundane activity (like doing laundry) as a high-stakes sport.
+* [ ] **Reality TV Confessional**: Agents speak to the camera about other agents behind their backs.
+* [ ] **Auction House**: Agents bid on absurd items with increasingly high stakes.
