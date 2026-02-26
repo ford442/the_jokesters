@@ -11,6 +11,7 @@ import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
+import { runTimeTravelLoop, runChefLoop, runMedicalLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 
 export interface DirectorCallbacks {
@@ -46,7 +47,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical';
     title: string;
     description: string;
     config?: {
@@ -92,6 +93,9 @@ export interface Scenario {
         codeLanguage?: string;
         therapyTopic?: string;
         philosopherTopic?: string;
+        timeEra?: string;
+        chefDish?: string;
+        medicalCondition?: string;
     };
 }
 
@@ -129,6 +133,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     therapy: runTherapyLoop,
     philosopher: runPhilosopherLoop,
     alien: runAlienLoop,
+    time_travel: runTimeTravelLoop,
+    chef: runChefLoop,
+    medical: runMedicalLoop,
 };
 
 export class Director {

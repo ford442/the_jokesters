@@ -133,6 +133,9 @@ export function getAppTemplate(): string {
             <button id="therapy-mode-btn" class="mode-btn">Therapy</button>
             <button id="philosopher-mode-btn" class="mode-btn">Phil. Stone</button>
             <button id="alien-mode-btn" class="mode-btn">Alien Contact</button>
+            <button id="time-mode-btn" class="mode-btn">Time Travel</button>
+            <button id="chef-mode-btn" class="mode-btn">Chef's Kitchen</button>
+            <button id="medical-mode-btn" class="mode-btn">Medical Drama</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -176,6 +179,39 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-alien-btn" class="primary-btn" disabled>Open Channel</button>
               <button id="stop-alien-btn" class="secondary-btn" style="display: none;" disabled>Close Channel</button>
+            </div>
+          </div>
+
+          <div id="time-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Time Era</label>
+              <input type="text" id="time-era" placeholder="e.g., 'Ancient Rome', 'The 90s'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-time-btn" class="primary-btn" disabled>Start Time Travel</button>
+              <button id="stop-time-btn" class="secondary-btn" style="display: none;" disabled>Stop Time Travel</button>
+            </div>
+          </div>
+
+          <div id="chef-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">The Dish</label>
+              <input type="text" id="chef-dish" placeholder="e.g., 'Burnt Toast', 'Raw Chicken'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-chef-btn" class="primary-btn" disabled>Start Service</button>
+              <button id="stop-chef-btn" class="secondary-btn" style="display: none;" disabled>Stop Service</button>
+            </div>
+          </div>
+
+          <div id="medical-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Medical Condition</label>
+              <input type="text" id="medical-condition" placeholder="e.g., 'Alien Parasite', 'Hiccups'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-medical-btn" class="primary-btn" disabled>Start Surgery</button>
+              <button id="stop-medical-btn" class="secondary-btn" style="display: none;" disabled>Stop Surgery</button>
             </div>
           </div>
 

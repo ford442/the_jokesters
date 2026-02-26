@@ -77,6 +77,15 @@ export interface ModeElements {
   alienTopicInput: HTMLInputElement;
   startAlienBtn: HTMLButtonElement;
   stopAlienBtn: HTMLButtonElement;
+  timeEraInput: HTMLInputElement;
+  startTimeBtn: HTMLButtonElement;
+  stopTimeBtn: HTMLButtonElement;
+  chefDishInput: HTMLInputElement;
+  startChefBtn: HTMLButtonElement;
+  stopChefBtn: HTMLButtonElement;
+  medicalConditionInput: HTMLInputElement;
+  startMedicalBtn: HTMLButtonElement;
+  stopMedicalBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -154,6 +163,15 @@ export function collectModeElements(): ModeElements {
     alienTopicInput: document.getElementById('alien-topic') as HTMLInputElement,
     startAlienBtn: document.getElementById('start-alien-btn') as HTMLButtonElement,
     stopAlienBtn: document.getElementById('stop-alien-btn') as HTMLButtonElement,
+    timeEraInput: document.getElementById('time-era') as HTMLInputElement,
+    startTimeBtn: document.getElementById('start-time-btn') as HTMLButtonElement,
+    stopTimeBtn: document.getElementById('stop-time-btn') as HTMLButtonElement,
+    chefDishInput: document.getElementById('chef-dish') as HTMLInputElement,
+    startChefBtn: document.getElementById('start-chef-btn') as HTMLButtonElement,
+    stopChefBtn: document.getElementById('stop-chef-btn') as HTMLButtonElement,
+    medicalConditionInput: document.getElementById('medical-condition') as HTMLInputElement,
+    startMedicalBtn: document.getElementById('start-medical-btn') as HTMLButtonElement,
+    stopMedicalBtn: document.getElementById('stop-medical-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -223,6 +241,15 @@ export function enableModeControls(el: ModeElements) {
   el.philosopherTopicInput.disabled = false;
   el.startAlienBtn.disabled = false;
   el.alienTopicInput.disabled = false;
+  el.startTimeBtn.disabled = false;
+  el.stopTimeBtn.disabled = false;
+  el.timeEraInput.disabled = false;
+  el.startChefBtn.disabled = false;
+  el.stopChefBtn.disabled = false;
+  el.chefDishInput.disabled = false;
+  el.startMedicalBtn.disabled = false;
+  el.stopMedicalBtn.disabled = false;
+  el.medicalConditionInput.disabled = false;
 }
 
 /**
@@ -645,4 +672,46 @@ export function registerModeHandlers(
     });
   });
   el.stopAlienBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Time Travel Mode
+  switchMode('time-mode-btn', 'time-mode-controls');
+  el.startTimeBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startTimeBtn.style.display = 'none';
+    el.stopTimeBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'time_travel', title: 'Time Travel Paradox', description: 'Agents from different eras arguing.',
+      config: { timeEra: el.timeEraInput.value }
+    });
+  });
+  el.stopTimeBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Chef Mode
+  switchMode('chef-mode-btn', 'chef-mode-controls');
+  el.startChefBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startChefBtn.style.display = 'none';
+    el.stopChefBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'chef', title: 'Chef\'s Kitchen', description: 'A high-stress kitchen critique.',
+      config: { chefDish: el.chefDishInput.value }
+    });
+  });
+  el.stopChefBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Medical Mode
+  switchMode('medical-mode-btn', 'medical-mode-controls');
+  el.startMedicalBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startMedicalBtn.style.display = 'none';
+    el.stopMedicalBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'medical', title: 'Medical Drama', description: 'A medical emergency with absurd treatments.',
+      config: { medicalCondition: el.medicalConditionInput.value }
+    });
+  });
+  el.stopMedicalBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }
