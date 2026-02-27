@@ -16,9 +16,12 @@ export interface ModeElements {
   startReporterBtn: HTMLButtonElement;
   stopReporterBtn: HTMLButtonElement;
   articleTextTextarea: HTMLTextAreaElement;
+  articleTitleInput: HTMLInputElement;
   scriptTopicInput: HTMLInputElement;
+  scriptTextTextarea: HTMLTextAreaElement;
   generateScriptBtn: HTMLButtonElement;
   loadExampleScriptBtn: HTMLButtonElement;
+  playScriptBtn: HTMLButtonElement;
   stopScriptBtn: HTMLButtonElement;
   roastTargetInput: HTMLInputElement;
   startRoastBtn: HTMLButtonElement;
@@ -102,9 +105,12 @@ export function collectModeElements(): ModeElements {
     startReporterBtn: document.getElementById('start-reporter-btn') as HTMLButtonElement,
     stopReporterBtn: document.getElementById('stop-reporter-btn') as HTMLButtonElement,
     articleTextTextarea: document.getElementById('article-text') as HTMLTextAreaElement,
+    articleTitleInput: document.getElementById('article-title') as HTMLInputElement,
     scriptTopicInput: document.getElementById('script-topic') as HTMLInputElement,
+    scriptTextTextarea: document.getElementById('script-text') as HTMLTextAreaElement,
     generateScriptBtn: document.getElementById('generate-script-btn') as HTMLButtonElement,
     loadExampleScriptBtn: document.getElementById('load-example-script-btn') as HTMLButtonElement,
+    playScriptBtn: document.getElementById('play-script-btn') as HTMLButtonElement,
     stopScriptBtn: document.getElementById('stop-script-btn') as HTMLButtonElement,
     roastTargetInput: document.getElementById('roast-target') as HTMLInputElement,
     startRoastBtn: document.getElementById('start-roast-btn') as HTMLButtonElement,
@@ -197,11 +203,15 @@ export function enableModeControls(el: ModeElements) {
   el.reporterTopicInput.disabled = false;
   el.reporterCategorySelect.disabled = false;
   el.reporterQuickTopicsSelect.disabled = false;
+  el.articleTextTextarea.disabled = false;
+  el.articleTitleInput.disabled = false;
   el.sceneTitleInput.disabled = false;
   el.sceneDescriptionInput.disabled = false;
   el.scriptTopicInput.disabled = false;
+  el.scriptTextTextarea.disabled = false;
   el.generateScriptBtn.disabled = false;
   el.loadExampleScriptBtn.disabled = false;
+  el.playScriptBtn.disabled = false;
   el.roastTargetInput.disabled = false;
   el.startRoastBtn.disabled = false;
   el.storyPromptInput.disabled = false;
@@ -391,6 +401,46 @@ export function registerModeHandlers(
   });
 
   el.stopScriptBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  el.loadExampleScriptBtn.addEventListener('click', async () => {
+    try {
+      const res = await fetch('./scenarios/test_script.json');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const script = data.script || data;
+      el.scriptTextTextarea.value = JSON.stringify(script, null, 2);
+      if (data.title && !el.scriptTopicInput.value) {
+        el.scriptTopicInput.value = data.title;
+      }
+    } catch (e) {
+      addMessage('System', `Failed to load example script: ${e instanceof Error ? e.message : String(e)}`, '#ff6b6b');
+    }
+  });
+
+  el.playScriptBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    const text = el.scriptTextTextarea.value.trim();
+    if (!text) {
+      addMessage('System', 'Please paste a script in the text area first.', '#ff6b6b');
+      return;
+    }
+    try {
+      const script = JSON.parse(text);
+      el.playScriptBtn.style.display = 'none';
+      el.generateScriptBtn.style.display = 'none';
+      el.loadExampleScriptBtn.style.display = 'none';
+      el.stopScriptBtn.style.display = 'inline-block';
+      await d.playScenario({
+        type: 'script',
+        title: el.scriptTopicInput.value || 'Pasted Script',
+        description: 'A pasted script.',
+        config: { generatedScript: script }
+      });
+    } catch (e) {
+      addMessage('System', `Invalid script JSON: ${e instanceof Error ? e.message : String(e)}. Expected an array of {speaker, line} objects.`, '#ff6b6b');
+    }
+  });
 
   // Roast Mode
   switchMode('roast-mode-btn', 'roast-mode-controls');

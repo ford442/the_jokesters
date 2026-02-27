@@ -396,9 +396,20 @@ export function getAppTemplate(): string {
                 disabled
               />
             </div>
+            <div class="input-group" style="margin-top: 8px;">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Or paste a script (JSON format)</label>
+              <textarea
+                id="script-text"
+                placeholder='[{"speaker":"comedian","line":"..."},{"speaker":"philosopher","line":"..."},{"speaker":"scientist","line":"..."}]  — speakers: comedian, philosopher, scientist, techBro, robot'
+                rows="4"
+                style="width: 100%; background: #0f3460; border: 1px solid #444; color: white; padding: 8px; font-size: 0.8em; resize: vertical;"
+                disabled
+              ></textarea>
+            </div>
             <div class="improv-buttons">
               <button id="generate-script-btn" class="primary-btn" disabled>Generate & Play</button>
               <button id="load-example-script-btn" class="secondary-btn" disabled>Load Example</button>
+              <button id="play-script-btn" class="secondary-btn" disabled>Play Pasted Script</button>
               <button id="stop-script-btn" class="secondary-btn" style="display: none;" disabled>Stop Script</button>
             </div>
           </div>
