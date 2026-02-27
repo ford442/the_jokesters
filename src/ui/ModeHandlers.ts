@@ -89,6 +89,15 @@ export interface ModeElements {
   medicalConditionInput: HTMLInputElement;
   startMedicalBtn: HTMLButtonElement;
   stopMedicalBtn: HTMLButtonElement;
+  hauntedSettingInput: HTMLInputElement;
+  startHauntedBtn: HTMLButtonElement;
+  stopHauntedBtn: HTMLButtonElement;
+  sportsActivityInput: HTMLInputElement;
+  startSportsBtn: HTMLButtonElement;
+  stopSportsBtn: HTMLButtonElement;
+  realityShowNameInput: HTMLInputElement;
+  startRealityBtn: HTMLButtonElement;
+  stopRealityBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -178,6 +187,15 @@ export function collectModeElements(): ModeElements {
     medicalConditionInput: document.getElementById('medical-condition') as HTMLInputElement,
     startMedicalBtn: document.getElementById('start-medical-btn') as HTMLButtonElement,
     stopMedicalBtn: document.getElementById('stop-medical-btn') as HTMLButtonElement,
+    hauntedSettingInput: document.getElementById('haunted-setting') as HTMLInputElement,
+    startHauntedBtn: document.getElementById('start-haunted-btn') as HTMLButtonElement,
+    stopHauntedBtn: document.getElementById('stop-haunted-btn') as HTMLButtonElement,
+    sportsActivityInput: document.getElementById('sports-activity') as HTMLInputElement,
+    startSportsBtn: document.getElementById('start-sports-btn') as HTMLButtonElement,
+    stopSportsBtn: document.getElementById('stop-sports-btn') as HTMLButtonElement,
+    realityShowNameInput: document.getElementById('reality-show-name') as HTMLInputElement,
+    startRealityBtn: document.getElementById('start-reality-btn') as HTMLButtonElement,
+    stopRealityBtn: document.getElementById('stop-reality-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -260,6 +278,15 @@ export function enableModeControls(el: ModeElements) {
   el.startMedicalBtn.disabled = false;
   el.stopMedicalBtn.disabled = false;
   el.medicalConditionInput.disabled = false;
+  el.startHauntedBtn.disabled = false;
+  el.stopHauntedBtn.disabled = false;
+  el.hauntedSettingInput.disabled = false;
+  el.startSportsBtn.disabled = false;
+  el.stopSportsBtn.disabled = false;
+  el.sportsActivityInput.disabled = false;
+  el.startRealityBtn.disabled = false;
+  el.stopRealityBtn.disabled = false;
+  el.realityShowNameInput.disabled = false;
 }
 
 /**
@@ -764,4 +791,46 @@ export function registerModeHandlers(
     });
   });
   el.stopMedicalBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Haunted House Mode
+  switchMode('haunted-mode-btn', 'haunted-mode-controls');
+  el.startHauntedBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startHauntedBtn.style.display = 'none';
+    el.stopHauntedBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'haunted', title: 'Haunted House', description: 'Agents investigating a spooky location.',
+      config: { hauntedSetting: el.hauntedSettingInput.value }
+    });
+  });
+  el.stopHauntedBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // SportsCast Mode
+  switchMode('sports-mode-btn', 'sports-mode-controls');
+  el.startSportsBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startSportsBtn.style.display = 'none';
+    el.stopSportsBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'sports', title: 'SportsCast', description: 'Agents commentating on mundane activities.',
+      config: { sportsActivity: el.sportsActivityInput.value }
+    });
+  });
+  el.stopSportsBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Reality TV Mode
+  switchMode('reality-mode-btn', 'reality-mode-controls');
+  el.startRealityBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startRealityBtn.style.display = 'none';
+    el.stopRealityBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'reality_tv', title: 'Reality TV', description: 'Agents in a reality show confessional.',
+      config: { realityShowName: el.realityShowNameInput.value }
+    });
+  });
+  el.stopRealityBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }

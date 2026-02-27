@@ -136,6 +136,9 @@ export function getAppTemplate(): string {
             <button id="time-mode-btn" class="mode-btn">Time Travel</button>
             <button id="chef-mode-btn" class="mode-btn">Chef's Kitchen</button>
             <button id="medical-mode-btn" class="mode-btn">Medical Drama</button>
+            <button id="haunted-mode-btn" class="mode-btn">Haunted House</button>
+            <button id="sports-mode-btn" class="mode-btn">SportsCast</button>
+            <button id="reality-mode-btn" class="mode-btn">Reality TV</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -212,6 +215,39 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-medical-btn" class="primary-btn" disabled>Start Surgery</button>
               <button id="stop-medical-btn" class="secondary-btn" style="display: none;" disabled>Stop Surgery</button>
+            </div>
+          </div>
+
+          <div id="haunted-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Location</label>
+              <input type="text" id="haunted-setting" placeholder="e.g., 'A Creepy Doll Factory'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-haunted-btn" class="primary-btn" disabled>Enter House</button>
+              <button id="stop-haunted-btn" class="secondary-btn" style="display: none;" disabled>Escape</button>
+            </div>
+          </div>
+
+          <div id="sports-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Mundane Activity</label>
+              <input type="text" id="sports-activity" placeholder="e.g., 'Doing Taxes', 'Making Toast'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-sports-btn" class="primary-btn" disabled>Start Commentary</button>
+              <button id="stop-sports-btn" class="secondary-btn" style="display: none;" disabled>Stop Commentary</button>
+            </div>
+          </div>
+
+          <div id="reality-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Show Name</label>
+              <input type="text" id="reality-show-name" placeholder="e.g., 'Keeping Up With The AI'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-reality-btn" class="primary-btn" disabled>Start Filming</button>
+              <button id="stop-reality-btn" class="secondary-btn" style="display: none;" disabled>Cut!</button>
             </div>
           </div>
 
