@@ -360,9 +360,12 @@ async function initApp() {
           modeEl.stopScriptBtn.style.display = 'none';
           modeEl.generateScriptBtn.style.display = 'inline-block';
           modeEl.loadExampleScriptBtn.style.display = 'inline-block';
+          modeEl.playScriptBtn.style.display = 'inline-block';
           modeEl.generateScriptBtn.disabled = false;
           modeEl.loadExampleScriptBtn.disabled = false;
+          modeEl.playScriptBtn.disabled = false;
           modeEl.scriptTopicInput.disabled = false;
+          modeEl.scriptTextTextarea.disabled = false;
 
           modeEl.stopRoastBtn.style.display = 'none';
           modeEl.startRoastBtn.style.display = 'inline-block';
