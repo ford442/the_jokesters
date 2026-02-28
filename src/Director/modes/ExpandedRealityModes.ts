@@ -119,3 +119,45 @@ export async function runRealityTVLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * Auction House Mode
+ * Agents bid on absurd items with increasingly high stakes.
+ */
+export async function runAuctionHouseLoop(scenario: Scenario, ctx: ModeContext) {
+    const item = scenario.config?.auctionItem || 'A mysterious glowing orb';
+    ctx.callbacks.onMessage('Director', `🔨 AUCTION HOUSE MODE: Bidding for ${item}`, '#f39c12');
+
+    const auctioneer = 'comedian';
+    const richSnob = 'philosopher';
+    const logicBidder = 'scientist';
+
+    // 1. Auctioneer Intro
+    ctx.callbacks.onTurnStart(auctioneer);
+    await ctx.manager.chatForAgent(auctioneer, `(You are a fast-talking auctioneer. Introduce the absurd item up for bid: "${item}". Start the bidding at an outrageous price. Be extremely enthusiastic!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Bidder (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Rich Snob Bids
+        if (Math.random() > 0.3) {
+            await ctx.manager.chatForAgent(richSnob, `(BIDDER: The user just bid/said: "${userInput}". Outbid them with an absurd currency or concept (e.g., 'three jars of memories', 'my firstborn\'s laugh'). Be incredibly condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, richSnob, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Logic Bidder Questions Value
+        if (Math.random() > 0.3) {
+            await ctx.manager.chatForAgent(logicBidder, `(BIDDER: Analyze the true value of "${item}". Make a highly specific, mathematically complex bid. Question the previous bidder's logic.)`, async (s) => await ctx.callbacks.onSpeak(s, logicBidder, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Auctioneer Hypes
+        await ctx.manager.chatForAgent(auctioneer, `(AUCTIONEER: React to the last bid. Try to drive the price even higher. Speak fast and hype up the "${item}"!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
+    }
+}

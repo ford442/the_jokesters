@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
-* **status**: On Track (Expanded Reality Modes Added)
+* **tasks_per_run**: 1
+* **status**: On Track (Auction House Mode Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -125,11 +125,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
         *   Construct filename: `episodes/episode-{id}.json`.
         *   Call `HFStorageManager.saveFile` (POST to `/api/datasets/{repo}/commit/main`).
     *   [x] Trigger save on "Save Episode" button click.
+    *   [ ] Implement background sync queue to reliably push `episodes/episode-{id}.json` to `user/jokesters-episodes` without blocking UI.
 
 3.  **Continuity**:
     *   [x] Fetch "Previous Episode Summaries" at boot.
         *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
         *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
+    *   [ ] Add semantic search across fetched "Previous Episode Summaries" using a lightweight vector store.
 
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
@@ -239,9 +241,12 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Implementation*: `Director.runSportsCommentaryLoop`.
 * [x] **Reality TV Confessional**: Agents speak to the camera about other agents behind their backs.
     *   *Implementation*: `Director.runRealityTVLoop`.
-* [ ] **Auction House**: Agents bid on absurd items with increasingly high stakes.
+* [x] **Auction House**: Agents bid on absurd items with increasingly high stakes.
+    *   *Implementation*: `Director.runAuctionHouseLoop`.
 
 ### Phase 15: The "Infinite" Update
+* [ ] **Escape Room Mode**: Agents are trapped in a room and must solve puzzles together to escape. (Model Pairing: Phi-3 for Logic vs Hermes-3 for Chaos).
+* [ ] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
 * [ ] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
 * [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
 * [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).

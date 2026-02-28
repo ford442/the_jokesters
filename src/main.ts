@@ -383,6 +383,10 @@ async function initApp() {
           modeEl.startMusicalBtn.style.display = 'inline-block';
           modeEl.musicalStyleInput.disabled = false;
 
+          modeEl.stopAuctionBtn.style.display = 'none';
+          modeEl.startAuctionBtn.style.display = 'inline-block';
+          modeEl.auctionItemInput.disabled = false;
+
           modeEl.stopInterviewBtn.style.display = 'none';
           modeEl.startInterviewBtn.style.display = 'inline-block';
           modeEl.interviewHostSelect.disabled = false;
