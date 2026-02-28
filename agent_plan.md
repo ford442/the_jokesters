@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: On Track (Time Travel, Chef, & Medical Modes Added)
+* **status**: On Track (Expanded Reality Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -68,12 +68,18 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 ### Goal: Cloud Persistence
 Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
-1.  **Authentication**: Implement HF OAuth or Token input in UI (Settings Modal).
-2.  **Episode Storage**: Push finished "Episode Scripts" (JSON) to a private HF Dataset.
-    *   `Dataset: user/jokesters-episodes`
-    *   *Action*: `MemoryManager` should switch from `localStorage` to `HFStorageManager` if token is present.
-3.  **Continuity**: Fetch "Previous Episode Summaries" at boot to seed the context window.
-    *   *Logic*: Check for `summary.json` in the dataset, inject into system prompt.
+#### Roadmap Steps
+1.  **Authentication**:
+    *   Implement HF OAuth or Token input in UI (Settings Modal).
+    *   Authenticate with the HF API using `HFStorageManager`.
+    *   Validate the token via `/whoami-v2`.
+2.  **Episode Storage**:
+    *   Push finished "Episode Scripts" (JSON) to a private HF Dataset (e.g., `user/jokesters-episodes`).
+    *   Construct standardized filenames (e.g., `episodes/episode-{timestamp}.json`).
+    *   Ensure background sync does not block the UI.
+3.  **Continuity**:
+    *   Fetch "Previous Episode Summaries" (or `summary.json`) from the private dataset at boot.
+    *   Inject this summary into the `GroupChatManager` system prompt to maintain continuity.
 4.  **Vector Memory**: (Future) Use a local vector store (e.g. Voy or simple cosine similarity) to retrieve relevant past jokes.
 
 ---
@@ -227,7 +233,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Implementation*: `Director.runMedicalLoop`.
 
 ### Phase 14: Expanded Reality (New Dreams)
-* [ ] **Haunted House Mode**: Agents investigate a spooky noise (Skeptic vs Believer).
-* [ ] **Sports Commentary Mode**: Agents narrate a mundane activity (like doing laundry) as a high-stakes sport.
-* [ ] **Reality TV Confessional**: Agents speak to the camera about other agents behind their backs.
+* [x] **Haunted House Mode**: Agents investigate a spooky noise (Skeptic vs Believer).
+    *   *Implementation*: `Director.runHauntedHouseLoop`.
+* [x] **Sports Commentary Mode**: Agents narrate a mundane activity (like doing laundry) as a high-stakes sport.
+    *   *Implementation*: `Director.runSportsCommentaryLoop`.
+* [x] **Reality TV Confessional**: Agents speak to the camera about other agents behind their backs.
+    *   *Implementation*: `Director.runRealityTVLoop`.
 * [ ] **Auction House**: Agents bid on absurd items with increasingly high stakes.
+
+### Phase 15: The "Infinite" Update
+* [ ] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
+* [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
+* [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
