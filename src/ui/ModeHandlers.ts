@@ -98,6 +98,9 @@ export interface ModeElements {
   realityShowNameInput: HTMLInputElement;
   startRealityBtn: HTMLButtonElement;
   stopRealityBtn: HTMLButtonElement;
+  auctionItemInput: HTMLInputElement;
+  startAuctionBtn: HTMLButtonElement;
+  stopAuctionBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -196,6 +199,9 @@ export function collectModeElements(): ModeElements {
     realityShowNameInput: document.getElementById('reality-show-name') as HTMLInputElement,
     startRealityBtn: document.getElementById('start-reality-btn') as HTMLButtonElement,
     stopRealityBtn: document.getElementById('stop-reality-btn') as HTMLButtonElement,
+    auctionItemInput: document.getElementById('auction-item') as HTMLInputElement,
+    startAuctionBtn: document.getElementById('start-auction-btn') as HTMLButtonElement,
+    stopAuctionBtn: document.getElementById('stop-auction-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -287,6 +293,9 @@ export function enableModeControls(el: ModeElements) {
   el.startRealityBtn.disabled = false;
   el.stopRealityBtn.disabled = false;
   el.realityShowNameInput.disabled = false;
+  el.startAuctionBtn.disabled = false;
+  el.stopAuctionBtn.disabled = false;
+  el.auctionItemInput.disabled = false;
 }
 
 /**
@@ -833,4 +842,18 @@ export function registerModeHandlers(
     });
   });
   el.stopRealityBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Auction House Mode
+  switchMode('auction-mode-btn', 'auction-mode-controls');
+  el.startAuctionBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startAuctionBtn.style.display = 'none';
+    el.stopAuctionBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'auction_house', title: 'Auction House', description: 'Agents bid on absurd items.',
+      config: { auctionItem: el.auctionItemInput.value }
+    });
+  });
+  el.stopAuctionBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }

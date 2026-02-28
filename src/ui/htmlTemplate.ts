@@ -139,6 +139,7 @@ export function getAppTemplate(): string {
             <button id="haunted-mode-btn" class="mode-btn">Haunted House</button>
             <button id="sports-mode-btn" class="mode-btn">SportsCast</button>
             <button id="reality-mode-btn" class="mode-btn">Reality TV</button>
+            <button id="auction-mode-btn" class="mode-btn">Auction House</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -248,6 +249,17 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-reality-btn" class="primary-btn" disabled>Start Filming</button>
               <button id="stop-reality-btn" class="secondary-btn" style="display: none;" disabled>Cut!</button>
+            </div>
+          </div>
+
+          <div id="auction-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Auction Item</label>
+              <input type="text" id="auction-item" placeholder="e.g., 'A signed photo of a potato'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-auction-btn" class="primary-btn" disabled>Start Auction</button>
+              <button id="stop-auction-btn" class="secondary-btn" style="display: none;" disabled>Stop Auction</button>
             </div>
           </div>
 

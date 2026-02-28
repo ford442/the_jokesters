@@ -13,7 +13,7 @@ import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
 import { runTimeTravelLoop, runChefLoop, runMedicalLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
-import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop } from './modes/ExpandedRealityModes';
+import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop } from './modes/ExpandedRealityModes';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -48,7 +48,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house';
     title: string;
     description: string;
     config?: {
@@ -100,6 +100,7 @@ export interface Scenario {
         hauntedSetting?: string;
         sportsActivity?: string;
         realityShowName?: string;
+        auctionItem?: string;
     };
 }
 
@@ -143,6 +144,7 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     haunted: runHauntedHouseLoop,
     sports: runSportsCommentaryLoop,
     reality_tv: runRealityTVLoop,
+    auction_house: runAuctionHouseLoop,
 };
 
 export class Director {
