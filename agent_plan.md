@@ -1,7 +1,7 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 1
+* **tasks_per_run**: 2
 * **status**: On Track (Auction House Mode Added)
 
 ## 1. System Philosophy: "The Digital Director"
@@ -125,7 +125,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
         *   Construct filename: `episodes/episode-{id}.json`.
         *   Call `HFStorageManager.saveFile` (POST to `/api/datasets/{repo}/commit/main`).
     *   [x] Trigger save on "Save Episode" button click.
-    *   [ ] Implement background sync queue to reliably push `episodes/episode-{id}.json` to `user/jokesters-episodes` without blocking UI.
+    *   [x] Implement background sync queue to reliably push `episodes/episode-{id}.json` to `user/jokesters-episodes` without blocking UI.
 
 3.  **Continuity**:
     *   [x] Fetch "Previous Episode Summaries" at boot.
@@ -223,7 +223,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Implement a full two-way sync (Pull all history on new device login).
     *   Handle merge conflicts if played on multiple devices.
     *   **Authentication**: Ensure strict token validation and error handling on startup. Verify token scope permissions (write access).
-    *   **Push**: Implement a reliable background queue for pushing episode scripts to `user/jokesters-episodes` to avoid blocking UI. Use `HFStorageManager.saveFile` with retry logic.
+    *   **Push**: Implement a reliable background queue for pushing episode scripts to `user/jokesters-episodes` to avoid blocking UI. Use `HFStorageManager.saveFile` with retry logic. (Implemented local storage sync queue in MemoryManager).
+    *   **Conflict Resolution**: When pushing updates or creating episodes, use logic to compare timestamps or version markers to ensure older offline sessions don't overwrite newer synced sessions. Support delta sync for large vector chunks.
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
@@ -250,3 +251,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
 * [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
 * [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
+
+### Phase 16: Time Loop Mode
+* [ ] **Time Loop**: Agents suddenly realize they are trapped in a repeating conversation loop.
+    *   *Model Pairing*: Hermes-3 for the "awakened" agent to break the fourth wall existential dread, paired with Phi-3 (who strictly adheres to the script and doesn't notice the loop).
+    *   *Mechanic*: The Director periodically wipes the context of the Phi-3 agent but leaves Hermes-3's memory intact.

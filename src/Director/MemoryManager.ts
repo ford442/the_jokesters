@@ -5,10 +5,12 @@ export class MemoryManager {
     private hfStorage: HFStorageManager;
     private hfToken: string | null = null;
     private hfRepoId: string | null = null;
+    private isSyncing: boolean = false;
 
     constructor() {
         this.hfStorage = new HFStorageManager();
         this.loadCloudCredentials();
+        this.processSyncQueue();
     }
 
     private loadCloudCredentials(): void {
@@ -107,7 +109,63 @@ export class MemoryManager {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/episode-${episodeId}.json`;
         const content = JSON.stringify(data, null, 2);
-        await this.hfStorage.saveFile(this.hfToken, this.hfRepoId, filename, content);
+
+        // Push to local sync queue
+        const queueKey = this.prefix + 'sync-queue';
+        const queueRaw = localStorage.getItem(queueKey);
+        let queue: { id: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+
+        // Remove existing item if updating same file
+        queue = queue.filter(q => q.filename !== filename);
+        // Generate a unique ID for this job to safely remove it later
+        const jobId = Math.random().toString(36).substring(2, 15);
+        queue.push({ id: jobId, filename, content });
+
+        localStorage.setItem(queueKey, JSON.stringify(queue));
+
+        // Trigger sync processing
+        this.processSyncQueue();
+    }
+
+    private async processSyncQueue(): Promise<void> {
+        if (this.isSyncing || !this.hfToken || !this.hfRepoId) return;
+
+        const queueKey = this.prefix + 'sync-queue';
+        const queueRaw = localStorage.getItem(queueKey);
+        if (!queueRaw) return;
+
+        let queue: { id: string, filename: string, content: string }[] = JSON.parse(queueRaw);
+        if (queue.length === 0) return;
+
+        this.isSyncing = true;
+
+        try {
+            while (true) {
+                const currentQueueRaw = localStorage.getItem(queueKey);
+                if (!currentQueueRaw) break;
+
+                let currentQueue: { id: string, filename: string, content: string }[] = JSON.parse(currentQueueRaw);
+                if (currentQueue.length === 0) break;
+
+                const item = currentQueue[0];
+                try {
+                    await this.hfStorage.saveFile(this.hfToken, this.hfRepoId, item.filename, item.content);
+                    // Remove item on success, re-read queue to avoid race conditions
+                    const freshQueueRaw = localStorage.getItem(queueKey);
+                    if (freshQueueRaw) {
+                        let freshQueue: { id: string, filename: string, content: string }[] = JSON.parse(freshQueueRaw);
+                        freshQueue = freshQueue.filter(q => q.id !== item.id);
+                        localStorage.setItem(queueKey, JSON.stringify(freshQueue));
+                    }
+                    console.log(`Successfully synced ${item.filename} to cloud.`);
+                } catch (error) {
+                    console.error(`Failed to sync ${item.filename} to cloud. Will retry later.`, error);
+                    break; // Stop processing on error, try again later
+                }
+            }
+        } finally {
+            this.isSyncing = false;
+        }
     }
 
     public loadEpisode(episodeId: string): any | null {
