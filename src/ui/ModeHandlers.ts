@@ -57,6 +57,9 @@ export interface ModeElements {
   trialTopicInput: HTMLInputElement;
   startTrialBtn: HTMLButtonElement;
   stopTrialBtn: HTMLButtonElement;
+  interrogationCrimeInput: HTMLInputElement;
+  startInterrogationBtn: HTMLButtonElement;
+  stopInterrogationBtn: HTMLButtonElement;
   techIssueInput: HTMLInputElement;
   startTechBtn: HTMLButtonElement;
   stopTechBtn: HTMLButtonElement;
@@ -101,6 +104,9 @@ export interface ModeElements {
   auctionItemInput: HTMLInputElement;
   startAuctionBtn: HTMLButtonElement;
   stopAuctionBtn: HTMLButtonElement;
+  escapeSettingInput: HTMLInputElement;
+  startEscapeBtn: HTMLButtonElement;
+  stopEscapeBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -158,6 +164,9 @@ export function collectModeElements(): ModeElements {
     trialTopicInput: document.getElementById('trial-topic') as HTMLInputElement,
     startTrialBtn: document.getElementById('start-trial-btn') as HTMLButtonElement,
     stopTrialBtn: document.getElementById('stop-trial-btn') as HTMLButtonElement,
+    interrogationCrimeInput: document.getElementById('interrogation-crime') as HTMLInputElement,
+    startInterrogationBtn: document.getElementById('start-interrogation-btn') as HTMLButtonElement,
+    stopInterrogationBtn: document.getElementById('stop-interrogation-btn') as HTMLButtonElement,
     techIssueInput: document.getElementById('tech-issue') as HTMLInputElement,
     startTechBtn: document.getElementById('start-tech-btn') as HTMLButtonElement,
     stopTechBtn: document.getElementById('stop-tech-btn') as HTMLButtonElement,
@@ -202,6 +211,9 @@ export function collectModeElements(): ModeElements {
     auctionItemInput: document.getElementById('auction-item') as HTMLInputElement,
     startAuctionBtn: document.getElementById('start-auction-btn') as HTMLButtonElement,
     stopAuctionBtn: document.getElementById('stop-auction-btn') as HTMLButtonElement,
+    escapeSettingInput: document.getElementById('escape-setting') as HTMLInputElement,
+    startEscapeBtn: document.getElementById('start-escape-btn') as HTMLButtonElement,
+    stopEscapeBtn: document.getElementById('stop-escape-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -259,6 +271,8 @@ export function enableModeControls(el: ModeElements) {
   el.visionFileInput.disabled = false;
   el.startTrialBtn.disabled = false;
   el.trialTopicInput.disabled = false;
+  el.startInterrogationBtn.disabled = false;
+  el.interrogationCrimeInput.disabled = false;
   el.startTechBtn.disabled = false;
   el.techIssueInput.disabled = false;
   el.startHistoricalBtn.disabled = false;
@@ -296,6 +310,9 @@ export function enableModeControls(el: ModeElements) {
   el.startAuctionBtn.disabled = false;
   el.stopAuctionBtn.disabled = false;
   el.auctionItemInput.disabled = false;
+  el.startEscapeBtn.disabled = false;
+  el.stopEscapeBtn.disabled = false;
+  el.escapeSettingInput.disabled = false;
 }
 
 /**
@@ -654,6 +671,20 @@ export function registerModeHandlers(
   });
   el.stopTrialBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 
+  // Interrogation Mode
+  switchMode('interrogation-mode-btn', 'interrogation-mode-controls');
+  el.startInterrogationBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startInterrogationBtn.style.display = 'none';
+    el.stopInterrogationBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'interrogation', title: 'Interrogation Room', description: 'The User is being interrogated!',
+      config: { interrogationCrime: el.interrogationCrimeInput.value }
+    });
+  });
+  el.stopInterrogationBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
   // Tech Mode
   switchMode('tech-mode-btn', 'tech-mode-controls');
   el.startTechBtn.addEventListener('click', async () => {
@@ -856,4 +887,18 @@ export function registerModeHandlers(
     });
   });
   el.stopAuctionBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Escape Room Mode
+  switchMode('escape-mode-btn', 'escape-mode-controls');
+  el.startEscapeBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    el.startEscapeBtn.style.display = 'none';
+    el.stopEscapeBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'escape_room', title: 'Escape Room', description: 'Agents are trapped in an escape room.',
+      config: { escapeRoomSetting: el.escapeSettingInput.value }
+    });
+  });
+  el.stopEscapeBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }

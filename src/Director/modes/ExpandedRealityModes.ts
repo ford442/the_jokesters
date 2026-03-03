@@ -161,3 +161,45 @@ export async function runAuctionHouseLoop(scenario: Scenario, ctx: ModeContext) 
         await ctx.manager.chatForAgent(auctioneer, `(AUCTIONEER: React to the last bid. Try to drive the price even higher. Speak fast and hype up the "${item}"!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
     }
 }
+
+/**
+ * Escape Room Mode
+ * Agents are trapped in a room and must solve puzzles together to escape.
+ */
+export async function runEscapeRoomLoop(scenario: Scenario, ctx: ModeContext) {
+    const setting = scenario.config?.escapeRoomSetting || 'A laser-filled vault';
+    ctx.callbacks.onMessage('Director', `🔒 ESCAPE ROOM MODE: Trapped in ${setting}`, '#e74c3c');
+
+    const chaos = 'comedian'; // Tries absurd solutions
+    const logic = 'scientist'; // Tries to solve it methodically
+    const existential = 'philosopher'; // Questions why they even want to escape
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(logic);
+    await ctx.manager.chatForAgent(logic, `(You are trapped in an escape room: ${setting}. Assess the situation logically. Point out a potential puzzle or clue to the User.)`, async (s) => await ctx.callbacks.onSpeak(s, logic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Trapped User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Chaos Agent tries something stupid
+        if (Math.random() > 0.2) {
+            await ctx.manager.chatForAgent(chaos, `(ESCAPE ROOM: The user just did this: "${userInput}". Try to "help" by doing something completely chaotic, unhelpful, or dangerous.)`, async (s) => await ctx.callbacks.onSpeak(s, chaos, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Philosopher gets distracted
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(existential, `(ESCAPE ROOM: React to "${userInput}" by questioning the philosophical nature of being trapped. Is the real escape room our own minds?)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Scientist tries to keep things on track
+        await ctx.manager.chatForAgent(logic, `(ESCAPE ROOM: Attempt to make sense of the chaos. Incorporate the user's action "${userInput}" into a logical theory to solve the next puzzle.)`, async (s) => await ctx.callbacks.onSpeak(s, logic, {}));
+    }
+}
