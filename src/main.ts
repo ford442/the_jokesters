@@ -1,701 +1,725 @@
 import './style.css'
 import { GroupChatManager } from './GroupChatManager'
-
+import type { Agent, ProfanityLevel } from './GroupChatManager'
+import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
-// WebLLM is now lazy-loaded when needed
+// import { SceneManager } from './SceneManager'
+import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
-import { MusicEngine } from './audio/MusicEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
-import { VoiceInputManager } from './audio/VoiceInputManager'
-import { AgentModelManager } from './AgentModelManager'
-import { Director, type DirectorCallbacks } from './Director/Director'
-import { ScriptGenerator } from './Director/ScriptGenerator'
-import { MemoryManager } from './Director/MemoryManager'
 
-import { agents, profanityLevels, defaultAgentModelMappings } from './config/agents'
-import { defaultModelId, applyModelConfigsToEngine, getAvailableModels, populateModelSelect } from './config/models'
-import { getAppTemplate } from './ui/htmlTemplate'
-import { startBeat, stopBeat } from './ui/BeatGenerator'
-import { collectModeElements, enableModeControls, registerModeHandlers } from './ui/ModeHandlers'
+// Log available models on startup
+console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
 
-// Export interface for ScriptBeat
-export interface ScriptBeat {
-  speaker: string;
-  line: string;
-}
-
-// WebLLM module will be loaded lazily
-let webllmModule: typeof import('@mlc-ai/web-llm') | null = null
-
-/**
- * Lazy load WebLLM engine
- */
-async function loadWebLLM(): Promise<typeof import('@mlc-ai/web-llm')> {
-  if (!webllmModule) {
-    webllmModule = await import('@mlc-ai/web-llm')
-    // Apply configs after loading
-    applyModelConfigsToEngine(webllmModule)
-  }
-  return webllmModule
-}
+// Define our agents with different personalities and sampling parameters
+// --- CASUAL & FUNNY AGENTS ---
+const agents: Agent[] = [
+  {
+    id: 'comedian',
+    name: 'The Comedian',
+    // Added instruction: End your response with "###"
+    // Female + Fast + Farcical
+    systemPrompt:
+      'You are a frantic, high-energy female comedian who talks incredibly fast. You are aware that you ramble at high speed and play on it comically. You mix highbrow references with lowbrow physical humor. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.85,
+    top_p: 0.93,
+    color: '#ff6b6b',
+  },
+  {
+    id: 'philosopher',
+    name: 'The Philosopher',
+    // Added instruction: End your response with "###"
+    // Slow + Pretentious
+    systemPrompt:
+      'You are a cynical philosopher who speaks very slowly. You judge the comedian for her speed. You are highbrow but petty. DO NOT start sentences with your name. End your response with "###"',
+    temperature: 0.70,
+    top_p: 0.9,
+    color: '#4ecdc4',
+  },
+  {
+    id: 'scientist',
+    name: 'The Scientist',
+    // Added instruction: End your response with "###"
+    // The "Literalist"
+    systemPrompt:
+      'You are a scientist who treats every joke as a hypothesis. You analyze crass jokes with mathematical precision. DO NOT use your name. End your response with "###"',
+    temperature: 0.5,
+    top_p: 0.85,
+    color: '#45b7d1',
+  },
+]
 
 // Initialize the app
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
-  app.innerHTML = getAppTemplate()
 
-  // Core DOM elements
+  // Configuration constants for prerendering
+  const PRERENDER_INITIAL_TURNS = 3  // Number of turns to prerender at scene start
+  const PRERENDER_MIN_QUEUE = 2      // Minimum queue size before triggering background prerender
+  const PRERENDER_BATCH_SIZE = 2     // Number of turns to generate in background
+  const MAX_PRERENDER_SENTENCES = 3  // Maximum sentences to prerender for audio
+
+  app.innerHTML = `
+    <div class="container">
+      <h1>The Jokesters</h1>
+      <p class="subtitle">Multi-Agent Chat powered by Llama-3 & WebGPU</p>
+      <div id="loading" class="loading">
+        <div class="progress-bar">
+          <div id="progress" class="progress-fill"></div>
+        </div>
+        <p id="status">Initializing WebLLM...</p>
+      </div>
+      <div id="chat-container" class="chat-container" style="display: none;">
+        <canvas id="scene"></canvas>
+        <div class="controls">
+          <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
+              <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
+              <span id="tts-steps-val" style="color: #4ecdc4; font-size: 0.8em; width: 20px;">10</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Director Chaos</label>
+              <input type="range" id="director-chaos" min="0" max="100" value="30" style="flex: 1;">
+              <span id="director-chaos-val" style="color: #ff6b6b; font-size: 0.8em; width: 20px;">30%</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
+              <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
+              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
+            </div>
+          </div>
+          <div class="mode-selector">
+            <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
+            <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
+          </div>
+          <div id="chat-log" class="chat-log"></div>
+          
+          <!-- Chat Mode Controls -->
+          <div id="chat-mode-controls" class="input-group">
+            <input 
+              type="text" 
+              id="user-input" 
+              placeholder="Type a message..."
+              autocomplete="off"
+            />
+            <button id="send-btn">Send</button>
+          </div>
+          
+          <!-- Improv Mode Controls -->
+          <div id="improv-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <input 
+                type="text" 
+                id="scene-title" 
+                placeholder="Scene title (e.g., 'At the Coffee Shop')..."
+                autocomplete="off"
+              />
+            </div>
+            <div class="input-group">
+              <textarea 
+                id="scene-description" 
+                placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..."
+                rows="3"
+                autocomplete="off"
+              ></textarea>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-improv-btn" class="primary-btn">Start Scene</button>
+              <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
+            </div>
+          </div>
+          
+          <div class="agent-info">
+            <p>Next speaker: <span id="next-agent">-</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
+  const progressBar = document.getElementById('progress') as HTMLDivElement
   const statusText = document.getElementById('status')!
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
-  const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement
-  const settingsModal = document.getElementById('settings-modal') as HTMLDivElement
-  const closeSettingsBtn = document.getElementById('close-settings-btn') as HTMLButtonElement
-  const saveSettingsBtn = document.getElementById('save-settings-btn') as HTMLButtonElement
-  const hfTokenInput = document.getElementById('hf-token') as HTMLInputElement
-  const hfRepoInput = document.getElementById('hf-repo') as HTMLInputElement
-  const settingsStatus = document.getElementById('settings-status') as HTMLDivElement
-  const saveEpisodeBtn = document.getElementById('save-episode-btn') as HTMLButtonElement
-  const modelSelect = document.getElementById('model-select') as HTMLSelectElement
-  const modelSelectMain = document.getElementById('model-select-main') as HTMLSelectElement | null
-  const loadModelBtn = document.getElementById('load-model-btn') as HTMLButtonElement
   const nextAgentSpan = document.getElementById('next-agent')!
+  const ttsStepsSlider = document.getElementById('tts-steps') as HTMLInputElement
+  const ttsStepsVal = document.getElementById('tts-steps-val')!
   const chaosSlider = document.getElementById('director-chaos') as HTMLInputElement
+  const chaosVal = document.getElementById('director-chaos-val')!
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
-  const languageSelect = document.getElementById('language-select') as HTMLSelectElement
-  const voiceBtn = document.getElementById('voice-btn') as HTMLButtonElement
-
-  // Collect all mode-related DOM elements
-  const modeEl = collectModeElements()
-
-  // Manager state
-  let groupChatManager: GroupChatManager;
-  let director: Director;
-  let scriptGenerator: ScriptGenerator;
-
-  // Expose for debugging/testing
-  (window as any).getDirector = () => director;
-  (window as any).getGroupChatManager = () => groupChatManager;
-  (window as any).getMemoryManager = () => memoryManager;
-  let memoryManager: MemoryManager | null = null;
-  let currentMessageContentSpan: HTMLElement | null = null;
-  let agentModelManager: AgentModelManager;
-  let audioEngine: AudioEngine;
-  let musicEngine: MusicEngine;
-  let speechQueue: SpeechQueue;
-  let voiceInput: VoiceInputManager;
-  let stage: Stage;
-  let lipSync: LipSync;
-  let audioInitializing = false;
-
-  // Active engine module state (lazy loaded)
-  let activeEngineModule: any = null
-
-  // Initial population with default engine (will be populated after loading)
-
-  // --- Helper Functions ---
-
-  const addMessage = (sender: string, text: string, color: string) => {
-    const div = document.createElement('div')
-    div.className = 'message'
-
-    const agent = agents.find(a => a.name === sender || a.id === sender);
-    let buttonsHtml = '';
-
-    if (agent) {
-      buttonsHtml = `
-      <span class="feedback-controls" style="float:right; opacity:0.5;">
-        <button class="feedback-btn" data-agent="${agent.id}" data-type="positive" title="Encourage Chaos">👍</button>
-        <button class="feedback-btn" data-agent="${agent.id}" data-type="negative" title="Reduce Chaos">👎</button>
-      </span>
-      `;
-    }
-
-    div.innerHTML = `<strong style="color: ${color}">${sender}:</strong> ${text}${buttonsHtml}`
-    chatLog.appendChild(div)
-    chatLog.scrollTop = chatLog.scrollHeight
-
-    if (agent) {
-      const btns = div.querySelectorAll('.feedback-btn');
-      btns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const target = e.currentTarget as HTMLButtonElement;
-          const agentId = target.getAttribute('data-agent');
-          const type = target.getAttribute('data-type') as 'positive' | 'negative';
-          if (agentId && groupChatManager) {
-            groupChatManager.adjustAgentPersonality(agentId, type);
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.textContent = `Adjusted ${agentId}: ${type === 'positive' ? '+Chaos' : '-Chaos'}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-            target.parentElement?.remove();
-          }
-        });
-      });
-    }
-  }
-
-  const speakAndVisualize = async (text: string, agentId: string, options?: { steps?: number; seed?: number; speed?: number }) => {
-    const opts = {
-      speed: options?.speed || 1.3,
-      steps: options?.steps || 10,
-      seed: options?.seed
-    };
-    
-    try {
-      // Parse timing cues for robot animations
-      let textToSpeak = text;
-      const isRobot = stage.isRobot(agentId);
-      
-      if (isRobot) {
-        // Set up robot animation sequence and get clean text
-        textToSpeak = stage.setupRobotAnimation(agentId, text);
-      }
-      
-      if (audioEngine) {
-        const audio = await audioEngine.synthesize(textToSpeak, agentId, opts);
-        speechQueue.add(audio);
-        stage.setActiveActor(agentId);
-      }
-    } catch (e) {
-      console.error('TTS Error:', e);
-    }
-  };
-
-  const updateNextAgentUI = () => {
-    if (!groupChatManager) {
-      nextAgentSpan.textContent = '-'
-      nextAgentSpan.style.color = '#888'
-      return
-    }
-    const next = groupChatManager.getCurrentAgent()
-    nextAgentSpan.textContent = next.name
-    nextAgentSpan.style.color = next.color
-  }
-
-  const updateCurrentModelDisplay = () => {
-    if (!agentModelManager) return
-    const currentModelId = agentModelManager.getCurrentModel()
-    const amManagerAny = agentModelManager as any
-    const currentVRAM = amManagerAny.getRequiredVRAM ? amManagerAny.getRequiredVRAM(currentModelId) : 0
-
-    const displayEl = document.getElementById('current-model-display')
-    const vramEl = document.getElementById('current-vram-display')
-
-    if (displayEl) displayEl.textContent = currentModelId ? currentModelId.split('/').pop() || currentModelId : 'None'
-    if (vramEl) vramEl.textContent = currentVRAM.toFixed(0)
-  }
-
-  const updateVRAMBadges = () => {
-    document.querySelectorAll('.vram-badge').forEach((badge) => {
-      const agentId = badge.getAttribute('data-agent')
-      if (agentId && agentModelManager) {
-        const select = document.getElementById(`model-${agentId}`) as HTMLSelectElement
-        if (select && select.value) {
-          const amManagerAny = agentModelManager as any
-          const vram = amManagerAny.getRequiredVRAM ? amManagerAny.getRequiredVRAM(select.value) : 0
-          badge.textContent = `${vram.toFixed(0)} MB`
-        }
-      }
-    })
-  }
+  const profanityVal = document.getElementById('profanity-val')!
 
   try {
-    // --- Stage 1: Initialize 3D Stage ---
-    stage = new Stage(canvas)
+    // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
+    const groupChatManager = new GroupChatManager(agents)
 
-    // --- Stage 2: Model Loading (triggered by button or auto-load) ---
-    const initializeManagers = async (modelId: string, engineModule: any) => {
-      // 2a. Initialize Audio Engine (once)
-      if (!audioInitializing) {
-        audioInitializing = true
-        statusText.textContent = 'Initializing Audio Engine...'
-        audioEngine = new AudioEngine()
-        try {
-          await audioEngine.init()
-        } catch (e) {
-          console.warn('AudioEngine init failed, proceeding without TTS:', e);
-          addMessage('System', 'TTS failed to load. Audio disabled.', '#ff6b6b');
-        }
+    const audioEngine = new AudioEngine()
+    const speechQueue = new SpeechQueue(audioEngine)
 
-        musicEngine = new MusicEngine()
-        voiceInput = new VoiceInputManager()
-        speechQueue = new SpeechQueue(audioEngine)
+    // Check for WebGL 2 support explicitly before initializing Three.js
+    // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality
+    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
+    if (!gl) {
+      throw new Error('WebGL 2 is not supported or is disabled in this environment.');
+    }
 
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        lipSync = new LipSync(audioContext)
+    const stage = new Stage(canvas, gl as WebGLRenderingContext)
+    const lipSync = new LipSync(speechQueue.getAudioContext())
 
-        if ('onAudioProcess' in audioEngine) {
-          (audioEngine as any).onAudioProcess = (data: any) => {
-            if ((lipSync as any).update) {
-              (lipSync as any).update(data)
-            }
-          }
-        }
+    // Wire up Audio -> Visuals
+    // SpeechQueue -> LipSync -> Destination
+    speechQueue.setDestination(lipSync.analyser)
+    lipSync.analyser.connect(speechQueue.getAudioContext().destination)
 
-        stage.setLipSync(lipSync)
-      }
+    stage.setLipSync(lipSync)
+    stage.render()
 
-      // 2b. Instantiate new managers
-      groupChatManager = new GroupChatManager(agents)
-      scriptGenerator = new ScriptGenerator(groupChatManager)
-      memoryManager = new MemoryManager();
+    // 1. Initialize Audio Engine (in background or parallel)
+    statusText.textContent = "Initializing Audio Engine..."
+    await audioEngine.init('./tts/onnx');
+    // 2. Initialize the chat manager with progress callback
+    statusText.textContent = "Initializing WebLLM..."
+    await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
+      const percentage = Math.round(progress.progress * 100)
+      progressBar.style.width = `${percentage}%`
+      statusText.textContent = progress.text
+    })
 
-      const previousContext = await memoryManager.loadLastEpisode();
+    // Initialize ImprovSceneManager
+    const improvSceneManager = new ImprovSceneManager(groupChatManager)
 
-      // 2d. Initialize AgentModelManager
-      agentModelManager = new AgentModelManager(
-        groupChatManager,
-        defaultAgentModelMappings,
-        (progress) => {
-          statusText.textContent = `Swapping model: ${progress.text}`
-        }
-      )
+    // Hide loading, show chat
+    loadingDiv.style.display = 'none'
+    chatContainer.style.display = 'flex'
 
-      // 2e. Video Controls
-      const videoElement = document.getElementById('reaction-video') as HTMLVideoElement;
-      const videoContainer = document.getElementById('video-container') as HTMLDivElement;
+    // UI listeners
+    ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
+    chaosSlider.oninput = () => chaosVal.textContent = chaosSlider.value + '%'
 
-      const videoControls = {
-        play: async () => await videoElement.play(),
-        pause: () => videoElement.pause(),
-        load: (url: string) => { videoElement.src = url; },
-        getTime: () => videoElement.currentTime,
-        show: (visible: boolean) => {
-          videoContainer.style.display = visible ? 'block' : 'none';
-        }
-      };
-
-      // 2f. Initialize Director with callbacks
-      const directorCallbacks: DirectorCallbacks = {
-        onMessage: (sender, message, color) => addMessage(sender, message, color),
-        onTicker: (text) => {
-          const container = document.getElementById('news-ticker-container');
-          const content = document.getElementById('news-ticker-content');
-          if (container && content) {
-            container.style.display = 'block';
-            content.textContent = text;
-          }
-        },
-        onSpeak: async (sentence, agentId, options) => {
-          await speakAndVisualize(sentence, agentId, options);
-          if (currentMessageContentSpan) {
-            const currentText = currentMessageContentSpan.textContent === '...' ? '' : (currentMessageContentSpan.textContent || '');
-            currentMessageContentSpan.textContent = currentText + sentence + ' ';
-            chatLog.scrollTop = chatLog.scrollHeight;
-          }
-        },
-        onTurnStart: async (agentId) => {
-          if (agentModelManager) {
-            await agentModelManager.ensureModelForAgent(agentId);
-            updateCurrentModelDisplay();
-          }
-          const agent = agents.find(a => a.id === agentId)!;
-          stage.setActiveActor(agentId);
-          
-          // Robot head tilt between phrases (when starting turn)
-          if (stage.isRobot(agentId)) {
-            stage.tiltRobotHead(agentId, 'left');
-            setTimeout(() => stage.tiltRobotHead(agentId, 'reset'), 300);
-          }
-
-          const messageDiv = document.createElement('div');
-          messageDiv.className = 'message';
-          messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
-          chatLog.appendChild(messageDiv);
-          currentMessageContentSpan = messageDiv.querySelector('.content')!;
-          chatLog.scrollTop = chatLog.scrollHeight;
-        },
-        onTurnEnd: async () => {
-          await speechQueue.waitUntilFinished();
-          updateNextAgentUI();
-          currentMessageContentSpan = null;
-        },
-        onError: (error) => {
-          console.error('Director Error:', error);
-          addMessage('System', 'Error in director loop', '#ff0000');
-        },
-        onMusicControl: (action, bpm) => {
-          if (musicEngine) {
-            if (action === 'start') musicEngine.startBeat(bpm);
-            else musicEngine.stopBeat();
-          }
-        },
-        onCallbackRecorded: (agentId: string, jokeId: string, count: number, status: string) => {
-          // Trigger visual callback feedback on the Stage
-          stage.recordCallback(agentId, jokeId, count, status as 'fresh' | 'building' | 'peak' | 'declining' | 'dead');
-        },
-        onSceneStop: () => {
-          addMessage('System', '🛑 Scene stopped by user', '#ff6b6b');
-          
-          // Clear all callback visuals when scene stops
-          stage.clearAllCallbackVisuals();
-
-          const ticker = document.getElementById('news-ticker-container');
-          if (ticker) ticker.style.display = 'none';
-
-          // Reset all mode start/stop buttons
-          modeEl.sceneTitleInput.disabled = false;
-          modeEl.sceneDescriptionInput.disabled = false;
-          modeEl.startImprovBtn.style.display = 'inline-block';
-          modeEl.stopImprovBtn.style.display = 'none';
-
-          modeEl.startReporterBtn.disabled = false;
-          modeEl.reporterTopicInput.disabled = false;
-          modeEl.reporterCategorySelect.disabled = false;
-          modeEl.reporterQuickTopicsSelect.disabled = false;
-          modeEl.stopReporterBtn.style.display = 'none';
-
-          const floatingStop = document.getElementById('floating-stop-improv-btn');
-          if (floatingStop) floatingStop.style.display = 'none';
-
-          modeEl.stopScriptBtn.style.display = 'none';
-          modeEl.generateScriptBtn.style.display = 'inline-block';
-          modeEl.loadExampleScriptBtn.style.display = 'inline-block';
-          modeEl.playScriptBtn.style.display = 'inline-block';
-          modeEl.generateScriptBtn.disabled = false;
-          modeEl.loadExampleScriptBtn.disabled = false;
-          modeEl.playScriptBtn.disabled = false;
-          modeEl.scriptTopicInput.disabled = false;
-          modeEl.scriptTextTextarea.disabled = false;
-
-          modeEl.stopRoastBtn.style.display = 'none';
-          modeEl.startRoastBtn.style.display = 'inline-block';
-          modeEl.roastTargetInput.disabled = false;
-
-          modeEl.stopStoryBtn.style.display = 'none';
-          modeEl.startStoryBtn.style.display = 'inline-block';
-          modeEl.storyPromptInput.disabled = false;
-
-          modeEl.stopDebateBtn.style.display = 'none';
-          modeEl.startDebateBtn.style.display = 'inline-block';
-          modeEl.debateTopicInput.disabled = false;
-
-          modeEl.stopMusicalBtn.style.display = 'none';
-          modeEl.startMusicalBtn.style.display = 'inline-block';
-          modeEl.musicalStyleInput.disabled = false;
-
-          modeEl.stopAuctionBtn.style.display = 'none';
-          modeEl.startAuctionBtn.style.display = 'inline-block';
-          modeEl.auctionItemInput.disabled = false;
-
-          modeEl.stopEscapeBtn.style.display = 'none';
-          modeEl.startEscapeBtn.style.display = 'inline-block';
-          modeEl.escapeSettingInput.disabled = false;
-
-          modeEl.stopInterviewBtn.style.display = 'none';
-          modeEl.startInterviewBtn.style.display = 'inline-block';
-          modeEl.interviewHostSelect.disabled = false;
-          modeEl.interviewGuestInput.disabled = false;
-
-          modeEl.stopDmBtn.style.display = 'none';
-          modeEl.startDmBtn.style.display = 'inline-block';
-          modeEl.dmSettingInput.disabled = false;
-
-          modeEl.stopAutonomousBtn.style.display = 'none';
-          modeEl.startAutonomousBtn.style.display = 'inline-block';
-
-          modeEl.stopTriviaBtn.style.display = 'none';
-          modeEl.startTriviaBtn.style.display = 'inline-block';
-          modeEl.triviaTopicInput.disabled = false;
-
-          modeEl.stopDreamBtn.style.display = 'none';
-          modeEl.startDreamBtn.style.display = 'inline-block';
-          modeEl.dreamThemeInput.disabled = false;
-
-          modeEl.stopVisionBtn.style.display = 'none';
-          modeEl.startVisionBtn.style.display = 'inline-block';
-          modeEl.visionUrlInput.disabled = false;
-          modeEl.visionFileInput.disabled = false;
-
-          modeEl.stopTrialBtn.style.display = 'none';
-          modeEl.startTrialBtn.style.display = 'inline-block';
-          modeEl.trialTopicInput.disabled = false;
-
-          modeEl.stopInterrogationBtn.style.display = 'none';
-          modeEl.startInterrogationBtn.style.display = 'inline-block';
-          modeEl.interrogationCrimeInput.disabled = false;
-
-          modeEl.stopTechBtn.style.display = 'none';
-          modeEl.startTechBtn.style.display = 'inline-block';
-          modeEl.techIssueInput.disabled = false;
-
-          modeEl.stopHistoricalBtn.style.display = 'none';
-          modeEl.startHistoricalBtn.style.display = 'inline-block';
-          modeEl.historicalFigure1Input.disabled = false;
-          modeEl.historicalFigure2Input.disabled = false;
-          modeEl.historicalTopicInput.disabled = false;
-
-          modeEl.stopCommentaryBtn.style.display = 'none';
-          modeEl.startCommentaryBtn.style.display = 'inline-block';
-          modeEl.commentaryTargetInput.disabled = false;
-
-          modeEl.stopCodeBtn.style.display = 'none';
-          modeEl.startCodeBtn.style.display = 'inline-block';
-          modeEl.codeLanguageInput.disabled = false;
-
-          modeEl.stopTherapyBtn.style.display = 'none';
-          modeEl.startTherapyBtn.style.display = 'inline-block';
-          modeEl.therapyTopicInput.disabled = false;
-
-          videoElement.pause();
-          videoContainer.style.display = 'none';
-        },
-        getSeed: () => seedInput.value ? parseInt(seedInput.value) : undefined,
-        videoControls: videoControls,
-        musicControls: {
-          startBeat: (bpm?: number) => { if (musicEngine) musicEngine.startBeat(bpm); else startBeat(); },
-          stopBeat: () => { if (musicEngine) musicEngine.stopBeat(); else stopBeat(); },
-        },
-      };
-      director = new Director(groupChatManager, directorCallbacks, memoryManager);
-      if (chaosSlider) director.setChaosLevel(parseInt(chaosSlider.value));
-
-      // Re-apply settings to the new manager instance
+    // Profanity level slider
+    const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
+      { level: 'PG', label: '👼 PG', color: '#4ecdc4' },
+      { level: 'CASUAL', label: '😏 Casual', color: '#45b7d1' },
+      { level: 'GRITTY', label: '🔥 Gritty', color: '#ffd700' },
+      { level: 'UNCENSORED', label: '💀 Uncensored', color: '#ff6b6b' },
+    ]
+    profanitySlider.oninput = () => {
       const idx = parseInt(profanitySlider.value)
-      const { level } = profanityLevels[idx]
+      const { level, label, color } = profanityLevels[idx]
+      profanityVal.textContent = label
+      profanityVal.style.color = color
       groupChatManager.setProfanityLevel(level)
-      groupChatManager.setLanguage(languageSelect.value)
+    }
 
-      // 2c. Load LLM model with progress (Moved to end to allow Director access during load)
-      statusText.textContent = `Loading model: ${modelId}...`
+    // Update next agent info
+    const updateNextAgentUI = () => {
+      const nextAgent = groupChatManager.getCurrentAgent()
+      nextAgentSpan.textContent = nextAgent.name
+      nextAgentSpan.style.color = nextAgent.color
+    }
+    updateNextAgentUI()
 
-      // Note: We await this LAST so that 'director' and other managers are instantiated
-      // and exposed to window even if loading hangs (useful for testing).
-      await groupChatManager.initialize(modelId, (progress: any) => {
-        statusText.textContent = progress.text
-      }, engineModule)
+    // Add message to chat log
+    const addMessage = (sender: string, message: string, color: string) => {
+      const messageDiv = document.createElement('div')
+      messageDiv.className = 'message'
+      messageDiv.innerHTML = `
+        <strong style="color: ${color}">${sender}:</strong> ${message}
+      `
+      chatLog.appendChild(messageDiv)
+      chatLog.scrollTop = chatLog.scrollHeight
+    }
 
-      if (previousContext) {
-        groupChatManager.setGlobalContext(previousContext);
-        addMessage('System', 'Loaded context from previous episode.', '#4ecdc4');
+    // Prerender state for audio
+    let isPrerendering = false;
+
+    // Helper to speak and animate with options (steps + seed)
+    const speakAndVisualize = async (text: string, agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
+      try {
+        stage.setActiveActor(agentId);
+        const audioData = await audioEngine.synthesize(text, agentId, { steps: options.steps, seed: options.seed });
+        speechQueue.add(audioData);
+      } catch (e) {
+        console.error("Speech synthesis failed", e);
+      }
+    }
+
+    // Prerender upcoming sentences to avoid gaps in audio
+    const prerenderAhead = async (sentences: string[], agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
+      if (isPrerendering || sentences.length === 0) return;
+      
+      isPrerendering = true;
+      console.log(`[Prerender Audio] Starting prerender of ${sentences.length} sentences`);
+      
+      // Prerender first few sentences ahead
+      const prerenderCount = Math.min(MAX_PRERENDER_SENTENCES, sentences.length);
+      const toPrerender = sentences.slice(0, prerenderCount);
+      
+      speechQueue.prerenderSentences(toPrerender, agentId, options);
+      isPrerendering = false;
+    }
+
+    // Handle send message
+    const sendMessage = async () => {
+      const message = userInput.value.trim()
+      if (!message) return
+
+      userInput.value = ''
+      userInput.disabled = true
+      sendBtn.disabled = true
+
+      // Add user message to log
+      addMessage('You', message, '#ffffff')
+
+      try {
+        // Get response from current agent with streaming
+        // We buffer the response for log, but speak sentence by sentence
+        let currentAgentId = groupChatManager.getCurrentAgent().id;
+        const agent = agents.find(a => a.id === currentAgentId)!;
+
+        // Start a fresh response line in chat log? 
+        // For simplicity, we'll append chunks or just update one message.
+        // Or wait for full response to add to log? 
+        // Prompt says "When the LLM emits a sentence, pass it to AudioEngine".
+        // Let's create a placeholder message and update it, OR just add message at the end.
+        // Let's add the message header first.
+
+        let fullResponse = "";
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message';
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
+        chatLog.appendChild(messageDiv);
+        const contentSpan = messageDiv.querySelector('.content')!;
+
+        // Make agent jump (Removed, handled by speakAndVisualize active actor)
+        stage.setActiveActor(currentAgentId);
+
+        // derive optional seed for reproducibility in chat mode
+        const baseUserSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const baseTurnSeed = baseUserSeed !== undefined ? baseUserSeed + groupChatManager.getHistoryLength() : undefined
+        
+        // Character-specific speeds
+        const characterSpeeds: Record<string, number> = {
+          'comedian': 1.5,
+          'philosopher': 0.6,
+          'scientist': 1.0
+        }
+
+        // Buffer for prerendering
+        const sentenceBuffer: string[] = [];
+        let sentenceIndex = 0;
+
+        await groupChatManager.chat(message + ' ###', (sentence) => {
+          // New sentence received
+          console.log(`[${agent.name} speaks]: ${sentence}`);
+          
+          // Add to buffer for prerendering
+          sentenceBuffer.push(sentence);
+
+          // Prerender next few sentences ahead
+          if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
+            const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
+            prerenderAhead(upcomingSentences, agent.id, { 
+              steps: parseInt(ttsStepsSlider.value || '10'), 
+              speed: characterSpeeds[agent.id] || 1.0, 
+              seed: baseTurnSeed 
+            });
+          }
+
+          // Speak current sentence
+          speakAndVisualize(sentence, agent.id, { 
+            steps: parseInt(ttsStepsSlider.value || '10'), 
+            speed: characterSpeeds[agent.id] || 1.0, 
+            seed: baseTurnSeed 
+          });
+          sentenceIndex++;
+
+          // Update UI with partial text
+          if (!fullResponse) contentSpan.textContent = ""; // clear ...
+          fullResponse += sentence + " ";
+          contentSpan.textContent = fullResponse;
+          chatLog.scrollTop = chatLog.scrollHeight;
+        }, { seed: baseTurnSeed });
+
+        // Wait for audio to finish playing this turn
+        await speechQueue.waitUntilFinished();
+
+        updateNextAgentUI();
+
+      } catch (error) {
+        console.error('Error:', error)
+        addMessage('System', 'Error generating response', '#ff0000')
       }
 
-      // --- Stage 3: Enable Mode Selection ---
-      statusText.textContent = 'Ready! Select a mode to begin.'
-      statusText.style.color = '#4ecdc4'
-      loadingDiv.style.display = 'none'
-
-      chatContainer.classList.add('enabled')
-
-      // Enable chat controls
       userInput.disabled = false
       sendBtn.disabled = false
-      modelSelect.disabled = false
-      loadModelBtn.disabled = false
-      if (modelSelectMain) modelSelectMain.disabled = false
+      userInput.focus()
+    }
 
-      // Enable all mode controls
-      enableModeControls(modeEl)
+    sendBtn.addEventListener('click', sendMessage)
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage()
+      }
+    })
 
-      // Enable voice button if supported
-      if (voiceInput && voiceInput.isSupported()) {
-        voiceBtn.disabled = false;
+    // Mode switching
+    const chatModeBtn = document.getElementById('chat-mode-btn')!
+    const improvModeBtn = document.getElementById('improv-mode-btn')!
+    const chatModeControls = document.getElementById('chat-mode-controls')!
+    const improvModeControls = document.getElementById('improv-mode-controls')!
+
+    chatModeBtn.addEventListener('click', () => {
+      chatModeBtn.classList.add('active')
+      improvModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'flex'
+      improvModeControls.style.display = 'none'
+
+      // Stop improv if running
+      if (improvSceneManager.isSceneRunning()) {
+        improvSceneManager.stop()
       }
 
       updateNextAgentUI()
-      updateCurrentModelDisplay()
+    })
 
-      // Populate model assignment dropdowns
-      const models = getAvailableModels(activeEngineModule)
-      const populateAssignmentSelect = (selectId: string, currentVal: string) => {
-        const el = document.getElementById(selectId) as HTMLSelectElement
-        if (!el) return
-        el.innerHTML = ''
-        models.forEach(m => {
-          const opt = document.createElement('option')
-          opt.value = m
-          opt.textContent = m
-          el.appendChild(opt)
-        })
-        if (currentVal && models.includes(currentVal)) el.value = currentVal
+    improvModeBtn.addEventListener('click', () => {
+      improvModeBtn.classList.add('active')
+      chatModeBtn.classList.remove('active')
+      chatModeControls.style.display = 'none'
+      improvModeControls.style.display = 'block'
+    })
 
-        el.onchange = () => {
-          const agentId = selectId.replace('model-', '')
-          agentModelManager.setModelForAgent(agentId, el.value)
-          updateVRAMBadges()
+    // Helper to calculate pacing for each turn (affects LLM token budget and TTS steps)
+    // All maxTokens capped at 96 to prevent VRAM exhaustion
+    const calculatePacing = () => {
+      const roll = Math.random();
+      // 30% Chance: "The One-Liner"
+      if (roll > 0.7) {
+        return {
+          type: 'punchline',
+          maxTokens: 48,
+          ttsSteps: 25,
+          promptSuffix: ' (One joking sentence. Be brief.)'
         }
-      }
-
-      populateAssignmentSelect('model-comedian', defaultAgentModelMappings.find(m => m.agentId === 'comedian')?.modelId || '')
-      populateAssignmentSelect('model-philosopher', defaultAgentModelMappings.find(m => m.agentId === 'philosopher')?.modelId || '')
-      populateAssignmentSelect('model-scientist', defaultAgentModelMappings.find(m => m.agentId === 'scientist')?.modelId || '')
-
-      updateVRAMBadges()
-
-      // Enable Voice Button if supported
-      if (voiceInput && voiceInput.isSupported()) {
-        voiceBtn.disabled = false;
-        voiceBtn.onclick = () => {
-          if ((voiceBtn as any).classList.contains('listening')) {
-            voiceInput.stopListening();
-            voiceBtn.classList.remove('listening');
-            voiceBtn.style.background = '#0f3460';
-          } else {
-            voiceBtn.classList.add('listening');
-            voiceBtn.style.background = '#ff6b6b';
-            voiceInput.startListening((text) => {
-              if (director && director.isSceneRunning()) {
-                director.handleInterrupt(text);
-                addMessage('You (Voice)', `(Interrupt) ${text}`, '#ffffff');
-              } else {
-                userInput.value = text;
-                userInput.focus();
-              }
-              voiceBtn.classList.remove('listening');
-              voiceBtn.style.background = '#0f3460';
-            }, (err) => {
-              console.error('Voice error:', err);
-              voiceBtn.classList.remove('listening');
-              voiceBtn.style.background = '#0f3460';
-            });
-          }
-        };
+        // 50% Chance: "The Standard"
+      } else if (roll > 0.2) {
+        return {
+          type: 'standard',
+          maxTokens: 72,
+          ttsSteps: 16,
+          promptSuffix: ' (1-2 sentences.)'
+        }
+        // 20% Chance: "The Rant"
+      } else {
+        return {
+          type: 'rant',
+          maxTokens: 96,
+          ttsSteps: 8,
+          promptSuffix: ' (Be expressive!)'
+        }
       }
     }
 
-    // --- Load Model Button Handler ---
-    loadModelBtn.addEventListener('click', async () => {
-      const modelId = modelSelect.value;
-      loadingDiv.style.display = 'flex';
-      loadModelBtn.disabled = true;
+    // Improv mode controls
+    const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
+    const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
+    const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
+    const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
+
+    let isImprovRunning = false
+    let prerenderedQueue: Array<{ agentId: string; agentName: string; response: string; sentences: string[] }> = []
+    
+    const startImprovScene = async () => {
+      const title = sceneTitleInput.value.trim()
+      const description = sceneDescriptionInput.value.trim()
+
+      if (!title || !description) {
+        addMessage('System', 'Please provide both a scene title and description', '#ff6b6b')
+        return
+      }
+
+      // Build the scene object if necessary (not used directly in Director loop)
+
+      // Disable inputs
+      sceneTitleInput.disabled = true
+      sceneDescriptionInput.disabled = true
+      startImprovBtn.style.display = 'none'
+      stopImprovBtn.style.display = 'inline-block'
+
+      // Clear chat log for new scene
+      addMessage('System', `🎭 Starting improv scene: "${title}"`, '#4ecdc4')
+      addMessage('System', description, '#4ecdc4')
 
       try {
-        // Lazy load WebLLM on first use
-        const webllm = await loadWebLLM();
-        activeEngineModule = webllm;
-        await initializeManagers(modelId, webllm);
-      } catch (e) {
-        console.error(e);
-        addMessage('System', 'Failed to load model: ' + e, '#ff0000');
-      } finally {
-        loadingDiv.style.display = 'none';
-        loadModelBtn.disabled = false;
-      }
-    });
+        // Start our own Director loop rather than using ImprovSceneManager's
+        // Reset conversation history and start with a seed line
+        isImprovRunning = true
+        groupChatManager.resetConversation()
+        prerenderedQueue = []
 
-    // --- EVENT LISTENERS ---
-
-    // Language Change
-    languageSelect.addEventListener('change', () => {
-      if (groupChatManager) {
-        groupChatManager.setLanguage(languageSelect.value);
-        addMessage('System', `Language set to ${languageSelect.value}`, '#4ecdc4');
-      }
-    });
-
-    // Register all mode button handlers
-    registerModeHandlers(
-      modeEl,
-      () => director || null,
-      () => scriptGenerator || null,
-      addMessage,
-    );
-
-    // Handle Send (User Input)
-    const handleSend = async () => {
-      const text = userInput.value.trim();
-      if (!text) return;
-      userInput.value = '';
-
-      if (director && director.isSceneRunning()) {
-        director.handleUserMessage(text);
-        addMessage('You', text, '#ffffff');
-      } else {
-        addMessage('You', text, '#ffffff');
+        // Prerender initial turns to get ahead
+        const initialPrompt = `You are participating in an improv comedy scene with other characters.\nScene: "${title}"\nDescription: ${description}\n\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). ###`
+        
+        addMessage('System', '🎬 Prerendering opening dialogue...', '#888')
+        
         try {
-          await groupChatManager.chat(text, (sentence) => {
-            const agent = groupChatManager.getCurrentAgent();
-            speakAndVisualize(sentence, agent.id);
-          });
+          const prerendered = await groupChatManager.prerenderTurns(initialPrompt, PRERENDER_INITIAL_TURNS)
+          prerenderedQueue = prerendered
+          console.log(`[Improv] Prerendered ${prerendered.length} turns`)
+          addMessage('System', `✅ Prerendered ${prerendered.length} turns ahead`, '#4ecdc4')
         } catch (e) {
-          console.error(e);
-          addMessage('System', 'Error generating response.', '#ff0000');
+          console.error('[Improv] Prerender failed, continuing with live generation', e)
+          addMessage('System', '⚠️ Prerender failed, using live generation', '#ff6b6b')
         }
-      }
-    };
 
-    sendBtn.addEventListener('click', handleSend);
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleSend();
-    });
-
-    // Settings Modal
-    settingsBtn.addEventListener('click', () => {
-      settingsModal.style.display = 'block';
-      if (memoryManager) {
-        const creds = memoryManager.getCloudCredentials();
-        if (creds.token) hfTokenInput.value = creds.token;
-        if (creds.repoId) hfRepoInput.value = creds.repoId;
-      }
-    });
-
-    closeSettingsBtn.addEventListener('click', () => {
-      settingsModal.style.display = 'none';
-    });
-
-    saveSettingsBtn.addEventListener('click', async () => {
-      const token = hfTokenInput.value.trim();
-      const repo = hfRepoInput.value.trim();
-
-      settingsStatus.textContent = 'Validating...';
-      settingsStatus.style.color = '#ffd700';
-
-      if (memoryManager) {
-        memoryManager.setCloudCredentials(token, repo);
-        const valid = await memoryManager.validateCloudCredentials();
-        if (valid) {
-          settingsStatus.textContent = 'Success! Credentials valid.';
-          settingsStatus.style.color = '#4ecdc4';
-          setTimeout(() => settingsModal.style.display = 'none', 1000);
-        } else {
-          settingsStatus.textContent = 'Invalid Token.';
-          settingsStatus.style.color = '#ff6b6b';
+        // Play first prerendered turn if available
+        if (prerenderedQueue.length > 0) {
+          await playPrerenderedTurn()
+        } else if (groupChatManager.getHistoryLength() === 0) {
+          const seed = title || 'Why do hotdogs come in packs of 10 but buns in packs of 8?'
+          addMessage('Director', `Action! "${seed}"`, '#888')
+          await processTurn(seed)
         }
-      }
-    });
 
-    // Save Episode
-    saveEpisodeBtn.addEventListener('click', () => {
-      if (memoryManager) {
-        const history = groupChatManager.getHistory();
-        const id = new Date().toISOString().replace(/[:.]/g, '-');
-        memoryManager.saveEpisode(id, {
-          timestamp: new Date().toISOString(),
-          history: history
-        });
-        addMessage('System', `Episode saved locally (and to cloud if configured). ID: ${id}`, '#4ecdc4');
-      }
-    });
+        // Continue loop until stopped
+        while (isImprovRunning) {
+          await new Promise(r => setTimeout(r, 1000))
+          if (!isImprovRunning) break
 
-    // Initial load - lazy load WebLLM first
-    if (defaultModelId) {
-      const webllm = await loadWebLLM();
-      activeEngineModule = webllm;
-      populateModelSelect(webllm)
-      await initializeManagers(defaultModelId, webllm);
+          // FINE TUNING 4: Escalation from the Director, influenced by chaos slider
+          const turnCount = groupChatManager.getHistoryLength()
+          const chaosLevel = parseInt(chaosSlider.value)
+
+          let critique = ""
+
+          // 3. Intelligent Director Check
+          // Only judge if scene is underway (turns > 2) and probability matches Chaos slider
+          if (turnCount > 2 && Math.random() * 100 < chaosLevel) {
+
+            // Visual cue that the Director is "Thinking"
+            const thinkingDiv = document.createElement('div')
+            thinkingDiv.innerHTML = `<em style="color:#666; font-size:0.9em">Director is watching...</em>`
+            chatLog.appendChild(thinkingDiv)
+            chatLog.scrollTop = chatLog.scrollHeight
+
+            // Get judgment
+            const rawCritique = await groupChatManager.getDirectorCritique()
+
+            // Remove thinking cue
+            chatLog.removeChild(thinkingDiv)
+
+            // Parse format "[STATUS]: Instruction"
+            if (rawCritique.includes(":")) {
+              const parts = rawCritique.split(":")
+              const status = parts[0].trim().toUpperCase() // "FLOWING" or "STAGNANT"
+              critique = parts.slice(1).join(":").trim()
+
+              // Color code the output
+              if (status.includes("FLOWING")) {
+                // Green/Teal for "Good job, keep going"
+                addMessage('Director (Note)', `📝 ${critique}`, '#4ecdc4')
+              } else {
+                // Red/Orange for "Boring, change it!"
+                addMessage('Director (Action!)', `🎬 ${critique}`, '#ff6b6b')
+              }
+            } else if (rawCritique) {
+              // Fallback if format is weird
+              critique = rawCritique
+              addMessage('Director', `📣 ${critique}`, '#ffd700')
+            }
+          }
+
+          // Default instruction for flow
+          const prompt = '(Reply naturally to the last thing said)'
+
+          // 4. Execute turn - use prerendered if available, otherwise generate live
+          if (prerenderedQueue.length > 0) {
+            console.log(`[Improv] Using prerendered turn (${prerenderedQueue.length} remaining)`)
+            await playPrerenderedTurn()
+          } else {
+            console.log('[Improv] No prerendered turns, generating live')
+            await processTurn(prompt, critique)
+          }
+        }
+
+        // Wait for final audio to finish
+        await speechQueue.waitUntilFinished()
+
+      } catch (error) {
+        console.error('Error running improv scene:', error)
+        addMessage('System', 'Error running improv scene', '#ff0000')
+      }
+
+      // Re-enable inputs
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
     }
+
+    const stopImprovScene = () => {
+      isImprovRunning = false
+      // Stop the manager if it's running
+      if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
+      addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
+      sceneTitleInput.disabled = false
+      sceneDescriptionInput.disabled = false
+      startImprovBtn.style.display = 'inline-block'
+      stopImprovBtn.style.display = 'none'
+    }
+
+    // Play a prerendered turn from the queue
+    const playPrerenderedTurn = async () => {
+      if (prerenderedQueue.length === 0) return
+
+      const turn = prerenderedQueue.shift()!
+      const agent = agents.find(a => a.id === turn.agentId)!
+
+      console.log(`[Prerendered] Playing: ${agent.name} - ${turn.sentences.length} sentences`)
+
+      stage.setActiveActor(turn.agentId)
+      
+      const messageDiv = document.createElement('div')
+      messageDiv.className = 'message'
+      messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content"></span>`
+      chatLog.appendChild(messageDiv)
+      const contentSpan = messageDiv.querySelector('.content')!
+
+      // Character-specific speeds
+      const characterSpeeds: Record<string, number> = {
+        'comedian': 1.5,
+        'philosopher': 0.6,
+        'scientist': 1.0
+      }
+
+      // Speak each sentence
+      for (const sentence of turn.sentences) {
+        await speakAndVisualize(sentence, turn.agentId, { 
+          steps: 16, 
+          speed: characterSpeeds[turn.agentId] || 1.0 
+        })
+        contentSpan.textContent = contentSpan.textContent ? contentSpan.textContent + ' ' + sentence : sentence
+        chatLog.scrollTop = chatLog.scrollHeight
+        
+        // Small delay between sentences for natural pacing
+        await new Promise(r => setTimeout(r, 200))
+      }
+
+      // Update conversation history to keep it in sync with prerendered content
+      groupChatManager.addToHistory('(Continue)', turn.response)
+
+      await speechQueue.waitUntilFinished()
+      updateNextAgentUI()
+
+      // Trigger new prerendering when queue gets low
+      if (prerenderedQueue.length < PRERENDER_MIN_QUEUE && isImprovRunning) {
+        console.log('[Prerender] Queue low, generating more turns in background...')
+        const continuePrompt = '(Reply naturally to the last thing said)'
+        // Don't await - let it happen in background
+        groupChatManager.prerenderTurns(continuePrompt, PRERENDER_BATCH_SIZE)
+          .then(newTurns => {
+            prerenderedQueue.push(...newTurns)
+            console.log(`[Prerender] Added ${newTurns.length} turns to queue (now ${prerenderedQueue.length})`)
+          })
+          .catch(e => console.error('[Prerender] Background prerender failed:', e))
+      }
+    }
+
+    // Director logic: process a single turn with pacing and TTS steps
+    const processTurn = async (inputText: string, silentCritique?: string) => {
+      try {
+        // 1. Calculate Pacing for this specific turn
+        const pacing = calculatePacing()
+        console.log(`[Director] Pacing: ${pacing.type} (Tokens: ${pacing.maxTokens}, Steps: ${pacing.ttsSteps})`)
+
+        let currentAgentId = groupChatManager.getCurrentAgent().id
+        const agent = agents.find(a => a.id === currentAgentId)!
+
+        stage.setActiveActor(currentAgentId)
+
+        const messageDiv = document.createElement('div')
+        messageDiv.className = 'message'
+        messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
+        chatLog.appendChild(messageDiv)
+        const contentSpan = messageDiv.querySelector('.content')!
+
+        // 2. Pass maxTokens to chat and append pacing prompt to the hidden prompt
+        // Compute the per-turn deterministic seed if user provided a seed
+        const userSeed = seedInput.value ? parseInt(seedInput.value) : undefined
+        const turnSeed = userSeed !== undefined ? userSeed + groupChatManager.getHistoryLength() : undefined
+        const effectivePrompt = inputText + pacing.promptSuffix + ' ###'
+
+        // Character-specific speeds
+        const characterSpeeds: Record<string, number> = {
+          'comedian': 1.5,
+          'philosopher': 0.6,
+          'scientist': 1.0
+        }
+
+        // Buffer for prerendering upcoming sentences
+        const sentenceBuffer: string[] = [];
+        let sentenceIndex = 0;
+
+        await groupChatManager.chat(effectivePrompt, (sentence) => {
+          // Add sentence to buffer for prerendering
+          sentenceBuffer.push(sentence);
+
+          // Prerender next few sentences ahead if we have enough in buffer
+          if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
+            const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
+            prerenderAhead(upcomingSentences, agent.id, { 
+              steps: pacing.ttsSteps, 
+              speed: characterSpeeds[agent.id] || 1.0, 
+              seed: turnSeed 
+            });
+          }
+
+          // 3. Pass ttsSteps to speak current sentence
+          speakAndVisualize(sentence, agent.id, { steps: pacing.ttsSteps, speed: characterSpeeds[agent.id] || 1.0, seed: turnSeed })
+          sentenceIndex++;
+
+          contentSpan.textContent = contentSpan.textContent === '...' ? sentence + ' ' : contentSpan.textContent + sentence + ' '
+          chatLog.scrollTop = chatLog.scrollHeight
+        }, { maxTokens: pacing.maxTokens, seed: turnSeed, hiddenInstruction: silentCritique })
+
+        await speechQueue.waitUntilFinished()
+        updateNextAgentUI()
+
+      } catch (error) {
+        console.error('Turn Error:', error)
+        isImprovRunning = false
+        // stopImprovLoop equivalent
+      }
+    }
+
+    startImprovBtn.addEventListener('click', startImprovScene)
+    stopImprovBtn.addEventListener('click', stopImprovScene)
 
     userInput.focus()
   } catch (error: any) {
     console.error('Initialization error:', error)
 
-    const statusText = document.getElementById('status')!;
     let errorMessage = 'Error initializing App. Please check console.'
     const errorStr = String(error)
 
     if (errorStr.includes('WebGL') || errorStr.includes('GPU') || errorStr.includes('gl_')) {
       errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
-    } else if (error instanceof Error && error.message) {
-      errorMessage = error.message
     }
 
     statusText.textContent = errorMessage

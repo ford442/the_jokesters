@@ -1,311 +1,211 @@
-import {
-  Group,
-  Mesh,
-  Sphere,
-  Vector3,
-  CapsuleGeometry,
-  BoxGeometry,
-  MeshPhongMaterial,
-  MeshLambertMaterial,
-  MeshBasicMaterial,
-  SpotLight,
-  MeshStandardMaterial,
-  BufferGeometry,
-  Material,
-} from 'three';
-import { CallbackVisualizer, type CallbackVisualState } from './CallbackVisualizer';
 
-/**
- * LOD Level configuration
- */
-interface LODLevel {
-    distance: number;
-    geometry: BufferGeometry;
-    material: Material;
-}
+import * as THREE from 'three';
 
-/**
- * Actor - 3D Avatar Representation with LOD support
- * 
- * Visibility guarantees:
- * - Capsule centered at specified X position, at ground level (y=0)
- * - Bright MeshPhongMaterial that responds to scene lighting
- * - Face indicator for direction
- * - Spotlight for highlighting when talking
- * 
- * Performance features:
- * - LOD system with 3 levels (high, medium, low) based on distance
- * - Frustum culling support via visibility tracking
- * - Geometry pooling for reduced memory allocation
- */
 export class Actor {
-    public group: Group;
-    protected mesh: Mesh;
-    private spotlight: SpotLight;
-    private faceIndicator: Mesh;
-    
-    // LOD system
-    private lodLevels: LODLevel[] = [];
-    private currentLOD = -1;
-    private highGeometry: CapsuleGeometry;
-    private mediumGeometry: CapsuleGeometry;
-    private lowGeometry: BoxGeometry;
-    
-    // Materials for different LOD levels
-    private highMaterial: MeshPhongMaterial;
-    private mediumMaterial: MeshLambertMaterial;
-    private lowMaterial: MeshBasicMaterial;
-    
-    // Frustum culling
-    public isInFrustum = true;
-    private boundingSphere: Sphere;
-    
-    // Animation
-    private baseY: number;
-    private id: string;
-    
-    // Callback visual feedback
-    private callbackVisualizer: CallbackVisualizer;
+    public group: THREE.Group;
+    private mesh: THREE.Mesh;
+    private spotlight: THREE.SpotLight;
+    private leftEye!: THREE.Mesh;
+    private rightEye!: THREE.Mesh;
+    private mouth!: THREE.Line;
+    private eyeGlow: THREE.PointLight;
+    private blinkTimer: number = 0;
+    private isBlinking: boolean = false;
+    // private originalY: number;
 
-    /**
-     * Creates a 3D avatar capsule with LOD support
-     * @param _id - Unique actor identifier
-     * @param color - Hex color string for the capsule
-     * @param x - X position on stage (y and z are always 0 for ground placement)
-     */
-    constructor(_id: string, color: string, x: number, z: number = 0) {
-        this.id = _id;
-        this.group = new Group();
-        // Position group at specified X, ground level (y=0), Z position
-        this.group.position.set(x, 0, z);
+    constructor(_id: string, color: string, x: number) {
+        this.group = new THREE.Group();
+        this.group.position.set(x, 0, 0); // Base position
+        // this.originalY = 1;
+        // Geometry is height 1 in SceneManager, let's match that roughly or standard size.
+        // SceneManager had cylinder height 1, radius 0.3. TargetY was position.y (1).
+        // Let's make it sit on ground. 
 
-        // Pre-create geometries for LOD (shared across instances)
-        // High detail: 8 segments, 16 rings
-        this.highGeometry = new CapsuleGeometry(0.3, 1, 8, 16);
-        // Medium detail: 4 segments, 8 rings  
-        this.mediumGeometry = new CapsuleGeometry(0.3, 1, 4, 8);
-        // Low detail: simple box
-        this.lowGeometry = new BoxGeometry(0.6, 1.6, 0.6);
-
-        // Materials for each LOD level
-        this.highMaterial = new MeshPhongMaterial({ 
-            color: color,
-            shininess: 30
+        // Capsule Body - Enhanced with better material
+        const geometry = new THREE.CapsuleGeometry(0.3, 1, 8, 16);
+        const material = new THREE.MeshStandardMaterial({ 
+            color,
+            metalness: 0.3,
+            roughness: 0.6,
+            emissive: color,
+            emissiveIntensity: 0.1
         });
-        
-        this.mediumMaterial = new MeshLambertMaterial({ 
-            color: color
-        });
-        
-        this.lowMaterial = new MeshBasicMaterial({ 
-            color: color
-        });
-
-        // Setup LOD levels
-        this.lodLevels = [
-            { distance: 0, geometry: this.highGeometry, material: this.highMaterial },
-            { distance: 8, geometry: this.mediumGeometry, material: this.mediumMaterial },
-            { distance: 15, geometry: this.lowGeometry, material: this.lowMaterial }
-        ];
-
-        // Create initial mesh with high detail
-        this.mesh = new Mesh(this.highGeometry, this.highMaterial);
-        this.baseY = 0;
-        this.mesh.position.y = this.baseY;
+        this.mesh = new THREE.Mesh(geometry, material);
+        this.mesh.position.y = 0.8; // Radius 0.3 + Half Length 0.5 = 0.8? CapsuleGeometry params are radius, length. 
+        // Total height = length + 2*radius = 1 + 0.6 = 1.6. Center is at 0. So bottom is -0.8.
+        // To stand on 0, y should be 0.8.
         this.mesh.castShadow = true;
         this.mesh.receiveShadow = true;
         this.group.add(this.mesh);
 
-        // Create bounding sphere for frustum culling
-        this.boundingSphere = new Sphere();
-        this.updateBoundingSphere();
+        // Create head area with face features
+        this.createFace();
 
-        // Face / Direction Indicator (only visible at high LOD)
-        const faceGeo = new BoxGeometry(0.2, 0.2, 0.1);
-        const faceMat = new MeshStandardMaterial({ color: 0xffffff });
-        this.faceIndicator = new Mesh(faceGeo, faceMat);
-        this.faceIndicator.position.set(0, 0.2, 0.28);
-        this.mesh.add(this.faceIndicator);
+        // Add accessories/decorations
+        this.addAccessories(color);
 
-        // Spotlight for highlighting when actor is talking
-        this.spotlight = new SpotLight(0xffffff, 0);
+        // Spotlight
+        this.spotlight = new THREE.SpotLight(0xffffff, 0); // Start dim
         this.spotlight.position.set(0, 5, 2);
         this.spotlight.target = this.mesh;
         this.spotlight.angle = Math.PI / 6;
         this.spotlight.penumbra = 0.5;
         this.spotlight.castShadow = true;
-        // Optimize shadow map for performance
-        this.spotlight.shadow.mapSize.width = 512;
-        this.spotlight.shadow.mapSize.height = 512;
-        this.spotlight.shadow.camera.near = 0.5;
-        this.spotlight.shadow.camera.far = 10;
         this.group.add(this.spotlight);
 
-        // Initialize callback visualizer for running gag feedback
-        this.callbackVisualizer = new CallbackVisualizer(this.group, this.mesh);
+        // Eye glow light for when speaking
+        this.eyeGlow = new THREE.PointLight(0xffffff, 0, 2);
+        this.eyeGlow.position.set(0, 0.6, 0.3);
+        this.mesh.add(this.eyeGlow);
     }
 
-    /**
-     * Record a callback for visual feedback
-     * @param jokeId - The joke identifier
-     * @param count - Current callback count
-     * @param status - Callback status from engine
-     */
-    recordCallback(jokeId: string, count: number, status: CallbackVisualState['status']): void {
-        this.callbackVisualizer.recordCallback(jokeId, count, status);
-    }
-
-    /**
-     * Clear all callback visuals (scene reset)
-     */
-    clearCallbackVisuals(): void {
-        this.callbackVisualizer.clear();
-    }
-
-    /**
-     * Update bounding sphere for frustum culling
-     */
-    private updateBoundingSphere(): void {
-        // Get world position
-        const worldPos = new Vector3();
-        this.mesh.getWorldPosition(worldPos);
-        // Bounding sphere radius covers the capsule
-        this.boundingSphere.set(worldPos, 1.0);
-    }
-
-    /**
-     * Get bounding sphere for frustum culling
-     */
-    public getBoundingSphere(): Sphere {
-        this.updateBoundingSphere();
-        return this.boundingSphere;
-    }
-
-    /**
-     * Update LOD level based on distance to camera
-     * @param cameraPosition - Current camera position
-     * @returns true if LOD changed
-     */
-    public updateLOD(cameraPosition: Vector3): boolean {
-        const distance = this.group.position.distanceTo(cameraPosition);
+    private createFace() {
+        // Eyes - Larger and more expressive
+        const eyeGeo = new THREE.SphereGeometry(0.08, 16, 16);
+        const eyeMat = new THREE.MeshStandardMaterial({ 
+            color: 0xffffff,
+            emissive: 0xffffff,
+            emissiveIntensity: 0.3
+        });
         
-        // Find appropriate LOD level
-        let targetLOD = this.lodLevels.length - 1;
-        for (let i = 0; i < this.lodLevels.length; i++) {
-            if (distance < this.lodLevels[i].distance || i === 0) {
-                targetLOD = i;
-                break;
-            }
-        }
+        this.leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+        this.leftEye.position.set(-0.1, 0.6, 0.28);
+        this.mesh.add(this.leftEye);
         
-        // Only update if LOD changed
-        if (targetLOD !== this.currentLOD) {
-            this.currentLOD = targetLOD;
-            const level = this.lodLevels[targetLOD];
-            
-            // Preserve transform
-            const position = this.mesh.position.clone();
-            const rotation = this.mesh.rotation.clone();
-            const scale = this.mesh.scale.clone();
-            
-            // Remove old mesh
-            this.group.remove(this.mesh);
-            
-            // Create new mesh with LOD geometry/material
-            this.mesh = new Mesh(level.geometry, level.material);
-            this.mesh.position.copy(position);
-            this.mesh.rotation.copy(rotation);
-            this.mesh.scale.copy(scale);
-            this.mesh.castShadow = targetLOD < 2; // No shadows for lowest LOD
-            this.mesh.receiveShadow = targetLOD < 2;
-            
-            // Add face indicator only for high LOD
-            if (targetLOD === 0 && this.faceIndicator) {
-                this.mesh.add(this.faceIndicator);
-                this.faceIndicator.visible = true;
-            } else if (this.faceIndicator) {
-                this.faceIndicator.visible = false;
-            }
-            
-            this.group.add(this.mesh);
-            this.spotlight.target = this.mesh;
-            
-            return true;
-        }
+        this.rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+        this.rightEye.position.set(0.1, 0.6, 0.28);
+        this.mesh.add(this.rightEye);
+
+        // Pupils
+        const pupilGeo = new THREE.SphereGeometry(0.04, 8, 8);
+        const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
         
-        return false;
+        const leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+        leftPupil.position.set(0, 0, 0.05);
+        this.leftEye.add(leftPupil);
+        
+        const rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
+        rightPupil.position.set(0, 0, 0.05);
+        this.rightEye.add(rightPupil);
+
+        // Mouth - Curved for expression
+        const mouthCurve = new THREE.EllipseCurve(
+            0, 0,            // center x, y
+            0.12, 0.06,      // xRadius, yRadius
+            0, Math.PI,      // start angle, end angle
+            false,           // clockwise
+            0                // rotation
+        );
+        const points = mouthCurve.getPoints(20);
+        const mouthGeo = new THREE.BufferGeometry().setFromPoints(points);
+        // Note: linewidth is not supported by WebGL, line will appear as 1px
+        const mouthMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+        this.mouth = new THREE.Line(mouthGeo, mouthMat);
+        this.mouth.position.set(0, 0.4, 0.28);
+        this.mouth.rotation.x = Math.PI / 2;
+        this.mesh.add(this.mouth);
     }
 
-    /**
-     * Sets the talking state - enables spotlight when true
-     */
+    private addAccessories(color: string) {
+        // Add a subtle rim/ring around the middle for style
+        const ringGeo = new THREE.TorusGeometry(0.32, 0.02, 8, 32);
+        const ringMat = new THREE.MeshStandardMaterial({ 
+            color: 0xffffff,
+            metalness: 0.8,
+            roughness: 0.2,
+            emissive: color,
+            emissiveIntensity: 0.2
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 0;
+        this.mesh.add(ring);
+
+        // Add antenna/crown decoration on top
+        const antennaGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8);
+        const antennaMat = new THREE.MeshStandardMaterial({ 
+            color: 0xffffff,
+            metalness: 0.7,
+            roughness: 0.3
+        });
+        const antenna = new THREE.Mesh(antennaGeo, antennaMat);
+        antenna.position.y = 0.95;
+        this.mesh.add(antenna);
+
+        // Ball on top of antenna
+        const ballGeo = new THREE.SphereGeometry(0.06, 16, 16);
+        const ballMat = new THREE.MeshStandardMaterial({ 
+            color,
+            metalness: 0.5,
+            roughness: 0.4,
+            emissive: color,
+            emissiveIntensity: 0.5
+        });
+        const ball = new THREE.Mesh(ballGeo, ballMat);
+        ball.position.y = 1.1;
+        this.mesh.add(ball);
+    }
+
     setTalking(isTalking: boolean) {
-        // Use intensity transition for smoother effect
-        const targetIntensity = isTalking ? 50 : 0;
-        this.spotlight.intensity = targetIntensity;
-    }
-
-    /**
-     * Updates the actor based on audio volume
-     * Scales the capsule to simulate speech animation
-     * Only updates if in frustum for performance
-     * Also updates callback visualizer animations
-     */
-    update(volume: number, deltaTime: number = 0.016) {
-        // Skip expensive animation if not visible
-        if (!this.isInFrustum) return;
+        // Smooth transition could be better, but direct set for now
+        this.spotlight.intensity = isTalking ? 50 : 0;
+        this.eyeGlow.intensity = isTalking ? 2 : 0;
         
-        // Don't override awkward silence animation
-        if (!this.isInAwkwardSilence()) {
-            // Simple squash and stretch based on audio volume
-            const scale = 1 + volume * 0.5;
-            this.mesh.scale.set(1 / Math.sqrt(scale), scale, 1 / Math.sqrt(scale));
-            
-            // Adjust Y position to scale from bottom, not center
-            this.mesh.position.y = 0.8 * (scale - 1);
-        }
-        
-        // Update callback visualizer
-        this.callbackVisualizer.update(deltaTime);
-    }
-
-    /**
-     * Check if actor is currently in awkward silence animation
-     */
-    private isInAwkwardSilence(): boolean {
-        // The callback visualizer manages this state internally
-        // We check mesh rotation as a proxy for awkward silence state
-        return Math.abs(this.mesh.rotation.z) > 0.01;
-    }
-
-    /**
-     * Get actor ID
-     */
-    getId(): string {
-        return this.id;
-    }
-
-    /**
-     * Sets frustum visibility state
-     */
-    setFrustumVisibility(visible: boolean) {
-        if (this.isInFrustum !== visible) {
-            this.isInFrustum = visible;
-            this.mesh.visible = visible;
-            // Also hide spotlight when not in frustum
-            this.spotlight.visible = visible;
+        // Make eyes glow more when talking
+        if (isTalking) {
+            (this.leftEye.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8;
+            (this.rightEye.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8;
+        } else {
+            (this.leftEye.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3;
+            (this.rightEye.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.3;
         }
     }
 
-    /**
-     * Dispose of resources
-     */
-    dispose() {
-        this.highGeometry.dispose();
-        this.mediumGeometry.dispose();
-        this.lowGeometry.dispose();
-        this.highMaterial.dispose();
-        this.mediumMaterial.dispose();
-        this.lowMaterial.dispose();
+    update(volume: number) {
+        // Simple squash and stretch or just scale Y
+        const scale = 1 + volume * 0.5;
+        this.mesh.scale.set(1 / Math.sqrt(scale), scale, 1 / Math.sqrt(scale)); // Conserve volume roughly
+        // Lift up so it scales from bottom?
+        // Changing scale from center of mesh modifies top and bottom.
+        // To scale from bottom, we'd need to adjust position y.
+        // Base Y is 0.8. New height is 1.6 * scale. Half height 0.8 * scale.
+        // New center should be 0.8 * scale.
+        this.mesh.position.y = 0.8 * scale;
+
+        // Make mouth open wider with volume (simulate talking)
+        if (this.mouth) {
+            const mouthScale = 1 + volume * 0.3;
+            this.mouth.scale.set(mouthScale, mouthScale, 1);
+        }
+
+        // Handle blinking animation
+        if (this.isBlinking) {
+            this.blinkTimer++;
+            if (this.blinkTimer > 6) {
+                // End blink
+                this.leftEye.scale.y = 1;
+                this.rightEye.scale.y = 1;
+                this.isBlinking = false;
+                this.blinkTimer = 0;
+            }
+        } else if (volume < 0.1) {
+            // Idle state - blink occasionally
+            this.blinkTimer++;
+            // Blink approximately every 240 frames (4 seconds at 60fps)
+            if (this.blinkTimer > 240) {
+                this.startBlink();
+            }
+        } else {
+            // Talking - reset timer
+            this.blinkTimer = 0;
+        }
+    }
+
+    private startBlink() {
+        if (this.isBlinking) return;
+        this.isBlinking = true;
+        this.blinkTimer = 0;
+        this.leftEye.scale.y = 0.1;
+        this.rightEye.scale.y = 0.1;
     }
 }
