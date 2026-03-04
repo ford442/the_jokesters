@@ -61,6 +61,40 @@ async function initApp() {
   const PRERENDER_BATCH_SIZE = 2     // Number of turns to generate in background
   const MAX_PRERENDER_SENTENCES = 3  // Maximum sentences to prerender for audio
 
+  // App initialization state machine
+  type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
+  let currentInitState: AppInitState = 'BOOTING'
+
+  // Helper to set progress with weighted stages
+  const setProgress = (status: string, percentage: number) => {
+    const progressBar = document.getElementById('progress') as HTMLDivElement
+    const statusText = document.getElementById('status')!
+    progressBar.style.width = `${percentage}%`
+    statusText.textContent = status
+  }
+
+  // Helper to enable/disable all interactive inputs
+  const setInputsEnabled = (enabled: boolean) => {
+    const ids = [
+      'user-input', 'send-btn', 'start-improv-btn', 'stop-improv-btn',
+      'scene-title', 'scene-description', 'tts-steps', 'director-chaos',
+      'global-seed', 'profanity-level', 'chat-mode-btn', 'improv-mode-btn'
+    ]
+    ids.forEach(id => {
+      const el = document.getElementById(id) as HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement | null
+      if (el) {
+        el.disabled = !enabled
+        if (enabled) {
+          el.style.opacity = '1'
+          el.style.pointerEvents = 'auto'
+        } else {
+          el.style.opacity = '0.5'
+          el.style.pointerEvents = 'none'
+        }
+      }
+    })
+  }
+
   app.innerHTML = `
     <div class="container">
       <h1>The Jokesters</h1>
@@ -164,6 +198,9 @@ async function initApp() {
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
 
+  // Disable all inputs until fully initialized
+  setInputsEnabled(false)
+
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
     const groupChatManager = new GroupChatManager(agents)
@@ -189,23 +226,42 @@ async function initApp() {
     stage.setLipSync(lipSync)
     stage.render()
 
-    // 1. Initialize Audio Engine (in background or parallel)
-    statusText.textContent = "Initializing Audio Engine..."
+    // Stage 1: DOM and WebGL setup (10%)
+    currentInitState = 'BOOTING'
+    setProgress("Setting up graphics...", 10)
+
+    // Stage 2: Initialize Audio Engine (25%)
+    currentInitState = 'AUDIO'
+    setProgress("Initializing Audio Engine...", 25)
     await audioEngine.init('./tts/onnx');
-    // 2. Initialize the chat manager with progress callback
-    statusText.textContent = "Initializing WebLLM..."
+
+    // Stage 3: Initialize WebLLM with progress (55% of total progress)
+    currentInitState = 'MODEL'
+    setProgress("Initializing WebLLM...", 35)
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
-      const percentage = Math.round(progress.progress * 100)
-      progressBar.style.width = `${percentage}%`
-      statusText.textContent = progress.text
+      // Map WebLLM progress (0-1) to 35-90% of total progress
+      const percentage = 35 + Math.round(progress.progress * 55)
+      setProgress(progress.text, percentage)
     })
+
+    // Stage 4: Final setup and UI binding (90%)
+    currentInitState = 'FINALIZING'
+    setProgress("Finalizing setup...", 90)
 
     // Initialize ImprovSceneManager
     const improvSceneManager = new ImprovSceneManager(groupChatManager)
 
+    // Stage 5: Ready - Enable all interactions (100%)
+    currentInitState = 'READY'
+    setProgress("Ready!", 100)
+
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+
+    // Enable all inputs now that everything is ready
+    setInputsEnabled(true)
+    userInput.focus()
 
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
@@ -262,14 +318,14 @@ async function initApp() {
     // Prerender upcoming sentences to avoid gaps in audio
     const prerenderAhead = async (sentences: string[], agentId: string, options: { steps?: number; seed?: number; speed?: number } = {}) => {
       if (isPrerendering || sentences.length === 0) return;
-      
+
       isPrerendering = true;
       console.log(`[Prerender Audio] Starting prerender of ${sentences.length} sentences`);
-      
+
       // Prerender first few sentences ahead
       const prerenderCount = Math.min(MAX_PRERENDER_SENTENCES, sentences.length);
       const toPrerender = sentences.slice(0, prerenderCount);
-      
+
       speechQueue.prerenderSentences(toPrerender, agentId, options);
       isPrerendering = false;
     }
@@ -312,7 +368,7 @@ async function initApp() {
         // derive optional seed for reproducibility in chat mode
         const baseUserSeed = seedInput.value ? parseInt(seedInput.value) : undefined
         const baseTurnSeed = baseUserSeed !== undefined ? baseUserSeed + groupChatManager.getHistoryLength() : undefined
-        
+
         // Character-specific speeds
         const characterSpeeds: Record<string, number> = {
           'comedian': 1.5,
@@ -327,25 +383,25 @@ async function initApp() {
         await groupChatManager.chat(message + ' ###', (sentence) => {
           // New sentence received
           console.log(`[${agent.name} speaks]: ${sentence}`);
-          
+
           // Add to buffer for prerendering
           sentenceBuffer.push(sentence);
 
           // Prerender next few sentences ahead
           if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
             const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
-            prerenderAhead(upcomingSentences, agent.id, { 
-              steps: parseInt(ttsStepsSlider.value || '10'), 
-              speed: characterSpeeds[agent.id] || 1.0, 
-              seed: baseTurnSeed 
+            prerenderAhead(upcomingSentences, agent.id, {
+              steps: parseInt(ttsStepsSlider.value || '10'),
+              speed: characterSpeeds[agent.id] || 1.0,
+              seed: baseTurnSeed
             });
           }
 
           // Speak current sentence
-          speakAndVisualize(sentence, agent.id, { 
-            steps: parseInt(ttsStepsSlider.value || '10'), 
-            speed: characterSpeeds[agent.id] || 1.0, 
-            seed: baseTurnSeed 
+          speakAndVisualize(sentence, agent.id, {
+            steps: parseInt(ttsStepsSlider.value || '10'),
+            speed: characterSpeeds[agent.id] || 1.0,
+            seed: baseTurnSeed
           });
           sentenceIndex++;
 
@@ -444,7 +500,7 @@ async function initApp() {
 
     let isImprovRunning = false
     let prerenderedQueue: Array<{ agentId: string; agentName: string; response: string; sentences: string[] }> = []
-    
+
     const startImprovScene = async () => {
       const title = sceneTitleInput.value.trim()
       const description = sceneDescriptionInput.value.trim()
@@ -475,9 +531,9 @@ async function initApp() {
 
         // Prerender initial turns to get ahead
         const initialPrompt = `You are participating in an improv comedy scene with other characters.\nScene: "${title}"\nDescription: ${description}\n\nStart the scene with your character's perspective. Be creative, stay in character, and keep your response brief (2-3 sentences). ###`
-        
+
         addMessage('System', '🎬 Prerendering opening dialogue...', '#888')
-        
+
         try {
           const prerendered = await groupChatManager.prerenderTurns(initialPrompt, PRERENDER_INITIAL_TURNS)
           prerenderedQueue = prerendered
@@ -594,7 +650,7 @@ async function initApp() {
       console.log(`[Prerendered] Playing: ${agent.name} - ${turn.sentences.length} sentences`)
 
       stage.setActiveActor(turn.agentId)
-      
+
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
       messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content"></span>`
@@ -610,13 +666,13 @@ async function initApp() {
 
       // Speak each sentence
       for (const sentence of turn.sentences) {
-        await speakAndVisualize(sentence, turn.agentId, { 
-          steps: 16, 
-          speed: characterSpeeds[turn.agentId] || 1.0 
+        await speakAndVisualize(sentence, turn.agentId, {
+          steps: 16,
+          speed: characterSpeeds[turn.agentId] || 1.0
         })
         contentSpan.textContent = contentSpan.textContent ? contentSpan.textContent + ' ' + sentence : sentence
         chatLog.scrollTop = chatLog.scrollHeight
-        
+
         // Small delay between sentences for natural pacing
         await new Promise(r => setTimeout(r, 200))
       }
@@ -683,10 +739,10 @@ async function initApp() {
           // Prerender next few sentences ahead if we have enough in buffer
           if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
             const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1);
-            prerenderAhead(upcomingSentences, agent.id, { 
-              steps: pacing.ttsSteps, 
-              speed: characterSpeeds[agent.id] || 1.0, 
-              seed: turnSeed 
+            prerenderAhead(upcomingSentences, agent.id, {
+              steps: pacing.ttsSteps,
+              speed: characterSpeeds[agent.id] || 1.0,
+              seed: turnSeed
             });
           }
 
@@ -713,6 +769,7 @@ async function initApp() {
 
     userInput.focus()
   } catch (error: any) {
+    currentInitState = 'ERROR'
     console.error('Initialization error:', error)
 
     let errorMessage = 'Error initializing App. Please check console.'
@@ -722,8 +779,11 @@ async function initApp() {
       errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
     }
 
-    statusText.textContent = errorMessage
+    setProgress(errorMessage, 0)
     statusText.style.color = '#ff6b6b'
+
+    // Keep inputs disabled on error
+    setInputsEnabled(false)
   }
 }
 
