@@ -1,6 +1,41 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
 
+export async function runInterrogationLoop(scenario: Scenario, ctx: ModeContext) {
+    const crime = scenario.config?.interrogationCrime || 'Stealing the cookies';
+    ctx.callbacks.onMessage('Director', `🚨 INTERROGATION ROOM: ${crime}`, '#e74c3c');
+
+    const badCop = 'comedian';
+    const goodCop = 'philosopher';
+    const weirdCop = 'scientist';
+
+    // 1. Bad Cop Intro
+    ctx.callbacks.onTurnStart(badCop);
+    await ctx.manager.chatForAgent(badCop, `(You are the BAD COP. The suspect (User) is in the interrogation room for: "${crime}". Slam your hands on the table! Demand a confession immediately! Be overly aggressive and unhinged.)`, async (s) => await ctx.callbacks.onSpeak(s, badCop, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Suspect (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Determine who speaks next
+        const roll = Math.random();
+
+        if (roll < 0.4) {
+            // Good Cop
+            await ctx.manager.chatForAgent(goodCop, `(GOOD COP: The suspect said: "${userInput}". Act sympathetic. Offer them a coffee or a deal. Try to understand their deep, emotional reasons for committing the crime. Undermine the Bad Cop gently.)`, async (s) => await ctx.callbacks.onSpeak(s, goodCop, {}));
+        } else if (roll < 0.7) {
+            // Weird Cop
+            await ctx.manager.chatForAgent(weirdCop, `(WEIRD COP: The suspect said: "${userInput}". Ask a completely bizarre, highly technical, or unsettling question that seems unrelated to the crime but might be a weird psychological tactic.)`, async (s) => await ctx.callbacks.onSpeak(s, weirdCop, {}));
+        } else {
+            // Bad Cop again
+            await ctx.manager.chatForAgent(badCop, `(BAD COP: The suspect said: "${userInput}". Get furious at this obvious lie! Threaten them with absurd jail time! Tell them you have (fake) evidence!)`, async (s) => await ctx.callbacks.onSpeak(s, badCop, {}));
+        }
+    }
+}
+
 export async function runTrialLoop(scenario: Scenario, ctx: ModeContext) {
     const crime = scenario.config?.trialTopic || 'Eating the last slice of pizza';
     ctx.callbacks.onMessage('Director', `⚖️ THE TRIAL: The Case of ${crime}`, '#f39c12');

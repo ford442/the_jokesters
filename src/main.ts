@@ -387,6 +387,10 @@ async function initApp() {
           modeEl.startAuctionBtn.style.display = 'inline-block';
           modeEl.auctionItemInput.disabled = false;
 
+          modeEl.stopEscapeBtn.style.display = 'none';
+          modeEl.startEscapeBtn.style.display = 'inline-block';
+          modeEl.escapeSettingInput.disabled = false;
+
           modeEl.stopInterviewBtn.style.display = 'none';
           modeEl.startInterviewBtn.style.display = 'inline-block';
           modeEl.interviewHostSelect.disabled = false;
@@ -415,6 +419,10 @@ async function initApp() {
           modeEl.stopTrialBtn.style.display = 'none';
           modeEl.startTrialBtn.style.display = 'inline-block';
           modeEl.trialTopicInput.disabled = false;
+
+          modeEl.stopInterrogationBtn.style.display = 'none';
+          modeEl.startInterrogationBtn.style.display = 'inline-block';
+          modeEl.interrogationCrimeInput.disabled = false;
 
           modeEl.stopTechBtn.style.display = 'none';
           modeEl.startTechBtn.style.display = 'inline-block';

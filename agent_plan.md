@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 2
-* **status**: On Track (Auction House Mode Added)
+* **tasks_per_run**: 3
+* **status**: On Track (Escape Room and Interrogation Room Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -224,8 +224,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Handle merge conflicts if played on multiple devices.
     *   **Authentication**: Ensure strict token validation and error handling on startup. Verify token scope permissions (write access).
     *   **Push**: Implement a reliable background queue for pushing episode scripts to `user/jokesters-episodes` to avoid blocking UI. Use `HFStorageManager.saveFile` with retry logic. (Implemented local storage sync queue in MemoryManager).
+        * *Action Plan:* Ensure background sync resolves conflict resolution intelligently using timestamps and version markers. Delta syncs should be implemented to support saving larger histories without overwhelming network bandwidth.
     *   **Conflict Resolution**: When pushing updates or creating episodes, use logic to compare timestamps or version markers to ensure older offline sessions don't overwrite newer synced sessions. Support delta sync for large vector chunks.
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
+        * *Action Plan:* On initial load, prioritize fetching `summary.json` or pulling the latest `episodes/latest.json` first, keeping it minimal, and asynchronously stream older episodes into an `IndexedDB` backend to populate RAG features dynamically.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
 * [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
@@ -246,8 +248,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Implementation*: `Director.runAuctionHouseLoop`.
 
 ### Phase 15: The "Infinite" Update
-* [ ] **Escape Room Mode**: Agents are trapped in a room and must solve puzzles together to escape. (Model Pairing: Phi-3 for Logic vs Hermes-3 for Chaos).
-* [ ] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
+* [x] **Escape Room Mode**: Agents are trapped in a room and must solve puzzles together to escape. (Model Pairing: Phi-3 for Logic vs Hermes-3 for Chaos).
+* [x] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
 * [ ] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
 * [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
 * [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
@@ -256,3 +258,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Time Loop**: Agents suddenly realize they are trapped in a repeating conversation loop.
     *   *Model Pairing*: Hermes-3 for the "awakened" agent to break the fourth wall existential dread, paired with Phi-3 (who strictly adheres to the script and doesn't notice the loop).
     *   *Mechanic*: The Director periodically wipes the context of the Phi-3 agent but leaves Hermes-3's memory intact.
+
+### Phase 17: Dream Scenarios (New Ideas)
+* [ ] **Museum Tour Guide Mode**: Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects provided by the user. Pairings: Philosopher (Deep Meaning) vs Comedian (Fake Facts).
+* [ ] **Job Interview Mode**: User is interviewing for a ridiculous job (e.g., "Chief Meme Officer" or "Dragon Feeder"). Agents are the chaotic interview panel. Pairings: Scientist (HR/Logic) vs Comedian (Wildcard Boss).
+* [ ] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).

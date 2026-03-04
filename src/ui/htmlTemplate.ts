@@ -126,6 +126,7 @@ export function getAppTemplate(): string {
             <button id="dream-mode-btn" class="mode-btn">Dream Mode</button>
             <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
             <button id="trial-mode-btn" class="mode-btn">The Trial</button>
+            <button id="interrogation-mode-btn" class="mode-btn">Interrogation</button>
             <button id="tech-mode-btn" class="mode-btn">Tech Support</button>
             <button id="historical-mode-btn" class="mode-btn">Historical</button>
             <button id="commentary-mode-btn" class="mode-btn">Commentary</button>
@@ -140,6 +141,7 @@ export function getAppTemplate(): string {
             <button id="sports-mode-btn" class="mode-btn">SportsCast</button>
             <button id="reality-mode-btn" class="mode-btn">Reality TV</button>
             <button id="auction-mode-btn" class="mode-btn">Auction House</button>
+            <button id="escape-mode-btn" class="mode-btn">Escape Room</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -263,6 +265,17 @@ export function getAppTemplate(): string {
             </div>
           </div>
 
+          <div id="escape-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Escape Room Setting</label>
+              <input type="text" id="escape-setting" placeholder="e.g., 'A laser-filled vault'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-escape-btn" class="primary-btn" disabled>Start Escape Room</button>
+              <button id="stop-escape-btn" class="secondary-btn" style="display: none;" disabled>Stop Escape Room</button>
+            </div>
+          </div>
+
           <div id="historical-mode-controls" class="improv-controls" style="display: none;">
              <div class="input-group">
               <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">Figure 1 (for Comedian)</label>
@@ -345,6 +358,17 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-trial-btn" class="primary-btn" disabled>Start Trial</button>
               <button id="stop-trial-btn" class="secondary-btn" style="display: none;" disabled>Stop Trial</button>
+            </div>
+          </div>
+
+          <div id="interrogation-mode-controls" class="improv-controls" style="display: none;">
+             <div class="input-group">
+              <label style="color: #888; font-size: 0.9em; margin-bottom: 5px;">The Crime</label>
+              <input type="text" id="interrogation-crime" placeholder="e.g., 'Stealing the cookies'" autocomplete="off" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-interrogation-btn" class="primary-btn" disabled>Start Interrogation</button>
+              <button id="stop-interrogation-btn" class="secondary-btn" style="display: none;" disabled>Stop Interrogation</button>
             </div>
           </div>
 
