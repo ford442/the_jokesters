@@ -460,4 +460,15 @@ export class GroupChatManager {
       this.currentAgentIndex = originalAgentIndex
     }
   }
+
+  public async chatForAgent(
+    agentId: string,
+    prompt: string,
+    onSentence?: (sentence: string) => void,
+    options?: { maxTokens?: number; seed?: number }
+  ): Promise<string> {
+    this.currentAgentIndex = this.agents.findIndex(a => a.id === agentId);
+    const result = await this.chat(prompt, onSentence, options);
+    return result.response;
+  }
 }

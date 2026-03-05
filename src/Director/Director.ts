@@ -14,6 +14,9 @@ import { runAlienLoop } from './modes/AlienMode';
 import { runTimeTravelLoop, runChefLoop, runMedicalLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
 import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop } from './modes/ExpandedRealityModes';
+import { runMuseumLoop } from './modes/MuseumMode';
+import { runJobInterviewLoop } from './modes/InterviewMode';
+import { runCookingShowLoop } from './modes/CookingMode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -48,7 +51,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum' | 'job_interview' | 'cooking_show';
     title: string;
     description: string;
     config?: {
@@ -103,6 +106,9 @@ export interface Scenario {
         auctionItem?: string;
         escapeRoomSetting?: string;
         interrogationCrime?: string;
+        museumExhibit?: string;
+        jobTitle?: string;
+        cookingDish?: string;
     };
 }
 
@@ -149,6 +155,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     auction_house: runAuctionHouseLoop,
     escape_room: runEscapeRoomLoop,
     interrogation: runInterrogationLoop,
+    museum: runMuseumLoop,
+    job_interview: runJobInterviewLoop,
+    cooking_show: runCookingShowLoop,
 };
 
 export class Director {

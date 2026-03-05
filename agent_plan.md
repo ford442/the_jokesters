@@ -1,7 +1,7 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
+* **tasks_per_run**: 4
 * **status**: On Track (Escape Room and Interrogation Room Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
@@ -260,6 +260,17 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Mechanic*: The Director periodically wipes the context of the Phi-3 agent but leaves Hermes-3's memory intact.
 
 ### Phase 17: Dream Scenarios (New Ideas)
-* [ ] **Museum Tour Guide Mode**: Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects provided by the user. Pairings: Philosopher (Deep Meaning) vs Comedian (Fake Facts).
-* [ ] **Job Interview Mode**: User is interviewing for a ridiculous job (e.g., "Chief Meme Officer" or "Dragon Feeder"). Agents are the chaotic interview panel. Pairings: Scientist (HR/Logic) vs Comedian (Wildcard Boss).
-* [ ] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).
+* [x] **Museum Tour Guide Mode**: Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects provided by the user. Pairings: Philosopher (Deep Meaning) vs Comedian (Fake Facts).
+* [x] **Job Interview Mode**: User is interviewing for a ridiculous job (e.g., "Chief Meme Officer" or "Dragon Feeder"). Agents are the chaotic interview panel. Pairings: Scientist (HR/Logic) vs Comedian (Wildcard Boss).
+* [x] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).
+
+### Phase 18: Infrastructure Expansion (Cloud Persistence Update)
+*   **Vector Search & Continuity**: Instead of just downloading the summary, we need to allow the system to request a specific context search against past episodes. Use a basic term frequency matcher locally until a robust lightweight vector db (like voy) can be integrated.
+*   **Local Storage Migration Strategy**: Add a flag to test IndexedDB instead of `localStorage` to bypass the 5MB limit before making it the default.
+*   **HuggingFace API Resilience**: Add robust retry logic to `HFStorageManager` to handle intermittent failures when pushing episodes.
+
+### Phase 19: New Interaction Modes (The "Dream" Expansion)
+*   **Collaborative Storytelling V2**: Agents build a story sentence by sentence, but the user is the "Editor" who can reject sentences and force rewrites. Model Pairing: Phi-3 (Logic/Coherence) to keep the plot on rails.
+*   **Heckler Mode**: The user is performing a stand-up routine (inputting jokes). The agents act as a tough crowd (Comedian, Skeptic, Absurdist) who heckle and rate the user's performance. Model Pairing: Hermes-3 (Uncensored) for maximum bite.
+*   **The Escape Room**: User and agents are trapped in a scenario. User must guide them to solve puzzles. Agents will bicker and misinterpret clues. Model Pairing: Qwen2.5-Coder for puzzle logic vs Hermes-3 for chaos.
+*   **Therapy Mode (Reversed)**: The user acts as the therapist, and the agents are deeply flawed patients with absurd interconnected problems.
