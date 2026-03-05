@@ -124,7 +124,7 @@ export class GroupChatManager {
     agentSystemPrompt: string,
     hiddenInstruction?: string
   ): string {
-    let systemMessage = agentSystemPrompt + '\n\n' + this.STYLE_INSTRUCTION;
+    let systemMessage = agentSystemPrompt + '\n\n' + this.styleInstruction;
     
     if (hiddenInstruction && hiddenInstruction.trim()) {
       systemMessage += '\n\n### DIRECTOR\'S SECRET NOTE ###\n' + hiddenInstruction + '\n(You MUST incorporate this note immediately!)';
@@ -458,6 +458,55 @@ export class GroupChatManager {
       // Restore original state - prerendering shouldn't affect actual conversation
       this.conversationHistory = originalHistory
       this.currentAgentIndex = originalAgentIndex
+    }
+  }
+
+
+  /**
+   * Note: This method was missing and was added back to allow specialized Director modes
+   * to dictate which agent speaks without automatically advancing the round-robin turn order.
+   */
+  async chatForAgent(
+    agentId: string,
+    prompt: string,
+    onSentence?: (sentence: string) => void,
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+  ): Promise<{ agentId: string; response: string }> {
+    const originalIndex = this.currentAgentIndex;
+
+    const agentIndex = this.agents.findIndex(a => a.id === agentId);
+    if (agentIndex === -1) {
+      throw new Error(`Agent with id ${agentId} not found`);
+    }
+
+    this.currentAgentIndex = agentIndex;
+
+    try {
+      const result = await this.chat(prompt, onSentence, options);
+      this.currentAgentIndex = originalIndex;
+      return result;
+    } catch (error) {
+      this.currentAgentIndex = originalIndex;
+      throw error;
+    }
+  }
+
+  /**
+   * Get the conversation history.
+   * Note: Added because it was missing.
+   */
+  getHistory(): Message[] {
+    return this.conversationHistory;
+  }
+
+
+  /**
+   * Stops the current LLM generation stream.
+   * Note: Added back as it was missing.
+   */
+  async interrupt(): Promise<void> {
+    if (this.engine) {
+      await this.engine.interruptGenerate?.();
     }
   }
 }

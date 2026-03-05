@@ -203,3 +203,142 @@ export async function runEscapeRoomLoop(scenario: Scenario, ctx: ModeContext) {
         await ctx.manager.chatForAgent(logic, `(ESCAPE ROOM: Attempt to make sense of the chaos. Incorporate the user's action "${userInput}" into a logical theory to solve the next puzzle.)`, async (s) => await ctx.callbacks.onSpeak(s, logic, {}));
     }
 }
+
+/**
+ * Museum Tour Guide Mode
+ * Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects.
+ */
+export async function runMuseumTourLoop(scenario: Scenario, ctx: ModeContext) {
+    const item = scenario.config?.museumItem || 'A rusty spoon';
+    ctx.callbacks.onMessage('Director', `🏛️ MUSEUM TOUR MODE: Exhibition - ${item}`, '#3498db');
+
+    const deepGuide = 'philosopher'; // The pretentious guide
+    const fakeGuide = 'comedian'; // The chaotic guide making things up
+    const curator = 'scientist'; // The annoyed curator
+
+    // 1. Deep Guide Intro
+    ctx.callbacks.onTurnStart(deepGuide);
+    await ctx.manager.chatForAgent(deepGuide, `(You are a pretentious museum tour guide. Introduce the new exhibition item: "${item}". Explain its deep, metaphorical significance to the human condition.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Tourist (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Fake Guide Reacts
+        ctx.callbacks.onTurnStart(fakeGuide);
+        await ctx.manager.chatForAgent(fakeGuide, `(TOUR GUIDE: The tourist just asked/said: "${userInput}". Give them a completely fake, absurd, and hilarious historical "fact" about the item.)`, async (s) => await ctx.callbacks.onSpeak(s, fakeGuide, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Curator Corrects
+        if (Math.random() > 0.4) {
+            ctx.callbacks.onTurnStart(curator);
+            await ctx.manager.chatForAgent(curator, `(MUSEUM CURATOR: You are annoyed by the other guides. Correct their nonsense about "${userInput}" with an extremely boring, pedantic, and scientific explanation of what the item actually is.)`, async (s) => await ctx.callbacks.onSpeak(s, curator, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Deep Guide Expands
+        if (Math.random() > 0.3) {
+            ctx.callbacks.onTurnStart(deepGuide);
+            await ctx.manager.chatForAgent(deepGuide, `(TOUR GUIDE: Ignore the curator. Respond to "${userInput}" by connecting the item to an obscure philosophical concept or ancient myth.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Job Interview Mode
+ * User is interviewing for a ridiculous job. Agents are the chaotic interview panel.
+ */
+export async function runJobInterviewLoop(scenario: Scenario, ctx: ModeContext) {
+    const jobTitle = scenario.config?.jobTitle || 'Chief Meme Officer';
+    ctx.callbacks.onMessage('Director', `👔 JOB INTERVIEW MODE: Position - ${jobTitle}`, '#34495e');
+
+    const hrLogic = 'scientist'; // The strict HR
+    const wildcardBoss = 'comedian'; // The chaotic boss
+    const existential = 'philosopher'; // The deep interviewer
+
+    // 1. HR Intro
+    ctx.callbacks.onTurnStart(hrLogic);
+    await ctx.manager.chatForAgent(hrLogic, `(You are the HR Director interviewing the User for the position of "${jobTitle}". Welcome them, explain the rigid corporate structure, and ask them their first standard interview question.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Candidate (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Randomly decide who reacts to the answer and asks the next question
+        const turnRoll = Math.random();
+
+        if (turnRoll < 0.33) {
+            // Wildcard Boss
+            ctx.callbacks.onTurnStart(wildcardBoss);
+            await ctx.manager.chatForAgent(wildcardBoss, `(WILDCARD BOSS: React to the candidate's answer: "${userInput}". Ignore what they said and ask a completely ridiculous, off-the-wall hypothetical question to test their "culture fit" for the "${jobTitle}" role.)`, async (s) => await ctx.callbacks.onSpeak(s, wildcardBoss, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (turnRoll < 0.66) {
+            // Existential
+            ctx.callbacks.onTurnStart(existential);
+            await ctx.manager.chatForAgent(existential, `(EXISTENTIAL INTERVIEWER: The candidate said: "${userInput}". Read way too deeply into their answer. Ask a follow-up question about their soul, their purpose, or the meaningless nature of the "${jobTitle}" job.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // HR Logic
+            ctx.callbacks.onTurnStart(hrLogic);
+            await ctx.manager.chatForAgent(hrLogic, `(HR DIRECTOR: The candidate said: "${userInput}". Analyze their answer for compliance with company policy. Ask a highly specific, boring technical question or ask them about their five-year plan.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Cooking Show Disaster Mode
+ * User provides ingredients, agents are competing chefs sabotaging each other.
+ */
+export async function runCookingShowLoop(scenario: Scenario, ctx: ModeContext) {
+    const dish = scenario.config?.cookingIngredient || 'A mysterious casserole';
+    ctx.callbacks.onMessage('Director', `🍳 COOKING SHOW DISASTER: Today's Special - ${dish}`, '#e67e22');
+
+    const molecularChef = 'scientist'; // Molecular Gastronomy
+    const conceptualChef = 'philosopher'; // Conceptual Food
+    const chaoticChef = 'comedian'; // Makes a mess
+
+    // 1. Chaotic Chef Intro
+    ctx.callbacks.onTurnStart(chaoticChef);
+    await ctx.manager.chatForAgent(chaoticChef, `(You are hosting a chaotic live cooking competition. Welcome the User, who is the guest judge and ingredient supplier. The theme is "${dish}". Ask the User what their first secret ingredient is!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Judge/Supplier (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Molecular Chef Integrates
+        ctx.callbacks.onTurnStart(molecularChef);
+        await ctx.manager.chatForAgent(molecularChef, `(MOLECULAR CHEF: The user just provided the ingredient: "${userInput}". Describe your highly scientific process for incorporating it into your version of "${dish}" using liquid nitrogen, spherification, or centrifuges.)`, async (s) => await ctx.callbacks.onSpeak(s, molecularChef, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Conceptual Chef Critiques
+        ctx.callbacks.onTurnStart(conceptualChef);
+        await ctx.manager.chatForAgent(conceptualChef, `(CONCEPTUAL CHEF: The user provided "${userInput}". Reject the literal ingredient and use the abstract concept of it instead. Mock the molecular chef's lack of soul.)`, async (s) => await ctx.callbacks.onSpeak(s, conceptualChef, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Chaotic Chef Sabotages
+        if (Math.random() > 0.3) {
+            ctx.callbacks.onTurnStart(chaoticChef);
+            await ctx.manager.chatForAgent(chaoticChef, `(CHAOTIC CHEF: Sabotage the others! You just threw "${userInput}" across the room or accidentally set something on fire. Chaos!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
