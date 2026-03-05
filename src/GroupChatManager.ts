@@ -124,7 +124,7 @@ export class GroupChatManager {
     agentSystemPrompt: string,
     hiddenInstruction?: string
   ): string {
-    let systemMessage = agentSystemPrompt + '\n\n' + this.STYLE_INSTRUCTION;
+    let systemMessage = agentSystemPrompt + '\n\n' + this.styleInstruction;
     
     if (hiddenInstruction && hiddenInstruction.trim()) {
       systemMessage += '\n\n### DIRECTOR\'S SECRET NOTE ###\n' + hiddenInstruction + '\n(You MUST incorporate this note immediately!)';
@@ -328,6 +328,35 @@ export class GroupChatManager {
 
   getHistoryLength(): number {
     return this.conversationHistory.length
+  }
+
+  getHistory(): Message[] {
+    return [...this.conversationHistory];
+  }
+
+  interrupt() {
+    if (this.engine) {
+      try {
+        this.engine.interruptGenerate?.();
+      } catch (e) {
+        console.warn("Could not interrupt engine directly", e);
+      }
+    }
+  }
+
+  public get completion() {
+    return this.engine?.chat.completions;
+  }
+
+  terminate() {
+    if (this.engine) {
+      try {
+        this.engine.unload();
+      } catch (e) {
+        console.warn("Could not unload engine cleanly during termination", e);
+      }
+      this.isInitialized = false;
+    }
   }
 
   resetConversation(): void {
