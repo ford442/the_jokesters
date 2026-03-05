@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 3
-* **status**: On Track (Escape Room and Interrogation Room Modes Added)
+* **tasks_per_run**: 4
+* **status**: On Track (Museum Tour, Job Interview, and Cooking Show Modes Added)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -68,7 +68,21 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 ### Goal: Cloud Persistence
 Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
-#### Roadmap Steps
+#### Roadmap Steps (Refined)
+1.  **Authentication**:
+    *   Implement HF OAuth or Token input in UI (Settings Modal).
+    *   Authenticate with the HF API using `HFStorageManager`.
+    *   Validate the token via `/whoami-v2`.
+2.  **Episode Storage**:
+    *   Push finished "Episode Scripts" (JSON) to a private HF Dataset (e.g., `user/jokesters-episodes`).
+    *   Construct standardized filenames (e.g., `episodes/episode-{timestamp}.json`).
+    *   Ensure background sync does not block the UI.
+3.  **Continuity**:
+    *   Fetch "Previous Episode Summaries" (or `summary.json`) from the private dataset at boot.
+    *   Inject this summary into the `GroupChatManager` system prompt to maintain continuity.
+4.  **Vector Memory**: (Future) Use a local vector store (e.g. Voy or simple cosine similarity) to retrieve relevant past jokes.
+
+#### Older Steps
 1.  **Authentication**:
     *   Implement HF OAuth or Token input in UI (Settings Modal).
     *   Authenticate with the HF API using `HFStorageManager`.
@@ -260,6 +274,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Mechanic*: The Director periodically wipes the context of the Phi-3 agent but leaves Hermes-3's memory intact.
 
 ### Phase 17: Dream Scenarios (New Ideas)
-* [ ] **Museum Tour Guide Mode**: Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects provided by the user. Pairings: Philosopher (Deep Meaning) vs Comedian (Fake Facts).
-* [ ] **Job Interview Mode**: User is interviewing for a ridiculous job (e.g., "Chief Meme Officer" or "Dragon Feeder"). Agents are the chaotic interview panel. Pairings: Scientist (HR/Logic) vs Comedian (Wildcard Boss).
-* [ ] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).
+* [x] **Museum Tour Guide Mode**: Agents act as tour guides for an absurd museum exhibition, explaining the "history" of random everyday objects provided by the user. Pairings: Philosopher (Deep Meaning) vs Comedian (Fake Facts).
+* [x] **Job Interview Mode**: User is interviewing for a ridiculous job (e.g., "Chief Meme Officer" or "Dragon Feeder"). Agents are the chaotic interview panel. Pairings: Scientist (HR/Logic) vs Comedian (Wildcard Boss).
+* [x] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).
+
+### Phase 18: Beyond The Box (New Modes)
+* [ ] **Superhero Sidekick Audition**: Agents are established superheroes interviewing the user to be their new sidekick. Pairings: Llama-3 (Heroic/Boy Scout) vs Hermes-3 (Gritty Anti-Hero).
+* [ ] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
