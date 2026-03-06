@@ -505,6 +505,7 @@ export class GroupChatManager {
    */
   async interrupt(): Promise<void> {
     if (this.engine) {
+      // @ts-ignore - interruptGenerate might not be in the type definitions for this version of WebLLM
       await this.engine.interruptGenerate?.();
     }
   }

@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 5
-* **status**: On Track (Museum Tour, Job Interview, and Cooking Show Modes Added)
+* **tasks_per_run**: 3
+* **status**: Friction Detected (CI Failure on Time Loop logic, decreased velocity to focus on quality)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -242,7 +242,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   **Conflict Resolution**: When pushing updates or creating episodes, use logic to compare timestamps or version markers to ensure older offline sessions don't overwrite newer synced sessions. Support delta sync for large vector chunks.
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
         * *Action Plan:* On initial load, prioritize fetching `summary.json` or pulling the latest `episodes/latest.json` first, keeping it minimal, and asynchronously stream older episodes into an `IndexedDB` backend to populate RAG features dynamically.
-    *   **Conflict Resolution:** Implement delta syncs with version markers and timestamps (last-write-wins) to handle offline play and prevent overwriting cloud saves.
+    *   **Cloud Persistence Roadmap:**
+        *   Authenticating with the HF API.
+        *   Pushing finished "Episode Scripts" to a private Dataset.
+        *   Fetching "Previous Episode Summaries" at boot for continuity.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
 * [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.

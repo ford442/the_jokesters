@@ -134,6 +134,7 @@ export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
     const confused = 'philosopher'; // The philosopher
 
     let loopCount = 0;
+    let awakenedMemory = "";
 
     // 1. First iteration is normal
     ctx.callbacks.onTurnStart(oblivious);
@@ -156,16 +157,19 @@ export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
             // First loop: Normal reaction
             await ctx.manager.chatForAgent(awakened, `(SCENE: "${topic}". The user said: "${userInput}". React normally. You feel a strange sense of deja vu but shake it off.)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
 
+            // Save history for reset before wiping
+            const history = ctx.manager.getHistory();
+            awakenedMemory = history.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n");
+
             // Trigger loop reset
             ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS ⚡`, '#f1c40f');
             loopCount++;
 
-            // Wipe oblivious memory but not awakened
+            // Wipe everyone's memory initially in the engine
             ctx.manager.resetConversation();
-            // We need to inject the awakened memory manually next turn
         } else {
-            // Subsequent loops: Awakened is panicking
-            await ctx.manager.chatForAgent(awakened, `(TIME LOOP: You are the ONLY one who remembers this has happened ${loopCount} times before! We were just talking about "${topic}". The oblivious agent reset! Panic! Scream about the time loop!)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+            // Subsequent loops: Awakened is panicking, inject their saved memory
+            await ctx.manager.chatForAgent(awakened, `(TIME LOOP: You are the ONLY one who remembers this has happened ${loopCount} times before! We were just talking about "${topic}". The oblivious agent just reset and forgot everything! Panic! Scream about the time loop! Try to convince them it's real!)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}), { hiddenInstruction: `Here is exactly what you remember happening before the loop reset:\n${awakenedMemory}`});
 
             if (!ctx.isRunning()) break;
 
@@ -181,6 +185,10 @@ export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
 
             // Randomly reset again
             if (Math.random() > 0.7) {
+                 const history = ctx.manager.getHistory();
+                 const recentMemory = history.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n");
+                 awakenedMemory += `\n...And then the loop happened again...\n${recentMemory}`;
+
                  ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS AGAIN ⚡`, '#f1c40f');
                  loopCount++;
                  ctx.manager.resetConversation();
