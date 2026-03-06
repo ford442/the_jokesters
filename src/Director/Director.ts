@@ -13,7 +13,10 @@ import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
 import { runTimeTravelLoop, runChefLoop, runMedicalLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
-import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop } from './modes/ExpandedRealityModes';
+import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop } from './modes/ExpandedRealityModes';
+import { runProceduralLoop } from './modes/CreativeMode';
+import { runSuperheroLoop } from './modes/InteractiveMode';
+import { runTimeLoopLoop } from './modes/DreamModes';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -48,7 +51,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy';
     title: string;
     description: string;
     config?: {
@@ -106,6 +109,10 @@ export interface Scenario {
         museumItem?: string;
         jobTitle?: string;
         cookingIngredient?: string;
+        proceduralVibe?: string;
+        timeLoopTopic?: string;
+        superheroName?: string;
+        conspiracyTopic?: string;
     };
 }
 
@@ -155,6 +162,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     museum_tour: runMuseumTourLoop,
     job_interview: runJobInterviewLoop,
     cooking_show: runCookingShowLoop,
+    procedural: runProceduralLoop,
+    time_loop: runTimeLoopLoop,
+    superhero: runSuperheroLoop,
+    conspiracy: runConspiracyLoop,
 };
 
 export class Director {

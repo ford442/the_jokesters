@@ -120,3 +120,75 @@ export async function runMedicalLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * Time Loop Mode
+ * Agents suddenly realize they are trapped in a repeating conversation loop.
+ */
+export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.timeLoopTopic || 'Ordering coffee';
+    ctx.callbacks.onMessage('Director', `🔄 TIME LOOP: Event - ${topic}`, '#e74c3c');
+
+    const awakened = 'comedian'; // Hermes-3
+    const oblivious = 'scientist'; // Phi-3
+    const confused = 'philosopher'; // The philosopher
+
+    let loopCount = 0;
+
+    // 1. First iteration is normal
+    ctx.callbacks.onTurnStart(oblivious);
+    await ctx.manager.chatForAgent(oblivious, `(We are in a normal, everyday scenario: "${topic}". Start the scene by stating what you are doing. Be completely unaware of anything strange.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Normal Response from Oblivious
+        await ctx.manager.chatForAgent(oblivious, `(SCENE: "${topic}". The user said: "${userInput}". Reply normally, strictly adhering to your role in the scene.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Awakened Agent Reacts
+        if (loopCount === 0) {
+            // First loop: Normal reaction
+            await ctx.manager.chatForAgent(awakened, `(SCENE: "${topic}". The user said: "${userInput}". React normally. You feel a strange sense of deja vu but shake it off.)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+
+            // Trigger loop reset
+            ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS ⚡`, '#f1c40f');
+            loopCount++;
+
+            // Wipe oblivious memory but not awakened
+            ctx.manager.resetConversation();
+            // We need to inject the awakened memory manually next turn
+        } else {
+            // Subsequent loops: Awakened is panicking
+            await ctx.manager.chatForAgent(awakened, `(TIME LOOP: You are the ONLY one who remembers this has happened ${loopCount} times before! We were just talking about "${topic}". The oblivious agent reset! Panic! Scream about the time loop!)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+
+            if (!ctx.isRunning()) break;
+
+            // Oblivious is confused by the panic
+            await ctx.manager.chatForAgent(oblivious, `(SCENE: "${topic}". The other agent is screaming about a "time loop" and the user said "${userInput}". Assume they are crazy. You have no memory of a loop. Dismiss them logically.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+
+            if (!ctx.isRunning()) break;
+
+            // Confused Philosopher tries to mediate
+            if (Math.random() > 0.4) {
+                 await ctx.manager.chatForAgent(confused, `(SCENE: "${topic}". One agent is screaming about time loops, the other is being logical. Philosophize about the nature of repetition and existence.)`, async (s) => await ctx.callbacks.onSpeak(s, confused, {}));
+            }
+
+            // Randomly reset again
+            if (Math.random() > 0.7) {
+                 ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS AGAIN ⚡`, '#f1c40f');
+                 loopCount++;
+                 ctx.manager.resetConversation();
+                 // Start the scene over exactly like the beginning
+                 ctx.callbacks.onTurnStart(oblivious);
+                 await ctx.manager.chatForAgent(oblivious, `(We are in a normal, everyday scenario: "${topic}". Start the scene exactly as if it's the first time it ever happened. You have NO memory of the time loop.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+                 await ctx.callbacks.onTurnEnd();
+            }
+        }
+    }
+}

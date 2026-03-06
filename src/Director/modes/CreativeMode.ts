@@ -72,3 +72,41 @@ export async function runPitchLoop(scenario: Scenario, ctx: ModeContext) {
         await ctx.manager.chatForAgent(pitchMan, `(PRODUCER: Hype up the new changes! Ask the Exec for the next plot point or casting decision.)`, async (s) => await ctx.callbacks.onSpeak(s, pitchMan, {}));
     }
 }
+
+export async function runProceduralLoop(scenario: Scenario, ctx: ModeContext) {
+    const vibe = scenario.config?.proceduralVibe || 'An unexpected encounter at a grocery store';
+    ctx.callbacks.onMessage('Director', `✨ PROCEDURAL MODE: Vibe - ${vibe}`, '#3498db');
+
+    const agent1 = 'comedian';
+    const agent2 = 'philosopher';
+    const agent3 = 'scientist';
+
+    // 1. Initial Scene Setup by Agent 1
+    ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(You are in a newly generated scenario based on this vibe: "${vibe}". Describe the setting and your character's bizarre role in it. Address the User who just walked in.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Agent 2 Reacts and Complicates
+        await ctx.manager.chatForAgent(agent2, `(PROCEDURAL SCENE: The user said: "${userInput}". React to this while building on the strange vibe of "${vibe}". Add a new, unexpected element to the scene.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Agent 3 Analyzes
+        if (Math.random() > 0.3) {
+            await ctx.manager.chatForAgent(agent3, `(PROCEDURAL SCENE: Analyze the absurdity of what is happening in this "${vibe}" scenario. Try to apply logic to a completely illogical situation.)`, async (s) => await ctx.callbacks.onSpeak(s, agent3, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Agent 1 Escalates
+        if (Math.random() > 0.5) {
+            await ctx.manager.chatForAgent(agent1, `(PROCEDURAL SCENE: Escalate the situation! The vibe is "${vibe}". Make something dramatic happen!)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+        }
+    }
+}

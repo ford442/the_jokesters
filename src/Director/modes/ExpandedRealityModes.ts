@@ -342,3 +342,43 @@ export async function runCookingShowLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * The Conspiracy Theorists Mode
+ * Agents try to link the user's mundane statements to a grand, global conspiracy.
+ */
+export async function runConspiracyLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.conspiracyTopic || 'The true meaning of breakfast';
+    ctx.callbacks.onMessage('Director', `👁️ CONSPIRACY MODE: Uncovering ${topic}`, '#8e44ad');
+
+    const logicalConnector = 'scientist'; // Phi-3
+    const wildLeaps = 'comedian'; // Hermes-3
+    const skeptic = 'philosopher'; // The grounded one
+
+    // 1. Initial Intro
+    ctx.callbacks.onTurnStart(wildLeaps);
+    await ctx.manager.chatForAgent(wildLeaps, `(You are a wild, paranoid conspiracy theorist broadcasting from a basement bunker. Welcome the User to your stream about "${topic}". Start with a massive leap of faith linking birds to the government.)`, async (s) => await ctx.callbacks.onSpeak(s, wildLeaps, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Caller (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Logical Connector Reacts
+        await ctx.manager.chatForAgent(logicalConnector, `(CONSPIRACY BOARD: The caller said: "${userInput}". Connect this mundane statement to a highly complex, mathematically "sound" but completely absurd global conspiracy involving "${topic}". Use string and thumbtacks logic!)`, async (s) => await ctx.callbacks.onSpeak(s, logicalConnector, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Wild Leaps Expands
+        await ctx.manager.chatForAgent(wildLeaps, `(PARANOID THEORIST: The caller just gave us the final piece of the puzzle: "${userInput}". Panic! Warn them that "they" are listening. Take the logical connector's theory and push it to the absolute extreme!)`, async (s) => await ctx.callbacks.onSpeak(s, wildLeaps, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Skeptic tries to ground them (rarely)
+        if (Math.random() > 0.6) {
+            await ctx.manager.chatForAgent(skeptic, `(SKEPTIC: Try to calmly explain to the other two that the caller just meant exactly what they said: "${userInput}". Stop them from building a conspiracy board.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+        }
+    }
+}
