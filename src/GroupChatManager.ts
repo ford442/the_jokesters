@@ -157,7 +157,7 @@ export class GroupChatManager {
 
     // If a hiddenInstruction was provided, append it to the system prompt
     if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-      fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
+      fullSystemPrompt += `\n\n### DIRECTOR\'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
     }
 
     // Create messages array with single merged system prompt
@@ -211,7 +211,7 @@ export class GroupChatManager {
             const stopIdx = earliestIdx
             let preStop = buffer.substring(0, stopIdx).trim()
             // Aggressively clean name and stop token
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
             preStop = preStop.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
             if (preStop) onSentence?.(preStop)
             buffer = ''
@@ -227,7 +227,7 @@ export class GroupChatManager {
 
             // CLEANUP: Remove "Agent Name:" and structural role prefixes from the start of sentences
             // This fixes the issue where they say their own name
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
             sentence = sentence.replace(namePrefixRegex, '')
             // Remove explicit stop tokens if the model included them
             sentence = sentence.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
@@ -244,7 +244,7 @@ export class GroupChatManager {
       if (buffer.trim()) {
         let cleanBuffer = buffer.trim()
         // Clean name from the final chunk too
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
         cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
         cleanBuffer = cleanBuffer.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
@@ -253,7 +253,7 @@ export class GroupChatManager {
 
       // CLEANUP: Ensure the history doesn't contain the name prefix either
       // (This prevents the model from learning to copy the pattern in the next turn)
-      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
       const cleanFullResponse = fullResponse.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
       // Add cleaned response to history
@@ -412,7 +412,7 @@ export class GroupChatManager {
         const fullResponse = completion.choices[0]?.message?.content || ''
         
         // Clean the response
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
         const cleanResponse = fullResponse
           .replace(namePrefixRegex, '')
           .replace(/###/g, '')
@@ -461,22 +461,59 @@ export class GroupChatManager {
     }
   }
 
-  public resetPerformanceMetrics() {}
-  public getPerformanceReport() { return ""; }
-  public getHistory() { return this.conversationHistory; }
-  public interrupt() { if (this.engine) { (this.engine as any).interruptGenerate(); } }
-  public get completion() { return this.engine?.chat.completions; }
-  public terminate() { if (this.engine) { this.engine.unload(); } this.isInitialized = false; }
-
-  public async chatForAgent(
+  /**
+   * Note: This method was missing and was added back to allow specialized Director modes
+   * to dictate which agent speaks without automatically advancing the round-robin turn order.
+   */
+  async chatForAgent(
     agentId: string,
     prompt: string,
     onSentence?: (sentence: string) => void,
-    options?: any
-  ): Promise<string> {
-    this.currentAgentIndex = this.agents.findIndex(a => a.id === agentId);
-    const result = await this.chat(prompt, onSentence, options);
-    return result.response;
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+  ): Promise<{ agentId: string; response: string }> {
+    const originalIndex = this.currentAgentIndex;
+
+    const agentIndex = this.agents.findIndex(a => a.id === agentId);
+    if (agentIndex === -1) {
+      throw new Error(`Agent with id ${agentId} not found`);
+    }
+
+    this.currentAgentIndex = agentIndex;
+
+    try {
+      const result = await this.chat(prompt, onSentence, options);
+      this.currentAgentIndex = originalIndex;
+      return result;
+    } catch (error) {
+      this.currentAgentIndex = originalIndex;
+      throw error;
+    }
   }
 
+  /**
+   * Get the conversation history.
+   * Note: Added because it was missing.
+   */
+  getHistory(): Message[] {
+    return this.conversationHistory;
+  }
+
+
+  /**
+   * Stops the current LLM generation stream.
+   * Note: Added back as it was missing.
+   */
+  async interrupt(): Promise<void> {
+    if (this.engine) {
+      await this.engine.interruptGenerate?.();
+    }
+  }
+
+  public resetPerformanceMetrics() {}
+
+  public getPerformanceReport() { return ""; }
+
+  public get completion() { return this.engine?.chat.completions; }
+
+  public terminate() { if (this.engine) { this.engine.unload(); } this.isInitialized = false; }
 }
