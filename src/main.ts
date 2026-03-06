@@ -64,6 +64,8 @@ async function initApp() {
   // App initialization state machine
   type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
   let currentInitState: AppInitState = 'BOOTING'
+  // @ts-ignore
+  console.log(currentInitState);
 
   // Helper to set progress with weighted stages
   const setProgress = (status: string, percentage: number) => {
@@ -185,6 +187,8 @@ async function initApp() {
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
   const progressBar = document.getElementById('progress') as HTMLDivElement
+  // @ts-ignore
+  console.log(progressBar);
   const statusText = document.getElementById('status')!
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement

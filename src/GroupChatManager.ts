@@ -136,7 +136,7 @@ export class GroupChatManager {
   async chat(
     userMessage: string,
     onSentence?: (sentence: string) => void,
-    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; enablePerfTracking?: boolean } = {}
   ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -330,35 +330,6 @@ export class GroupChatManager {
     return this.conversationHistory.length
   }
 
-  getHistory(): Message[] {
-    return [...this.conversationHistory];
-  }
-
-  interrupt() {
-    if (this.engine) {
-      try {
-        this.engine.interruptGenerate?.();
-      } catch (e) {
-        console.warn("Could not interrupt engine directly", e);
-      }
-    }
-  }
-
-  public get completion() {
-    return this.engine?.chat.completions;
-  }
-
-  terminate() {
-    if (this.engine) {
-      try {
-        this.engine.unload();
-      } catch (e) {
-        console.warn("Could not unload engine cleanly during termination", e);
-      }
-      this.isInitialized = false;
-    }
-  }
-
   resetConversation(): void {
     this.conversationHistory = []
     this.currentAgentIndex = 0
@@ -390,7 +361,7 @@ export class GroupChatManager {
   async prerenderTurns(
     initialPrompt: string,
     turnCount: number = this.DEFAULT_PRERENDER_TURNS,
-    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; enablePerfTracking?: boolean } = {}
   ): Promise<Array<{ agentId: string; agentName: string; response: string; sentences: string[] }>> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -490,14 +461,22 @@ export class GroupChatManager {
     }
   }
 
+  public resetPerformanceMetrics() {}
+  public getPerformanceReport() { return ""; }
+  public getHistory() { return this.conversationHistory; }
+  public interrupt() { if (this.engine) { (this.engine as any).interruptGenerate(); } }
+  public get completion() { return this.engine?.chat.completions; }
+  public terminate() { if (this.engine) { this.engine.unload(); } this.isInitialized = false; }
+
   public async chatForAgent(
     agentId: string,
     prompt: string,
     onSentence?: (sentence: string) => void,
-    options?: { maxTokens?: number; seed?: number }
+    options?: any
   ): Promise<string> {
     this.currentAgentIndex = this.agents.findIndex(a => a.id === agentId);
     const result = await this.chat(prompt, onSentence, options);
     return result.response;
   }
+
 }

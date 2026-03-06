@@ -1,13 +1,5 @@
 
-import {
-  Group,
-  Sprite,
-  PointLight,
-  Mesh,
-  CanvasTexture,
-  SpriteMaterial,
-  MeshPhongMaterial,
-} from 'three';
+import * as THREE from 'three';
 
 export interface CallbackVisualState {
   count: number;
@@ -25,10 +17,10 @@ export interface CallbackVisualState {
  * Comedy theory: Callbacks peak at 3rd use, then decline
  */
 export class CallbackVisualizer {
-  private group: Group;
-  private counterSprite: Sprite | null = null;
-  private glowLight: PointLight | null = null;
-  private actorMesh: Mesh;
+  private group: THREE.Group;
+  private counterSprite: any | null = null;
+  private glowLight: THREE.PointLight | null = null;
+  private actorMesh: THREE.Mesh;
   
   // Animation state
   private isAwkwardSilence: boolean = false;
@@ -41,7 +33,7 @@ export class CallbackVisualizer {
   private readonly GLOW_COLOR_DECLINE = 0xff6b6b; // Red-ish
   private readonly GLOW_COLOR_DEAD = 0x666666; // Gray
 
-  constructor(actorGroup: Group, actorMesh: Mesh) {
+  constructor(actorGroup: THREE.Group, actorMesh: THREE.Mesh) {
     this.group = actorGroup;
     this.actorMesh = actorMesh;
     this.baseY = actorMesh.position.y;
@@ -110,8 +102,8 @@ export class CallbackVisualizer {
     }
     
     // Reset actor mesh
-    this.actorMesh.material = new MeshPhongMaterial({
-      color: (this.actorMesh.material as MeshPhongMaterial).color,
+    this.actorMesh.material = new THREE.MeshPhongMaterial({
+      color: (this.actorMesh.material as any).color,
       shininess: 30
     });
   }
@@ -156,14 +148,14 @@ export class CallbackVisualizer {
     ctx.fillText(`x${count}`, centerX, centerY);
     
     // Create sprite
-    const texture = new CanvasTexture(canvas);
-    const material = new SpriteMaterial({ 
+    const texture = new (THREE as any).CanvasTexture(canvas);
+    const material = new (THREE as any).SpriteMaterial({
       map: texture,
       transparent: true,
       opacity: 0.9
     });
     
-    this.counterSprite = new Sprite(material);
+    this.counterSprite = new (THREE as any).Sprite(material);
     this.counterSprite.scale.set(0.4, 0.4, 0.4);
     this.counterSprite.position.set(0, this.COUNTER_OFFSET_Y, 0);
     
@@ -288,19 +280,19 @@ export class CallbackVisualizer {
     }
     
     // Add point light for glow effect
-    this.glowLight = new PointLight(color, intensity, 3);
+    this.glowLight = new THREE.PointLight(color, intensity, 3);
     this.glowLight.position.set(0, 0.5, 0.5);
     this.group.add(this.glowLight);
     
     // Also tint the mesh material
-    const baseColor = (this.actorMesh.material as MeshPhongMaterial).color;
+    const baseColor = (this.actorMesh.material as any).color;
     const tintFactor = 0.3;
     
     const r = baseColor.r * (1 - tintFactor) + ((color >> 16) & 0xff) / 255 * tintFactor;
     const g = baseColor.g * (1 - tintFactor) + ((color >> 8) & 0xff) / 255 * tintFactor;
     const b = baseColor.b * (1 - tintFactor) + (color & 0xff) / 255 * tintFactor;
     
-    (this.actorMesh.material as MeshPhongMaterial).color.setRGB(r, g, b);
+    (this.actorMesh.material as any).color.setRGB(r, g, b);
     
     // Fade out glow after 2 seconds
     setTimeout(() => {

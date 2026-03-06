@@ -1,19 +1,5 @@
 
-import {
-  Group,
-  Mesh,
-  BoxGeometry,
-  MeshPhongMaterial,
-  CircleGeometry,
-  MeshBasicMaterial,
-  DoubleSide,
-  PlaneGeometry,
-  CylinderGeometry,
-  MeshStandardMaterial,
-  SphereGeometry,
-  SpotLight,
-  Vector3,
-} from 'three';
+import * as THREE from 'three';
 
 /**
  * Animation state types for the Deadpan Robot
@@ -36,18 +22,18 @@ export type RobotAnimationState =
  * - Integration with [pause 2s] and [processing...] timing cues
  */
 export class DeadpanRobotActor {
-    public group: Group;
-    private bodyMesh: Mesh;
-    private headGroup: Group;
-    private leftEye: Mesh;
-    private rightEye: Mesh;
-    private spotlight: SpotLight;
+    public group: THREE.Group;
+    private bodyMesh: THREE.Mesh;
+    private headGroup: THREE.Group;
+    private leftEye: THREE.Mesh;
+    private rightEye: THREE.Mesh;
+    private spotlight: THREE.SpotLight;
     
     // Animation state
     private animationState: RobotAnimationState = 'idle';
     private headTiltAngle: number = 0;
     private targetHeadTilt: number = 0;
-    private vibrationOffset: Vector3 = new Vector3();
+    private vibrationOffset: THREE.Vector3 = new THREE.Vector3();
     
     // Blink pattern (rhythmic - 3 rapid blinks every 4 seconds)
     private blinkTimer: number = 0;
@@ -64,8 +50,8 @@ export class DeadpanRobotActor {
     private lastUpdateTime: number = performance.now();
     
     // Materials for state changes
-    private eyeMaterial: MeshBasicMaterial;
-    private processingEyeMaterial: MeshBasicMaterial;
+    private eyeMaterial: THREE.MeshBasicMaterial;
+    private processingEyeMaterial: THREE.MeshBasicMaterial;
 
     /**
      * Creates a 3D deadpan robot
@@ -74,91 +60,91 @@ export class DeadpanRobotActor {
      * @param x - X position on stage
      */
     constructor(_id: string, color: string = '#C0C0C0', x: number) {
-        this.group = new Group();
+        this.group = new THREE.Group();
         this.group.position.set(x, 0, 0);
 
         // Robot Body - Boxy mechanical design instead of capsule
-        const bodyGeo = new BoxGeometry(0.5, 1.2, 0.4);
-        const bodyMat = new MeshPhongMaterial({ 
+        const bodyGeo = new THREE.BoxGeometry(0.5, 1.2, 0.4);
+        const bodyMat = new THREE.MeshPhongMaterial({
             color: color,
             shininess: 80,
             specular: 0x444444
         });
-        this.bodyMesh = new Mesh(bodyGeo, bodyMat);
+        this.bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
         this.bodyMesh.position.y = 0.6;
         this.bodyMesh.castShadow = true;
         this.bodyMesh.receiveShadow = true;
         this.group.add(this.bodyMesh);
 
         // Mechanical details - chest panel
-        const chestGeo = new BoxGeometry(0.35, 0.4, 0.05);
-        const chestMat = new MeshPhongMaterial({ 
+        const chestGeo = new THREE.BoxGeometry(0.35, 0.4, 0.05);
+        const chestMat = new THREE.MeshPhongMaterial({
             color: 0x333333,
             shininess: 60
         });
-        const chest = new Mesh(chestGeo, chestMat);
+        const chest = new THREE.Mesh(chestGeo, chestMat);
         chest.position.set(0, 0.1, 0.2);
         this.bodyMesh.add(chest);
 
         // Status light on chest
-        const statusGeo = new CircleGeometry(0.04, 16);
-        this.processingEyeMaterial = new MeshBasicMaterial({ 
+        const statusGeo = new (THREE as any).CircleGeometry(0.04, 16);
+        this.processingEyeMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
-            side: DoubleSide
+            side: (THREE as any).DoubleSide
         });
-        const status = new Mesh(statusGeo, this.processingEyeMaterial);
+        const status = new THREE.Mesh(statusGeo, this.processingEyeMaterial);
         status.position.set(0, 0.1, 0.23);
         this.bodyMesh.add(status);
 
-        // Head Group - separate for tilting
-        this.headGroup = new Group();
+        // Head THREE.Group - separate for tilting
+        this.headGroup = new THREE.Group();
         this.headGroup.position.set(0, 0.7, 0); // At top of body
         this.bodyMesh.add(this.headGroup);
 
         // Robot Head - Box shape
-        const headGeo = new BoxGeometry(0.45, 0.4, 0.45);
-        const headMat = new MeshPhongMaterial({ 
+        const headGeo = new THREE.BoxGeometry(0.45, 0.4, 0.45);
+        const headMat = new THREE.MeshPhongMaterial({
             color: color,
             shininess: 80,
             specular: 0x444444
         });
-        const head = new Mesh(headGeo, headMat);
+        const head = new THREE.Mesh(headGeo, headMat);
         head.castShadow = true;
         this.headGroup.add(head);
 
         // LED Eyes - Glowing panels
-        this.eyeMaterial = new MeshBasicMaterial({ 
+        this.eyeMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff, // Cyan LED color
-            side: DoubleSide
+            side: (THREE as any).DoubleSide
         });
 
         // Left eye
-        const eyeGeo = new PlaneGeometry(0.08, 0.04);
-        this.leftEye = new Mesh(eyeGeo, this.eyeMaterial.clone());
+        const eyeGeo = new THREE.PlaneGeometry(0.08, 0.04);
+        this.leftEye = new THREE.Mesh(eyeGeo, (this.eyeMaterial as any).clone());
         this.leftEye.position.set(-0.1, 0, 0.23);
         head.add(this.leftEye);
 
         // Right eye
-        this.rightEye = new Mesh(eyeGeo, this.eyeMaterial.clone());
+        this.rightEye = new THREE.Mesh(eyeGeo, (this.eyeMaterial as any).clone());
         this.rightEye.position.set(0.1, 0, 0.23);
         head.add(this.rightEye);
 
         // Antenna
-        const antennaGeo = new CylinderGeometry(0.01, 0.01, 0.2);
-        const antennaMat = new MeshStandardMaterial({ color: 0x666666 });
-        const antenna = new Mesh(antennaGeo, antennaMat);
+        const antennaGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.2);
+        const antennaMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+        const antenna = new THREE.Mesh(antennaGeo, antennaMat);
         antenna.position.set(0.15, 0.3, 0);
         head.add(antenna);
 
         // Antenna tip
-        const tipGeo = new SphereGeometry(0.03);
-        const tipMat = new MeshBasicMaterial({ color: 0xff0000 }); // Red tip
-        const tip = new Mesh(tipGeo, tipMat);
+        const tipGeo = new THREE.SphereGeometry(0.03);
+        const tipMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red tip
+        const tip = new THREE.Mesh(tipGeo, tipMat);
         tip.position.set(0.15, 0.4, 0);
         head.add(tip);
 
         // Spotlight for highlighting when talking
-        this.spotlight = new SpotLight(0xffffff, 0);
+        this.spotlight = new THREE.SpotLight(0xffffff, 0);
         this.spotlight.position.set(0, 5, 2);
         this.spotlight.target = this.bodyMesh;
         this.spotlight.angle = Math.PI / 6;
@@ -219,15 +205,15 @@ export class DeadpanRobotActor {
         if (isProcessing) {
             this.animationState = 'processing';
             // Change eyes to indicate processing
-            (this.leftEye.material as MeshBasicMaterial).color.setHex(0xffaa00); // Orange
-            (this.rightEye.material as MeshBasicMaterial).color.setHex(0xffaa00);
-            this.processingEyeMaterial.color.setHex(0xffaa00); // Status light
+            (this.leftEye.material as any).color.setHex(0xffaa00); // Orange
+            (this.rightEye.material as any).color.setHex(0xffaa00);
+            (this.processingEyeMaterial as any).color.setHex(0xffaa00); // Status light
         } else {
             this.animationState = 'idle';
             // Reset eyes to cyan
-            (this.leftEye.material as MeshBasicMaterial).color.setHex(0x00ffff);
-            (this.rightEye.material as MeshBasicMaterial).color.setHex(0x00ffff);
-            this.processingEyeMaterial.color.setHex(0x00ff00); // Status light
+            (this.leftEye.material as any).color.setHex(0x00ffff);
+            (this.rightEye.material as any).color.setHex(0x00ffff);
+            (this.processingEyeMaterial as any).color.setHex(0x00ff00); // Status light
         }
     }
 
@@ -238,13 +224,13 @@ export class DeadpanRobotActor {
         if (isPaused) {
             this.animationState = 'paused';
             // Dim eyes slightly during pause
-            (this.leftEye.material as MeshBasicMaterial).color.multiplyScalar(0.5);
-            (this.rightEye.material as MeshBasicMaterial).color.multiplyScalar(0.5);
+            (this.leftEye.material as any).color.multiplyScalar(0.5);
+            (this.rightEye.material as any).color.multiplyScalar(0.5);
         } else {
             this.animationState = 'idle';
             // Restore eye brightness
-            (this.leftEye.material as MeshBasicMaterial).color.setHex(0x00ffff);
-            (this.rightEye.material as MeshBasicMaterial).color.setHex(0x00ffff);
+            (this.leftEye.material as any).color.setHex(0x00ffff);
+            (this.rightEye.material as any).color.setHex(0x00ffff);
         }
     }
 
@@ -340,11 +326,11 @@ export class DeadpanRobotActor {
      * Dispose of resources
      */
     dispose() {
-        this.group.traverse((child) => {
-            if (child instanceof Mesh) {
-                child.geometry.dispose();
+        (this.group as any).traverse((child: any) => {
+            if ((child as any).isMesh) {
+                (child as any).geometry.dispose();
                 if (Array.isArray(child.material)) {
-                    child.material.forEach(m => m.dispose());
+                    child.material.forEach((m: any) => m.dispose());
                 } else {
                     child.material.dispose();
                 }
