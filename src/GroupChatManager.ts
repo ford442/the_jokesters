@@ -136,7 +136,7 @@ export class GroupChatManager {
   async chat(
     userMessage: string,
     onSentence?: (sentence: string) => void,
-    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; enablePerfTracking?: boolean } = {}
   ): Promise<{ agentId: string; response: string }> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -157,7 +157,7 @@ export class GroupChatManager {
 
     // If a hiddenInstruction was provided, append it to the system prompt
     if (options.hiddenInstruction && options.hiddenInstruction.trim()) {
-      fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
+      fullSystemPrompt += `\n\n### DIRECTOR\'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
     }
 
     // Create messages array with single merged system prompt
@@ -211,7 +211,7 @@ export class GroupChatManager {
             const stopIdx = earliestIdx
             let preStop = buffer.substring(0, stopIdx).trim()
             // Aggressively clean name and stop token
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
             preStop = preStop.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
             if (preStop) onSentence?.(preStop)
             buffer = ''
@@ -227,7 +227,7 @@ export class GroupChatManager {
 
             // CLEANUP: Remove "Agent Name:" and structural role prefixes from the start of sentences
             // This fixes the issue where they say their own name
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
             sentence = sentence.replace(namePrefixRegex, '')
             // Remove explicit stop tokens if the model included them
             sentence = sentence.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
@@ -244,7 +244,7 @@ export class GroupChatManager {
       if (buffer.trim()) {
         let cleanBuffer = buffer.trim()
         // Clean name from the final chunk too
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
         cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
         cleanBuffer = cleanBuffer.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
@@ -253,7 +253,7 @@ export class GroupChatManager {
 
       // CLEANUP: Ensure the history doesn't contain the name prefix either
       // (This prevents the model from learning to copy the pattern in the next turn)
-      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
       const cleanFullResponse = fullResponse.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
 
       // Add cleaned response to history
@@ -361,7 +361,7 @@ export class GroupChatManager {
   async prerenderTurns(
     initialPrompt: string,
     turnCount: number = this.DEFAULT_PRERENDER_TURNS,
-    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {}
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; enablePerfTracking?: boolean } = {}
   ): Promise<Array<{ agentId: string; agentName: string; response: string; sentences: string[] }>> {
     if (!this.engine || !this.isInitialized) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
@@ -412,7 +412,7 @@ export class GroupChatManager {
         const fullResponse = completion.choices[0]?.message?.content || ''
         
         // Clean the response
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
         const cleanResponse = fullResponse
           .replace(namePrefixRegex, '')
           .replace(/###/g, '')
@@ -461,7 +461,6 @@ export class GroupChatManager {
     }
   }
 
-
   /**
    * Note: This method was missing and was added back to allow specialized Director modes
    * to dictate which agent speaks without automatically advancing the round-robin turn order.
@@ -509,4 +508,12 @@ export class GroupChatManager {
       await this.engine.interruptGenerate?.();
     }
   }
+
+  public resetPerformanceMetrics() {}
+
+  public getPerformanceReport() { return ""; }
+
+  public get completion() { return this.engine?.chat.completions; }
+
+  public terminate() { if (this.engine) { this.engine.unload(); } this.isInitialized = false; }
 }

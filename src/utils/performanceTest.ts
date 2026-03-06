@@ -17,7 +17,18 @@
  * ```
  */
 
-import type { GroupChatManager, GenerationMetrics } from '../GroupChatManager'
+
+
+
+
+export interface GenerationMetrics {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  totalTimeMs: number;
+  timeToFirstTokenMs: number;
+  tokensPerSec: number;
+}
 
 export interface PerformanceTestOptions {
   /** Number of chat iterations to measure */
@@ -55,7 +66,7 @@ export interface PerformanceTestResults {
  * Run a performance benchmark test
  */
 export async function runPerformanceTest(
-  manager: GroupChatManager,
+  manager: any,
   options: PerformanceTestOptions = {}
 ): Promise<PerformanceTestResults> {
   const {
@@ -95,13 +106,13 @@ export async function runPerformanceTest(
     
     if (result.metrics) {
       metrics.push(result.metrics)
-      console.log(`[PerfTest] Iteration ${i + 1}/${iterations}: ${result.metrics.decodeTokensPerSec.toFixed(2)} tok/sec`)
+      console.log(`[PerfTest] Iteration ${i + 1}/${iterations}: ${result.metrics.tokensPerSec.toFixed(2)} tok/sec`)
     }
   }
   
   // Calculate statistics
-  const tokensPerSecValues = metrics.map(m => m.decodeTokensPerSec).sort((a, b) => a - b)
-  const totalTokens = metrics.reduce((sum, m) => sum + m.tokensGenerated, 0)
+  const tokensPerSecValues = metrics.map(m => m.tokensPerSec).sort((a, b) => a - b)
+  const totalTokens = metrics.reduce((sum, m) => sum + m.totalTokens, 0)
   const totalTimeMs = metrics.reduce((sum, m) => sum + m.totalTimeMs, 0)
   const avgTokensPerSec = totalTokens / (totalTimeMs / 1000)
   
@@ -148,7 +159,7 @@ function percentile(sortedArray: number[], p: number): number {
 /**
  * Generate human-readable performance report
  */
-function generateReport(summary: PerformanceTestResults['summary'], manager: GroupChatManager): string {
+function generateReport(summary: PerformanceTestResults['summary'], manager: any): string {
   const engineReport = manager.getPerformanceReport()
   
   return `
@@ -180,7 +191,7 @@ ${engineReport}
  * Quick benchmark - runs a minimal test and returns key metrics
  */
 export async function quickBenchmark(
-  manager: GroupChatManager,
+  manager: any,
   prompt: string = "Hello! Tell me a joke."
 ): Promise<{ tokensPerSec: number; latencyMs: number }> {
   const startTime = performance.now()
@@ -191,7 +202,7 @@ export async function quickBenchmark(
   const endTime = performance.now()
   
   return {
-    tokensPerSec: result.metrics?.decodeTokensPerSec || 0,
+    tokensPerSec: result.metrics?.tokensPerSec || 0,
     latencyMs: endTime - startTime,
   }
 }

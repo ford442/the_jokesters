@@ -74,7 +74,7 @@ export async function runVisionLoop(scenario: Scenario, ctx: ModeContext) {
     if (ctx.isRunning()) {
         const currentAgent = ctx.manager.getCurrentAgent();
         await ctx.callbacks.onTurnStart(currentAgent.id);
-        await ctx.manager.chat(content, async (sentence) => {
+        await ctx.manager.chat(content as any, async (sentence) => {
             await ctx.callbacks.onSpeak(sentence, currentAgent.id, { steps: 20 });
         }, { maxTokens: 256 });
         await ctx.callbacks.onTurnEnd();

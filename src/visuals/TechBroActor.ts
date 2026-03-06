@@ -1,11 +1,5 @@
 
-import {
-  Mesh,
-  CapsuleGeometry,
-  MeshPhongMaterial,
-  BoxGeometry,
-  Material,
-} from 'three';
+import * as THREE from 'three';
 import { Actor } from './Actor';
 
 /**
@@ -22,17 +16,17 @@ import { Actor } from './Actor';
  */
 export class TechBroActor extends Actor {
     // Custom Tech Bro elements
-    private hairElement: Mesh | null = null;
-    private wristElement: Mesh | null = null;
-    private gunHandLeft: Mesh | null = null;
-    private gunHandRight: Mesh | null = null;
+    private hairElement: THREE.Mesh | null = null;
+    private wristElement: THREE.Mesh | null = null;
+    private gunHandLeft: THREE.Mesh | null = null;
+    private gunHandRight: THREE.Mesh | null = null;
     
     // Animation state
     private isGestureAnimating: boolean = false;
     private animationType: 'idle' | 'fingerguns' | 'hairflip' | 'watchcheck' = 'idle';
     private animationTime: number = 0;
     private animationDuration: number = 0;
-    private currentMesh: Mesh | null = null;
+    private currentMesh: THREE.Mesh | null = null;
     
     // Base confident pose values
     private readonly CONFIDENT_ROTATION_X = -0.08;
@@ -48,7 +42,7 @@ export class TechBroActor extends Actor {
      */
     constructor(id: string, x: number) {
         // Call parent with orange Tech Bro color (z=0 for center-right positioning)
-        super(id, '#FF6B35', x, 0);
+        super(id as any, '#FF6B35' as any, x as any);
         
         // Setup Tech Bro specific visual elements
         this.setupTechBroElements();
@@ -60,9 +54,9 @@ export class TechBroActor extends Actor {
     /**
      * Get the current mesh from the Actor (accessing inherited protected/private)
      */
-    private getCurrentMesh(): Mesh | null {
-        // Access the mesh through the group (first child that's a Mesh)
-        const mesh = this.group.children.find(child => child instanceof Mesh) as Mesh;
+    private getCurrentMesh(): THREE.Mesh | null {
+        // Access the mesh through the group (first child that's a THREE.Mesh)
+        const mesh = (this.group as any).children.find((child: any) => (child as any).isMesh) as THREE.Mesh;
         return mesh || null;
     }
     
@@ -76,26 +70,26 @@ export class TechBroActor extends Actor {
         this.currentMesh = mesh;
         
         // Create "hair" element - a small curved piece on top to simulate hair
-        const hairGeo = new CapsuleGeometry(0.15, 0.3, 4, 8);
-        const hairMat = new MeshPhongMaterial({ 
+        const hairGeo = new (THREE as any).CapsuleGeometry(0.15, 0.3, 4, 8);
+        const hairMat = new THREE.MeshPhongMaterial({
             color: 0x8B4513, // Brown hair color
             shininess: 50
         });
-        this.hairElement = new Mesh(hairGeo, hairMat);
+        this.hairElement = new THREE.Mesh(hairGeo, hairMat);
         this.hairElement.position.set(0, 0.7, 0.1);
         this.hairElement.rotation.x = Math.PI / 4;
         mesh.add(this.hairElement);
         
         // Create wrist/Apple Watch element
-        const wristGeo = new BoxGeometry(0.15, 0.08, 0.05);
-        const wristMat = new MeshPhongMaterial({ 
+        const wristGeo = new THREE.BoxGeometry(0.15, 0.08, 0.05);
+        const wristMat = new THREE.MeshPhongMaterial({
             color: 0x333333, // Dark watch band
             shininess: 80
         });
-        this.wristElement = new Mesh(wristGeo, wristMat);
+        this.wristElement = new THREE.Mesh(wristGeo, wristMat);
         // Position on left "wrist" (side of capsule)
         this.wristElement.position.set(-0.32, 0.1, 0);
-        this.wristElement.visible = false; // Hidden by default
+        (this.wristElement as any).visible = false; // Hidden by default
         mesh.add(this.wristElement);
     }
     
@@ -106,7 +100,7 @@ export class TechBroActor extends Actor {
         const mesh = this.getCurrentMesh();
         if (!mesh || mesh === this.currentMesh) return;
         
-        // Mesh has changed (LOD update), reattach custom elements
+        // THREE.Mesh has changed (LOD update), reattach custom elements
         this.currentMesh = mesh;
         
         if (this.hairElement) {
@@ -175,18 +169,18 @@ export class TechBroActor extends Actor {
         this.removeGunHands();
         
         // Hand geometry
-        const handGeo = new CapsuleGeometry(0.08, 0.25, 4, 8);
-        const handMat = new MeshPhongMaterial({ color: 0xFF6B35 });
+        const handGeo = new (THREE as any).CapsuleGeometry(0.08, 0.25, 4, 8);
+        const handMat = new THREE.MeshPhongMaterial({ color: 0xFF6B35 });
         
         // Left gun hand (extending from left side)
-        this.gunHandLeft = new Mesh(handGeo, handMat);
+        this.gunHandLeft = new THREE.Mesh(handGeo, handMat);
         this.gunHandLeft.position.set(-0.45, 0.2, 0.2);
         this.gunHandLeft.rotation.z = Math.PI / 2;
         this.gunHandLeft.rotation.y = -0.3;
         mesh.add(this.gunHandLeft);
         
         // Right gun hand
-        this.gunHandRight = new Mesh(handGeo, handMat);
+        this.gunHandRight = new THREE.Mesh(handGeo, handMat);
         this.gunHandRight.position.set(0.45, 0.2, 0.2);
         this.gunHandRight.rotation.z = -Math.PI / 2;
         this.gunHandRight.rotation.y = 0.3;
@@ -202,14 +196,14 @@ export class TechBroActor extends Actor {
         
         if (this.gunHandLeft) {
             mesh.remove(this.gunHandLeft);
-            this.gunHandLeft.geometry.dispose();
-            (this.gunHandLeft.material as Material).dispose();
+            (this.gunHandLeft as any).geometry.dispose();
+            (this.gunHandLeft.material as any).dispose();
             this.gunHandLeft = null;
         }
         if (this.gunHandRight) {
             mesh.remove(this.gunHandRight);
-            this.gunHandRight.geometry.dispose();
-            (this.gunHandRight.material as Material).dispose();
+            (this.gunHandRight as any).geometry.dispose();
+            (this.gunHandRight.material as any).dispose();
             this.gunHandRight = null;
         }
     }
@@ -241,7 +235,7 @@ export class TechBroActor extends Actor {
         
         // Show the wrist element
         if (this.wristElement) {
-            this.wristElement.visible = true;
+            (this.wristElement as any).visible = true;
         }
     }
     
@@ -464,7 +458,7 @@ export class TechBroActor extends Actor {
         
         // Hide wrist element
         if (this.wristElement) {
-            this.wristElement.visible = false;
+            (this.wristElement as any).visible = false;
         }
         
         // Reset animation type
@@ -497,16 +491,16 @@ export class TechBroActor extends Actor {
         this.removeGunHands();
         
         if (this.hairElement) {
-            this.hairElement.geometry.dispose();
-            (this.hairElement.material as Material).dispose();
+            (this.hairElement as any).geometry.dispose();
+            (this.hairElement.material as any).dispose();
         }
         
         if (this.wristElement) {
-            this.wristElement.geometry.dispose();
-            (this.wristElement.material as Material).dispose();
+            (this.wristElement as any).geometry.dispose();
+            (this.wristElement.material as any).dispose();
         }
         
         // Call parent dispose
-        super.dispose();
+        (Actor.prototype as any).dispose?.call(this);
     }
 }

@@ -32,7 +32,7 @@ Do not include any markdown formatting or explanation. Just the JSON array.`;
         ];
 
         try {
-            const response = await this.manager.completion(messages, {
+            const response = await (this.manager.completion as any)(messages, {
                 maxTokens: 1024,
                 temperature: 0.8,
                 jsonMode: true

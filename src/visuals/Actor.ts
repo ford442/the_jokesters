@@ -22,7 +22,7 @@ export class Actor {
         // Let's make it sit on ground. 
 
         // Capsule Body - Enhanced with better material
-        const geometry = new THREE.CapsuleGeometry(0.3, 1, 8, 16);
+        const geometry = new (THREE as any).CapsuleGeometry(0.3, 1, 8, 16);
         const material = new THREE.MeshStandardMaterial({ 
             color,
             metalness: 0.3,
@@ -31,7 +31,7 @@ export class Actor {
             emissiveIntensity: 0.1
         });
         this.mesh = new THREE.Mesh(geometry, material);
-        this.mesh.position.y = 0.8; // Radius 0.3 + Half Length 0.5 = 0.8? CapsuleGeometry params are radius, length. 
+        this.mesh.position.y = 0.8; // Radius 0.3 + Half Length 0.5 = 0.8? (THREE as any).CapsuleGeometry params are radius, length.
         // Total height = length + 2*radius = 1 + 0.6 = 1.6. Center is at 0. So bottom is -0.8.
         // To stand on 0, y should be 0.8.
         this.mesh.castShadow = true;

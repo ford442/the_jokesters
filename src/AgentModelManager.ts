@@ -76,7 +76,6 @@ export class AgentModelManager {
       // Step 2: Load the target model
       this.reportProgress(`Loading ${targetModel}...`, 0.3)
       await this.groupChatManager.initialize(
-        targetModel,
         (progress: webllm.InitProgressReport) => {
           // Forward progress to UI with scaling (30% to 90% of total progress)
           const scaledProgress = 0.3 + (progress.progress * 0.6)
