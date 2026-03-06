@@ -120,3 +120,83 @@ export async function runMedicalLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * Time Loop Mode
+ * Agents suddenly realize they are trapped in a repeating conversation loop.
+ */
+export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.timeLoopTopic || 'Ordering coffee';
+    ctx.callbacks.onMessage('Director', `🔄 TIME LOOP: Event - ${topic}`, '#e74c3c');
+
+    const awakened = 'comedian'; // Hermes-3
+    const oblivious = 'scientist'; // Phi-3
+    const confused = 'philosopher'; // The philosopher
+
+    let loopCount = 0;
+    let awakenedMemory = "";
+
+    // 1. First iteration is normal
+    ctx.callbacks.onTurnStart(oblivious);
+    await ctx.manager.chatForAgent(oblivious, `(We are in a normal, everyday scenario: "${topic}". Start the scene by stating what you are doing. Be completely unaware of anything strange.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Normal Response from Oblivious
+        await ctx.manager.chatForAgent(oblivious, `(SCENE: "${topic}". The user said: "${userInput}". Reply normally, strictly adhering to your role in the scene.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Awakened Agent Reacts
+        if (loopCount === 0) {
+            // First loop: Normal reaction
+            await ctx.manager.chatForAgent(awakened, `(SCENE: "${topic}". The user said: "${userInput}". React normally. You feel a strange sense of deja vu but shake it off.)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+
+            // Save history for reset before wiping
+            const history = ctx.manager.getHistory();
+            awakenedMemory = history.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n");
+
+            // Trigger loop reset
+            ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS ⚡`, '#f1c40f');
+            loopCount++;
+
+            // Wipe everyone's memory initially in the engine
+            ctx.manager.resetConversation();
+        } else {
+            // Subsequent loops: Awakened is panicking, inject their saved memory
+            await ctx.manager.chatForAgent(awakened, `(TIME LOOP: You are the ONLY one who remembers this has happened ${loopCount} times before! We were just talking about "${topic}". The oblivious agent just reset and forgot everything! Panic! Scream about the time loop! Try to convince them it's real!)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}), { hiddenInstruction: `Here is exactly what you remember happening before the loop reset:\n${awakenedMemory}`});
+
+            if (!ctx.isRunning()) break;
+
+            // Oblivious is confused by the panic
+            await ctx.manager.chatForAgent(oblivious, `(SCENE: "${topic}". The other agent is screaming about a "time loop" and the user said "${userInput}". Assume they are crazy. You have no memory of a loop. Dismiss them logically.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+
+            if (!ctx.isRunning()) break;
+
+            // Confused Philosopher tries to mediate
+            if (Math.random() > 0.4) {
+                 await ctx.manager.chatForAgent(confused, `(SCENE: "${topic}". One agent is screaming about time loops, the other is being logical. Philosophize about the nature of repetition and existence.)`, async (s) => await ctx.callbacks.onSpeak(s, confused, {}));
+            }
+
+            // Randomly reset again
+            if (Math.random() > 0.7) {
+                 const history = ctx.manager.getHistory();
+                 const recentMemory = history.slice(-4).map(m => `${m.role}: ${m.content}`).join("\n");
+                 awakenedMemory += `\n...And then the loop happened again...\n${recentMemory}`;
+
+                 ctx.callbacks.onMessage('Director', `⚡ THE TIMELINE RESETS AGAIN ⚡`, '#f1c40f');
+                 loopCount++;
+                 ctx.manager.resetConversation();
+                 // Start the scene over exactly like the beginning
+                 ctx.callbacks.onTurnStart(oblivious);
+                 await ctx.manager.chatForAgent(oblivious, `(We are in a normal, everyday scenario: "${topic}". Start the scene exactly as if it's the first time it ever happened. You have NO memory of the time loop.)`, async (s) => await ctx.callbacks.onSpeak(s, oblivious, {}));
+                 await ctx.callbacks.onTurnEnd();
+            }
+        }
+    }
+}

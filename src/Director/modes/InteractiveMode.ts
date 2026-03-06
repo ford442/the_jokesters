@@ -225,3 +225,38 @@ export async function runCommentaryLoop(scenario: Scenario, ctx: ModeContext) {
         await ctx.manager.chatForAgent(color, `(COLOR COMMENTATOR: Add a deep, philosophical, or completely unrelated observation about the move "${userInput}". Maybe mention the meta-game.)`, async (s) => await ctx.callbacks.onSpeak(s, color, {}));
     }
 }
+
+export async function runSuperheroLoop(scenario: Scenario, ctx: ModeContext) {
+    const heroName = scenario.config?.superheroName || 'Captain Justice';
+    ctx.callbacks.onMessage('Director', `🦸‍♂️ SUPERHERO AUDITION: The New Sidekick for ${heroName}`, '#2ecc71');
+
+    const boyScout = 'philosopher'; // The lawful good hero
+    const antiHero = 'comedian'; // The gritty vigilante
+    const techSupport = 'scientist'; // The person in the chair
+
+    // 1. Boy Scout Intro
+    ctx.callbacks.onTurnStart(boyScout);
+    await ctx.manager.chatForAgent(boyScout, `(You are ${heroName}, a "Boy Scout" lawful-good superhero. Welcome the User to the sidekick audition. Ask them what their superpower is and their moral code. Be extremely earnest and heroic.)`, async (s) => await ctx.callbacks.onSpeak(s, boyScout, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Applicant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Randomly decide who reacts
+        const turnRoll = Math.random();
+
+        if (turnRoll < 0.33) {
+            // Anti-Hero
+            await ctx.manager.chatForAgent(antiHero, `(ANTI-HERO: You are a gritty, violent, cynical vigilante. The applicant said: "${userInput}". Mock their power or moral code. Tell them they wouldn't last five minutes in the real city streets. Smoke a fake cigarette.)`, async (s) => await ctx.callbacks.onSpeak(s, antiHero, {}));
+        } else if (turnRoll < 0.66) {
+            // Tech Support
+            await ctx.manager.chatForAgent(techSupport, `(PERSON IN THE CHAIR: You are the nerdy scientist back at base. Analyze the applicant's statement: "${userInput}". Overcomplicate the physics of their superpower. Calculate the collateral damage they would cause.)`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+        } else {
+            // Boy Scout again
+            await ctx.manager.chatForAgent(boyScout, `(BOY SCOUT: The applicant said: "${userInput}". React with relentless optimism. Try to find the heroic potential in their weird statement. Give them a cheesy superhero lecture about responsibility.)`, async (s) => await ctx.callbacks.onSpeak(s, boyScout, {}));
+        }
+    }
+}

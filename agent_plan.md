@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity
-* **tasks_per_run**: 4
-* **status**: On Track (Museum Tour, Job Interview, and Cooking Show Modes Added)
+* **tasks_per_run**: 3
+* **status**: Friction Detected (CI Failure on Time Loop logic, decreased velocity to focus on quality)
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -242,6 +242,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   **Conflict Resolution**: When pushing updates or creating episodes, use logic to compare timestamps or version markers to ensure older offline sessions don't overwrite newer synced sessions. Support delta sync for large vector chunks.
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
         * *Action Plan:* On initial load, prioritize fetching `summary.json` or pulling the latest `episodes/latest.json` first, keeping it minimal, and asynchronously stream older episodes into an `IndexedDB` backend to populate RAG features dynamically.
+    *   **Cloud Persistence Roadmap:**
+        *   Authenticating with the HF API.
+        *   Pushing finished "Episode Scripts" to a private Dataset.
+        *   Fetching "Previous Episode Summaries" at boot for continuity.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
 * [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
@@ -264,12 +268,12 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 15: The "Infinite" Update
 * [x] **Escape Room Mode**: Agents are trapped in a room and must solve puzzles together to escape. (Model Pairing: Phi-3 for Logic vs Hermes-3 for Chaos).
 * [x] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
-* [ ] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
+* [x] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
 * [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
 * [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
 
 ### Phase 16: Time Loop Mode
-* [ ] **Time Loop**: Agents suddenly realize they are trapped in a repeating conversation loop.
+* [x] **Time Loop**: Agents suddenly realize they are trapped in a repeating conversation loop.
     *   *Model Pairing*: Hermes-3 for the "awakened" agent to break the fourth wall existential dread, paired with Phi-3 (who strictly adheres to the script and doesn't notice the loop).
     *   *Mechanic*: The Director periodically wipes the context of the Phi-3 agent but leaves Hermes-3's memory intact.
 
@@ -279,5 +283,6 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Cooking Show Disaster**: User provides ingredients, agents are competing chefs trying to make a dish and sabotaging each other. Pairings: Scientist (Molecular Gastronomy) vs Philosopher (Conceptual Food).
 
 ### Phase 18: Beyond The Box (New Modes)
-* [ ] **Superhero Sidekick Audition**: Agents are established superheroes interviewing the user to be their new sidekick. Pairings: Llama-3 (Heroic/Boy Scout) vs Hermes-3 (Gritty Anti-Hero).
-* [ ] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
+* [x] **Superhero Sidekick Audition**: Agents are established superheroes interviewing the user to be their new sidekick. Pairings: Llama-3 (Heroic/Boy Scout) vs Hermes-3 (Gritty Anti-Hero).
+* [x] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
+* [ ] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
