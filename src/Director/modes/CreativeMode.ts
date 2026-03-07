@@ -39,6 +39,42 @@ export async function runMysteryLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runSilentFilmLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.silentFilmTopic || 'A pie eating contest';
+    ctx.callbacks.onMessage('Director', `📽️ SILENT FILM ERA: ${topic}`, '#34495e');
+
+    const physicalActor = 'comedian'; // Llama-3 equivalent (Physical Comedy)
+    const literalActor = 'philosopher'; // Phi-3 equivalent (Literal Interpretation)
+    const audience = 'scientist'; // Audience Reaction
+
+    // 1. Scene Intro
+    ctx.callbacks.onTurnStart(physicalActor);
+    await ctx.manager.chatForAgent(physicalActor, `(SILENT FILM: You are an actor in a black-and-white silent film about "${topic}". You MUST NOT speak any dialogue. You can ONLY use emojis and describe physical actions between asterisks, like *slips on banana peel* 🍌🤕. React to the user walking onto the set.)`, async (s) => await ctx.callbacks.onSpeak(s, physicalActor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Co-Star (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Literal Actor Misunderstands
+        await ctx.manager.chatForAgent(literalActor, `(SILENT FILM: The co-star did: "${userInput}". You are an actor who takes everything perfectly literally but you still MUST NOT speak dialogue. Use ONLY emojis and physical actions between asterisks to show your reaction and misunderstanding of their action. *looks confused and tries to eat hat* 🎩🍽️)`, async (s) => await ctx.callbacks.onSpeak(s, literalActor, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Audience Reacts
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(audience, `(SILENT FILM AUDIENCE: You are watching the film and must react with a title card. Provide a short, melodramatic text title card describing the emotion of the scene, like: "Alas! The pie was poisoned!" Or just react to the absurdity.)`, async (s) => await ctx.callbacks.onSpeak(s, audience, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Physical Actor Escalates
+        await ctx.manager.chatForAgent(physicalActor, `(SILENT FILM: Escalate the physical comedy of "${topic}". DO NOT USE DIALOGUE. Use ONLY emojis and physical actions between asterisks to do something increasingly slapstick. *throws pie at wall* 🥧💥🏃‍♂️)`, async (s) => await ctx.callbacks.onSpeak(s, physicalActor, {}));
+    }
+}
+
 export async function runPitchLoop(scenario: Scenario, ctx: ModeContext) {
     const genre = scenario.config?.pitchGenre || 'Sci-Fi Action';
     ctx.callbacks.onMessage('Director', `🎬 MOVIE PITCH MODE: Pitching a ${genre} movie`, '#e67e22');

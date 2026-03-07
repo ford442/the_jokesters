@@ -2,7 +2,7 @@
 
 ## Project Velocity
 * **tasks_per_run**: 3
-* **status**: Friction Detected (CI Failure on Time Loop logic, decreased velocity to focus on quality)
+* **status**: Proceeding smoothly.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -244,8 +244,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
         * *Action Plan:* On initial load, prioritize fetching `summary.json` or pulling the latest `episodes/latest.json` first, keeping it minimal, and asynchronously stream older episodes into an `IndexedDB` backend to populate RAG features dynamically.
     *   **Cloud Persistence Roadmap:**
         *   Authenticating with the HF API.
-        *   Pushing finished "Episode Scripts" to a private Dataset.
-        *   Fetching "Previous Episode Summaries" at boot for continuity.
+        *   Pushing finished "Episode Scripts" to a private Dataset. Ensure background sync resolves conflict resolution intelligently using timestamps and version markers.
+        *   Fetching "Previous Episode Summaries" at boot for continuity. specifically download `summary.json` at boot to prime the context window.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
 * [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
@@ -285,4 +285,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 18: Beyond The Box (New Modes)
 * [x] **Superhero Sidekick Audition**: Agents are established superheroes interviewing the user to be their new sidekick. Pairings: Llama-3 (Heroic/Boy Scout) vs Hermes-3 (Gritty Anti-Hero).
 * [x] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
-* [ ] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
+* [x] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
+
+### Phase 19: The Dream Expansion (New Modes)
+* [ ] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
+* [ ] **News Anchor Meltdown**: A reporter mode where the teleprompter breaks, forcing agents to improvise absurd news.
