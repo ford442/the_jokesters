@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
-## Project Velocity
+## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Proceeding smoothly.
+* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features (Stand-up, Meltdown, Cross-Tab). The velocity feels appropriate for the complexity, so it remains at 3 for now.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -69,7 +69,13 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 #### Roadmap Steps (Refined)
-1.  **Authentication**:
+1.  **Delta Syncs & Versioning**:
+    *   Implement intelligent background sync resolution using timestamps.
+    *   Push only delta changes (new vectors/messages) to `user/jokesters-episodes` instead of full JSON overwrites to save bandwidth.
+2.  **Summary Caching**:
+    *   On initial boot, prioritize fetching `summary.json` from the HF dataset to instantly prime the `GroupChatManager` context window.
+    *   Cache this summary in `localStorage` to avoid blocking the main thread on slow networks.
+3.  **Authentication**:
     *   Implement HF OAuth or Token input in UI (Settings Modal).
     *   Authenticate with the HF API using `HFStorageManager`.
     *   Validate the token via `/whoami-v2`.
@@ -270,7 +276,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
 * [x] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
 * [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
-* [ ] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
+* [x] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
 
 ### Phase 16: Time Loop Mode
 * [x] **Time Loop**: Agents suddenly realize they are trapped in a repeating conversation loop.
@@ -288,5 +294,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
 
 ### Phase 19: The Dream Expansion (New Modes)
-* [ ] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
-* [ ] **News Anchor Meltdown**: A reporter mode where the teleprompter breaks, forcing agents to improvise absurd news.
+* [x] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
+* [x] **News Anchor Meltdown**: A reporter mode where the teleprompter breaks, forcing agents to improvise absurd news.
+* [ ] **The Silent Treatment Mode**: Agents stubbornly refuse to speak, forcing the user to talk.
+* [ ] **Dating Show Contestants**: Agents try to woo the user in a dating game show.

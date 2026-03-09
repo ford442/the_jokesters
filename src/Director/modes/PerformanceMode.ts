@@ -31,6 +31,58 @@ export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runStandupLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.standupTopic || 'everyday life';
+    const comedian = 'comedian';
+    const hecklers = ['philosopher', 'scientist'];
+
+    ctx.callbacks.onMessage('Director', `🎤 STAND-UP COMEDY: ${topic}`, '#f1c40f');
+
+    ctx.callbacks.onTurnStart(comedian);
+    await ctx.manager.chatForAgent(comedian, `(You are doing a stand-up comedy routine about "${topic}". Walk on stage, grab the mic, and deliver your opening joke. Be confident and punchy!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
+            await ctx.manager.chatForAgent(comedian, `(Someone in the audience just yelled: "${heckle}". Destroy them with a comeback!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+            continue;
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // Comedian tells a joke
+        await ctx.manager.chatForAgent(comedian, `(STAND-UP ROUTINE: Deliver your next joke about "${topic}". Wait for the laugh.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Random chance of heckle from other agents
+        if (Math.random() > 0.6) {
+            const heckler = hecklers[Math.floor(Math.random() * hecklers.length)];
+            const hecklePrompt = `(You are in the audience of a comedy show. Heckle the comedian based on their last joke. Keep it short, loud, and annoying!)`;
+
+            ctx.callbacks.onMessage('Director', `📢 ${heckler.toUpperCase()} HECKLES!`, '#e74c3c');
+            await ctx.manager.chatForAgent(heckler, hecklePrompt, async (s) => await ctx.callbacks.onSpeak(s, heckler, { speed: 1.2 }));
+
+            if (ctx.isRunning()) {
+                await ctx.manager.chatForAgent(comedian, `(The heckler just said that. Roast them back immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, { speed: 1.1 }));
+            }
+        } else {
+            // Audience reacts
+            if (Math.random() > 0.5) {
+                const laughs = ['"HAHAHA!"', '"LOL"', '"*crickets*"', '"BOOOOO!"', '"That is so true!"'];
+                const laugh = laughs[Math.floor(Math.random() * laughs.length)];
+                ctx.callbacks.onMessage('Audience', laugh, '#888');
+            }
+        }
+
+        round++;
+        await new Promise(r => setTimeout(r, 1500));
+    }
+}
+
 export async function runStoryLoop(scenario: Scenario, ctx: ModeContext) {
     let storySoFar = scenario.config?.initialPrompt || 'Once upon a time...';
     ctx.callbacks.onMessage('Director', `📖 Story Time! "${storySoFar}"`, '#4ecdc4');
