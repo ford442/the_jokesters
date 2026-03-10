@@ -260,3 +260,56 @@ export async function runSuperheroLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+export async function runDatingShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '💖 DATING SHOW: The Contestants are trying to woo you!', '#ff69b4');
+
+    const contestants = ['comedian', 'philosopher', 'scientist'];
+
+    // Introductions
+    for (const agent of contestants) {
+        if (!ctx.isRunning()) break;
+        ctx.callbacks.onTurnStart(agent);
+        await ctx.manager.chatForAgent(agent, `(DATING SHOW: Introduce yourself to the User. Try to woo them with your unique charm. Be flirtatious but stay bizarrely in character!)`, async (s) => await ctx.callbacks.onSpeak(s, agent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('You', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        let activeAgent = 'comedian';
+        if (roll > 0.66) activeAgent = 'philosopher';
+        else if (roll > 0.33) activeAgent = 'scientist';
+
+        ctx.callbacks.onTurnStart(activeAgent);
+        await ctx.manager.chatForAgent(activeAgent, `(DATING SHOW: The User said: "${userInput}". Respond affectionately. Try to outshine the other contestants and win the User's heart. Be romantic but bizarrely in character.)`, async (s) => await ctx.callbacks.onSpeak(s, activeAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runSilentTreatmentLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '🤫 THE SILENT TREATMENT: Make them talk!', '#34495e');
+
+    const agents = ['comedian', 'philosopher', 'scientist'];
+
+    // Initial stubbornness
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', `(SILENT TREATMENT: You are giving the user the silent treatment. Express your refusal to speak using physical descriptions like *crosses arms* or *looks away*. Do NOT say any actual dialogue.)`, async (s) => await ctx.callbacks.onSpeak(s, 'comedian', {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('You', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const activeAgent = agents[Math.floor(Math.random() * agents.length)];
+
+        ctx.callbacks.onTurnStart(activeAgent);
+        await ctx.manager.chatForAgent(activeAgent, `(SILENT TREATMENT: The User said: "${userInput}". You are desperately trying to maintain the silent treatment, but you are cracking. Describe your physical struggle to stay silent. You may let slip ONE word if you must, but try to use actions instead of words.)`, async (s) => await ctx.callbacks.onSpeak(s, activeAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

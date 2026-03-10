@@ -5,7 +5,7 @@ import type { ModeContext } from './modes/ModeContext';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop, runMeltdownLoop } from './modes/ReporterMode';
-import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop } from './modes/InteractiveMode';
+import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop } from './modes/InteractiveMode';
 import { runMysteryLoop, runPitchLoop, runSilentFilmLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
@@ -17,6 +17,7 @@ import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuct
 import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop } from './modes/InteractiveMode';
 import { runTimeLoopLoop } from './modes/DreamModes';
+import { runRapBattleVisualsLoop } from './modes/RapBattleVisualsMode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -51,7 +52,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals';
     title: string;
     description: string;
     config?: {
@@ -172,6 +173,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     silent_film: runSilentFilmLoop,
     standup: runStandupLoop,
     meltdown: runMeltdownLoop,
+    dating_show: runDatingShowLoop,
+    silent_treatment: runSilentTreatmentLoop,
+    rap_battle_visuals: runRapBattleVisualsLoop
 };
 
 export class Director {
