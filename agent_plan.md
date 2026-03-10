@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features (Stand-up, Meltdown, Cross-Tab). The velocity feels appropriate for the complexity, so it remains at 3 for now.
+* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features (Rap Battle Visuals, Silent Treatment, Dating Show). The velocity feels appropriate for the complexity, so it remains at 3 for now.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -213,7 +213,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Mystery Mode**: Agents act as detectives solving a crime (or being interrogated).
     *   *Model Pairing*: Qwen2.5-Coder (Detective) vs Hermes-3 (Suspect).
     *   *Implementation*: `Director.runMysteryLoop` (CreativeMode).
-* [ ] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
+* [x] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
 
 ### Phase 10: Advanced Cloud Features
 * [ ] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
@@ -231,7 +231,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Implementation*: `Director.runPhilosopherLoop`.
 * [x] **Alien First Contact**: Agents try to communicate with an alien entity (the User) using math, music, or mime.
     *   *Implementation*: `Director.runAlienLoop`.
-* [ ] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
+* [x] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
 
 ### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
 * [ ] **IndexedDB Migration**: Move local storage from `localStorage` (5MB limit) to `IndexedDB` to support years of conversation history.
@@ -293,8 +293,30 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
 * [x] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
 
+### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
+1.  **Phase A: Local-First Migration**
+    *   Goal: Overcome `localStorage` 5MB limit.
+    *   Action: Integrate `idb-keyval` or `Dexie.js` to handle `MemoryManager` episode saving and local recall.
+    *   Outcome: Support massive localized histories without HF integration as a baseline.
+2.  **Phase B: Intelligent Syncing**
+    *   Goal: Seamlessly push local IndexedDB episodes to Hugging Face datasets.
+    *   Action: Refine the background sync queue to handle chunked uploads and timestamp-based conflict resolution, preventing offline sessions from overwriting online ones.
+3.  **Phase C: Universal Recall (RAG)**
+    *   Goal: Give agents context of the past automatically.
+    *   Action: Use a lightweight vector store (e.g. `voy`) inside a WebWorker. Index fetched "Previous Episode Summaries" and allow `GroupChatManager` to silently query the DB based on user keywords before generating a response.
+    *   Action: Specifically, pull down an overarching `summary.json` at boot time to prime the context window immediately while large histories stream into the IndexedDB backend.
+
+### Phase 20: The "Beyond Reality" Expansion (New Modes)
+* [ ] **The Intervention Mode**: Agents hold a serious, emotionally charged intervention for the user's bizarre behavior (e.g. "We need to talk about your addiction to the codebase").
+    *   *Model Pairing*: Qwen2.5 (Facts) vs Hermes-3 (Emotional outbursts).
+* [ ] **Ghost Hunters Mode**: Agents are paranormal investigators exploring a haunted location.
+    *   *Model Pairing*: Llama-3 (Skeptic) vs Hermes-3 (Overly dramatic believer).
+* [ ] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
+    *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
+* [ ] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
+
 ### Phase 19: The Dream Expansion (New Modes)
 * [x] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
 * [x] **News Anchor Meltdown**: A reporter mode where the teleprompter breaks, forcing agents to improvise absurd news.
-* [ ] **The Silent Treatment Mode**: Agents stubbornly refuse to speak, forcing the user to talk.
-* [ ] **Dating Show Contestants**: Agents try to woo the user in a dating game show.
+* [x] **The Silent Treatment Mode**: Agents stubbornly refuse to speak, forcing the user to talk.
+* [x] **Dating Show Contestants**: Agents try to woo the user in a dating game show.
