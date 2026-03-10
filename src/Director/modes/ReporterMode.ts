@@ -156,3 +156,59 @@ function generateTickerHeadline(topic: string): string {
     ];
     return templates[Math.floor(Math.random() * templates.length)];
 }
+
+export async function runMeltdownLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.meltdownTopic || 'local weather patterns';
+    const anchor = 'comedian';
+    const coAnchor = 'philosopher';
+    const expert = 'scientist';
+
+    ctx.callbacks.onMessage('Director', `📺 LIVE NEWS: ${topic}`, '#4ecdc4');
+
+    // Normal intro
+    ctx.callbacks.onTurnStart(anchor);
+    await ctx.manager.chatForAgent(anchor, `(You are a highly professional news anchor presenting a story about "${topic}". Be serious and confident.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    // The breakdown
+    ctx.callbacks.onMessage('Director', `🚨 ERROR: TELEPROMPTER BROKE! 🚨`, '#ff0000');
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        if (ctx.interruptQueue.length > 0) {
+            const heckle = ctx.interruptQueue.shift()!;
+            ctx.callbacks.onMessage('Producer', `"${heckle}"`, '#ff6b6b');
+            await ctx.manager.chatForAgent(anchor, `(The producer yelled in your earpiece: "${heckle}". React live on air!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+            continue;
+        }
+
+        if (!ctx.isRunning()) break;
+
+        // Anchor spirals
+        await ctx.manager.chatForAgent(anchor, `(The teleprompter is completely broken. You are live on air discussing "${topic}". Panic and start making up the most ridiculous, unhinged conspiracy theories to fill time!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, { speed: 1.2 }));
+
+        if (!ctx.isRunning()) break;
+
+        // Co-anchor tries to save it
+        if (round % 2 === 0) {
+            await ctx.manager.chatForAgent(coAnchor, `(You are the co-anchor. The main anchor is having a live meltdown. Try to salvage the segment and bring it back to logical facts.)`, async (s) => await ctx.callbacks.onSpeak(s, coAnchor, {}));
+        } else {
+            // Expert makes it worse
+            await ctx.manager.chatForAgent(expert, `(You are the live field expert. Validate the anchor's insane conspiracy theory using fake science jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
+        }
+
+        if (ctx.callbacks.onTicker) {
+            const panicHeadlines = [
+                `BREAKING: WE DON'T KNOW WHAT'S HAPPENING`,
+                `UPDATE: EVERYTHING IS A LIE`,
+                `LIVE: ANCHOR SWEATING PROFUSELY`,
+                `NEWS: IS THE MOON REAL?`,
+                `ALERT: PLEASE SEND HELP`
+            ];
+            ctx.callbacks.onTicker(panicHeadlines[Math.floor(Math.random() * panicHeadlines.length)]);
+        }
+
+        round++;
+        await new Promise(r => setTimeout(r, 1200));
+    }
+}

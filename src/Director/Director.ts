@@ -4,7 +4,7 @@ import { MemoryManager } from './MemoryManager';
 import type { ModeContext } from './modes/ModeContext';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
-import { runReporterLoop } from './modes/ReporterMode';
+import { runReporterLoop, runMeltdownLoop } from './modes/ReporterMode';
 import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop } from './modes/InteractiveMode';
 import { runMysteryLoop, runPitchLoop, runSilentFilmLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
@@ -12,7 +12,7 @@ import { runTherapyLoop } from './modes/TherapyMode';
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
 import { runTimeTravelLoop, runChefLoop, runMedicalLoop } from './modes/DreamModes';
-import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop } from './modes/PerformanceMode';
+import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
 import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop } from './modes/ExpandedRealityModes';
 import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop } from './modes/InteractiveMode';
@@ -51,7 +51,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown';
     title: string;
     description: string;
     config?: {
@@ -72,6 +72,8 @@ export interface Scenario {
         debateTopic?: string;
         musicalStyle?: string;
         musicalTopic?: string;
+        standupTopic?: string;
+        meltdownTopic?: string;
         podcastConfig?: {
             host: string;
             guest: string;
@@ -168,6 +170,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     superhero: runSuperheroLoop,
     conspiracy: runConspiracyLoop,
     silent_film: runSilentFilmLoop,
+    standup: runStandupLoop,
+    meltdown: runMeltdownLoop,
 };
 
 export class Director {
@@ -179,11 +183,25 @@ export class Director {
     private interruptQueue: string[] = [];
     private inputPromise: { resolve: (text: string) => void, reject: (reason?: any) => void } | null = null;
     private memoryManager: MemoryManager | null = null;
+    private broadcastChannel: BroadcastChannel | null = null;
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks, memoryManager?: MemoryManager) {
         this.manager = manager;
         this.callbacks = callbacks;
         this.memoryManager = memoryManager || null;
+
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                this.broadcastChannel = new BroadcastChannel('jokesters_crosstab');
+                this.broadcastChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === 'heckle' && event.data.text && this.isRunning) {
+                        this.interruptQueue.push(`[FROM ANOTHER TAB]: ${event.data.text}`);
+                    }
+                };
+            }
+        } catch (e) {
+            console.warn('BroadcastChannel not supported or failed to initialize:', e);
+        }
     }
 
     public setChaosLevel(level: number) {
@@ -313,6 +331,12 @@ export class Director {
         console.log(`Director received interrupt: ${text}`);
         this.interruptQueue.push(text);
         this.callbacks.onMessage('System', `🗣️ Heckler detected: "${text}"`, '#ff6b6b');
+
+        try {
+            this.broadcastChannel?.postMessage({ type: 'heckle', text });
+        } catch (e) {
+            console.warn('Failed to broadcast heckle:', e);
+        }
 
         if (this.manager) {
             await this.manager.interrupt();
