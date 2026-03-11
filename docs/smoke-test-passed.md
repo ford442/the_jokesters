@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-02-22T17:22:02.170859
+**Test Date:** 2026-03-11T12:06:49.632246
 
 ## Test Summary
 
@@ -17,11 +17,11 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 6.6s |
-| Load Time | 0.5s |
-| JS Heap Memory | 391.0 MB |
-| Console Errors | 5 |
-| Console Warnings | 5 |
+| Build Time | 11.2s |
+| Load Time | 3.3s |
+| JS Heap Memory | 57.5 MB |
+| Console Errors | 4 |
+| Console Warnings | 2 |
 
 ## Agents Tested
 
@@ -54,17 +54,15 @@ The following 5 personas are configured:
 
 ## Console Output
 
-**Errors (5):**
+**Errors (4):**
 - WebGPU adapter not available...
 - [Supertonic] Error locating/loading JSON configs: Error: Could not locate tts.json at ./tts/onnx or ...
 - AudioEngine Init Failed: Error: Could not locate tts.json at ./tts/onnx or common locations: ./tts/o...
-- Failed to initialize GroupChatManager (attempt 1/3): Error: Unable to find a compatible GPU. This is...
-- Failed to initialize GroupChatManager (attempt 2/3): Error: Unable to find a compatible GPU. This is...
+- Initialization error: Error: Could not locate tts.json at ./tts/onnx or common locations: ./tts/onnx...
 
-**Warnings (5):**
-- No available adapters....
-- [.WebGL-0x36dc00137c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall du...
-- AudioEngine init failed, proceeding without TTS: Error: Could not locate tts.json at ./tts/onnx or c...
+**Warnings (2):**
+- Failed to create WebGPU Context Provider...
+- [GroupMarkerNotSet(crbug.com/242999)!:A0501800D4200000]Automatic fallback to software WebGL has been...
 
 ## Notes
 
