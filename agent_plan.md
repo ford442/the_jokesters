@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features (Rap Battle Visuals, Silent Treatment, Dating Show). The velocity feels appropriate for the complexity, so it remains at 3 for now.
+* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features: Semantic Search across episodes, Community Scripts from HF, and Visual Context (Vision) support. The velocity feels appropriate for the complexity, so it remains at 3 for now.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -151,7 +151,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   [x] Fetch "Previous Episode Summaries" at boot.
         *   *Action*: `MemoryManager.loadLastEpisode()` should fetch `episodes/latest.json` or query file list.
         *   *Action*: Inject summary into `GroupChatManager` system prompt on init.
-    *   [ ] Add semantic search across fetched "Previous Episode Summaries" using a lightweight vector store.
+    *   [x] Add semantic search across fetched "Previous Episode Summaries" using a lightweight vector store.
 
 ### Phase 5: New Creative Modes
 * [x] **Roast Battle Mode**:
@@ -174,7 +174,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 7: Deep Cloud Integration (The "Dream")
 * [x] **Automated Sync**: Automatically save episodes to HF Dataset when a scene ends.
 * [x] **Continuity**: Fetch "Previous Episode Summary" from HF at boot and inject into Agent context.
-* [ ] **Community Scripts**: Load scripts from a shared/public HF dataset.
+* [x] **Community Scripts**: Load scripts from a shared/public HF dataset.
 * [x] **Voice Input**: Add STT (Browser API) to allow user to speak to agents.
 
 ### Phase 7: Deep Immersion (Dreams)
@@ -184,7 +184,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Interactive Fiction / Dungeon Master**:
     *   One agent acts as DM, others as players + User.
     *   Implemented `Director.runDungeonMasterLoop`.
-* [ ] **Visual Context (Vision)**:
+* [x] **Visual Context (Vision)**:
     *   Agents react to user-uploaded images or webcam feed.
     *   Implemented: `Director.runVisionLoop` + Multimodal support in `GroupChatManager`.
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
@@ -307,6 +307,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Action: Specifically, pull down an overarching `summary.json` at boot time to prime the context window immediately while large histories stream into the IndexedDB backend.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
+* [ ] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
+    *   *Model Pairing*: Qwen2.5-Coder (Scientist: Calculates timeline risks) vs Hermes-3 (Philosopher: Argues the ethics of destiny).
 * [ ] **The Intervention Mode**: Agents hold a serious, emotionally charged intervention for the user's bizarre behavior (e.g. "We need to talk about your addiction to the codebase").
     *   *Model Pairing*: Qwen2.5 (Facts) vs Hermes-3 (Emotional outbursts).
 * [ ] **Ghost Hunters Mode**: Agents are paranormal investigators exploring a haunted location.

@@ -463,8 +463,11 @@ export class Director {
         if (!this.memoryManager) return null;
         try {
             const results = this.memoryManager.searchLocalEpisodes(topic);
-            if (results.length > 0) {
-                const snippets = results.map(r => `(Episode ${r.episodeId}): ${r.snippet}`).join('\n');
+            const fetchedResults = await this.memoryManager.searchFetchedSummaries(topic);
+            const allResults = [...results, ...fetchedResults].slice(0, 3);
+
+            if (allResults.length > 0) {
+                const snippets = allResults.map(r => `(Episode ${r.episodeId}): ${r.snippet}`).join('\n');
                 return `(MEMORY RECALL: You vaguely remember discussing "${topic}" before. Reference these past moments if relevant:\n${snippets})`;
             }
         } catch (e) {

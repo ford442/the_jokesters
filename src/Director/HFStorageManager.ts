@@ -117,4 +117,31 @@ export class HFStorageManager {
             return null;
         }
     }
+
+    /**
+     * Downloads a file from a public Hugging Face Dataset (no token required).
+     * @param repoId The repository ID (e.g., "TheJokesters/community-scripts").
+     * @param filename The path/filename in the repo.
+     */
+    public async loadCommunityScript(repoId: string, filename: string): Promise<string | null> {
+        let cleanRepoId = repoId;
+        if (cleanRepoId.startsWith("datasets/")) {
+            cleanRepoId = cleanRepoId.replace("datasets/", "");
+        }
+
+        const url = `https://huggingface.co/datasets/${cleanRepoId}/resolve/main/${filename}`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                if (response.status === 404) return null; // File not found
+                throw new Error(`HF Community Script Download failed: ${response.status}`);
+            }
+
+            return await response.text();
+        } catch (error) {
+            console.error("HF Community Script Download failed:", error);
+            return null;
+        }
+    }
 }

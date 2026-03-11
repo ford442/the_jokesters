@@ -180,6 +180,12 @@ export class MemoryManager {
         return JSON.parse(content);
     }
 
+    public async loadCommunityScript(repoId: string, filename: string): Promise<any | null> {
+        const content = await this.hfStorage.loadCommunityScript(repoId, filename);
+        if (!content) return null;
+        return JSON.parse(content);
+    }
+
     public listEpisodes(): string[] {
         const episodes: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -219,5 +225,74 @@ export class MemoryManager {
             }
         }
         return results.slice(0, 3);
+    }
+
+    private cloudSummaryCache: any = null;
+
+    private async ensureCloudSummaryCache(): Promise<void> {
+        if (this.cloudSummaryCache) return;
+        if (!this.hfToken || !this.hfRepoId) return;
+
+        try {
+            const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
+            if (content) {
+                this.cloudSummaryCache = JSON.parse(content);
+            }
+        } catch (e) {
+            console.warn('Failed to fetch summary cache:', e);
+        }
+    }
+
+    private calculateSimilarityScore(query: string, text: string): number {
+        // Lightweight tf-idf / keyword overlap simulation (Vector RAG)
+        const queryWords = query.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+        const textWords = text.toLowerCase().split(/\W+/);
+
+        let score = 0;
+        for (const word of queryWords) {
+            if (textWords.includes(word)) score += 1;
+        }
+        return score;
+    }
+
+    public async searchFetchedSummaries(query: string): Promise<{ episodeId: string, snippet: string }[]> {
+        await this.ensureCloudSummaryCache();
+
+        const results: { episodeId: string, snippet: string, score: number }[] = [];
+
+        if (this.cloudSummaryCache && this.cloudSummaryCache.history && Array.isArray(this.cloudSummaryCache.history)) {
+            for (const msg of this.cloudSummaryCache.history) {
+                if (msg.content && typeof msg.content === 'string') {
+                    const score = this.calculateSimilarityScore(query, msg.content);
+                    if (score > 0) {
+                        // Extract a snippet centered around the first matched word
+                        const normalizedContent = msg.content.toLowerCase();
+                        const queryWords = query.toLowerCase().split(/\W+/).filter(w => w.length > 3);
+                        let firstMatchIdx = -1;
+
+                        for (const word of queryWords) {
+                            const idx = normalizedContent.indexOf(word);
+                            if (idx !== -1) {
+                                firstMatchIdx = idx;
+                                break;
+                            }
+                        }
+
+                        let snippet = msg.content;
+                        if (firstMatchIdx !== -1) {
+                            const start = Math.max(0, firstMatchIdx - 50);
+                            const end = Math.min(msg.content.length, firstMatchIdx + 50 + query.length);
+                            snippet = (start > 0 ? '...' : '') + msg.content.substring(start, end) + (end < msg.content.length ? '...' : '');
+                        }
+
+                        results.push({ episodeId: 'latest-cloud', snippet: `[${msg.role}]: ${snippet}`, score });
+                    }
+                }
+            }
+        }
+
+        // Sort by score descending and return top matches
+        results.sort((a, b) => b.score - a.score);
+        return results.slice(0, 3).map(r => ({ episodeId: r.episodeId, snippet: r.snippet }));
     }
 }
