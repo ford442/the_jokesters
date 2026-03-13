@@ -1,4 +1,5 @@
 import * as webllm from '@mlc-ai/web-llm'
+import { appConfig, defaultModelId, OPTIMIZED_MODELS } from './config/models'
 
 // ============================================================================
 // PROFANITY LEVEL CONFIGURATION
@@ -81,43 +82,82 @@ export class GroupChatManager {
   ): Promise<void> {
     if (this.isInitialized) return
 
-    try {
-      /*
-      // Define custom Vicuna model configuration
-      const customModel = {
-        model_id: "ford442/vicuna-7b-q4f32-webllm",
-        model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
-        model_lib: "./Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
-        vram_required_MB: 4096,
-        low_resource_required: false,
-      };
-
-      const appConfig = {
-        model_list: [customModel],
-        use_indexed_db: true,
-      };
-      */
-
-      console.log('Loading Hermes-3-Llama-3.2-3B model...');
-
-      // Follow the official example format
-      this.engine = await webllm.CreateMLCEngine(
-        "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-        {
-          // appConfig: appConfig,
-          initProgressCallback: onProgress
-        }, // engineConfig
-        {
-          repetition_penalty: 1.15
-        } // chatOpts (optional)
-      );
-
-      this.isInitialized = true
-      console.log('GroupChatManager initialized successfully with custom Vicuna model')
-    } catch (error) {
-      console.error('Failed to initialize GroupChatManager:', error)
-      throw error
+    // Pre-check WebGPU availability before attempting model load
+    if (!(navigator as unknown as { gpu?: unknown }).gpu) {
+      throw new Error(
+        'WebGPU is not supported in this browser. ' +
+        'Please use Chrome 113+ or Edge 113+ with WebGPU enabled.'
+      )
     }
+
+    // Model fallback chain: prefer optimized q4f16, fall back to alternatives
+    const modelFallbacks = [
+      defaultModelId,                                       // Hermes-3-3B-q4f16 (primary)
+      OPTIMIZED_MODELS.LLAMA_3_2_3B_Q4F16.model_id,       // Llama-3.2-3B-q4f16 (fallback)
+      OPTIMIZED_MODELS.HERMES_3_3B_Q4F16.model_id,        // Hermes-3-3B-q4f16 (retry same, clears cache)
+    ]
+
+    let lastError: unknown = null
+
+    for (let i = 0; i < modelFallbacks.length; i++) {
+      const modelId = modelFallbacks[i]
+      // Skip duplicates (e.g. if defaultModelId already matches a fallback entry)
+      if (i > 0 && modelId === modelFallbacks[i - 1]) continue
+
+      console.log(`Loading model [${i + 1}/${modelFallbacks.length}]: ${modelId}`)
+
+      try {
+        this.engine = await webllm.CreateMLCEngine(
+          modelId,
+          {
+            appConfig,          // Provides correct WASM lib URLs and context window settings
+            initProgressCallback: onProgress,
+          },
+          {
+            repetition_penalty: 1.15,
+          }
+        )
+
+        this.isInitialized = true
+        console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
+        return
+
+      } catch (error) {
+        lastError = error
+        const msg = error instanceof Error ? error.message : String(error)
+
+        // Categorize the failure for better diagnostics
+        if (msg.includes('exit(1)') || msg.includes('ExitStatus')) {
+          console.warn(
+            `[ModelLoader] Model ${modelId} failed with WASM exit — likely GPU OOM or WASM mismatch.`,
+            error
+          )
+        } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('ERR_')) {
+          console.warn(
+            `[ModelLoader] Model ${modelId} failed with network error — CDN or cache issue.`,
+            error
+          )
+        } else {
+          console.warn(`[ModelLoader] Model ${modelId} failed:`, error)
+        }
+
+        // Try next fallback, unless this is the last one
+        if (i < modelFallbacks.length - 1) {
+          const nextModel = modelFallbacks[i + 1]
+          if (nextModel !== modelId) {
+            onProgress?.({
+              progress: 0,
+              timeElapsed: 0,
+              text: `Model load failed, trying fallback: ${nextModel}…`,
+            })
+          }
+        }
+      }
+    }
+
+    // All fallbacks exhausted
+    console.error('Failed to initialize GroupChatManager after all fallbacks:', lastError)
+    throw lastError
   }
 
   private buildSystemMessage(
