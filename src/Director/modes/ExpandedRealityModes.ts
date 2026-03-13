@@ -382,3 +382,43 @@ export async function runConspiracyLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * Ghost Hunters Mode
+ * Agents are paranormal investigators exploring a haunted location.
+ */
+export async function runGhostHuntersLoop(scenario: Scenario, ctx: ModeContext) {
+    const location = scenario.config?.hauntedLocation || 'an abandoned spaghetti factory';
+    ctx.callbacks.onMessage('Director', `👻 GHOST HUNTERS: Investigating ${location}`, '#8e44ad');
+
+    const skeptic = 'scientist'; // Llama-3: Tries to find logical explanations
+    const believer = 'comedian'; // Hermes-3: Overly dramatic, feels cold spots
+    const medium = 'philosopher'; // The Spiritual Medium
+
+    // 1. Believer Intro
+    ctx.callbacks.onTurnStart(believer);
+    await ctx.manager.chatForAgent(believer, `(You are the lead investigator of a cheesy ghost hunting TV show. We are currently in "${location}". Whisper dramatically to the camera (the user). Claim you just felt a cold spot or saw an orb. Ask the user if they saw it too!)`, async (s) => await ctx.callbacks.onSpeak(s, believer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Camera Operator (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Skeptic Debunks
+        await ctx.manager.chatForAgent(skeptic, `(SKEPTIC: The camera operator (user) said: "${userInput}". Aggressively debunk it. Provide a completely mundane, boring, and highly technical explanation for what they think they saw in "${location}". (e.g., "That's not a ghost, it's a draft from the HVAC system").)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Medium Senses Something
+        await ctx.manager.chatForAgent(medium, `(SPIRITUAL MEDIUM: The user said: "${userInput}". Suddenly fall into a brief trance. Describe a very specific, mundane, or absurd ghost from "${location}" that is trying to communicate through you. (e.g., "The ghost of a 19th-century accountant wants to know if you kept the receipts").)`, async (s) => await ctx.callbacks.onSpeak(s, medium, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Believer Panics
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(believer, `(BELIEVER: The medium is in a trance, and the skeptic is ruining the show! React with sheer panic and dramatic flair to whatever the user said: "${userInput}". Scream! Run away! Demand the cameras keep rolling!)`, async (s) => await ctx.callbacks.onSpeak(s, believer, {}));
+        }
+    }
+}

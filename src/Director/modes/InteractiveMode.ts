@@ -313,3 +313,42 @@ export async function runSilentTreatmentLoop(_scenario: Scenario, ctx: ModeConte
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+/**
+ * Intervention Mode
+ * Agents hold a serious, emotionally charged intervention for the user's bizarre behavior.
+ */
+export async function runInterventionLoop(scenario: Scenario, ctx: ModeContext) {
+    const addiction = scenario.config?.interventionTopic || 'addiction to writing recursive functions';
+    ctx.callbacks.onMessage('Director', `🛋️ THE INTERVENTION: Confronting the User's ${addiction}`, '#e74c3c');
+
+    const scientist = 'scientist'; // Qwen2.5: Facts & statistics
+    const comedian = 'comedian'; // Hermes-3: Emotional outbursts & crying
+    const philosopher = 'philosopher'; // The disappointed parent figure
+
+    // 1. Philosopher Intro
+    ctx.callbacks.onTurnStart(philosopher);
+    await ctx.manager.chatForAgent(philosopher, `(You are hosting an intervention for the user's "${addiction}". You are deeply disappointed but trying to be supportive. Begin by reading a prepared letter starting with: "Dear [User], your ${addiction} has affected us in the following ways...")`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Determine who speaks next
+        const roll = Math.random();
+
+        if (roll < 0.4) {
+            // Scientist Facts
+            await ctx.manager.chatForAgent(scientist, `(SCIENTIST: The user said: "${userInput}". Read a shocking (and absurd) statistic or medical fact about the dangers of "${addiction}". Show them a "chart" (describe it).)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        } else if (roll < 0.7) {
+            // Comedian Emotional Breakdown
+            await ctx.manager.chatForAgent(comedian, `(COMEDIAN: The user said: "${userInput}". Have a complete emotional breakdown. Cry uncontrollably. Share a bizarre personal anecdote about how their "${addiction}" ruined your birthday/wedding/life.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        } else {
+            // Philosopher Disappointment
+            await ctx.manager.chatForAgent(philosopher, `(PHILOSOPHER: The user said: "${userInput}". Respond with a deep, heavy sigh. Express profound existential disappointment. Tell them they are avoiding reality.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        }
+    }
+}
