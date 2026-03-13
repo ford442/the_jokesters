@@ -72,8 +72,8 @@ async function initApp() {
   const setProgress = (status: string, percentage: number) => {
     const progressBar = document.getElementById('progress') as HTMLDivElement
     const statusText = document.getElementById('status')!
-    progressBar.style.width = `${percentage}%`
-    statusText.textContent = status
+    if (progressBar) progressBar.style.width = `${percentage}%`
+    if (statusText) statusText.textContent = status
   }
 
   // Helper to enable/disable all interactive inputs
@@ -103,10 +103,29 @@ async function initApp() {
       <h1>The Jokesters</h1>
       <p class="subtitle">Multi-Agent Chat powered by Llama-3 & WebGPU</p>
       <div id="loading" class="loading">
-        <div class="progress-bar">
-          <div id="progress" class="progress-fill"></div>
+        <!-- Model picker (shown before loading starts) -->
+        <div id="model-picker" style="width:100%;max-width:480px;margin:0 auto;">
+          <h3 style="color:#4ecdc4;margin:0 0 6px;font-size:1.1em;">Choose Your AI Model</h3>
+          <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">All models run locally in your browser via WebGPU. Weights are cached after the first download.</p>
+          <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
+            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · Fast · ~2 GB VRAM ★ Recommended</option>
+            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · Fast · ~2.5 GB VRAM</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · All GPUs · ~2 GB VRAM (no f16 needed)</option>
+            <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · All GPUs · ~2.5 GB VRAM (no f16 needed)</option>
+            <option value="ford442/vicuna-7b-q4f32-webllm">Vicuna 7B q4f32 · All GPUs · ~4 GB VRAM (Llama-2 based)</option>
+            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
+            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
+          </select>
+          <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:2em;margin:0 0 12px;"></p>
+          <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
         </div>
-        <p id="status">Initializing WebLLM...</p>
+        <!-- Progress bar (hidden until launch) -->
+        <div id="progress-section" style="display:none;width:100%;">
+          <div class="progress-bar">
+            <div id="progress" class="progress-fill"></div>
+          </div>
+          <p id="status">Initializing WebLLM...</p>
+        </div>
       </div>
       <div id="chat-container" class="chat-container" style="display: none;">
         <canvas id="scene"></canvas>
@@ -189,6 +208,31 @@ async function initApp() {
     </div>
   `
 
+  // Wire up model picker — must run after app.innerHTML is set
+  const modelSelectLaunch = document.getElementById('model-select-launch') as HTMLSelectElement
+  const modelHint = document.getElementById('model-launch-hint')!
+  const MODEL_HINTS: Record<string, string> = {
+    'Hermes-3-Llama-3.2-3B-q4f16_1-MLC':  'Fine-tuned for instruction following. Best default choice on modern GPUs.',
+    'Llama-3.2-3B-Instruct-q4f16_1-MLC':  'Standard Meta 3B model. Good speed/quality on any f16-capable GPU.',
+    'Hermes-3-Llama-3.2-3B-q4f32_1-MLC':  'Same Hermes-3 3B in universal f32 mode — works on GPUs without f16 shader support.',
+    'Llama-3.2-3B-Instruct-q4f32_1-MLC':  'Standard 3B in f32 mode. Compatible with older or integrated GPUs.',
+    'ford442/vicuna-7b-q4f32-webllm':      'Vicuna 7B (Llama-2 based). Larger model, richer responses. ~4 GB VRAM, works on any WebGPU GPU.',
+    'Hermes-3-Llama-3.1-8B-q4f16_1-MLC':  'Best quality available. Requires RTX 30xx / RX 6000 / M1 Pro or better with f16 shader support.',
+    'Llama-3.1-8B-Instruct-q4f16_1-MLC':  'Meta 8B flagship. Excellent reasoning. Requires f16-capable GPU with 5+ GB VRAM.',
+  }
+  const updateModelHint = () => { modelHint.textContent = MODEL_HINTS[modelSelectLaunch.value] ?? '' }
+  modelSelectLaunch.addEventListener('change', updateModelHint)
+  updateModelHint()
+
+  // Wait for user to click Launch before starting initialization
+  const selectedModelId = await new Promise<string>(resolve => {
+    document.getElementById('launch-btn')!.addEventListener('click', () => {
+      document.getElementById('model-picker')!.style.display = 'none'
+      document.getElementById('progress-section')!.style.display = 'block'
+      resolve(modelSelectLaunch.value)
+    })
+  })
+
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
@@ -252,7 +296,7 @@ async function initApp() {
       // Map WebLLM progress (0-1) to 35-90% of total progress
       const percentage = 35 + Math.round(progress.progress * 55)
       setProgress(progress.text, percentage)
-    })
+    }, selectedModelId)
 
     // Stage 4: Final setup and UI binding (90%)
     currentInitState = 'FINALIZING'
