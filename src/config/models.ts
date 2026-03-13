@@ -210,12 +210,13 @@ export const appConfig = {
       overrides: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.overrides,
       vram_required_MB: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.vram_required_MB,
     },
-    // Vicuna 7B kept in registry but NOT in active picker until mlc-chat-config.json is fixed
-    // {
-    //   model: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model,
-    //   model_id: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_id,
-    //   ...
-    // },
+    {
+      model: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model,
+      model_id: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_id,
+      model_lib: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_lib,
+      overrides: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.overrides,
+      vram_required_MB: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.vram_required_MB,
+    },
     // Legacy models (for backward compatibility)
     {
       model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",

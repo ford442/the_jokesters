@@ -113,6 +113,7 @@ async function initApp() {
             <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · All GPUs · ~2 GB VRAM (no f16 needed)</option>
             <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · All GPUs · ~2.5 GB VRAM (no f16 needed)</option>
             <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · All GPUs · ~4 GB VRAM (no f16 needed)</option>
+            <option value="ford442/vicuna-7b-q4f32-webllm">Vicuna 7B q4f32 · All GPUs · ~4 GB VRAM (Llama-2 / Vicuna tuned)</option>
             <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
             <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
           </select>
@@ -217,6 +218,7 @@ async function initApp() {
     'Hermes-3-Llama-3.2-3B-q4f32_1-MLC':  'Same Hermes-3 3B in universal f32 mode — works on GPUs without f16 shader support.',
     'Llama-3.2-3B-Instruct-q4f32_1-MLC':  'Standard 3B in f32 mode. Compatible with older or integrated GPUs.',
     'Llama-2-7b-chat-hf-q4f32_1-MLC':     'Llama-2 7B Chat (Meta). Mid-size model, richer responses than 3B. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
+    'ford442/vicuna-7b-q4f32-webllm':      'Vicuna 7B (Llama-2 fine-tune). Instruction-following specialist. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
     'Hermes-3-Llama-3.1-8B-q4f16_1-MLC':  'Best quality available. Requires RTX 30xx / RX 6000 / M1 Pro or better with f16 shader support.',
     'Llama-3.1-8B-Instruct-q4f16_1-MLC':  'Meta 8B flagship. Excellent reasoning. Requires f16-capable GPU with 5+ GB VRAM.',
   }
