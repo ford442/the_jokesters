@@ -45,6 +45,7 @@ export class GroupChatManager {
   private currentAgentIndex = 0
   private conversationHistory: Message[] = []
   private isInitialized = false
+  private loadedModelId: string | null = null
 
   // Style instruction - can be changed at runtime via setProfanityLevel()
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
@@ -77,8 +78,13 @@ export class GroupChatManager {
     return this.currentProfanityLevel
   }
 
+  getLoadedModelId(): string | null {
+    return this.loadedModelId
+  }
+
   async initialize(
-    onProgress?: (progress: webllm.InitProgressReport) => void
+    onProgress?: (progress: webllm.InitProgressReport) => void,
+    preferredModelId?: string
   ): Promise<void> {
     if (this.isInitialized) return
 
@@ -107,7 +113,7 @@ export class GroupChatManager {
     // Build fallback chain based on f16 capability.
     // q4f16_1 = faster/less VRAM but needs f16 shader extension.
     // q4f32_1 = universally compatible fallback.
-    const modelFallbacks = supportsF16
+    const autoFallbacks = supportsF16
       ? [
           defaultModelId,                                   // Hermes-3-3B-q4f16 (primary)
           OPTIMIZED_MODELS.LLAMA_3_2_3B_Q4F16.model_id,   // Llama-3.2-3B-q4f16 (fallback)
@@ -116,6 +122,11 @@ export class GroupChatManager {
           'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',            // Hermes-3-3B-q4f32 (compatible primary)
           'Llama-3.2-3B-Instruct-q4f32_1-MLC',            // Llama-3.2-3B-q4f32 (compatible fallback)
         ]
+
+    // If user explicitly chose a model, try it first, then fall back to auto chain
+    const modelFallbacks = preferredModelId
+      ? [preferredModelId, ...autoFallbacks.filter(id => id !== preferredModelId)]
+      : autoFallbacks
 
     console.log(`[ModelLoader] Using ${supportsF16 ? 'f16 (optimized)' : 'f32 (compatible)'} model chain:`, modelFallbacks)
 
@@ -141,6 +152,7 @@ export class GroupChatManager {
         )
 
         this.isInitialized = true
+        this.loadedModelId = modelId
         console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
         return
 
