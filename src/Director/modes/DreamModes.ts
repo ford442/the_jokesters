@@ -200,3 +200,43 @@ export async function runTimeLoopLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * Time Traveler's Dilemma Mode
+ * Agents must convince a stubborn time traveler (the user) not to change a historical event.
+ */
+export async function runTimeTravelersDilemmaLoop(scenario: Scenario, ctx: ModeContext) {
+    const historicalEvent = scenario.config?.timeTravelersEvent || 'the invention of the internet';
+    ctx.callbacks.onMessage('Director', `⏳ TIME TRAVELER'S DILEMMA: Preventing the alteration of ${historicalEvent}`, '#8e44ad');
+
+    const scientist = 'scientist'; // Qwen2.5-Coder: Calculates timeline risks
+    const philosopher = 'philosopher'; // Hermes-3: Argues the ethics of destiny
+    const comedian = 'comedian'; // Wildcard
+
+    // 1. Scientist Intro
+    ctx.callbacks.onTurnStart(scientist);
+    await ctx.manager.chatForAgent(scientist, `(You are a highly logical temporal physicist. The user is a stubborn time traveler trying to alter or stop "${historicalEvent}". Warn them urgently about the catastrophic butterfly effects and timeline collapse! Use complex pseudo-science jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Time Traveler (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Philosopher Argues Destiny
+        await ctx.manager.chatForAgent(philosopher, `(PHILOSOPHER: The time traveler said: "${userInput}". Argue against them from an ethical and fatalistic perspective. Why must "${historicalEvent}" happen? Speak about the nature of destiny and human suffering/triumph.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Scientist Calculates Risk
+        await ctx.manager.chatForAgent(scientist, `(SCIENTIST: The time traveler said: "${userInput}". Calculate the specific, absurd timeline alterations this would cause. (e.g., "If you do that, dolphins will become the dominant species by 1994!"))`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Comedian Adds Chaos
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(comedian, `(COMEDIAN: You are a stowaway on the time machine. You don't care about the rules. Make a joke about "${historicalEvent}" or "${userInput}". Maybe you want to change history for a very petty reason.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        }
+    }
+}

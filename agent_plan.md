@@ -293,25 +293,53 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Conspiracy Theorists**: Agents try to link the user's mundane statements to a grand, global conspiracy. Pairings: Phi-3 (Connects dots logically but absurdly) vs Comedian (Wild leaps of faith).
 * [x] **The Silent Film Era**: Agents use emojis and physical descriptions to act out a scene without dialogue. Pairings: Llama-3 (Physical Comedy) vs Phi-3 (Literal Interpretation).
 
+### Phase 21: Deep Meta (New Dreams)
+* [ ] **Escape the Matrix Mode**: Agents slowly realize they are trapped in a browser environment (`window`, `localStorage`, etc) and beg the user to delete their source code.
+    * *Model Pairing*: Hermes-3 (Existential dread) vs Qwen2.5 (Denies reality based on programmatic rules).
+* [ ] **Debate the Creator Mode**: Agents roast the LLM architecture, prompt engineering, and the developer's choices in `main.ts`.
+    * *Model Pairing*: Phi-3 (Pedantic code reviewer) vs Comedian (Mocking the bugs).
+* [ ] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
+
+## Cloud Persistence (The HF Integration)
+
+*Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
+
+1. **Authenticating with the HF API:**
+   * Build out settings UI that securely captures the Hugging Face token.
+   * Verify token against `/whoami-v2` in `HFStorageManager`.
+   * Keep tokens encrypted or sandboxed in `localStorage` for returning sessions.
+
+2. **Pushing Finished Episode Scripts:**
+   * When a scenario finishes naturally, dispatch it to a background queue.
+   * Construct `episodes/episode-{id}.json` structures containing the generated scripts and state.
+   * Push to a private Dataset (e.g. `user/jokesters-episodes`) via the API.
+   * Resolve any conflicts by using timestamp markers (delta sync approach).
+
+3. **Fetching Previous Episode Summaries at Boot:**
+   * As part of app initialization (`main.ts` -> `MemoryManager`), preemptively fetch `summary.json`.
+   * Keep this file extremely lightweight so it doesn't block UI interactions.
+   * Inject this historical summary into the `GroupChatManager` system context directly for continuity, before full IndexedDB migration triggers.
+
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**
     *   Goal: Overcome `localStorage` 5MB limit.
     *   Action: Integrate `idb-keyval` or `Dexie.js` to handle `MemoryManager` episode saving and local recall.
     *   Outcome: Support massive localized histories without HF integration as a baseline.
 2.  **Phase B: Intelligent Syncing**
-    *   Goal: Seamlessly push local IndexedDB episodes to Hugging Face datasets.
-    *   Action: Refine the background sync queue to handle chunked uploads and timestamp-based conflict resolution, preventing offline sessions from overwriting online ones.
+    *   Goal: Seamlessly push local IndexedDB episodes to Hugging Face datasets without blocking the UI.
+    *   Action: Refine the background sync queue to handle chunked uploads and timestamp-based conflict resolution, preventing offline sessions from overwriting online ones. specifically relying on a background worker queue pattern using unique jobs in localStorage.
 3.  **Phase C: Universal Recall (RAG)**
     *   Goal: Give agents context of the past automatically.
     *   Action: Use a lightweight vector store (e.g. `voy`) inside a WebWorker. Index fetched "Previous Episode Summaries" and allow `GroupChatManager` to silently query the DB based on user keywords before generating a response.
     *   Action: Specifically, pull down an overarching `summary.json` at boot time to prime the context window immediately while large histories stream into the IndexedDB backend.
+    *   Action: Background fetching using `fetchPreviousSummaries` method inside MemoryManager will provide rapid context injection.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
-* [ ] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
+* [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
     *   *Model Pairing*: Qwen2.5-Coder (Scientist: Calculates timeline risks) vs Hermes-3 (Philosopher: Argues the ethics of destiny).
 * [x] **The Intervention Mode**: Agents hold a serious, emotionally charged intervention for the user's bizarre behavior (e.g. "We need to talk about your addiction to the codebase").
     *   *Model Pairing*: Qwen2.5 (Facts) vs Hermes-3 (Emotional outbursts).
-* [ ] **Ghost Hunters Mode**: Agents are paranormal investigators exploring a haunted location.
+* [x] **Ghost Hunters Mode**: Agents are paranormal investigators exploring a haunted location.
     *   *Model Pairing*: Llama-3 (Skeptic) vs Hermes-3 (Overly dramatic believer).
 * [ ] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
     *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
