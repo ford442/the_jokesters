@@ -9,6 +9,7 @@ import * as webllm from '@mlc-ai/web-llm'
 
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
+import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
 
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
@@ -154,16 +155,21 @@ async function initApp() {
           <!-- Improv Mode Controls -->
           <div id="improv-mode-controls" class="improv-controls" style="display: none;">
             <div class="input-group">
-              <input 
-                type="text" 
-                id="scene-title" 
+              <select id="improv-preset-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #0f3460; color: white; font-size: 0.95em; margin-bottom: 8px;">
+                <option value="">-- Use a Preset Scenario --</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <input
+                type="text"
+                id="scene-title"
                 placeholder="Scene title (e.g., 'At the Coffee Shop')..."
                 autocomplete="off"
               />
             </div>
             <div class="input-group">
-              <textarea 
-                id="scene-description" 
+              <textarea
+                id="scene-description"
                 placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..."
                 rows="3"
                 autocomplete="off"
@@ -499,8 +505,27 @@ async function initApp() {
     // Improv mode controls
     const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
     const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
+    const improvPresetSelect = document.getElementById('improv-preset-select') as HTMLSelectElement
     const startImprovBtn = document.getElementById('start-improv-btn') as HTMLButtonElement
     const stopImprovBtn = document.getElementById('stop-improv-btn') as HTMLButtonElement
+
+    // Populate preset dropdown
+    DEFAULT_IMPROV_SETUPS.forEach(setup => {
+      const option = document.createElement('option')
+      option.value = setup.id
+      option.textContent = setup.title
+      improvPresetSelect.appendChild(option)
+    })
+
+    // Setup preset selection listener
+    improvPresetSelect.addEventListener('change', () => {
+      if (!improvPresetSelect.value) return
+      const selectedSetup = DEFAULT_IMPROV_SETUPS.find(s => s.id === improvPresetSelect.value)
+      if (selectedSetup) {
+        sceneTitleInput.value = selectedSetup.title
+        sceneDescriptionInput.value = selectedSetup.description
+      }
+    })
 
     let isImprovRunning = false
     let prerenderedQueue: Array<{ agentId: string; agentName: string; response: string; sentences: string[] }> = []
