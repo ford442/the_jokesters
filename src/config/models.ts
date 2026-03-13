@@ -121,10 +121,27 @@ export const OPTIMIZED_MODELS = {
   },
 
   /**
-   * Vicuna 7B with 4-bit quantization, fp32 compute
-   * Llama-2 based instruction model from ford442's HF repo
-   * q4f32_1 = universally compatible (no f16 shader required)
+   * Llama-2-7B-chat with 4-bit quantization, fp32 compute
+   * Official mlc-ai build — complete mlc-chat-config, no f16 required
+   * q4f32_1 = universally compatible
    * VRAM: ~4GB
+   */
+  LLAMA_2_7B_Q4F32: {
+    model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
+    model: "https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC",
+    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    overrides: {
+      context_window_size: 4096,
+      prefill_chunk_size: 1024,
+    },
+    vram_required_MB: 4000,
+    recommended_for: ["all_gpus", "mid_size"],
+  },
+
+  /**
+   * Vicuna 7B — ford442's custom WebLLM build
+   * NOTE: requires tokenizer_files + token IDs in mlc-chat-config.json to work.
+   * Until the HF repo config is updated, use LLAMA_2_7B_Q4F32 instead.
    */
   VICUNA_7B_Q4F32: {
     model_id: "ford442/vicuna-7b-q4f32-webllm",
@@ -187,12 +204,18 @@ export const appConfig = {
       vram_required_MB: OPTIMIZED_MODELS.HERMES_3_3B_Q4F16.vram_required_MB,
     },
     {
-      model: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model,
-      model_id: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_id,
-      model_lib: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_lib,
-      overrides: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.overrides,
-      vram_required_MB: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.vram_required_MB,
+      model: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.model,
+      model_id: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.model_id,
+      model_lib: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.model_lib,
+      overrides: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.overrides,
+      vram_required_MB: OPTIMIZED_MODELS.LLAMA_2_7B_Q4F32.vram_required_MB,
     },
+    // Vicuna 7B kept in registry but NOT in active picker until mlc-chat-config.json is fixed
+    // {
+    //   model: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model,
+    //   model_id: OPTIMIZED_MODELS.VICUNA_7B_Q4F32.model_id,
+    //   ...
+    // },
     // Legacy models (for backward compatibility)
     {
       model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
