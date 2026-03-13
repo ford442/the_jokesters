@@ -7,6 +7,68 @@ export class MemoryManager {
     private hfRepoId: string | null = null;
     private isSyncing: boolean = false;
 
+    // IndexedDB Helpers
+    private dbName = 'jokestersDB';
+    private storeName = 'episodes';
+
+    private openDB(): Promise<IDBDatabase> {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, 1);
+            request.onupgradeneeded = (event: any) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(this.storeName)) {
+                    db.createObjectStore(this.storeName);
+                }
+            };
+            request.onsuccess = (event: any) => resolve(event.target.result);
+            request.onerror = (event: any) => reject(event.target.error);
+        });
+    }
+
+    private async idbSet(key: string, val: any): Promise<void> {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.put(val, key);
+            request.onsuccess = () => resolve();
+            request.onerror = (e: any) => reject(e.target.error);
+        });
+    }
+
+    private async idbGet(key: string): Promise<any> {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.get(key);
+            request.onsuccess = (e: any) => resolve(e.target.result);
+            request.onerror = (e: any) => reject(e.target.error);
+        });
+    }
+
+    // private async idbRemove(key: string): Promise<void> {
+    //     const db = await this.openDB();
+    //     return new Promise((resolve, reject) => {
+    //         const tx = db.transaction(this.storeName, 'readwrite');
+    //         const store = tx.objectStore(this.storeName);
+    //         const request = store.delete(key);
+    //         request.onsuccess = () => resolve();
+    //         request.onerror = (e: any) => reject(e.target.error);
+    //     });
+    // }
+
+    private async idbKeys(): Promise<string[]> {
+        const db = await this.openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.getAllKeys();
+            request.onsuccess = (e: any) => resolve(e.target.result as string[]);
+            request.onerror = (e: any) => reject(e.target.error);
+        });
+    }
+
     constructor() {
         this.hfStorage = new HFStorageManager();
         this.loadCloudCredentials();
@@ -60,6 +122,7 @@ export class MemoryManager {
 
     public saveEpisode(episodeId: string, data: any): void {
         this.save(`episode-${episodeId}`, data);
+        this.idbSet(`episode-${episodeId}`, data).catch(e => console.error(e));
 
         // Save summary locally
         if (data.history && Array.isArray(data.history)) {
@@ -168,7 +231,11 @@ export class MemoryManager {
         }
     }
 
-    public loadEpisode(episodeId: string): any | null {
+    public async loadEpisode(episodeId: string): Promise<any | null> {
+        try {
+            const data = await this.idbGet(`episode-${episodeId}`);
+            if (data) return data;
+        } catch(e) {}
         return this.load(`episode-${episodeId}`);
     }
 
@@ -186,20 +253,53 @@ export class MemoryManager {
         return JSON.parse(content);
     }
 
-    public listEpisodes(): string[] {
+    public async listEpisodes(): Promise<string[]> {
         const episodes: string[] = [];
+        try {
+            const keys = await this.idbKeys();
+            for (const key of keys) {
+                if (key.startsWith('episode-')) {
+                    episodes.push(key.replace('episode-', ''));
+                }
+            }
+        } catch(e) {}
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && key.startsWith(this.prefix + 'episode-')) {
-                episodes.push(key.replace(this.prefix + 'episode-', ''));
+                const id = key.replace(this.prefix + 'episode-', '');
+                if (!episodes.includes(id)) episodes.push(id);
             }
         }
         return episodes;
     }
 
-    public searchLocalEpisodes(query: string): { episodeId: string, snippet: string }[] {
+    public async searchLocalEpisodes(query: string): Promise<{ episodeId: string, snippet: string }[]> {
         const results: { episodeId: string, snippet: string }[] = [];
         const normalizedQuery = query.toLowerCase();
+
+        try {
+            const keys = await this.idbKeys();
+            for (const key of keys) {
+                if (key.startsWith('episode-')) {
+                    const episodeId = key.replace('episode-', '');
+                    const content = await this.idbGet(key);
+
+                    if (content && content.history && Array.isArray(content.history)) {
+                        for (const msg of content.history) {
+                            if (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(normalizedQuery)) {
+                                const idx = msg.content.toLowerCase().indexOf(normalizedQuery);
+                                const start = Math.max(0, idx - 50);
+                                const end = Math.min(msg.content.length, idx + 50 + query.length);
+                                const snippet = (start > 0 ? '...' : '') + msg.content.substring(start, end) + (end < msg.content.length ? '...' : '');
+
+                                results.push({ episodeId, snippet: `[${msg.role}]: ${snippet}` });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch(e) {}
 
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -208,23 +308,58 @@ export class MemoryManager {
                 const content = this.load<any>(`episode-${episodeId}`);
 
                 if (content && content.history && Array.isArray(content.history)) {
-                    // Check history for keyword
                     for (const msg of content.history) {
                         if (msg.content && typeof msg.content === 'string' && msg.content.toLowerCase().includes(normalizedQuery)) {
-                            // Extract a snippet (max 100 chars around the match)
                             const idx = msg.content.toLowerCase().indexOf(normalizedQuery);
                             const start = Math.max(0, idx - 50);
                             const end = Math.min(msg.content.length, idx + 50 + query.length);
                             const snippet = (start > 0 ? '...' : '') + msg.content.substring(start, end) + (end < msg.content.length ? '...' : '');
 
-                            results.push({ episodeId, snippet: `[${msg.role}]: ${snippet}` });
-                            break; // One match per episode is enough
+                            if (!results.find(r => r.episodeId === episodeId)) {
+                                results.push({ episodeId, snippet: `[${msg.role}]: ${snippet}` });
+                            }
+                            break;
                         }
                     }
                 }
             }
         }
         return results.slice(0, 3);
+    }
+
+    public async saveUserProfile(profile: any): Promise<void> {
+        this.save('user_preferences', profile);
+        if (this.hfToken && this.hfRepoId) {
+            const filename = `profile/user_preferences.json`;
+            const content = JSON.stringify(profile, null, 2);
+
+            const queueKey = this.prefix + 'sync-queue';
+            const queueRaw = localStorage.getItem(queueKey);
+            let queue: { id: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+
+            queue = queue.filter(q => q.filename !== filename);
+            const jobId = Math.random().toString(36).substring(2, 15);
+            queue.push({ id: jobId, filename, content });
+
+            localStorage.setItem(queueKey, JSON.stringify(queue));
+            this.processSyncQueue();
+        }
+    }
+
+    public async loadUserProfile(): Promise<any> {
+        let localProfile = this.load<any>('user_preferences');
+        if (this.hfToken && this.hfRepoId) {
+            try {
+                const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'profile/user_preferences.json');
+                if (content) {
+                    localProfile = JSON.parse(content);
+                    this.save('user_preferences', localProfile);
+                }
+            } catch (e) {
+                console.warn('Failed to load user profile from cloud:', e);
+            }
+        }
+        return localProfile;
     }
 
     private cloudSummaryCache: any = null;

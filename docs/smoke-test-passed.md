@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-03-11T12:06:49.632246
+**Test Date:** 2026-03-13T11:57:05.282593
 
 ## Test Summary
 
@@ -17,8 +17,8 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 11.2s |
-| Load Time | 3.3s |
+| Build Time | 9.0s |
+| Load Time | 1.2s |
 | JS Heap Memory | 57.5 MB |
 | Console Errors | 4 |
 | Console Warnings | 2 |
@@ -62,7 +62,7 @@ The following 5 personas are configured:
 
 **Warnings (2):**
 - Failed to create WebGPU Context Provider...
-- [GroupMarkerNotSet(crbug.com/242999)!:A0501800D4200000]Automatic fallback to software WebGL has been...
+- [GroupMarkerNotSet(crbug.com/242999)!:A020180074000000]Automatic fallback to software WebGL has been...
 
 ## Notes
 

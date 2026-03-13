@@ -82,7 +82,7 @@ class SmokeTestRunner:
             ['npm', 'run', 'build'],
             capture_output=True,
             text=True,
-            cwd='/workspaces/the_jokesters'
+            cwd='/app'
         )
         
         self.metrics['build_time'] = time.time() - start
@@ -114,7 +114,7 @@ class SmokeTestRunner:
         
         missing = []
         for f in required_files:
-            path = f'/workspaces/the_jokesters/{f}'
+            path = f'/app/{f}'
             if not os.path.exists(path):
                 missing.append(f)
         
@@ -130,7 +130,7 @@ class SmokeTestRunner:
         """Verify all 5 agents are configured"""
         print("\n--- Checking Agent Configuration ---")
         
-        with open('/workspaces/the_jokesters/src/config/agents.ts', 'r') as f:
+        with open('/app/src/config/agents.ts', 'r') as f:
             content = f.read()
         
         expected_agents = ['comedian', 'philosopher', 'scientist', 'techBro', 'robot']
@@ -153,7 +153,7 @@ class SmokeTestRunner:
         """Verify CallbackEngine implementation"""
         print("\n--- Checking CallbackEngine ---")
         
-        with open('/workspaces/the_jokesters/src/comedy/callbackEngine.ts', 'r') as f:
+        with open('/app/src/comedy/callbackEngine.ts', 'r') as f:
             content = f.read()
         
         # Check for key features
@@ -180,7 +180,7 @@ class SmokeTestRunner:
         """Verify QualityFilter implementation"""
         print("\n--- Checking QualityFilter ---")
         
-        with open('/workspaces/the_jokesters/src/comedy/qualityFilter.ts', 'r') as f:
+        with open('/app/src/comedy/qualityFilter.ts', 'r') as f:
             content = f.read()
         
         checks = {
@@ -205,7 +205,7 @@ class SmokeTestRunner:
         """Verify TTS configuration"""
         print("\n--- Checking TTS Setup ---")
         
-        with open('/workspaces/the_jokesters/src/audio/AudioEngine.ts', 'r') as f:
+        with open('/app/src/audio/AudioEngine.ts', 'r') as f:
             content = f.read()
         
         checks = {
@@ -232,7 +232,7 @@ class SmokeTestRunner:
             ['npm', 'run', 'dev'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd='/workspaces/the_jokesters'
+            cwd='/app'
         )
         
         # Wait for server to be ready
@@ -346,7 +346,7 @@ class SmokeTestRunner:
     
     def write_pass_report(self):
         """Write the smoke test pass report"""
-        os.makedirs('/workspaces/the_jokesters/docs', exist_ok=True)
+        os.makedirs('/app/docs', exist_ok=True)
         
         report = f"""# Smoke Test Passed ✓
 
@@ -431,7 +431,7 @@ WebGPU availability depends on browser and hardware support.
 **Status: ALL CHECKS PASSED** ✅
 """
         
-        with open('/workspaces/the_jokesters/docs/smoke-test-passed.md', 'w') as f:
+        with open('/app/docs/smoke-test-passed.md', 'w') as f:
             f.write(report)
         
         print(f"\n✓ Report written to /docs/smoke-test-passed.md")
