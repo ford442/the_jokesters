@@ -468,7 +468,7 @@ export class Director {
     private async searchAndRecall(topic: string): Promise<string | null> {
         if (!this.memoryManager) return null;
         try {
-            const results = this.memoryManager.searchLocalEpisodes(topic);
+            const results = await this.memoryManager.searchLocalEpisodes(topic);
             const fetchedResults = await this.memoryManager.searchFetchedSummaries(topic);
             const allResults = [...results, ...fetchedResults].slice(0, 3);
 

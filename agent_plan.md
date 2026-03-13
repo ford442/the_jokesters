@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features from Phase 20: The Time Traveler's Dilemma, Intervention Mode, and Ghost Hunters Mode. Development was very fluid, indicating the velocity remains solid. I will maintain `tasks_per_run` at 3.
+* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features: User Profile Sync, IndexedDB Migration, and The Intervention Mode. The velocity feels appropriate for the complexity, so it remains at 3 for now.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -217,7 +217,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 10: Advanced Cloud Features
 * [ ] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
-* [ ] **User Profile Sync**: Sync user preferences and custom scenarios to the cloud.
+* [x] **User Profile Sync**: Sync user preferences and custom scenarios to the cloud.
 * [ ] **Community Scripts**: Allow users to share scripts to a public HF Dataset.
 
 ### Phase 11: Experimental AI (Dream Ideas)
@@ -234,7 +234,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Rap Battle Visuals**: Dedicated visual mode with beat visualization, rhyming checks (using phoneme matching), and crowd reaction effects.
 
 ### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
-* [ ] **IndexedDB Migration**: Move local storage from `localStorage` (5MB limit) to `IndexedDB` to support years of conversation history.
+* [x] **IndexedDB Migration**: Move local storage from `localStorage` (5MB limit) to `IndexedDB` to support years of conversation history.
 * [ ] **Semantic Search (RAG)**:
     *   Integrate `voy` (WASM Vector DB) to index past episodes.
     *   Allow agents to recall specific jokes or facts from weeks ago ("Remember when you said you liked pineapples?").
@@ -344,6 +344,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
     *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
 * [ ] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
+* [ ] **The Fortune Teller Mode**: Agents act as mystical seers interpreting the user's future from random, absurd objects.
+* [ ] **Parallel Universe Mode**: Agents communicate with alternate versions of themselves who made different life choices.
 
 ### Phase 19: The Dream Expansion (New Modes)
 * [x] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
