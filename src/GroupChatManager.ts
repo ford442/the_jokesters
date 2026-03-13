@@ -83,19 +83,41 @@ export class GroupChatManager {
     if (this.isInitialized) return
 
     // Pre-check WebGPU availability before attempting model load
-    if (!(navigator as unknown as { gpu?: unknown }).gpu) {
+    const gpu = (navigator as unknown as { gpu?: unknown }).gpu
+    if (!gpu) {
       throw new Error(
         'WebGPU is not supported in this browser. ' +
         'Please use Chrome 113+ or Edge 113+ with WebGPU enabled.'
       )
     }
 
-    // Model fallback chain: prefer optimized q4f16, fall back to alternatives
-    const modelFallbacks = [
-      defaultModelId,                                       // Hermes-3-3B-q4f16 (primary)
-      OPTIMIZED_MODELS.LLAMA_3_2_3B_Q4F16.model_id,       // Llama-3.2-3B-q4f16 (fallback)
-      OPTIMIZED_MODELS.HERMES_3_3B_Q4F16.model_id,        // Hermes-3-3B-q4f16 (retry same, clears cache)
-    ]
+    // Probe the GPU adapter to check for f16 shader support.
+    // q4f16_1 models require the 'shader-f16' feature; without it they crash
+    // with "extension 'f16' is not allowed in the current environment".
+    let supportsF16 = false
+    try {
+      const nav = navigator as unknown as { gpu: { requestAdapter(): Promise<{ features: Set<string> } | null> } }
+      const adapter = await nav.gpu.requestAdapter()
+      supportsF16 = adapter?.features.has('shader-f16') ?? false
+      console.log(`[ModelLoader] GPU adapter f16 support: ${supportsF16}`)
+    } catch {
+      console.warn('[ModelLoader] Could not query GPU adapter features; assuming no f16 support')
+    }
+
+    // Build fallback chain based on f16 capability.
+    // q4f16_1 = faster/less VRAM but needs f16 shader extension.
+    // q4f32_1 = universally compatible fallback.
+    const modelFallbacks = supportsF16
+      ? [
+          defaultModelId,                                   // Hermes-3-3B-q4f16 (primary)
+          OPTIMIZED_MODELS.LLAMA_3_2_3B_Q4F16.model_id,   // Llama-3.2-3B-q4f16 (fallback)
+        ]
+      : [
+          'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',            // Hermes-3-3B-q4f32 (compatible primary)
+          'Llama-3.2-3B-Instruct-q4f32_1-MLC',            // Llama-3.2-3B-q4f32 (compatible fallback)
+        ]
+
+    console.log(`[ModelLoader] Using ${supportsF16 ? 'f16 (optimized)' : 'f32 (compatible)'} model chain:`, modelFallbacks)
 
     let lastError: unknown = null
 
