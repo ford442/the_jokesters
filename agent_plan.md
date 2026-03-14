@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Proceeding smoothly. Today's checkout cycle successfully implemented 3 new features: User Profile Sync, IndexedDB Migration, and The Intervention Mode. The velocity feels appropriate for the complexity, so it remains at 3 for now.
+* **tasks_per_run**: 4
+* **status**: Proceeding extremely smoothly. Today's checkout cycle successfully implemented 3 new features (The Newsroom, Vector Database Integration, Community Scripts) without friction. Incrementing velocity to 4 for the next run.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -60,6 +60,7 @@ To support new modes, we need a standard way to inject "World Info" into the LLM
 *   **Autonomous Agent Mode**: Agents chatter amongst themselves, shifting topics dynamically.
 *   **The Trial**: Agents act as courtroom figures judging the user.
 *   **Tech Support**: Agents act as unhelpful tech support.
+*   **Telethon Mode**: Agents host a charity telethon for an absurd cause. User acts as a caller. (Requires Hermes-3 for pleading, Phi-3 for reading off ridiculous donation stats).
 
 ---
 
@@ -193,7 +194,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
 * [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
 * [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
-* [ ] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
+* [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
 ### Phase 8: Advanced Intelligence & Polish
 * [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
 * [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
@@ -216,9 +217,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Rap Battle Visuals**: Dedicated visual mode for musical battles with scoring and effects.
 
 ### Phase 10: Advanced Cloud Features
-* [ ] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
+* [x] **Vector Database Integration**: Integrate a vector database (e.g., Chroma or HF Embeddings) for semantic search of past episodes.
 * [x] **User Profile Sync**: Sync user preferences and custom scenarios to the cloud.
-* [ ] **Community Scripts**: Allow users to share scripts to a public HF Dataset.
+* [x] **Community Scripts**: Allow users to share scripts to a public HF Dataset.
 
 ### Phase 11: Experimental AI (Dream Ideas)
 * [x] **Code Review Mode**: Agents review code pasted by the user, roasting or praising it (using specialized coding models).
@@ -306,19 +307,21 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 1. **Authenticating with the HF API:**
    * Build out settings UI that securely captures the Hugging Face token.
-   * Verify token against `/whoami-v2` in `HFStorageManager`.
-   * Keep tokens encrypted or sandboxed in `localStorage` for returning sessions.
+   * Verify token against `https://huggingface.co/api/whoami-v2` in `HFStorageManager`.
+   * Keep tokens encrypted or sandboxed in `localStorage` for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target `repoId`.
 
 2. **Pushing Finished Episode Scripts:**
-   * When a scenario finishes naturally, dispatch it to a background queue.
+   * When a scenario finishes naturally, the Director calls `MemoryManager.saveEpisode`.
+   * This triggers `MemoryManager.saveEpisodeToCloud`, placing the job in a local IndexedDB/localStorage queue.
    * Construct `episodes/episode-{id}.json` structures containing the generated scripts and state.
-   * Push to a private Dataset (e.g. `user/jokesters-episodes`) via the API.
-   * Resolve any conflicts by using timestamp markers (delta sync approach).
+   * Push to a private Dataset (e.g. `user/jokesters-episodes`) via the HF REST API endpoint (`POST /api/datasets/{repo_id}/commit/main`).
+   * Resolve any conflicts by using timestamp markers (delta sync approach). Only sync delta changes to prevent massive payloads.
 
 3. **Fetching Previous Episode Summaries at Boot:**
-   * As part of app initialization (`main.ts` -> `MemoryManager`), preemptively fetch `summary.json`.
+   * As part of app initialization (`main.ts` -> `MemoryManager`), preemptively fetch `summary.json` (or `episodes/latest.json`) from the HF dataset.
    * Keep this file extremely lightweight so it doesn't block UI interactions.
    * Inject this historical summary into the `GroupChatManager` system context directly for continuity, before full IndexedDB migration triggers.
+   * Background process streams full histories into IndexedDB for deep local semantic RAG.
 
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**

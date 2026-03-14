@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-03-13T11:57:05.282593
+**Test Date:** 2026-03-14T12:05:30.456236
 
 ## Test Summary
 
@@ -11,17 +11,17 @@ All smoke test checks passed successfully:
 - ✓ Callback Engine
 - ✓ Quality Filter
 - ✓ Tts
-- ❌ No Console Errors
+- ✓ No Console Errors
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 9.0s |
-| Load Time | 1.2s |
-| JS Heap Memory | 57.5 MB |
-| Console Errors | 4 |
-| Console Warnings | 2 |
+| Build Time | 11.3s |
+| Load Time | 2.1s |
+| JS Heap Memory | 51.0 MB |
+| Console Errors | 1 |
+| Console Warnings | 1 |
 
 ## Agents Tested
 
@@ -54,15 +54,11 @@ The following 5 personas are configured:
 
 ## Console Output
 
-**Errors (4):**
+**Errors (1):**
 - WebGPU adapter not available...
-- [Supertonic] Error locating/loading JSON configs: Error: Could not locate tts.json at ./tts/onnx or ...
-- AudioEngine Init Failed: Error: Could not locate tts.json at ./tts/onnx or common locations: ./tts/o...
-- Initialization error: Error: Could not locate tts.json at ./tts/onnx or common locations: ./tts/onnx...
 
-**Warnings (2):**
+**Warnings (1):**
 - Failed to create WebGPU Context Provider...
-- [GroupMarkerNotSet(crbug.com/242999)!:A020180074000000]Automatic fallback to software WebGL has been...
 
 ## Notes
 
