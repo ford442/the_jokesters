@@ -117,6 +117,15 @@ async function initApp() {
             <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
             <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
           </select>
+          <select id="context-size-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
+            <option value="auto">Auto (detect VRAM)</option>
+            <option value="4096">4096 tokens (full)</option>
+            <option value="2048">2048 tokens</option>
+            <option value="1024">1024 tokens</option>
+            <option value="512">512 tokens</option>
+            <option value="256">256 tokens</option>
+            <option value="128">128 tokens (minimal VRAM)</option>
+          </select>
           <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:2em;margin:0 0 12px;"></p>
           <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
         </div>
@@ -227,11 +236,15 @@ async function initApp() {
   updateModelHint()
 
   // Wait for user to click Launch before starting initialization
-  const selectedModelId = await new Promise<string>(resolve => {
+  const { selectedModelId, preferredContext } = await new Promise<{selectedModelId: string, preferredContext: number | 'auto'}>(resolve => {
     document.getElementById('launch-btn')!.addEventListener('click', () => {
+      const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement;
+      const contextVal = contextSelect ? contextSelect.value : 'auto';
+      const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10);
+
       document.getElementById('model-picker')!.style.display = 'none'
       document.getElementById('progress-section')!.style.display = 'block'
-      resolve(modelSelectLaunch.value)
+      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext })
     })
   })
 
@@ -298,7 +311,7 @@ async function initApp() {
       // Map WebLLM progress (0-1) to 35-90% of total progress
       const percentage = 35 + Math.round(progress.progress * 55)
       setProgress(progress.text, percentage)
-    }, selectedModelId)
+    }, selectedModelId, preferredContext)
 
     // Stage 4: Final setup and UI binding (90%)
     currentInitState = 'FINALIZING'

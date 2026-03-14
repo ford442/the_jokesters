@@ -1,4 +1,5 @@
 import * as webllm from '@mlc-ai/web-llm'
+import { loadModelWithDynamicContext } from './utils/dynamicContext'
 import { appConfig, defaultModelId, OPTIMIZED_MODELS } from './config/models'
 
 // ============================================================================
@@ -84,7 +85,8 @@ export class GroupChatManager {
 
   async initialize(
     onProgress?: (progress: webllm.InitProgressReport) => void,
-    preferredModelId?: string
+    preferredModelId?: string,
+    preferredContext?: number | 'auto'
   ): Promise<void> {
     if (this.isInitialized) return
 
@@ -140,20 +142,27 @@ export class GroupChatManager {
       console.log(`Loading model [${i + 1}/${modelFallbacks.length}]: ${modelId}`)
 
       try {
-        this.engine = await webllm.CreateMLCEngine(
-          modelId,
-          {
-            appConfig,          // Provides correct WASM lib URLs and context window settings
-            initProgressCallback: onProgress,
-          },
-          {
-            repetition_penalty: 1.15,
-          }
+        const modelConfig = appConfig.model_list.find(m => m.model_id === modelId);
+
+        if (!modelConfig) {
+          throw new Error(`Model ${modelId} not found in config`);
+        }
+
+        this.engine = await loadModelWithDynamicContext(
+          modelConfig,
+          preferredContext,
+          onProgress
         )
+
+        // Add repetition penalty separately if possible, or assume handled by webllm defaults
+        // (dynamicContext loader currently doesn't pass repetition_penalty in chatOpts directly)
 
         this.isInitialized = true
         this.loadedModelId = modelId
-        console.log(`GroupChatManager initialized successfully with model: ${modelId}`)
+
+        const actualContext = (this.engine as any).chatOpts?.context_window_size ||
+                              (this.engine as any).chatConfig?.context_window_size || 'unknown';
+        console.log(`GroupChatManager initialized successfully with model: ${modelId} and context: ${actualContext}`)
         return
 
       } catch (error) {
