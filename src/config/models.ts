@@ -144,7 +144,7 @@ export const OPTIMIZED_MODELS = {
    */
   VICUNA_7B_Q4F32: {
     model_id: "ford442/vicuna-7b-q4f32-webllm",
-    model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
+    model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
     model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
     overrides: {
       context_window_size: 4096,
