@@ -157,6 +157,55 @@ function generateTickerHeadline(topic: string): string {
     return templates[Math.floor(Math.random() * templates.length)];
 }
 
+export async function runNewsroomLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.newsroomTopic || 'A very slow news day';
+    const anchor = 'comedian';
+    const fieldReporter = 'philosopher';
+    const expert = 'scientist';
+
+    ctx.callbacks.onMessage('Director', `📺 LIVE NEWSROOM: ${topic}`, '#4ecdc4');
+    ctx.callbacks.onMessage('Ticker', `BREAKING: ${topic} dominates the headlines...`, '#ff0000');
+
+    // Intro from Anchor
+    ctx.callbacks.onTurnStart(anchor);
+    await ctx.manager.chatForAgent(anchor, `(You are a highly professional news anchor presenting a developing story about "${topic}". Welcome the viewers, state the main headline, and toss it over to the field reporter.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let round = 1;
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!ctx.isRunning()) break;
+
+        // User represents "Control Room / Producer" giving an update
+        ctx.callbacks.onMessage('Producer (You)', userInput, '#ffffff');
+
+        if (round % 3 === 1) {
+            // Field Reporter reacts
+            ctx.callbacks.onTurnStart(fieldReporter);
+            await ctx.manager.chatForAgent(fieldReporter, `(You are a stressed field reporter live on the scene. The producer just reported: "${userInput}". Describe the chaos around you related to "${topic}" and this new update.)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            ctx.callbacks.onMessage('Ticker', `UPDATE: Field reporter struggling with "${userInput}"...`, '#ff0000');
+        } else if (round % 3 === 2) {
+            // Expert analyzes
+            ctx.callbacks.onTurnStart(expert);
+            await ctx.manager.chatForAgent(expert, `(You are a weirdly specific studio expert. The producer reported: "${userInput}". Analyze this development using overly complex, mostly fabricated jargon and statistics.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            ctx.callbacks.onMessage('Ticker', `ANALYSIS: Experts remain confused about "${userInput}"...`, '#ff0000');
+        } else {
+            // Anchor brings it back
+            ctx.callbacks.onTurnStart(anchor);
+            await ctx.manager.chatForAgent(anchor, `(You are the main anchor. The producer said: "${userInput}". Summarize the absurdity of what the field reporter and expert just said, and transition smoothly as if this is normal news.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            ctx.callbacks.onMessage('Ticker', `LIVE: Anchor continues despite "${userInput}"...`, '#ff0000');
+        }
+
+        round++;
+    }
+}
+
 export async function runMeltdownLoop(scenario: Scenario, ctx: ModeContext) {
     const topic = scenario.config?.meltdownTopic || 'local weather patterns';
     const anchor = 'comedian';

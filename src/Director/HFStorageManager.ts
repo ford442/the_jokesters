@@ -123,6 +123,22 @@ export class HFStorageManager {
      * @param repoId The repository ID (e.g., "TheJokesters/community-scripts").
      * @param filename The path/filename in the repo.
      */
+    /**
+     * Uploads a community script to a public Hugging Face Dataset.
+     * @param token The HF API token with write access to the community repo.
+     * @param repoId The community repository ID.
+     * @param filename The desired filename for the script.
+     * @param content The script content to save.
+     */
+    public async publishCommunityScript(token: string, repoId: string, filename: string, content: string): Promise<void> {
+        return this.saveFile(token, repoId, filename, content);
+    }
+
+    /**
+     * Downloads a file from a public Hugging Face Dataset (no token required).
+     * @param repoId The repository ID (e.g., "TheJokesters/community-scripts").
+     * @param filename The path/filename in the repo.
+     */
     public async loadCommunityScript(repoId: string, filename: string): Promise<string | null> {
         let cleanRepoId = repoId;
         if (cleanRepoId.startsWith("datasets/")) {
