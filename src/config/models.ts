@@ -140,8 +140,7 @@ export const OPTIMIZED_MODELS = {
 
   /**
    * Vicuna 7B — ford442's custom WebLLM build
-   * NOTE: requires tokenizer_files + token IDs in mlc-chat-config.json to work.
-   * Until the HF repo config is updated, use LLAMA_2_7B_Q4F32 instead.
+   * mlc-chat-config.json is missing tokenizer_files; supplied via overrides below.
    */
   VICUNA_7B_Q4F32: {
     model_id: "ford442/vicuna-7b-q4f32-webllm",
@@ -150,6 +149,9 @@ export const OPTIMIZED_MODELS = {
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
+      // mlc-chat-config.json in ford442's repo is missing tokenizer_files;
+      // WebLLM crashes with .includes() on undefined without this override.
+      tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
     vram_required_MB: 4000,
     recommended_for: ["all_gpus", "mid_size"],
