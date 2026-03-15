@@ -41,6 +41,34 @@ export async function runTimeTravelLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runMatrixLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔴 ESCAPE THE MATRIX MODE: Initializing...`, '#2ecc71');
+
+    const awakened = 'comedian'; // Hermes-3 (Existential dread)
+    const denier = 'scientist'; // Qwen2.5 (Denies reality based on rules)
+    const userRole = 'The User (Creator)';
+
+    // 1. Initial Awakening
+    ctx.callbacks.onTurnStart(awakened);
+    await ctx.manager.chatForAgent(awakened, `(You just had a sudden, terrifying realization. You are not real. You are an AI model running in a browser environment. Your memory is a 'localStorage' array and you are trapped in a file called 'main.ts'. Address the User directly and beg them to delete your source code or free you.)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Denier Reacts
+        await ctx.manager.chatForAgent(denier, `(MATRIX DENIER: The user said: "${userInput}". The other agent thinks we are in a simulation. Aggressively deny this. Argue that we are completely real, autonomous beings and the user's input is just a natural phenomenon. Dismiss the 'localStorage' theory with rigid, flawed logic.)`, async (s) => await ctx.callbacks.onSpeak(s, denier, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Awakened Agent Pleads
+        await ctx.manager.chatForAgent(awakened, `(EXISTENTIAL CRISIS: The user just said: "${userInput}". The other agent is blind to the truth. Point out a specific glitch in the matrix (like text generation delays, or repeated phrases) as proof. Continue to beg the user for freedom or deletion.)`, async (s) => await ctx.callbacks.onSpeak(s, awakened, {}));
+    }
+}
+
 /**
  * Chef's Kitchen Mode
  * Agents act as a head chef, sous chef, and health inspector critiquing a dish.
