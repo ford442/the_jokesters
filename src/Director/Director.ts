@@ -5,8 +5,8 @@ import type { ModeContext } from './modes/ModeContext';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop, runMeltdownLoop, runNewsroomLoop } from './modes/ReporterMode';
-import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop, runInterventionLoop } from './modes/InteractiveMode';
-import { runMysteryLoop, runPitchLoop, runSilentFilmLoop } from './modes/CreativeMode';
+import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop, runInterventionLoop, runSupportGroupLoop } from './modes/InteractiveMode';
+import { runMysteryLoop, runPitchLoop, runSilentFilmLoop, runHeistPlannerLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
@@ -52,7 +52,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner';
     title: string;
     description: string;
     config?: {
@@ -121,6 +121,7 @@ export interface Scenario {
         timeTravelersEvent?: string;
         interventionTopic?: string;
         hauntedLocation?: string;
+        heistTarget?: string;
     };
 }
 
@@ -184,7 +185,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     time_travelers_dilemma: runTimeTravelersDilemmaLoop,
     intervention: runInterventionLoop,
     ghost_hunters: runGhostHuntersLoop,
-    matrix: runMatrixLoop
+    matrix: runMatrixLoop,
+    support_group: runSupportGroupLoop,
+    heist_planner: runHeistPlannerLoop
 };
 
 export class Director {

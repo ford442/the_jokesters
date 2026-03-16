@@ -109,6 +109,40 @@ export async function runPitchLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runHeistPlannerLoop(scenario: Scenario, ctx: ModeContext) {
+    const target = scenario.config?.heistTarget || 'the moon';
+    ctx.callbacks.onMessage('Director', `💎 HEIST PLANNER: Stealing ${target}`, '#8e44ad');
+
+    const mastermind = 'philosopher'; // Phi-3: Mastermind
+    const wildcard = 'comedian'; // Hermes-3: Wildcard
+    const techExpert = 'scientist';
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(mastermind);
+    await ctx.manager.chatForAgent(mastermind, `(HEIST PLANNER: You are the meticulous mastermind behind a crew planning to steal "${target}". The User is your new recruit. Welcome them to the safehouse and outline phase one of the heist. Be overly complicated.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermind, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Recruit (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Wildcard reacts
+            await ctx.manager.chatForAgent(wildcard, `(HEIST PLANNER: The recruit said: "${userInput}". You are the chaotic wildcard of the crew. Suggest a completely unhinged and violent addition to the plan involving explosives or rabid animals.)`, async (s) => await ctx.callbacks.onSpeak(s, wildcard, {}));
+        } else if (roll < 0.66) {
+            // Tech Expert reacts
+            await ctx.manager.chatForAgent(techExpert, `(HEIST PLANNER: The recruit said: "${userInput}". You are the tech expert (hacker). Point out a ridiculous technical flaw in the current plan and use excessive hacker jargon to propose a solution to bypass the mainframe.)`, async (s) => await ctx.callbacks.onSpeak(s, techExpert, {}));
+        } else {
+            // Mastermind corrects
+            await ctx.manager.chatForAgent(mastermind, `(HEIST PLANNER: The recruit said: "${userInput}". Analyze the state of the plan. Correct the others if they are being too chaotic. Ask the recruit for the next crucial detail of the heist.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermind, {}));
+        }
+    }
+}
+
 export async function runProceduralLoop(scenario: Scenario, ctx: ModeContext) {
     const vibe = scenario.config?.proceduralVibe || 'An unexpected encounter at a grocery store';
     ctx.callbacks.onMessage('Director', `✨ PROCEDURAL MODE: Vibe - ${vibe}`, '#3498db');
