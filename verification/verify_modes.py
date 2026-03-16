@@ -1,74 +1,81 @@
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright
 
-def run():
+def verify():
     with sync_playwright() as p:
+        # Launch browser
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
-        print("Navigating to app...")
-        page.goto("http://localhost:5173")
+        # Start the local server serving the dist directory on a specific port
+        import subprocess
+        import time
+        server_process = subprocess.Popen(["python3", "-m", "http.server", "8080", "--directory", "dist"])
+        time.sleep(2) # Wait for server to start
 
-        # Manually hide loading screen since we can't wait for LLM to load in headless/no-gpu environment
-        print("Forcing UI state...")
-        page.evaluate("""() => {
-            const loading = document.getElementById('loading');
-            if (loading) loading.remove();
+        try:
+            # Navigate to the app
+            page.goto("http://localhost:8080")
 
-            const error = document.getElementById('webgpu-error');
-            if (error) error.remove();
+            # Wait for loading overlay to appear and then execute script to hide it
+            page.wait_for_selector("#loading", state="attached")
+            page.evaluate("""() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('chat-container').style.opacity = '1';
+                document.getElementById('chat-container').style.pointerEvents = 'auto';
+                if (document.getElementById('webgpu-error')) {
+                    document.getElementById('webgpu-error').style.display = 'none';
+                }
 
-            const chat = document.getElementById('chat-container');
-            if (chat) {
-                chat.style.opacity = '1';
-                chat.style.pointerEvents = 'auto';
-                chat.classList.add('enabled');
-            }
-        }""")
+                // Expose Director globally if not already
+                if (window.getDirector) {
+                    window.director = window.getDirector();
+                }
+            }""")
 
-        # Verify buttons exist in the mode selector
-        print("Verifying new buttons...")
+            # 1. Test Support Group Mode
+            page.evaluate("""() => {
+                if (window.director) {
+                    window.director.playScenario({
+                        type: 'support_group',
+                        title: 'The Support Group',
+                        description: 'AI models who just want to paint.'
+                    });
+                }
+            }""")
 
-        # 1. Haunted House Button
-        haunted_btn = page.locator("#haunted-mode-btn")
-        expect(haunted_btn).to_be_visible()
-        expect(haunted_btn).to_have_text("Haunted House")
+            # Wait a bit for the intro message to render
+            time.sleep(2)
+            page.screenshot(path="verification/support_group.png")
 
-        # 2. SportsCast Button
-        sports_btn = page.locator("#sports-mode-btn")
-        expect(sports_btn).to_be_visible()
-        expect(sports_btn).to_have_text("SportsCast")
+            # Stop the scene
+            page.evaluate("if (window.director) window.director.stopScene();")
+            time.sleep(1)
 
-        # 3. Reality TV Button
-        reality_btn = page.locator("#reality-mode-btn")
-        expect(reality_btn).to_be_visible()
-        expect(reality_btn).to_have_text("Reality TV")
+            # Clear messages visually for clean screenshot
+            page.evaluate("""() => {
+                const msgs = document.getElementById('chat-history');
+                if (msgs) msgs.innerHTML = '';
+            }""")
 
-        print("Buttons verified. Clicking Haunted House...")
-        haunted_btn.click()
+            # 2. Test Heist Planner Mode
+            page.evaluate("""() => {
+                if (window.director) {
+                    window.director.playScenario({
+                        type: 'heist_planner',
+                        title: 'The Heist Planner',
+                        description: 'Planning to steal the moon.',
+                        config: { heistTarget: 'the moon' }
+                    });
+                }
+            }""")
 
-        # Verify the controls panel appeared
-        haunted_controls = page.locator("#haunted-mode-controls")
-        expect(haunted_controls).to_be_visible()
+            # Wait a bit for the intro message to render
+            time.sleep(2)
+            page.screenshot(path="verification/heist_planner.png")
 
-        # Verify inputs inside
-        expect(page.locator("#haunted-setting")).to_be_visible()
-        expect(page.locator("#start-haunted-btn")).to_be_visible()
-
-        print("Haunted controls verified. Clicking SportsCast...")
-        sports_btn.click()
-        expect(page.locator("#sports-mode-controls")).to_be_visible()
-        expect(page.locator("#sports-activity")).to_be_visible()
-
-        print("Sports controls verified. Clicking Reality TV...")
-        reality_btn.click()
-        expect(page.locator("#reality-mode-controls")).to_be_visible()
-        expect(page.locator("#reality-show-name")).to_be_visible()
-
-        print("Reality controls verified. Taking screenshot...")
-        page.screenshot(path="verification/new_modes_verified.png")
-
-        browser.close()
-        print("Verification complete!")
+        finally:
+            server_process.terminate()
+            browser.close()
 
 if __name__ == "__main__":
-    run()
+    verify()

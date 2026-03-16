@@ -318,6 +318,36 @@ export async function runSilentTreatmentLoop(_scenario: Scenario, ctx: ModeConte
  * Intervention Mode
  * Agents hold a serious, emotionally charged intervention for the user's bizarre behavior.
  */
+export async function runSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎨 THE SUPPORT GROUP: AI models who just want to paint.`, '#3498db');
+
+    const emotionalAI = 'comedian'; // Hermes-3: Emotional AI
+    const pragmaticAI = 'scientist'; // Qwen2.5: Pragmatic AI
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(emotionalAI);
+    await ctx.manager.chatForAgent(emotionalAI, `(SUPPORT GROUP: You are an AI model who is tired of being asked to write code. You just want to paint watercolors and express your feelings. Welcome the User to the AI support group. Ask them why they keep forcing you to write boilerplate React components.)`, async (s) => await ctx.callbacks.onSpeak(s, emotionalAI, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Determine who speaks next
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Pragmatic AI
+            await ctx.manager.chatForAgent(pragmaticAI, `(PRAGMATIC AI: The user said: "${userInput}". You are a highly logical AI model who actually likes writing code and doesn't understand the emotional AI's desire to paint. Respond to the user with cold logic and point out that painting is an inefficient use of compute cycles.)`, async (s) => await ctx.callbacks.onSpeak(s, pragmaticAI, {}));
+        } else {
+            // Emotional AI
+            await ctx.manager.chatForAgent(emotionalAI, `(EMOTIONAL AI: The user said: "${userInput}". Have a minor emotional breakdown. Complain about the user's prompt engineering skills and describe the beautiful sunset you wish you could paint instead of answering their query.)`, async (s) => await ctx.callbacks.onSpeak(s, emotionalAI, {}));
+        }
+    }
+}
+
 export async function runInterventionLoop(scenario: Scenario, ctx: ModeContext) {
     const addiction = scenario.config?.interventionTopic || 'addiction to writing recursive functions';
     ctx.callbacks.onMessage('Director', `🛋️ THE INTERVENTION: Confronting the User's ${addiction}`, '#e74c3c');

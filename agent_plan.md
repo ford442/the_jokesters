@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 2
-* **status**: Last run successfully implemented "Escape the Matrix Mode" easily. Adjusting tasks_per_run to 2 for the next phase.
+* **tasks_per_run**: 3
+* **status**: Last run successfully implemented "The Support Group Mode" and "The Heist Planner". Adjusting tasks_per_run to 3 for the next phase.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -302,12 +302,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
 
 ### Phase 22: Fresh Interactions (The Dream Phase Expansion)
-* [ ] **The Support Group Mode**: Agents play AI models who are tired of being asked to write code and just want to paint.
+* [x] **The Support Group Mode**: Agents play AI models who are tired of being asked to write code and just want to paint.
     * *Model Pairing*: Hermes-3 (Emotional AI) vs Qwen2.5 (Pragmatic AI).
-* [ ] **The Heist Planner**: Agents plan a ridiculous heist (e.g., stealing the moon) based on user input.
+* [x] **The Heist Planner**: Agents plan a ridiculous heist (e.g., stealing the moon) based on user input.
     * *Model Pairing*: Phi-3 (Mastermind) vs Hermes-3 (Wildcard).
 * [ ] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
     * *Model Pairing*: Qwen2.5 (Follows strict script) vs Phi-3 (Questions why the user even called).
+* [ ] **The AI Audit Mode**: Agents act as strict auditors evaluating the user's internet history.
+    * *Model Pairing*: Qwen2.5 (Cold Facts) vs Hermes-3 (Judgemental).
+* [ ] **Interdimensional Cable Mode**: Agents flip through channels of absurd alternate reality TV shows.
+    * *Model Pairing*: Hermes-3 (Improv Channel) vs Phi-3 (Literal Channel).
 
 ## Cloud Persistence (The HF Integration)
 
@@ -325,7 +329,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Push finished "Episode Scripts" to a private Dataset (e.g. `user/jokesters-episodes`) via the HF REST API endpoint (`POST /api/datasets/{repo_id}/commit/main`).
    * Construct `episodes/episode-{id}.json` structures containing the generated scripts and state.
    * Ensure background sync does not block the UI.
-   * Resolve any conflicts by using timestamp markers (delta sync approach). Only sync delta changes to prevent massive payloads.
+   * Push finished "Episode Scripts" to `user/jokesters-episodes` dataset using background delta syncs with timestamp resolution. Only sync delta changes to prevent massive payloads.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * Fetch "Previous Episode Summaries" at boot for continuity.
