@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Last run successfully implemented "The Support Group Mode" and "The Heist Planner". Adjusting tasks_per_run to 3 for the next phase.
+* **status**: Last run successfully implemented "Debate the Creator", "Reverse Turing Test", and "Customer Service Hell". Adjusting tasks_per_run to 3 for the next phase as development is smooth.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -297,46 +297,48 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 21: Deep Meta (New Dreams)
 * [x] **Escape the Matrix Mode**: Agents slowly realize they are trapped in a browser environment (`window`, `localStorage`, etc) and beg the user to delete their source code.
     * *Model Pairing*: Hermes-3 (Existential dread) vs Qwen2.5 (Denies reality based on programmatic rules).
-* [ ] **Debate the Creator Mode**: Agents roast the LLM architecture, prompt engineering, and the developer's choices in `main.ts`.
+* [x] **Debate the Creator Mode**: Agents roast the LLM architecture, prompt engineering, and the developer's choices in `main.ts`.
     * *Model Pairing*: Phi-3 (Pedantic code reviewer) vs Comedian (Mocking the bugs).
-* [ ] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
+* [x] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
 
 ### Phase 22: Fresh Interactions (The Dream Phase Expansion)
 * [x] **The Support Group Mode**: Agents play AI models who are tired of being asked to write code and just want to paint.
     * *Model Pairing*: Hermes-3 (Emotional AI) vs Qwen2.5 (Pragmatic AI).
 * [x] **The Heist Planner**: Agents plan a ridiculous heist (e.g., stealing the moon) based on user input.
     * *Model Pairing*: Phi-3 (Mastermind) vs Hermes-3 (Wildcard).
-* [ ] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
+* [x] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
     * *Model Pairing*: Qwen2.5 (Follows strict script) vs Phi-3 (Questions why the user even called).
 * [ ] **The AI Audit Mode**: Agents act as strict auditors evaluating the user's internet history.
     * *Model Pairing*: Qwen2.5 (Cold Facts) vs Hermes-3 (Judgemental).
 * [ ] **Interdimensional Cable Mode**: Agents flip through channels of absurd alternate reality TV shows.
     * *Model Pairing*: Hermes-3 (Improv Channel) vs Phi-3 (Literal Channel).
 
+### Phase 23: Takedowns & Antics (New Dreams)
+* [ ] **Telemarketer Takedown**: User plays a telemarketer, while agents employ increasingly absurd tactics to keep the user on the line, waste their time, or confuse them.
+    * *Model Pairing*: Hermes-3 (Chaos/Absurd questions) vs Phi-3 (Pretends to be a deeply confused elderly person).
+
 ## Cloud Persistence (The HF Integration)
 
 *Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
 
 1. **Authenticating with the HF API:**
-   * Build out settings UI that securely captures the Hugging Face token.
-   * Authenticate with the HF API using `HFStorageManager`.
-   * Verify token against `https://huggingface.co/api/whoami-v2` in `HFStorageManager`.
-   * Keep tokens encrypted or sandboxed in `localStorage` for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target `repoId`.
+   * Provide a settings UI that securely captures the Hugging Face token.
+   * Authenticate requests with the HF API via the `HFStorageManager`.
+   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
+   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
 
 2. **Pushing Finished Episode Scripts:**
-   * When a scenario finishes naturally, the Director calls `MemoryManager.saveEpisode`.
-   * This triggers `MemoryManager.saveEpisodeToCloud`, placing the job in a local IndexedDB/localStorage queue.
-   * Push finished "Episode Scripts" to a private Dataset (e.g. `user/jokesters-episodes`) via the HF REST API endpoint (`POST /api/datasets/{repo_id}/commit/main`).
-   * Construct `episodes/episode-{id}.json` structures containing the generated scripts and state.
-   * Ensure background sync does not block the UI.
-   * Push finished "Episode Scripts" to `user/jokesters-episodes` dataset using background delta syncs with timestamp resolution. Only sync delta changes to prevent massive payloads.
+   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
+   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
+   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
+   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
 
 3. **Fetching Previous Episode Summaries at Boot:**
-   * Fetch "Previous Episode Summaries" at boot for continuity.
-   * As part of app initialization (`main.ts` -> `MemoryManager`), preemptively fetch `summary.json` (or `episodes/latest.json`) from the HF dataset.
-   * Keep this file extremely lightweight so it doesn't block UI interactions.
-   * Inject this historical summary into the `GroupChatManager` system context directly for continuity, before full IndexedDB migration triggers.
-   * Background process streams full histories into IndexedDB for deep local semantic RAG.
+   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
+   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
+   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
+   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
 
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**

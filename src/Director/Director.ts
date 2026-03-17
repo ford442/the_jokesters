@@ -5,13 +5,13 @@ import type { ModeContext } from './modes/ModeContext';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop, runMeltdownLoop, runNewsroomLoop } from './modes/ReporterMode';
-import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop, runInterventionLoop, runSupportGroupLoop } from './modes/InteractiveMode';
+import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop, runInterventionLoop, runSupportGroupLoop, runCustomerServiceHellLoop } from './modes/InteractiveMode';
 import { runMysteryLoop, runPitchLoop, runSilentFilmLoop, runHeistPlannerLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
-import { runTimeTravelLoop, runChefLoop, runMedicalLoop, runTimeTravelersDilemmaLoop, runMatrixLoop } from './modes/DreamModes';
+import { runTimeTravelLoop, runChefLoop, runMedicalLoop, runTimeTravelersDilemmaLoop, runMatrixLoop, runDebateCreatorLoop, runReverseTuringLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
 import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop } from './modes/ExpandedRealityModes';
 import { runProceduralLoop } from './modes/CreativeMode';
@@ -52,7 +52,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell';
     title: string;
     description: string;
     config?: {
@@ -122,6 +122,9 @@ export interface Scenario {
         interventionTopic?: string;
         hauntedLocation?: string;
         heistTarget?: string;
+        creatorTopic?: string;
+        turingTopic?: string;
+        serviceIssue?: string;
     };
 }
 
@@ -187,7 +190,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     ghost_hunters: runGhostHuntersLoop,
     matrix: runMatrixLoop,
     support_group: runSupportGroupLoop,
-    heist_planner: runHeistPlannerLoop
+    heist_planner: runHeistPlannerLoop,
+    debate_creator: runDebateCreatorLoop,
+    reverse_turing: runReverseTuringLoop,
+    customer_service_hell: runCustomerServiceHellLoop
 };
 
 export class Director {

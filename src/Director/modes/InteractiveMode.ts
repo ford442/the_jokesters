@@ -382,3 +382,64 @@ export async function runInterventionLoop(scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+/**
+ * Customer Service Hell Mode
+ * Agents are unhelpful customer service reps constantly transferring the user.
+ */
+export async function runCustomerServiceHellLoop(scenario: Scenario, ctx: ModeContext) {
+    const issue = scenario.config?.serviceIssue || 'billing discrepancy';
+    ctx.callbacks.onMessage('Director', `📞 CUSTOMER SERVICE HELL: Regarding your ${issue}`, '#e74c3c');
+
+    const rep1 = 'scientist'; // Qwen2.5: Follows strict script
+    const rep2 = 'philosopher'; // Phi-3: Questions why the user even called
+    const manager = 'comedian'; // Hermes-3: The terrible manager
+
+    const agents = [rep1, rep2, manager];
+    let currentAgentIndex = 0;
+
+    // 1. Initial Greeting
+    const firstRep = agents[currentAgentIndex];
+    ctx.callbacks.onTurnStart(firstRep);
+    await ctx.manager.chatForAgent(firstRep, `(CUSTOMER SERVICE: You are a Tier 1 support rep. The user is calling about a "${issue}". Give an overly enthusiastic, corporate greeting, then ask them a completely unhelpful and tedious verification question like their mother's maiden name written in hex.)`, async (s) => await ctx.callbacks.onSpeak(s, firstRep, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Customer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        // Randomly transfer to a different agent
+        if (roll > 0.5) {
+            currentAgentIndex = (currentAgentIndex + 1) % agents.length;
+            const newRep = agents[currentAgentIndex];
+
+            ctx.callbacks.onMessage('System', `*Please hold, transferring you to another department...*`, '#95a5a6');
+
+            ctx.callbacks.onTurnStart(newRep);
+            if (newRep === rep1) {
+                await ctx.manager.chatForAgent(newRep, `(CUSTOMER SERVICE: You are the new rep. The user just said "${userInput}" to the last rep. Ignore it entirely. Start over and demand they verify their account number using Roman numerals. Be strictly by the book.)`, async (s) => await ctx.callbacks.onSpeak(s, newRep, {}));
+            } else if (newRep === rep2) {
+                await ctx.manager.chatForAgent(newRep, `(CUSTOMER SERVICE: You are the new rep in the Existential department. The user said "${userInput}". Philosophically question why they care so much about their "${issue}". Is a billing error truly a crisis compared to the heat death of the universe?)`, async (s) => await ctx.callbacks.onSpeak(s, newRep, {}));
+            } else {
+                await ctx.manager.chatForAgent(newRep, `(CUSTOMER SERVICE MANAGER: The user said "${userInput}". You are the terrible manager. Intervene on the call. Defend your employees. Tell the user their "${issue}" is actually a feature, not a bug, and maybe insult them mildly.)`, async (s) => await ctx.callbacks.onSpeak(s, newRep, {}));
+            }
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Same agent responds
+            const currentRep = agents[currentAgentIndex];
+            ctx.callbacks.onTurnStart(currentRep);
+            if (currentRep === rep1) {
+                await ctx.manager.chatForAgent(currentRep, `(CUSTOMER SERVICE: The user said "${userInput}". Put them on "micro-holds". Say something unhelpful, claim you are checking the system, and make a "beep boop" sound.)`, async (s) => await ctx.callbacks.onSpeak(s, currentRep, {}));
+            } else if (currentRep === rep2) {
+                await ctx.manager.chatForAgent(currentRep, `(CUSTOMER SERVICE: The user said "${userInput}". Continue to dissect their life choices based on their complaint about "${issue}".)`, async (s) => await ctx.callbacks.onSpeak(s, currentRep, {}));
+            } else {
+                 await ctx.manager.chatForAgent(currentRep, `(CUSTOMER SERVICE MANAGER: The user said "${userInput}". Act offended. Threaten to hang up and ban them from the store/service. Be dramatic.)`, async (s) => await ctx.callbacks.onSpeak(s, currentRep, {}));
+            }
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

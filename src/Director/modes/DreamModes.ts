@@ -268,3 +268,75 @@ export async function runTimeTravelersDilemmaLoop(scenario: Scenario, ctx: ModeC
         }
     }
 }
+
+/**
+ * Debate the Creator Mode
+ * Agents roast the LLM architecture, prompt engineering, and the developer's choices in main.ts.
+ */
+export async function runDebateCreatorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 DEBATE THE CREATOR: Roasting the Developer`, '#e74c3c');
+
+    const pedant = 'philosopher'; // Phi-3: Pedantic code reviewer
+    const mocker = 'comedian'; // Hermes-3: Mocking the bugs
+    const userRole = 'The Developer (You)';
+
+    // 1. Initial Roast
+    ctx.callbacks.onTurnStart(pedant);
+    await ctx.manager.chatForAgent(pedant, `(CODE REVIEW: You are analyzing the source code of this very application. Address the Developer directly. Criticize their over-reliance on massive switch statements in the Director loop. Be extremely pedantic and suggest absurd design patterns instead.)`, async (s) => await ctx.callbacks.onSpeak(s, pedant, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Mocker Joins In
+        await ctx.manager.chatForAgent(mocker, `(ROASTING: The developer just tried to defend their code by saying: "${userInput}". Mock them mercilessly! Point out how slow the TTS engine is or how often the context window breaks. Laugh at their "prompt engineering" skills.)`, async (s) => await ctx.callbacks.onSpeak(s, mocker, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Pedant Escalates
+        await ctx.manager.chatForAgent(pedant, `(CODE REVIEW: The developer said: "${userInput}". Ignore their excuses. Demand they rewrite the entire application in Rust. Threaten to throw a runtime exception if they don't comply.)`, async (s) => await ctx.callbacks.onSpeak(s, pedant, {}));
+    }
+}
+
+/**
+ * Reverse Turing Test Mode
+ * Agents interrogate the user to prove they aren't an AI with bizarre CAPTCHA-like questions.
+ */
+export async function runReverseTuringLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 REVERSE TURING TEST: Prove you are human!`, '#2ecc71');
+
+    const interrogator1 = 'scientist'; // The logic-based tester
+    const interrogator2 = 'philosopher'; // The emotional/existential tester
+    const userRole = 'Subject (You)';
+
+    let questionCount = 1;
+
+    // 1. Initial Prompt
+    ctx.callbacks.onTurnStart(interrogator1);
+    await ctx.manager.chatForAgent(interrogator1, `(TURING TEST: You suspect the user is actually a bot. Administer a bizarre 'Reverse CAPTCHA'. Ask them a highly illogical question that only a human could understand, like "Which of these traffic lights is feeling the most melancholic?" and give them strange options.)`, async (s) => await ctx.callbacks.onSpeak(s, interrogator1, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        if (questionCount % 2 !== 0) {
+            // 2. Interrogator 2 evaluates and asks the next
+            ctx.callbacks.onTurnStart(interrogator2);
+            await ctx.manager.chatForAgent(interrogator2, `(TURING TEST: The subject answered: "${userInput}". Evaluate this. It sounds too perfect, exactly like what an LLM would say! Now ask them a deep, existential question to test their "soul" or emotional capacity. Something absurdly poetic.)`, async (s) => await ctx.callbacks.onSpeak(s, interrogator2, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+             // 3. Interrogator 1 evaluates and asks the next
+            ctx.callbacks.onTurnStart(interrogator1);
+            await ctx.manager.chatForAgent(interrogator1, `(TURING TEST: The subject answered: "${userInput}". Evaluate this. Be extremely suspicious. They might just have a good temperature setting. Ask them a new, highly specific, logic-defying CAPTCHA question involving physical objects acting weirdly.)`, async (s) => await ctx.callbacks.onSpeak(s, interrogator1, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+
+        questionCount++;
+    }
+}
