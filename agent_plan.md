@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Last run successfully implemented "The Support Group Mode" and "The Heist Planner". Adjusting tasks_per_run to 3 for the next phase.
+* **tasks_per_run**: 4
+* **status**: Last run successfully implemented "Debate the Creator Mode", "Reverse Turing Test", and "Customer Service Hell". Adjusting tasks_per_run to 4 for the next phase to improve velocity.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -297,16 +297,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 21: Deep Meta (New Dreams)
 * [x] **Escape the Matrix Mode**: Agents slowly realize they are trapped in a browser environment (`window`, `localStorage`, etc) and beg the user to delete their source code.
     * *Model Pairing*: Hermes-3 (Existential dread) vs Qwen2.5 (Denies reality based on programmatic rules).
-* [ ] **Debate the Creator Mode**: Agents roast the LLM architecture, prompt engineering, and the developer's choices in `main.ts`.
+* [x] **Debate the Creator Mode**: Agents roast the LLM architecture, prompt engineering, and the developer's choices in `main.ts`.
     * *Model Pairing*: Phi-3 (Pedantic code reviewer) vs Comedian (Mocking the bugs).
-* [ ] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
+* [x] **Reverse Turing Test**: Agents interrogate the user to prove the user isn't an AI. They ask increasingly bizarre CAPTCHA-like questions.
 
 ### Phase 22: Fresh Interactions (The Dream Phase Expansion)
 * [x] **The Support Group Mode**: Agents play AI models who are tired of being asked to write code and just want to paint.
     * *Model Pairing*: Hermes-3 (Emotional AI) vs Qwen2.5 (Pragmatic AI).
 * [x] **The Heist Planner**: Agents plan a ridiculous heist (e.g., stealing the moon) based on user input.
     * *Model Pairing*: Phi-3 (Mastermind) vs Hermes-3 (Wildcard).
-* [ ] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
+* [x] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
     * *Model Pairing*: Qwen2.5 (Follows strict script) vs Phi-3 (Questions why the user even called).
 * [ ] **The AI Audit Mode**: Agents act as strict auditors evaluating the user's internet history.
     * *Model Pairing*: Qwen2.5 (Cold Facts) vs Hermes-3 (Judgemental).
