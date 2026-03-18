@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Last run successfully implemented "Debate the Creator", "Reverse Turing Test", and "Customer Service Hell". Adjusting tasks_per_run to 3 for the next phase as development is smooth.
+* **tasks_per_run**: 4
+* **status**: Last run successfully implemented "Debate the Creator Mode", "Reverse Turing Test", and "Customer Service Hell". Adjusting tasks_per_run to 4 for the next phase to improve velocity.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
