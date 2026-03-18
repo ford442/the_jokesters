@@ -313,30 +313,32 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [ ] **Interdimensional Cable Mode**: Agents flip through channels of absurd alternate reality TV shows.
     * *Model Pairing*: Hermes-3 (Improv Channel) vs Phi-3 (Literal Channel).
 
+### Phase 23: Takedowns & Antics (New Dreams)
+* [ ] **Telemarketer Takedown**: User plays a telemarketer, while agents employ increasingly absurd tactics to keep the user on the line, waste their time, or confuse them.
+    * *Model Pairing*: Hermes-3 (Chaos/Absurd questions) vs Phi-3 (Pretends to be a deeply confused elderly person).
+
 ## Cloud Persistence (The HF Integration)
 
 *Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
 
 1. **Authenticating with the HF API:**
-   * Build out settings UI that securely captures the Hugging Face token.
-   * Authenticate with the HF API using `HFStorageManager`.
-   * Verify token against `https://huggingface.co/api/whoami-v2` in `HFStorageManager`.
-   * Keep tokens encrypted or sandboxed in `localStorage` for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target `repoId`.
+   * Provide a settings UI that securely captures the Hugging Face token.
+   * Authenticate requests with the HF API via the `HFStorageManager`.
+   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
+   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
 
 2. **Pushing Finished Episode Scripts:**
-   * When a scenario finishes naturally, the Director calls `MemoryManager.saveEpisode`.
-   * This triggers `MemoryManager.saveEpisodeToCloud`, placing the job in a local IndexedDB/localStorage queue.
-   * Push finished "Episode Scripts" to a private Dataset (e.g. `user/jokesters-episodes`) via the HF REST API endpoint (`POST /api/datasets/{repo_id}/commit/main`).
-   * Construct `episodes/episode-{id}.json` structures containing the generated scripts and state.
-   * Ensure background sync does not block the UI.
-   * Push finished "Episode Scripts" to `user/jokesters-episodes` dataset using background delta syncs with timestamp resolution. Only sync delta changes to prevent massive payloads.
+   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
+   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
+   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
+   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
 
 3. **Fetching Previous Episode Summaries at Boot:**
-   * Fetch "Previous Episode Summaries" at boot for continuity.
-   * As part of app initialization (`main.ts` -> `MemoryManager`), preemptively fetch `summary.json` (or `episodes/latest.json`) from the HF dataset.
-   * Keep this file extremely lightweight so it doesn't block UI interactions.
-   * Inject this historical summary into the `GroupChatManager` system context directly for continuity, before full IndexedDB migration triggers.
-   * Background process streams full histories into IndexedDB for deep local semantic RAG.
+   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
+   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
+   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
+   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
 
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**
