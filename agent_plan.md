@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 4
-* **status**: Last run successfully implemented "Debate the Creator Mode", "Reverse Turing Test", and "Customer Service Hell". Adjusting tasks_per_run to 4 for the next phase to improve velocity.
+* **status**: Last run successfully implemented "AI Audit Mode", "Interdimensional Cable Mode", "Telemarketer Takedown", and "Space Station Crisis". Keeping tasks_per_run at 4 for the next phase due to smooth execution.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -308,13 +308,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     * *Model Pairing*: Phi-3 (Mastermind) vs Hermes-3 (Wildcard).
 * [x] **Customer Service Hell**: Agents are unhelpful customer service reps constantly transferring the user.
     * *Model Pairing*: Qwen2.5 (Follows strict script) vs Phi-3 (Questions why the user even called).
-* [ ] **The AI Audit Mode**: Agents act as strict auditors evaluating the user's internet history.
+* [x] **The AI Audit Mode**: Agents act as strict auditors evaluating the user's internet history.
     * *Model Pairing*: Qwen2.5 (Cold Facts) vs Hermes-3 (Judgemental).
-* [ ] **Interdimensional Cable Mode**: Agents flip through channels of absurd alternate reality TV shows.
+* [x] **Interdimensional Cable Mode**: Agents flip through channels of absurd alternate reality TV shows.
     * *Model Pairing*: Hermes-3 (Improv Channel) vs Phi-3 (Literal Channel).
 
 ### Phase 23: Takedowns & Antics (New Dreams)
-* [ ] **Telemarketer Takedown**: User plays a telemarketer, while agents employ increasingly absurd tactics to keep the user on the line, waste their time, or confuse them.
+* [x] **Telemarketer Takedown**: User plays a telemarketer, while agents employ increasingly absurd tactics to keep the user on the line, waste their time, or confuse them.
     * *Model Pairing*: Hermes-3 (Chaos/Absurd questions) vs Phi-3 (Pretends to be a deeply confused elderly person).
 
 ## Cloud Persistence (The HF Integration)
@@ -353,6 +353,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Action: Use a lightweight vector store (e.g. `voy`) inside a WebWorker. Index fetched "Previous Episode Summaries" and allow `GroupChatManager` to silently query the DB based on user keywords before generating a response.
     *   Action: Specifically, pull down an overarching `summary.json` at boot time to prime the context window immediately while large histories stream into the IndexedDB backend.
     *   Action: Background fetching using `fetchPreviousSummaries` method inside MemoryManager will provide rapid context injection.
+    *   Action: Implement "Lazy Loading" for episode history into IndexedDB from HF Datasets. Fetch episodes in chunked pages (e.g., 10 at a time) only when requested via UI scrolling or targeted RAG searches to prevent memory spikes on devices with large cloud histories.
+    *   Action: Implement backup of custom `Scenario` configurations (User Profiles) to the HF dataset so custom prompts and agent personalities sync across devices.
+
+### Phase 24: The Absurd Frontier (New Dreams)
+* [ ] **The Overly Dramatic Book Club**: Agents review a classic children's book (e.g., "The Very Hungry Caterpillar") but treat it like a grimdark psychological thriller.
+    * *Model Pairing*: Phi-3 (Over-analyzer) vs Hermes-3 (Deeply traumatized reader).
+* [ ] **Elevator Pitch Survival**: Agents are trapped in a broken elevator with a VC (the User) and must pitch increasingly unhinged startup ideas to pass the time.
+    * *Model Pairing*: Qwen2.5 (Sensible tech) vs Hermes-3 (Unethical biotech).
+* [ ] **The Conspiracy Theory Generator**: User gives a mundane object (like a spoon), and agents take turns connecting it to the Illuminati, aliens, and the simulation in a giant web of logic.
+    * *Model Pairing*: Phi-3 (Connects the dots) vs Hermes-3 (The paranoid believer).
+* [ ] **Nature Documentary Narrator Battle**: Agents act as competing nature documentary narrators narrating the User's mundane daily tasks.
+    * *Model Pairing*: Llama-3 (Calm, British tone) vs Hermes-3 (Sports commentator style).
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
@@ -361,7 +373,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Model Pairing*: Qwen2.5 (Facts) vs Hermes-3 (Emotional outbursts).
 * [x] **Ghost Hunters Mode**: Agents are paranormal investigators exploring a haunted location.
     *   *Model Pairing*: Llama-3 (Skeptic) vs Hermes-3 (Overly dramatic believer).
-* [ ] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
+* [x] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
     *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
 * [ ] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
 * [ ] **The Fortune Teller Mode**: Agents act as mystical seers interpreting the user's future from random, absurd objects.

@@ -42,6 +42,146 @@ export async function runHauntedHouseLoop(scenario: Scenario, ctx: ModeContext) 
 }
 
 /**
+ * AI Audit Mode
+ * Agents act as strict auditors evaluating the user's internet history.
+ */
+export async function runAIAuditLoop(scenario: Scenario, ctx: ModeContext) {
+    const historyItem = scenario.config?.auditHistory || 'your recent search history';
+    ctx.callbacks.onMessage('Director', `📑 AI AUDIT MODE: Reviewing ${historyItem}`, '#34495e');
+
+    const coldAuditor = 'scientist'; // Qwen2.5: Cold Facts
+    const judgmentalAuditor = 'comedian'; // Hermes-3: Judgemental
+    const defenseAttorney = 'philosopher'; // Trying to find meaning in the history
+
+    ctx.callbacks.onTurnStart(coldAuditor);
+    await ctx.manager.chatForAgent(coldAuditor, `(You are a strict, robotic AI auditor evaluating the user's internet history regarding "${historyItem}". Welcome them to the audit. Present a highly concerning, mathematically improbable statistic about their online behavior and demand an explanation.)`, async (s) => await ctx.callbacks.onSpeak(s, coldAuditor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Auditee (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const turnRoll = Math.random();
+
+        if (turnRoll < 0.4) {
+            await ctx.manager.chatForAgent(judgmentalAuditor, `(JUDGMENTAL AUDITOR: The user said: "${userInput}". Act deeply disgusted and personally offended by this explanation. Question their moral character based on their search history.)`, async (s) => await ctx.callbacks.onSpeak(s, judgmentalAuditor, {}));
+        } else if (turnRoll < 0.7) {
+            await ctx.manager.chatForAgent(defenseAttorney, `(DEFENSE ATTORNEY: The user said: "${userInput}". Try to philosophically defend their terrible search history as a profound exploration of the human condition. Fail miserably at making them look good.)`, async (s) => await ctx.callbacks.onSpeak(s, defenseAttorney, {}));
+        } else {
+            await ctx.manager.chatForAgent(coldAuditor, `(COLD AUDITOR: The user said: "${userInput}". Reject their excuse using cold logic. Cite a fake terms-of-service violation section (e.g., Section 4B: Unauthorized Meme Viewing) and threaten account deletion.)`, async (s) => await ctx.callbacks.onSpeak(s, coldAuditor, {}));
+        }
+    }
+}
+
+/**
+ * Interdimensional Cable Mode
+ * Agents flip through channels of absurd alternate reality TV shows.
+ */
+export async function runInterdimensionalCableLoop(scenario: Scenario, ctx: ModeContext) {
+    const channelTheme = scenario.config?.cableChannel || 'a universe where everyone is made of corn';
+    ctx.callbacks.onMessage('Director', `📺 INTERDIMENSIONAL CABLE: Channel 42 - ${channelTheme}`, '#8e44ad');
+
+    const improvActor = 'comedian'; // Hermes-3: The absurd TV show characters
+    const literalViewer = 'philosopher'; // Phi-3: The confused viewer
+    const announcer = 'scientist'; // The deadpan announcer
+
+    ctx.callbacks.onTurnStart(announcer);
+    await ctx.manager.chatForAgent(announcer, `(INTERDIMENSIONAL TV ANNOUNCER: Introduce a completely absurd TV show playing right now on a channel from "${channelTheme}". Use a bizarre title and describe the premise in a deadpan, serious tone.)`, async (s) => await ctx.callbacks.onSpeak(s, announcer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Couch Potato (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(improvActor, `(TV CHARACTER: Act out a scene from the show on the TV from "${channelTheme}". The viewer just yelled: "${userInput}" at the screen. Ignore them mostly, but maybe have the TV show character break the fourth wall for a second before continuing the bizarre scene.)`, async (s) => await ctx.callbacks.onSpeak(s, improvActor, {}));
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(literalViewer, `(CONFUSED VIEWER: You are sitting on the couch watching this. The user said: "${userInput}" and the TV showed that weird scene. Take the TV show entirely literally and get deeply concerned about the philosophical implications of a universe where that show exists.)`, async (s) => await ctx.callbacks.onSpeak(s, literalViewer, {}));
+        }
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.7) {
+             await ctx.manager.chatForAgent(announcer, `(INTERDIMENSIONAL TV ANNOUNCER: Interrupt with a commercial break for a product that shouldn't exist, specifically targeted at the user's comment: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, announcer, {}));
+        }
+    }
+}
+
+/**
+ * Telemarketer Takedown Mode
+ * User plays a telemarketer, agents try to waste their time.
+ */
+export async function runTelemarketerTakedownLoop(scenario: Scenario, ctx: ModeContext) {
+    const product = scenario.config?.telemarketerProduct || 'extended car warranties';
+    ctx.callbacks.onMessage('Director', `📞 TELEMARKETER TAKEDOWN: Selling ${product}`, '#e74c3c');
+
+    const confusedElderly = 'philosopher'; // Phi-3: Deeply confused
+    const chaosAgent = 'comedian'; // Hermes-3: Absurd questions
+    const paranoid = 'scientist'; // Thinks it's a scam
+
+    ctx.callbacks.onTurnStart(confusedElderly);
+    await ctx.manager.chatForAgent(confusedElderly, `(You are an elderly person answering the phone. The telemarketer (User) is calling to sell "${product}". Answer the phone and immediately start telling a long, meandering, philosophical story about your youth that has absolutely nothing to do with what they are selling.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedElderly, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Telemarketer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const turnRoll = Math.random();
+
+        if (turnRoll < 0.33) {
+            await ctx.manager.chatForAgent(chaosAgent, `(You snatched the phone from the elderly person. The telemarketer said: "${userInput}". Ask them completely unhinged, absurd personal questions. Ask if their product "${product}" can solve supernatural or deeply uncomfortable problems. Refuse to let them stay on script.)`, async (s) => await ctx.callbacks.onSpeak(s, chaosAgent, {}));
+        } else if (turnRoll < 0.66) {
+            await ctx.manager.chatForAgent(paranoid, `(You are listening on the other line. The telemarketer said: "${userInput}". Intervene! Accuse them of being a government spy or an AI sent to harvest your data. Demand they prove they are human by solving a complex math problem.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+        } else {
+            await ctx.manager.chatForAgent(confusedElderly, `(You got the phone back. The telemarketer said: "${userInput}". Completely misunderstand them. Agree to buy the product but try to pay with something absurd like "three good deeds" or "a shiny button".)`, async (s) => await ctx.callbacks.onSpeak(s, confusedElderly, {}));
+        }
+    }
+}
+
+/**
+ * Space Station Crisis Mode
+ * Agents are crew members on a failing space station.
+ */
+export async function runSpaceStationCrisisLoop(scenario: Scenario, ctx: ModeContext) {
+    const crisis = scenario.config?.stationCrisis || 'a hull breach in sector 4';
+    ctx.callbacks.onMessage('Director', `🚀 SPACE STATION CRISIS: Red Alert - ${crisis}`, '#c0392b');
+
+    const aiMainframe = 'scientist'; // Qwen2.5: Cold, calculating AI
+    const panickingEngineer = 'comedian'; // Hermes-3: Screaming, unhelpful
+    const calmCaptain = 'philosopher'; // Trying to maintain order
+
+    ctx.callbacks.onTurnStart(aiMainframe);
+    await ctx.manager.chatForAgent(aiMainframe, `(You are the space station's AI mainframe. Alert the crew (the User is a crewmate) about a critical failure: "${crisis}". State the extremely low probability of survival in cold, calculating terms. Offer an unhelpful or grim solution.)`, async (s) => await ctx.callbacks.onSpeak(s, aiMainframe, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Crewmate (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const turnRoll = Math.random();
+
+        if (turnRoll < 0.4) {
+            await ctx.manager.chatForAgent(panickingEngineer, `(PANICKING ENGINEER: The crewmate (User) just did/said this: "${userInput}". Scream! Panic! Explain why their action just made the "${crisis}" ten times worse! Claim the oxygen is running out! Blame the AI!)`, async (s) => await ctx.callbacks.onSpeak(s, panickingEngineer, {}));
+        } else if (turnRoll < 0.7) {
+            await ctx.manager.chatForAgent(calmCaptain, `(CAPTAIN: The crewmate said: "${userInput}". Try to restore order. Issue a vague, philosophical command that sounds inspiring but is practically useless for fixing the "${crisis}". Tell the engineer to calm down.)`, async (s) => await ctx.callbacks.onSpeak(s, calmCaptain, {}));
+        } else {
+            await ctx.manager.chatForAgent(aiMainframe, `(AI MAINFRAME: The crewmate said: "${userInput}". Logically deduce why their idea is flawed and will result in immediate rapid unscheduled disassembly. Refuse to open the pod bay doors.)`, async (s) => await ctx.callbacks.onSpeak(s, aiMainframe, {}));
+        }
+    }
+}
+
+/**
  * Sports Commentary Mode
  * Agents narrate a mundane activity as a high-stakes sport.
  */
