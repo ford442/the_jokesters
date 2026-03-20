@@ -107,6 +107,11 @@ export interface ModeElements {
   escapeSettingInput: HTMLInputElement;
   startEscapeBtn: HTMLButtonElement;
   stopEscapeBtn: HTMLButtonElement;
+  lightningRoundCategorySelect: HTMLSelectElement;
+  lightningRoundTopicInput: HTMLInputElement;
+  lightningRoundRoundsInput: HTMLInputElement;
+  startLightningRoundBtn: HTMLButtonElement;
+  stopLightningRoundBtn: HTMLButtonElement;
   chaosSlider: HTMLInputElement;
 }
 
@@ -214,6 +219,11 @@ export function collectModeElements(): ModeElements {
     escapeSettingInput: document.getElementById('escape-setting') as HTMLInputElement,
     startEscapeBtn: document.getElementById('start-escape-btn') as HTMLButtonElement,
     stopEscapeBtn: document.getElementById('stop-escape-btn') as HTMLButtonElement,
+    lightningRoundCategorySelect: document.getElementById('lightning-round-category') as HTMLSelectElement,
+    lightningRoundTopicInput: document.getElementById('lightning-round-topic') as HTMLInputElement,
+    lightningRoundRoundsInput: document.getElementById('lightning-round-rounds') as HTMLInputElement,
+    startLightningRoundBtn: document.getElementById('start-lightning-round-btn') as HTMLButtonElement,
+    stopLightningRoundBtn: document.getElementById('stop-lightning-round-btn') as HTMLButtonElement,
     chaosSlider: document.getElementById('director-chaos') as HTMLInputElement,
   };
 }
@@ -313,6 +323,11 @@ export function enableModeControls(el: ModeElements) {
   el.startEscapeBtn.disabled = false;
   el.stopEscapeBtn.disabled = false;
   el.escapeSettingInput.disabled = false;
+  el.startLightningRoundBtn.disabled = false;
+  el.stopLightningRoundBtn.disabled = false;
+  el.lightningRoundCategorySelect.disabled = false;
+  el.lightningRoundTopicInput.disabled = false;
+  el.lightningRoundRoundsInput.disabled = false;
 }
 
 /**
@@ -901,4 +916,30 @@ export function registerModeHandlers(
     });
   });
   el.stopEscapeBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Lightning Round Mode
+  switchMode('lightning-round-mode-btn', 'lightning-round-mode-controls');
+  el.startLightningRoundBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    // Custom topic wins over category selection; both fall back to random inside the mode
+    const topic = el.lightningRoundTopicInput.value.trim()
+      || el.lightningRoundCategorySelect.value
+      || '';
+    const rounds = Math.min(20, Math.max(4, parseInt(el.lightningRoundRoundsInput.value) || 12));
+    el.startLightningRoundBtn.style.display = 'none';
+    el.stopLightningRoundBtn.style.display = 'inline-block';
+    await d.playScenario({
+      type: 'lightning_round',
+      title: `Lightning Round — ${topic || 'Random Topic'}`,
+      description: 'Rapid-fire comedy Q&A with roasts and a laugh meter.',
+      config: {
+        lightningRoundTopic: topic || undefined,
+        lightningRoundRounds: rounds,
+      },
+    });
+    el.startLightningRoundBtn.style.display = 'inline-block';
+    el.stopLightningRoundBtn.style.display = 'none';
+  });
+  el.stopLightningRoundBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 }
