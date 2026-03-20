@@ -1,6 +1,7 @@
 import * as webllm from '@mlc-ai/web-llm'
 import { loadModelWithDynamicContext } from './utils/dynamicContext'
 import { appConfig, defaultModelId, OPTIMIZED_MODELS } from './config/models'
+import { parallelDownloadManager } from './services/ParallelDownloadManager'
 
 // ============================================================================
 // PROFANITY LEVEL CONFIGURATION
@@ -89,6 +90,15 @@ export class GroupChatManager {
     preferredContext?: number | 'auto'
   ): Promise<void> {
     if (this.isInitialized) return
+
+    // Initialize parallel download manager for faster model loading
+    try {
+      await parallelDownloadManager.initialize()
+      console.log('[ModelLoader] Parallel download manager initialized')
+    } catch (error) {
+      console.warn('[ModelLoader] Could not initialize parallel download manager:', error)
+      // Continue anyway - parallel downloads are optional optimization
+    }
 
     // Pre-check WebGPU availability before attempting model load
     const gpu = (navigator as unknown as { gpu?: unknown }).gpu
