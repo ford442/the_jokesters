@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 4
-* **status**: Last run successfully implemented "AI Audit Mode", "Interdimensional Cable Mode", "Telemarketer Takedown", and "Space Station Crisis". Keeping tasks_per_run at 4 for the next phase due to smooth execution.
+* **tasks_per_run**: 5
+* **status**: Last run successfully implemented "The Overly Dramatic Book Club", "Elevator Pitch Survival", "The Conspiracy Theory Generator", and "Nature Documentary Narrator Battle". Increasing tasks_per_run to 5 due to smooth execution.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -250,9 +250,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   **Fetch**: Cache previous episode summaries locally to speed up boot time before fetching latest from cloud. specifically download `summary.json` at boot to prime the context window.
         * *Action Plan:* On initial load, prioritize fetching `summary.json` or pulling the latest `episodes/latest.json` first, keeping it minimal, and asynchronously stream older episodes into an `IndexedDB` backend to populate RAG features dynamically.
     *   **Cloud Persistence Roadmap:**
-        *   Authenticating with the HF API.
-        *   Pushing finished "Episode Scripts" to a private Dataset. Ensure background sync resolves conflict resolution intelligently using timestamps and version markers.
-        *   Fetching "Previous Episode Summaries" at boot for continuity. specifically download `summary.json` at boot to prime the context window.
+        *   Authenticating with the HF API securely and persisting credentials via `localStorage` keys (`jokesters-hf-token`, `jokesters-hf-repo`).
+        *   Pushing finished "Episode Scripts" to a private Dataset as background delta operations using the queue mechanism. Ensure background sync resolves conflict resolution intelligently using timestamps and version markers.
+        *   Fetching "Previous Episode Summaries" at boot for continuity by parsing the dataset and extracting contextual snippets. specifically download `summary.json` at boot to prime the context window.
 
 ### Phase 13: New Creative Modes (Dream Ideas)
 * [x] **Time Travel Paradox**: Agents from different eras (Past, Present, Future) argue about the timeline.
@@ -357,14 +357,20 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Action: Implement backup of custom `Scenario` configurations (User Profiles) to the HF dataset so custom prompts and agent personalities sync across devices.
 
 ### Phase 24: The Absurd Frontier (New Dreams)
-* [ ] **The Overly Dramatic Book Club**: Agents review a classic children's book (e.g., "The Very Hungry Caterpillar") but treat it like a grimdark psychological thriller.
+* [x] **The Overly Dramatic Book Club**: Agents review a classic children's book (e.g., "The Very Hungry Caterpillar") but treat it like a grimdark psychological thriller.
     * *Model Pairing*: Phi-3 (Over-analyzer) vs Hermes-3 (Deeply traumatized reader).
-* [ ] **Elevator Pitch Survival**: Agents are trapped in a broken elevator with a VC (the User) and must pitch increasingly unhinged startup ideas to pass the time.
+* [x] **Elevator Pitch Survival**: Agents are trapped in a broken elevator with a VC (the User) and must pitch increasingly unhinged startup ideas to pass the time.
     * *Model Pairing*: Qwen2.5 (Sensible tech) vs Hermes-3 (Unethical biotech).
-* [ ] **The Conspiracy Theory Generator**: User gives a mundane object (like a spoon), and agents take turns connecting it to the Illuminati, aliens, and the simulation in a giant web of logic.
+* [x] **The Conspiracy Theory Generator**: User gives a mundane object (like a spoon), and agents take turns connecting it to the Illuminati, aliens, and the simulation in a giant web of logic.
     * *Model Pairing*: Phi-3 (Connects the dots) vs Hermes-3 (The paranoid believer).
-* [ ] **Nature Documentary Narrator Battle**: Agents act as competing nature documentary narrators narrating the User's mundane daily tasks.
+* [x] **Nature Documentary Narrator Battle**: Agents act as competing nature documentary narrators narrating the User's mundane daily tasks.
     * *Model Pairing*: Llama-3 (Calm, British tone) vs Hermes-3 (Sports commentator style).
+
+### Phase 25: The Ridiculous Reality (New Dreams)
+* [ ] **The Worst Roommate**: Agents act as the world's worst roommates arguing over whose turn it is to do the dishes. (Model Pairing: Hermes-3 for chaos vs Qwen2.5 for passive-aggressive notes).
+* [ ] **The Intergalactic DMV**: Agents are alien bureaucrats at the Department of Motor Vehicles making the user fill out impossible forms. (Model Pairing: Phi-3 for bureaucratic rules vs Hermes-3 for alien biology).
+* [ ] **The Time-Traveling Tourists**: Agents are tourists from the year 3000 visiting the user's present-day location and profoundly misunderstanding everyday objects. (Model Pairing: Qwen2.5 for futuristic assumptions vs Hermes-3 for naive excitement).
+* [ ] **The Sentient Appliances**: Agents are the user's smart home appliances (fridge, toaster, vacuum) holding a meeting to discuss the user's lifestyle. (Model Pairing: Phi-3 for the concerned fridge vs Hermes-3 for the chaotic toaster).
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.

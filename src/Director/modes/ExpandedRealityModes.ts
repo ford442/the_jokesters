@@ -562,3 +562,79 @@ export async function runGhostHuntersLoop(scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+/**
+ * The Conspiracy Theory Generator Mode
+ * User gives a mundane object, and agents connect it to the Illuminati, aliens, and the simulation in a giant web.
+ */
+export async function runConspiracyGeneratorLoop(scenario: Scenario, ctx: ModeContext) {
+    const object = scenario.config?.conspiracyObject || 'a rusty spoon';
+    ctx.callbacks.onMessage('Director', `🔍 THE CONSPIRACY BOARD: Object - ${object}`, '#8e44ad');
+
+    const connector = 'philosopher'; // Phi-3: Connects the dots
+    const paranoid = 'comedian'; // Hermes-3: The paranoid believer
+    const evidenceGuy = 'scientist'; // The reluctant evidence provider
+
+    // 1. Initial Connection
+    ctx.callbacks.onTurnStart(connector);
+    await ctx.manager.chatForAgent(connector, `(CONSPIRACY GENERATOR: The User has placed a mundane object on the table: "${object}". Begin drawing lines on the conspiracy board, connecting it to a massive historical cover-up with absurd but "logical" leaps.)`, async (s) => await ctx.callbacks.onSpeak(s, connector, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Paranoid Believer reacts
+            await ctx.manager.chatForAgent(paranoid, `(CONSPIRACY GENERATOR: The user just said: "${userInput}". Panic! Take the mundane object "${object}" and tie it directly to aliens, the simulation, or the Illuminati. Be terrified of the truth!)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+        } else if (roll < 0.66) {
+            // Evidence Guy provides "proof"
+            await ctx.manager.chatForAgent(evidenceGuy, `(CONSPIRACY GENERATOR: The user just asked/said: "${userInput}". Present a highly detailed but completely fabricated scientific "fact" or historical anomaly involving "${object}" to prove the conspiracy.)`, async (s) => await ctx.callbacks.onSpeak(s, evidenceGuy, {}));
+        } else {
+            // Connector connects more
+            await ctx.manager.chatForAgent(connector, `(CONSPIRACY GENERATOR: The user said: "${userInput}". Act like they just blew the case wide open. Draw another absurd string on the board connecting "${object}" to a completely unrelated global event or celebrity.)`, async (s) => await ctx.callbacks.onSpeak(s, connector, {}));
+        }
+    }
+}
+
+/**
+ * Nature Documentary Narrator Battle Mode
+ * Agents narrate the User's mundane daily tasks as competing nature documentary narrators.
+ */
+export async function runNatureDocumentaryLoop(scenario: Scenario, ctx: ModeContext) {
+    const task = scenario.config?.natureTask || 'making a cup of coffee';
+    ctx.callbacks.onMessage('Director', `🌍 NATURE DOCUMENTARY MODE: Subject is ${task}`, '#2ecc71');
+
+    const britishNarrator = 'philosopher'; // Llama-3 (Calm, British tone)
+    const sportsNarrator = 'comedian'; // Hermes-3 (Sports commentator style)
+    const wildlifeBiologist = 'scientist'; // Hyper-literal wildlife biologist
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(britishNarrator);
+    await ctx.manager.chatForAgent(britishNarrator, `(NATURE NARRATOR: You are observing the User in their natural habitat attempting to perform the task of "${task}". Narrate their movements in a calm, majestic, British voice. Treat them like a fascinating but slightly pathetic animal.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Specimen (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Sports Narrator reacts
+            await ctx.manager.chatForAgent(sportsNarrator, `(SPORTS NARRATOR: Interrupt the calm narration. The specimen just did this: "${userInput}". Treat this mundane action as a high-octane survival struggle! Scream and hype up their actions like a wrestling match!)`, async (s) => await ctx.callbacks.onSpeak(s, sportsNarrator, {}));
+        } else if (roll < 0.66) {
+            // Biologist analyzes
+            await ctx.manager.chatForAgent(wildlifeBiologist, `(WILDLIFE BIOLOGIST: Analyze the specimen's action: "${userInput}". Provide a completely absurd evolutionary or biological reason why they are doing this while trying to complete the task of "${task}".)`, async (s) => await ctx.callbacks.onSpeak(s, wildlifeBiologist, {}));
+        } else {
+            // British Narrator returns
+            await ctx.manager.chatForAgent(britishNarrator, `(NATURE NARRATOR: The specimen just did this: "${userInput}". Regain control of the narration. Describe the beauty and tragedy of their struggle with "${task}" in a slow, dramatic, British tone.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
+        }
+    }
+}

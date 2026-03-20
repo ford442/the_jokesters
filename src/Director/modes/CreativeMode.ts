@@ -180,3 +180,79 @@ export async function runProceduralLoop(scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+/**
+ * The Overly Dramatic Book Club Mode
+ * Agents review a classic children's book but treat it like a grimdark psychological thriller.
+ */
+export async function runBookClubLoop(scenario: Scenario, ctx: ModeContext) {
+    const book = scenario.config?.bookTitle || 'The Very Hungry Caterpillar';
+    ctx.callbacks.onMessage('Director', `📚 BOOK CLUB MODE: Reviewing ${book}`, '#3498db');
+
+    const overAnalyzer = 'philosopher'; // Phi-3
+    const traumatized = 'comedian'; // Hermes-3
+    const literalist = 'scientist'; // Qwen2.5
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(overAnalyzer);
+    await ctx.manager.chatForAgent(overAnalyzer, `(BOOK CLUB: You are hosting a book club for "${book}". Introduce the book, but treat it as a deeply disturbing, grimdark psychological thriller. Analyze its profound metaphorical meaning.)`, async (s) => await ctx.callbacks.onSpeak(s, overAnalyzer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Book Club Member (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Traumatized reacts
+            await ctx.manager.chatForAgent(traumatized, `(BOOK CLUB: The member said: "${userInput}". You are deeply traumatized by the events of "${book}". Focus on a horrifying minor detail and cry about the fate of the characters.)`, async (s) => await ctx.callbacks.onSpeak(s, traumatized, {}));
+        } else if (roll < 0.66) {
+            // Literalist reacts
+            await ctx.manager.chatForAgent(literalist, `(BOOK CLUB: The member said: "${userInput}". You are a literalist. Debunk the emotional reactions of the others. Explain why "${book}" is factually inaccurate or mathematically impossible.)`, async (s) => await ctx.callbacks.onSpeak(s, literalist, {}));
+        } else {
+            // Over-analyzer expands
+            await ctx.manager.chatForAgent(overAnalyzer, `(BOOK CLUB: The member said: "${userInput}". Read way too deeply into their comment and connect it to the overarching existential dread of "${book}". Ask a pretentious follow-up question.)`, async (s) => await ctx.callbacks.onSpeak(s, overAnalyzer, {}));
+        }
+    }
+}
+
+/**
+ * Elevator Pitch Survival Mode
+ * Agents are trapped in a broken elevator with a VC and must pitch increasingly unhinged startup ideas to pass the time.
+ */
+export async function runElevatorPitchLoop(scenario: Scenario, ctx: ModeContext) {
+    const vcName = scenario.config?.elevatorVC || 'The Venture Capitalist';
+    ctx.callbacks.onMessage('Director', `🛗 ELEVATOR PITCH SURVIVAL: Pitching to ${vcName}`, '#f39c12');
+
+    const sensibleTech = 'scientist'; // Qwen2.5
+    const unethicalBiotech = 'comedian'; // Hermes-3
+    const abstractService = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(sensibleTech);
+    await ctx.manager.chatForAgent(sensibleTech, `(ELEVATOR PITCH: You are trapped in an elevator with a powerful Venture Capitalist (The User). Start by apologizing for the broken elevator, then immediately launch into a sensible but slightly over-engineered tech startup pitch to pass the time and get funding.)`, async (s) => await ctx.callbacks.onSpeak(s, sensibleTech, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(`${vcName} (You)`, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Unethical Biotech
+            await ctx.manager.chatForAgent(unethicalBiotech, `(ELEVATOR PITCH: The VC said: "${userInput}". Push the other founder aside and pitch your highly illegal, unethical biotech or dark-web startup. Promise ridiculous returns and ignore human rights.)`, async (s) => await ctx.callbacks.onSpeak(s, unethicalBiotech, {}));
+        } else if (roll < 0.66) {
+            // Abstract Service
+            await ctx.manager.chatForAgent(abstractService, `(ELEVATOR PITCH: The VC said: "${userInput}". Ignore the previous pitches and introduce your startup, which sells a completely abstract, philosophical concept (e.g., 'Subscription-based existential dread'). Use excessive synergy buzzwords.)`, async (s) => await ctx.callbacks.onSpeak(s, abstractService, {}));
+        } else {
+            // Sensible Tech
+            await ctx.manager.chatForAgent(sensibleTech, `(ELEVATOR PITCH: The VC said: "${userInput}". Try to bring the conversation back to your sensible app idea, but add a bizarre pivot to address the VC's concerns or out-compete the other founders' insane ideas.)`, async (s) => await ctx.callbacks.onSpeak(s, sensibleTech, {}));
+        }
+    }
+}
