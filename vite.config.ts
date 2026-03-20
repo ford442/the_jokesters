@@ -23,6 +23,10 @@ export default defineConfig({
     sourcemap: false,
     // Rollup options for chunking
     rollupOptions: {
+      input: {
+        main: './index.html',
+        sw: './src/service-worker.ts',
+      },
       output: {
         // Manual chunks for code splitting
         manualChunks: {

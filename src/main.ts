@@ -56,6 +56,17 @@ const agents: Agent[] = [
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
+  // Register service worker for parallel model downloads (optional optimization)
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('./service-worker.js')
+      console.log('[ServiceWorker] Registered for parallel downloads:', registration)
+    } catch (error) {
+      console.warn('[ServiceWorker] Registration failed (non-critical):', error)
+      // Service worker is optional - continue without it
+    }
+  }
+
   // Configuration constants for prerendering
   const PRERENDER_INITIAL_TURNS = 3  // Number of turns to prerender at scene start
   const PRERENDER_MIN_QUEUE = 2      // Minimum queue size before triggering background prerender
