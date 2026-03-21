@@ -12,9 +12,9 @@ import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
-import { runTimeTravelLoop, runChefLoop, runMedicalLoop, runTimeTravelersDilemmaLoop, runMatrixLoop, runDebateCreatorLoop, runReverseTuringLoop } from './modes/DreamModes';
+import { runTimeTravelLoop, runChefLoop, runMedicalLoop, runTimeTravelersDilemmaLoop, runMatrixLoop, runDebateCreatorLoop, runReverseTuringLoop, runTimeTravelingTouristsLoop, runHistoricalCourtroomLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
-import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop, runAIAuditLoop, runInterdimensionalCableLoop, runTelemarketerTakedownLoop, runSpaceStationCrisisLoop, runConspiracyGeneratorLoop, runNatureDocumentaryLoop } from './modes/ExpandedRealityModes';
+import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop, runAIAuditLoop, runInterdimensionalCableLoop, runTelemarketerTakedownLoop, runSpaceStationCrisisLoop, runConspiracyGeneratorLoop, runNatureDocumentaryLoop, runWorstRoommateLoop, runIntergalacticDMVLoop, runSentientAppliancesLoop } from './modes/ExpandedRealityModes';
 import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop } from './modes/InteractiveMode';
 import { runTimeLoopLoop } from './modes/DreamModes';
@@ -54,7 +54,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'lightning_round' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'lightning_round' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that' | 'worst_roommate' | 'intergalactic_dmv' | 'time_traveling_tourists' | 'sentient_appliances' | 'historical_courtroom';
     title: string;
     description: string;
     config?: {
@@ -135,6 +135,11 @@ export interface Scenario {
         elevatorVC?: string;
         conspiracyObject?: string;
         natureTask?: string;
+        roommateChore?: string;
+        dmvPermit?: string;
+        touristObject?: string;
+        applianceHabit?: string;
+        historicalLawsuit?: string;
         // Rapid-fire modes
         rapidFireTopic?: string;
         questionCount?: number;
@@ -225,6 +230,11 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     rapid_fire_association: runRapidFireAssociation,
     rapid_fire_this_or_that: runRapidFireThisOrThat,
     lightning_round: runLightningRoundLoop,
+    worst_roommate: runWorstRoommateLoop,
+    intergalactic_dmv: runIntergalacticDMVLoop,
+    time_traveling_tourists: runTimeTravelingTouristsLoop,
+    sentient_appliances: runSentientAppliancesLoop,
+    historical_courtroom: runHistoricalCourtroomLoop,
 };
 
 export class Director {
