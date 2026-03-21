@@ -6,6 +6,7 @@ import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop, runMeltdownLoop, runNewsroomLoop } from './modes/ReporterMode';
 import { runTrialLoop, runTechSupportLoop, runDungeonMasterLoop, runTriviaLoop, runInterviewLoop, runCommentaryLoop, runInterrogationLoop, runDatingShowLoop, runSilentTreatmentLoop, runInterventionLoop, runSupportGroupLoop, runCustomerServiceHellLoop } from './modes/InteractiveMode';
+import { runRapidFireTrivia, runRapidFireRoast, runRapidFireAssociation, runRapidFireThisOrThat } from './modes/RapidFireMode';
 import { runMysteryLoop, runPitchLoop, runSilentFilmLoop, runHeistPlannerLoop, runBookClubLoop, runElevatorPitchLoop } from './modes/CreativeMode';
 import { runCodeReviewLoop } from './modes/CodeReviewMode';
 import { runTherapyLoop } from './modes/TherapyMode';
@@ -52,7 +53,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that';
     title: string;
     description: string;
     config?: {
@@ -133,6 +134,12 @@ export interface Scenario {
         elevatorVC?: string;
         conspiracyObject?: string;
         natureTask?: string;
+        // Rapid-fire modes
+        rapidFireTopic?: string;
+        questionCount?: number;
+        roundCount?: number;
+        turnCount?: number;
+        startWord?: string;
     };
 }
 
@@ -209,7 +216,11 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     book_club: runBookClubLoop,
     elevator_pitch: runElevatorPitchLoop,
     conspiracy_generator: runConspiracyGeneratorLoop,
-    nature_documentary: runNatureDocumentaryLoop
+    nature_documentary: runNatureDocumentaryLoop,
+    rapid_fire_trivia: runRapidFireTrivia,
+    rapid_fire_roast: runRapidFireRoast,
+    rapid_fire_association: runRapidFireAssociation,
+    rapid_fire_this_or_that: runRapidFireThisOrThat,
 };
 
 export class Director {
