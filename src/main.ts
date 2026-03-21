@@ -1,5 +1,5 @@
 import './style.css'
-import { GroupChatManager } from './GroupChatManager'
+import { GroupChatManager, type ErrorCategory } from './GroupChatManager'
 import type { Agent, ProfanityLevel } from './GroupChatManager'
 import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
@@ -265,7 +265,6 @@ async function initApp() {
   const progressBar = document.getElementById('progress') as HTMLDivElement
   // @ts-ignore
   console.log(progressBar);
-  const statusText = document.getElementById('status')!
   const chatLog = document.getElementById('chat-log')!
   const userInput = document.getElementById('user-input') as HTMLInputElement
   const sendBtn = document.getElementById('send-btn') as HTMLButtonElement
@@ -871,15 +870,83 @@ async function initApp() {
     currentInitState = 'ERROR'
     console.error('Initialization error:', error)
 
-    let errorMessage = 'Error initializing App. Please check console.'
-    const errorStr = String(error)
+    // Categorize the error for user-friendly messaging
+    const errorCategory: ErrorCategory = GroupChatManager.getErrorCategory(error)
 
-    if (errorStr.includes('WebGL') || errorStr.includes('GPU') || errorStr.includes('gl_')) {
-      errorMessage = 'Hardware Acceleration is disabled or unavailable. This application requires a GPU to run the 3D visualizer and AI models. Please enable graphics acceleration in your browser settings.'
+    // Build error messages based on category
+    const errorMessages: Record<ErrorCategory, { title: string; suggestion: string }> = {
+      webgpu: {
+        title: 'WebGPU Not Supported',
+        suggestion: 'Use Chrome 113+ or Edge 113+ with hardware acceleration enabled.'
+      },
+      oom: {
+        title: 'GPU Out of Memory',
+        suggestion: 'Close other GPU-heavy tabs and reload, or try a lower-VRAM model.'
+      },
+      network: {
+        title: 'Network Error',
+        suggestion: 'Check your connection and reload. Model weights download from HuggingFace CDN.'
+      },
+      unknown: {
+        title: 'Initialization Failed',
+        suggestion: 'Check the browser console for more details.'
+      }
     }
 
-    setProgress(errorMessage, 0)
-    statusText.style.color = '#ff6b6b'
+    const { title, suggestion } = errorMessages[errorCategory]
+    const rawError = error instanceof Error ? error.message : String(error)
+
+    // Render error panel inside #loading div
+    const errorPanel = document.createElement('div')
+    errorPanel.className = 'error-panel'
+    errorPanel.innerHTML = `
+      <h3>${title}</h3>
+      <div class="error-category">Category: ${errorCategory}</div>
+      <div class="error-suggestion">${suggestion}</div>
+      <div class="error-raw">${rawError}</div>
+      <div class="error-buttons">
+        <button class="retry-btn">Retry</button>
+        <button class="copy-btn">Copy Error</button>
+      </div>
+    `
+
+    // Replace progress section with error panel
+    const progressSection = document.getElementById('progress-section')!
+    progressSection.style.display = 'none'
+    const loadingDiv = document.getElementById('loading')!
+    loadingDiv.innerHTML = ''
+    loadingDiv.appendChild(errorPanel)
+
+    // Wire up retry button
+    const retryBtn = errorPanel.querySelector('.retry-btn') as HTMLButtonElement
+    retryBtn.addEventListener('click', () => {
+      loadingDiv.innerHTML = ''
+      const progressSection = document.createElement('div')
+      progressSection.id = 'progress-section'
+      progressSection.style.display = 'block'
+      progressSection.innerHTML = `
+        <div class="progress-bar">
+          <div id="progress" class="progress-fill"></div>
+        </div>
+        <p id="status">Initializing WebLLM...</p>
+      `
+      loadingDiv.appendChild(progressSection)
+      initApp()
+    })
+
+    // Wire up copy button
+    const copyBtn = errorPanel.querySelector('.copy-btn') as HTMLButtonElement
+    copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(rawError)
+        copyBtn.textContent = 'Copied!'
+        setTimeout(() => {
+          copyBtn.textContent = 'Copy Error'
+        }, 2000)
+      } catch {
+        console.warn('Could not copy to clipboard')
+      }
+    })
 
     // Keep inputs disabled on error
     setInputsEnabled(false)

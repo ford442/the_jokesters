@@ -446,3 +446,102 @@ input:focus, textarea:focus {
     90% { opacity: 1; transform: translate(-50%, 0); }
     100% { opacity: 0; transform: translate(-50%, -20px); }
 }
+
+/* Error Panel Styles */
+.error-panel {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    border: 2px solid #ff6b6b;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.2);
+}
+
+.error-panel h3 {
+    color: #ff6b6b;
+    margin: 0 0 8px 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-panel h3::before {
+    content: "⚠️";
+}
+
+.error-panel .error-category {
+    background: rgba(255, 107, 107, 0.1);
+    border-left: 3px solid #ff6b6b;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-weight: 500;
+    color: #ffa5a5;
+}
+
+.error-panel .error-suggestion {
+    background: rgba(78, 205, 196, 0.1);
+    border-left: 3px solid #4ecdc4;
+    padding: 12px;
+    margin: 12px 0;
+    border-radius: 4px;
+    color: #7df3e8;
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
+.error-panel .error-raw {
+    background: #000;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 12px 0;
+    color: #aaa;
+    font-size: 0.85em;
+    font-family: 'Courier New', monospace;
+    max-height: 120px;
+    overflow-y: auto;
+    word-break: break-all;
+    border: 1px solid #333;
+}
+
+.error-panel .error-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.error-panel button {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.error-panel .retry-btn {
+    background: #4ecdc4;
+    color: #0a0a1a;
+}
+
+.error-panel .retry-btn:hover {
+    background: #7df3e8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+}
+
+.error-panel .copy-btn {
+    background: #0f3460;
+    color: #4ecdc4;
+    border: 1px solid #4ecdc4;
+}
+
+.error-panel .copy-btn:hover {
+    background: #1a5a7a;
+    box-shadow: 0 4px 12px rgba(78, 205, 196, 0.2);
+}

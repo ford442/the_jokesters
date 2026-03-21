@@ -41,6 +41,8 @@ export interface Message {
   content: string
 }
 
+export type ErrorCategory = 'webgpu' | 'oom' | 'network' | 'unknown'
+
 export class GroupChatManager {
   private engine: webllm.MLCEngine | null = null
   private agents: Agent[]
@@ -62,6 +64,34 @@ export class GroupChatManager {
 
   constructor(agents: Agent[]) {
     this.agents = agents
+  }
+
+  /**
+   * Categorize an error to provide user-friendly messaging
+   */
+  static getErrorCategory(error: unknown): ErrorCategory {
+    const msg = error instanceof Error ? error.message : String(error)
+    const msgLower = msg.toLowerCase()
+
+    // WebGPU not available
+    if (msgLower.includes('webgpu') || msgLower.includes('gpu') && msgLower.includes('not supported')) {
+      return 'webgpu'
+    }
+
+    // Out of memory
+    if (msgLower.includes('oom') || msgLower.includes('memory') ||
+        msgLower.includes('createbuffer') || msgLower.includes('allocation')) {
+      return 'oom'
+    }
+
+    // Network errors
+    if (msgLower.includes('fetch') || msgLower.includes('network') ||
+        msgLower.includes('err_') || msgLower.includes('cache') ||
+        msgLower.includes('cdn') || msgLower.includes('timeout')) {
+      return 'network'
+    }
+
+    return 'unknown'
   }
 
   /**
