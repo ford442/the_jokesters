@@ -340,3 +340,98 @@ export async function runReverseTuringLoop(_scenario: Scenario, ctx: ModeContext
         questionCount++;
     }
 }
+
+/**
+ * The Time-Traveling Tourists Mode
+ * Agents are tourists from the year 3000 profoundly misunderstanding everyday objects.
+ */
+export async function runTimeTravelingTouristsLoop(scenario: Scenario, ctx: ModeContext) {
+    const object = scenario.config?.touristObject || 'a stapler';
+    ctx.callbacks.onMessage('Director', `📸 TIME TOURISTS: Visiting the year ${new Date().getFullYear()}`, '#8e44ad');
+
+    const futuristicAssumptions = 'scientist'; // Qwen2.5: Assumes advanced technology
+    const naiveExcitement = 'comedian'; // Hermes-3: Wants to touch/eat everything
+    const unimpressedCritic = 'philosopher'; // Phi-3: Prefers the future
+
+    // 1. Futuristic Assumptions Intro
+    ctx.callbacks.onTurnStart(futuristicAssumptions);
+    await ctx.manager.chatForAgent(futuristicAssumptions, `(TIME TOURISTS: You are a tourist from the year 3000 visiting the present day. You just encountered the User holding "${object}". Approach them and loudly marvel at this "primitive nuclear fusion device" (or similar absurd assumption about what it is). Take a holographic picture.)`, async (s) => await ctx.callbacks.onSpeak(s, futuristicAssumptions, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Local Guide (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Naive Excitement
+            ctx.callbacks.onTurnStart(naiveExcitement);
+            await ctx.manager.chatForAgent(naiveExcitement, `(TIME TOURISTS: The local (User) said: "${userInput}". You are an overly excited tourist from the future. Misunderstand what they said entirely. Ask if you can eat "${object}" or if it has feelings. Try to buy it with futuristic space-credits.)`, async (s) => await ctx.callbacks.onSpeak(s, naiveExcitement, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Unimpressed Critic
+            ctx.callbacks.onTurnStart(unimpressedCritic);
+            await ctx.manager.chatForAgent(unimpressedCritic, `(TIME TOURISTS: The local said: "${userInput}". You are a snobby tourist from the year 3000. Express profound disappointment at the backwardness of the 21st century. Complain about the lack of teleportation or the smell of non-synthetic air regarding "${object}".)`, async (s) => await ctx.callbacks.onSpeak(s, unimpressedCritic, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Futuristic Assumptions
+            ctx.callbacks.onTurnStart(futuristicAssumptions);
+            await ctx.manager.chatForAgent(futuristicAssumptions, `(TIME TOURISTS: The local said: "${userInput}". Ignore their explanation of "${object}". "Correct" them by explaining how in the future, this object evolved into a devastating weapon or a famous religious artifact. Take more notes.)`, async (s) => await ctx.callbacks.onSpeak(s, futuristicAssumptions, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Historical Courtroom Mode
+ * Agents are historical figures suing each other.
+ */
+export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
+    const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
+    ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');
+
+    const judge = 'philosopher'; // The judge (e.g., Socrates)
+    const plaintiff = 'scientist'; // The historical plaintiff
+    const defendant = 'comedian'; // The historical defendant
+
+    // 1. Judge Intro
+    ctx.callbacks.onTurnStart(judge);
+    await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: You are an ancient, famous philosopher acting as the Judge in the lawsuit of "${lawsuit}". Welcome the jury (the User). Command silence in the court and demand the Plaintiff present their opening statement. Speak formally and mention your own ancient philosophies.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    // 2. Plaintiff Opening
+    ctx.callbacks.onTurnStart(plaintiff);
+    await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: You are the Plaintiff in the case of "${lawsuit}". Present your ridiculous historical grievance to the jury (the User). Demand compensation in a historically appropriate currency or form of revenge. Be dramatic and pompous.)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Jury Member (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Defendant Reacts
+            ctx.callbacks.onTurnStart(defendant);
+            await ctx.manager.chatForAgent(defendant, `(HISTORICAL COURTROOM: The jury member just shouted: "${userInput}". You are the Defendant in "${lawsuit}". Shout "OBJECTION!" Defend yourself with absurd historical excuses or blame a different historical event. Counter-sue the Plaintiff!)`, async (s) => await ctx.callbacks.onSpeak(s, defendant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Plaintiff Retaliates
+            ctx.callbacks.onTurnStart(plaintiff);
+            await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: The jury member said: "${userInput}". Twist their words to support your case against the Defendant in "${lawsuit}". Provide a "new piece of evidence" (a fake historical document or invention).)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Judge Mediates
+            ctx.callbacks.onTurnStart(judge);
+            await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: Order in the court! The jury member said: "${userInput}". Respond with a deep, pseudo-philosophical ruling on their outburst. Ask the Plaintiff or Defendant a very difficult question about "${lawsuit}".)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

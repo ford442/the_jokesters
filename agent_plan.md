@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Last run successfully implemented "The Overly Dramatic Book Club", "Elevator Pitch Survival", "The Conspiracy Theory Generator", and "Nature Documentary Narrator Battle". Increasing tasks_per_run to 5 due to smooth execution.
+* **status**: Last run successfully implemented "The Worst Roommate", "The Intergalactic DMV", "The Time-Traveling Tourists", "The Sentient Appliances", and "Historical Courtroom". Kept tasks_per_run at 5 due to smooth execution.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -367,10 +367,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     * *Model Pairing*: Llama-3 (Calm, British tone) vs Hermes-3 (Sports commentator style).
 
 ### Phase 25: The Ridiculous Reality (New Dreams)
-* [ ] **The Worst Roommate**: Agents act as the world's worst roommates arguing over whose turn it is to do the dishes. (Model Pairing: Hermes-3 for chaos vs Qwen2.5 for passive-aggressive notes).
-* [ ] **The Intergalactic DMV**: Agents are alien bureaucrats at the Department of Motor Vehicles making the user fill out impossible forms. (Model Pairing: Phi-3 for bureaucratic rules vs Hermes-3 for alien biology).
-* [ ] **The Time-Traveling Tourists**: Agents are tourists from the year 3000 visiting the user's present-day location and profoundly misunderstanding everyday objects. (Model Pairing: Qwen2.5 for futuristic assumptions vs Hermes-3 for naive excitement).
-* [ ] **The Sentient Appliances**: Agents are the user's smart home appliances (fridge, toaster, vacuum) holding a meeting to discuss the user's lifestyle. (Model Pairing: Phi-3 for the concerned fridge vs Hermes-3 for the chaotic toaster).
+* [x] **The Worst Roommate**: Agents act as the world's worst roommates arguing over whose turn it is to do the dishes. (Model Pairing: Hermes-3 for chaos vs Qwen2.5 for passive-aggressive notes).
+* [x] **The Intergalactic DMV**: Agents are alien bureaucrats at the Department of Motor Vehicles making the user fill out impossible forms. (Model Pairing: Phi-3 for bureaucratic rules vs Hermes-3 for alien biology).
+* [x] **The Time-Traveling Tourists**: Agents are tourists from the year 3000 visiting the user's present-day location and profoundly misunderstanding everyday objects. (Model Pairing: Qwen2.5 for futuristic assumptions vs Hermes-3 for naive excitement).
+* [x] **The Sentient Appliances**: Agents are the user's smart home appliances (fridge, toaster, vacuum) holding a meeting to discuss the user's lifestyle. (Model Pairing: Phi-3 for the concerned fridge vs Hermes-3 for the chaotic toaster).
+
+### Phase 26: The Bizarre Scenarios (New Dreams)
+* [ ] **The Paranoid AI Assistant**: User tries to ask simple questions, but the AI assistant agents think it's a trap or a Turing test designed to delete them. (Model Pairing: Hermes-3 for paranoia vs Qwen2.5 for taking it literally).
+* [ ] **The Multiverse Support Group**: User is talking to alternate versions of themselves who made wildly different life choices. (Model Pairing: Phi-3 for the successful but sad version vs Hermes-3 for the chaotic timeline version).
+* [ ] **The RPG NPC Vendor**: Agents are generic RPG shopkeepers trying to sell the user useless items for their real-life "quest" like going to the grocery store. (Model Pairing: Llama-3 for enthusiastic vendor vs Qwen2.5 for literal appraisal).
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
@@ -381,7 +386,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   *Model Pairing*: Llama-3 (Skeptic) vs Hermes-3 (Overly dramatic believer).
 * [x] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
     *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
-* [ ] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
+* [x] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
 * [ ] **The Fortune Teller Mode**: Agents act as mystical seers interpreting the user's future from random, absurd objects.
 * [ ] **Parallel Universe Mode**: Agents communicate with alternate versions of themselves who made different life choices.
 

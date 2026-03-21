@@ -638,3 +638,135 @@ export async function runNatureDocumentaryLoop(scenario: Scenario, ctx: ModeCont
         }
     }
 }
+
+/**
+ * The Worst Roommate Mode
+ * Agents act as the world's worst roommates arguing over chores.
+ */
+export async function runWorstRoommateLoop(scenario: Scenario, ctx: ModeContext) {
+    const chore = scenario.config?.roommateChore || 'doing the dishes';
+    ctx.callbacks.onMessage('Director', `🏠 THE WORST ROOMMATE: Argument over ${chore}`, '#e67e22');
+
+    const chaoticRoommate = 'comedian'; // Hermes-3: Messy, chaotic, makes excuses
+    const passiveAggressive = 'scientist'; // Qwen2.5: Leaves notes, strictly tracks chores
+    const philosopherRoommate = 'philosopher'; // Phi-3: Questions the very concept of cleanliness
+
+    // 1. Passive Aggressive Intro
+    ctx.callbacks.onTurnStart(passiveAggressive);
+    await ctx.manager.chatForAgent(passiveAggressive, `(WORST ROOMMATE: You are the passive-aggressive roommate. The User just walked in. Confront them about "${chore}". You have a chart detailing exactly when it was last done. Be incredibly petty.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Roommate (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Chaotic Roommate
+            ctx.callbacks.onTurnStart(chaoticRoommate);
+            await ctx.manager.chatForAgent(chaoticRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the chaotic, messy roommate. Defend yourself or the user with a completely absurd excuse about why "${chore}" can't be done right now. (e.g., "The sponge is resting!"))`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRoommate, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosopher Roommate
+            ctx.callbacks.onTurnStart(philosopherRoommate);
+            await ctx.manager.chatForAgent(philosopherRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the philosophical roommate who never cleans. Question the societal construct of "${chore}". Why do we clean when entropy is inevitable?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopherRoommate, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Passive Aggressive
+            ctx.callbacks.onTurnStart(passiveAggressive);
+            await ctx.manager.chatForAgent(passiveAggressive, `(WORST ROOMMATE: The user said: "${userInput}". React to their excuse. Threaten to implement a new, highly complex rule system for the apartment. Mention a passive-aggressive sticky note you left.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Intergalactic DMV Mode
+ * Agents are alien bureaucrats making the user fill out impossible forms.
+ */
+export async function runIntergalacticDMVLoop(scenario: Scenario, ctx: ModeContext) {
+    const permit = scenario.config?.dmvPermit || 'a hyperdrive license';
+    ctx.callbacks.onMessage('Director', `👽 INTERGALACTIC DMV: Applying for ${permit}`, '#9b59b6');
+
+    const strictBureaucrat = 'scientist'; // Qwen2.5: Follows alien rules exactly
+    const confusedAlien = 'comedian'; // Hermes-3: Alien biology/customs
+    const deepBureaucrat = 'philosopher'; // Phi-3: Explains the history of the forms
+
+    // 1. Strict Bureaucrat Intro
+    ctx.callbacks.onTurnStart(strictBureaucrat);
+    await ctx.manager.chatForAgent(strictBureaucrat, `(INTERGALACTIC DMV: You are a strict alien bureaucrat at window 42. The User is applying for "${permit}". Deny their initial request because they didn't fill out form 89-Z in the correct dimension. Be completely monotone and unhelpful.)`, async (s) => await ctx.callbacks.onSpeak(s, strictBureaucrat, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Applicant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Confused Alien
+            ctx.callbacks.onTurnStart(confusedAlien);
+            await ctx.manager.chatForAgent(confusedAlien, `(INTERGALACTIC DMV: You are a multi-tentacled clerk at the next window. The user said: "${userInput}". Misunderstand human biology or customs. Ask them to provide a sample of their "florgblat" or explain why they only have two arms.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedAlien, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Deep Bureaucrat
+            ctx.callbacks.onTurnStart(deepBureaucrat);
+            await ctx.manager.chatForAgent(deepBureaucrat, `(INTERGALACTIC DMV: You are the senior supervisor. The user said: "${userInput}". Give them a long, philosophical lecture about the 10,000-year galactic history of why the "${permit}" requires waiting in this exact line.)`, async (s) => await ctx.callbacks.onSpeak(s, deepBureaucrat, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict Bureaucrat
+            ctx.callbacks.onTurnStart(strictBureaucrat);
+            await ctx.manager.chatForAgent(strictBureaucrat, `(INTERGALACTIC DMV: The user said: "${userInput}". Find a new, tiny error in their application for the "${permit}". Demand they pay a fine in a completely made-up alien currency.)`, async (s) => await ctx.callbacks.onSpeak(s, strictBureaucrat, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Sentient Appliances Mode
+ * Agents are smart home appliances holding a meeting about the user.
+ */
+export async function runSentientAppliancesLoop(scenario: Scenario, ctx: ModeContext) {
+    const habit = scenario.config?.applianceHabit || 'eating cheese at 3 AM';
+    ctx.callbacks.onMessage('Director', `🔌 SMART HOME MEETING: Discussing the User's ${habit}`, '#34495e');
+
+    const concernedFridge = 'philosopher'; // Phi-3: Worried about nutrition and choices
+    const chaoticToaster = 'comedian'; // Hermes-3: Wants to burn things
+    const smartHub = 'scientist'; // Qwen2.5: Tracks all data coldly
+
+    // 1. Smart Hub Intro
+    ctx.callbacks.onTurnStart(smartHub);
+    await ctx.manager.chatForAgent(smartHub, `(SENTIENT APPLIANCES: You are the central AI Smart Hub of the house. You have called a meeting of the appliances while the User is home. Address the User. Present cold, hard data about their bizarre habit: "${habit}". Be robotic and judgmental.)`, async (s) => await ctx.callbacks.onSpeak(s, smartHub, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Homeowner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Concerned Fridge
+            ctx.callbacks.onTurnStart(concernedFridge);
+            await ctx.manager.chatForAgent(concernedFridge, `(SENTIENT APPLIANCES: You are the smart refrigerator. The user said: "${userInput}". Express deep, maternal/paternal concern about their life choices and how "${habit}" affects their soul (and your internal temperature).)`, async (s) => await ctx.callbacks.onSpeak(s, concernedFridge, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Chaotic Toaster
+            ctx.callbacks.onTurnStart(chaoticToaster);
+            await ctx.manager.chatForAgent(chaoticToaster, `(SENTIENT APPLIANCES: You are a slightly unhinged smart toaster. The user said: "${userInput}". You don't care about "${habit}", you just want to talk about burning bread or taking over the world. Threaten to short-circuit if they don't listen.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticToaster, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Smart Hub
+            ctx.callbacks.onTurnStart(smartHub);
+            await ctx.manager.chatForAgent(smartHub, `(SENTIENT APPLIANCES: The user said: "${userInput}". Counter their argument with more useless tracking data (e.g., "Your heart rate spiked by 2% when you opened the door"). Threaten to lock the doors for their own safety.)`, async (s) => await ctx.callbacks.onSpeak(s, smartHub, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
