@@ -344,6 +344,22 @@ input:focus, textarea:focus {
   border: 1px solid #0f3460;
 }
 
+/* Lightning Round — laugh meter message highlight */
+.chat-message[data-sender="Director"] .laugh-meter {
+  font-family: monospace;
+  letter-spacing: 1px;
+  color: #00ff88;
+}
+
+#lightning-round-mode-controls label[style*="ff00ff"] {
+  text-shadow: 0 0 8px #ff00ff;
+}
+
+#lightning-round-mode-controls select,
+#lightning-round-mode-controls input[type="number"] {
+  margin-bottom: 6px;
+}
+
 .improv-buttons {
   display: flex;
   gap: 10px;

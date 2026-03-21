@@ -19,6 +19,7 @@ import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop } from './modes/InteractiveMode';
 import { runTimeLoopLoop } from './modes/DreamModes';
 import { runRapBattleVisualsLoop } from './modes/RapBattleVisualsMode';
+import { runLightningRoundLoop } from './modes/LightningRoundMode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -53,7 +54,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'lightning_round' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that';
     title: string;
     description: string;
     config?: {
@@ -140,6 +141,8 @@ export interface Scenario {
         roundCount?: number;
         turnCount?: number;
         startWord?: string;
+        lightningRoundTopic?: string;
+        lightningRoundRounds?: number;
     };
 }
 
@@ -221,6 +224,7 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     rapid_fire_roast: runRapidFireRoast,
     rapid_fire_association: runRapidFireAssociation,
     rapid_fire_this_or_that: runRapidFireThisOrThat,
+    lightning_round: runLightningRoundLoop,
 };
 
 export class Director {

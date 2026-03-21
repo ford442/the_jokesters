@@ -142,6 +142,7 @@ export function getAppTemplate(): string {
             <button id="reality-mode-btn" class="mode-btn">Reality TV</button>
             <button id="auction-mode-btn" class="mode-btn">Auction House</button>
             <button id="escape-mode-btn" class="mode-btn">Escape Room</button>
+            <button id="lightning-round-mode-btn" class="mode-btn">⚡ Lightning Round</button>
           </div>
 
           <div id="code-mode-controls" class="improv-controls" style="display: none;">
@@ -273,6 +274,36 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-escape-btn" class="primary-btn" disabled>Start Escape Room</button>
               <button id="stop-escape-btn" class="secondary-btn" style="display: none;" disabled>Stop Escape Room</button>
+            </div>
+          </div>
+
+          <div id="lightning-round-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <label style="color: #ff00ff; font-size: 0.9em; margin-bottom: 5px; font-weight: bold;">⚡ Lightning Round Roast</label>
+              <label style="color: #888; font-size: 0.85em; margin-bottom: 5px;">Preset Category</label>
+              <select id="lightning-round-category" style="background: #0f3460; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; width: 100%;" disabled>
+                <option value="">— random —</option>
+                <option value="bad dating stories">Bad dating stories</option>
+                <option value="why pineapple belongs on pizza">Why pineapple belongs on pizza</option>
+                <option value="AI taking over the world">AI taking over the world</option>
+                <option value="worst tech support fails">Worst tech support fails</option>
+                <option value="celebrity gossip gone wrong">Celebrity gossip gone wrong</option>
+                <option value="food crimes against humanity">Food crimes against humanity</option>
+                <option value="why your boss is actually an alien">Why your boss is actually an alien</option>
+                <option value="things you should never google">Things you should never google</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.85em; margin-bottom: 5px;">…or type a custom topic</label>
+              <input type="text" id="lightning-round-topic" placeholder="e.g., 'why cats are secretly evil'" autocomplete="off" disabled />
+            </div>
+            <div class="input-group">
+              <label style="color: #888; font-size: 0.85em; margin-bottom: 5px;">Rounds (4–20)</label>
+              <input type="number" id="lightning-round-rounds" value="12" min="4" max="20" style="background: #0f3460; border: 1px solid #444; color: white; padding: 4px 6px; border-radius: 4px; width: 80px;" disabled />
+            </div>
+            <div class="improv-buttons">
+              <button id="start-lightning-round-btn" class="primary-btn" disabled>⚡ Start Lightning Round</button>
+              <button id="stop-lightning-round-btn" class="secondary-btn" style="display: none;" disabled>Stop</button>
             </div>
           </div>
 
