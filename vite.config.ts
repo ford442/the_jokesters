@@ -43,8 +43,15 @@ export default defineConfig({
           // Add content hash for cache busting
           return `assets/${name}-[hash].js`;
         },
-        // Entry file naming
-        entryFileNames: 'assets/[name]-[hash].js',
+        // Entry file naming - service worker gets stable name, others are hashed
+        entryFileNames: (chunkInfo) => {
+          // Service worker must have a stable name for reliable registration
+          if (chunkInfo.name === 'sw') {
+            return 'service-worker.js';
+          }
+          // Hash main and other entries for cache busting
+          return 'assets/[name]-[hash].js';
+        },
         // Asset file naming (for images, fonts, etc.)
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name || '';
