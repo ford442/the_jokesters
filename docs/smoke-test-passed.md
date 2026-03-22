@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-03-19T11:42:10.946559
+**Test Date:** 2026-03-22T12:10:48.835235
 
 ## Test Summary
 
@@ -11,17 +11,17 @@ All smoke test checks passed successfully:
 - ✓ Callback Engine
 - ✓ Quality Filter
 - ✓ Tts
-- ✓ No Console Errors
+- ❌ No Console Errors
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 11.0s |
-| Load Time | 2.9s |
+| Build Time | 9.0s |
+| Load Time | 0.7s |
 | JS Heap Memory | 51.0 MB |
-| Console Errors | 1 |
-| Console Warnings | 1 |
+| Console Errors | 2 |
+| Console Warnings | 2 |
 
 ## Agents Tested
 
@@ -54,11 +54,13 @@ The following 5 personas are configured:
 
 ## Console Output
 
-**Errors (1):**
+**Errors (2):**
 - WebGPU adapter not available...
+- The script has an unsupported MIME type ('text/html')....
 
-**Warnings (1):**
+**Warnings (2):**
 - Failed to create WebGPU Context Provider...
+- [ServiceWorker] Registration failed (non-critical): SecurityError: Failed to register a ServiceWorke...
 
 ## Notes
 

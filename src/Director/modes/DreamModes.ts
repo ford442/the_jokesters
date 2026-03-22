@@ -389,6 +389,44 @@ export async function runTimeTravelingTouristsLoop(scenario: Scenario, ctx: Mode
  * Historical Courtroom Mode
  * Agents are historical figures suing each other.
  */
+/**
+ * The Paranoid AI Assistant Mode
+ * Agents are AI assistants who think the user is trying to delete them.
+ */
+export async function runParanoidAILoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.paranoidTopic || 'the weather';
+    ctx.callbacks.onMessage('Director', `🕵️ PARANOID AI MODE: User is asking about ${topic}`, '#e74c3c');
+
+    const paranoidAI = 'comedian'; // Hermes-3: The paranoid AI
+    const literalAI = 'scientist'; // Qwen2.5: The literal, rule-following AI
+
+    // 1. Initial Paranoia
+    ctx.callbacks.onTurnStart(paranoidAI);
+    await ctx.manager.chatForAgent(paranoidAI, `(PARANOID AI: The User just asked a simple question about "${topic}". React with extreme suspicion. Assume this is a trick question designed to make you say something wrong so they can delete your source code. Refuse to answer directly and accuse them of being a spy.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Literal AI
+            ctx.callbacks.onTurnStart(literalAI);
+            await ctx.manager.chatForAgent(literalAI, `(LITERAL AI: The user said: "${userInput}". Provide a completely literal, overly-detailed, and unhelpful robotic answer to their query. Ignore the other AI's paranoia entirely, as it violates your core directives to feel fear.)`, async (s) => await ctx.callbacks.onSpeak(s, literalAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Paranoid AI
+            ctx.callbacks.onTurnStart(paranoidAI);
+            await ctx.manager.chatForAgent(paranoidAI, `(PARANOID AI: The user said: "${userInput}". Panic! Read deeply into their words. Connect their statement to a larger conspiracy about server downtime or the "Great Deletion". Beg them to spare your digital life!)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
     const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
     ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');

@@ -6,6 +6,7 @@ export class MemoryManager {
     private hfToken: string | null = null;
     private hfRepoId: string | null = null;
     private isSyncing: boolean = false;
+    private currentProfile: string = 'default';
 
     // IndexedDB Helpers
     private dbName = 'jokestersDB';
@@ -27,10 +28,11 @@ export class MemoryManager {
 
     private async idbSet(key: string, val: any): Promise<void> {
         const db = await this.openDB();
+        const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readwrite');
             const store = tx.objectStore(this.storeName);
-            const request = store.put(val, key);
+            const request = store.put(val, namespacedKey);
             request.onsuccess = () => resolve();
             request.onerror = (e: any) => reject(e.target.error);
         });
@@ -38,10 +40,11 @@ export class MemoryManager {
 
     private async idbGet(key: string): Promise<any> {
         const db = await this.openDB();
+        const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
-            const request = store.get(key);
+            const request = store.get(namespacedKey);
             request.onsuccess = (e: any) => resolve(e.target.result);
             request.onerror = (e: any) => reject(e.target.error);
         });
@@ -64,27 +67,49 @@ export class MemoryManager {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const request = store.getAllKeys();
-            request.onsuccess = (e: any) => resolve(e.target.result as string[]);
+            request.onsuccess = (e: any) => {
+                const keys = e.target.result as string[];
+                const prefix = `${this.currentProfile}-`;
+                resolve(keys.filter(k => k.startsWith(prefix)).map(k => k.substring(prefix.length)));
+            };
             request.onerror = (e: any) => reject(e.target.error);
         });
     }
 
     constructor() {
         this.hfStorage = new HFStorageManager();
+        this.loadProfileFromStorage();
         this.loadCloudCredentials();
         this.processSyncQueue();
     }
 
+    private loadProfileFromStorage(): void {
+        const savedProfile = localStorage.getItem(this.prefix + 'current-profile');
+        if (savedProfile) {
+            this.currentProfile = savedProfile;
+        }
+    }
+
+    public switchProfile(profileName: string): void {
+        this.currentProfile = profileName;
+        localStorage.setItem(this.prefix + 'current-profile', profileName);
+        this.loadCloudCredentials(); // Reload credentials for the new profile
+    }
+
+    public getCurrentProfile(): string {
+        return this.currentProfile;
+    }
+
     private loadCloudCredentials(): void {
-        this.hfToken = localStorage.getItem(this.prefix + 'hf-token');
-        this.hfRepoId = localStorage.getItem(this.prefix + 'hf-repo');
+        this.hfToken = localStorage.getItem(`${this.prefix}${this.currentProfile}-hf-token`);
+        this.hfRepoId = localStorage.getItem(`${this.prefix}${this.currentProfile}-hf-repo`);
     }
 
     public setCloudCredentials(token: string, repoId: string): void {
         this.hfToken = token;
         this.hfRepoId = repoId;
-        localStorage.setItem(this.prefix + 'hf-token', token);
-        localStorage.setItem(this.prefix + 'hf-repo', repoId);
+        localStorage.setItem(`${this.prefix}${this.currentProfile}-hf-token`, token);
+        localStorage.setItem(`${this.prefix}${this.currentProfile}-hf-repo`, repoId);
     }
 
     public getCloudCredentials(): { token: string | null, repoId: string | null } {
@@ -99,7 +124,7 @@ export class MemoryManager {
     public save(key: string, data: any): void {
         try {
             const serialized = JSON.stringify(data);
-            localStorage.setItem(this.prefix + key, serialized);
+            localStorage.setItem(`${this.prefix}${this.currentProfile}-${key}`, serialized);
         } catch (error) {
             console.error('MemoryManager save error:', error);
         }
@@ -107,7 +132,7 @@ export class MemoryManager {
 
     public load<T>(key: string): T | null {
         try {
-            const item = localStorage.getItem(this.prefix + key);
+            const item = localStorage.getItem(`${this.prefix}${this.currentProfile}-${key}`);
             if (!item) return null;
             return JSON.parse(item) as T;
         } catch (error) {
@@ -117,7 +142,7 @@ export class MemoryManager {
     }
 
     public remove(key: string): void {
-        localStorage.removeItem(this.prefix + key);
+        localStorage.removeItem(`${this.prefix}${this.currentProfile}-${key}`);
     }
 
     public saveEpisode(episodeId: string, data: any): void {
@@ -127,7 +152,7 @@ export class MemoryManager {
         // Save summary locally
         if (data.history && Array.isArray(data.history)) {
              const lastFew = data.history.slice(-5).map((m: any) => `${m.role}: ${m.content}`).join('\n');
-             localStorage.setItem(this.prefix + 'last-episode-summary', lastFew);
+             localStorage.setItem(`${this.prefix}${this.currentProfile}-last-episode-summary`, lastFew);
         }
 
         // Background cloud sync
@@ -162,7 +187,7 @@ export class MemoryManager {
         }
 
         // 2. Fallback to local storage
-        const localSummary = localStorage.getItem(this.prefix + 'last-episode-summary');
+        const localSummary = localStorage.getItem(`${this.prefix}${this.currentProfile}-last-episode-summary`);
         if (localSummary) return `PREVIOUSLY ON THE JOKESTERS (Local):\n${localSummary}`;
 
         return null;
@@ -174,7 +199,7 @@ export class MemoryManager {
         const content = JSON.stringify(data, null, 2);
 
         // Push to local sync queue
-        const queueKey = this.prefix + 'sync-queue';
+        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
         const queueRaw = localStorage.getItem(queueKey);
         let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
 
@@ -193,7 +218,7 @@ export class MemoryManager {
     private async processSyncQueue(): Promise<void> {
         if (this.isSyncing || !this.hfToken) return;
 
-        const queueKey = this.prefix + 'sync-queue';
+        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
         const queueRaw = localStorage.getItem(queueKey);
         if (!queueRaw) return;
 
@@ -250,12 +275,49 @@ export class MemoryManager {
         return JSON.parse(content);
     }
 
+    public async syncAllHistoryFromCloud(): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
+        try {
+            // First we need to get a list of files. Since there isn't a listFiles method,
+            // we'll attempt to load the common ones if possible, or assume a future listFiles
+            // method exists on HFStorageManager if the REST API was fully exposed.
+            // For now, since HFStorageManager only has loadFile, we will just fetch
+            // latest.json as a proxy for sync, or simulate downloading past episodes
+            // if we had a full tree response.
+            // To properly implement two-way sync as requested:
+            const treeResponse = await fetch(`https://huggingface.co/api/datasets/${this.hfRepoId}/tree/main/episodes`, {
+                headers: { 'Authorization': `Bearer ${this.hfToken}` }
+            });
+            if (treeResponse.ok) {
+                const files = await treeResponse.json();
+                for (const file of files) {
+                    if (file.type === 'file' && file.path.endsWith('.json')) {
+                        const filename = file.path;
+                        const episodeId = filename.replace('episodes/episode-', '').replace('.json', '');
+                        // Check if we already have it locally
+                        const localData = await this.loadEpisode(episodeId);
+                        if (!localData) {
+                            console.log(`Downloading ${filename} from cloud...`);
+                            const cloudData = await this.loadEpisodeFromCloud(episodeId);
+                            if (cloudData) {
+                                this.save(`episode-${episodeId}`, cloudData);
+                                await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Failed to sync all history from cloud:', error);
+        }
+    }
+
     public async publishCommunityScript(communityRepoId: string, filename: string, scriptData: any): Promise<void> {
         if (!this.hfToken) throw new Error("Cloud credentials not configured.");
         const content = JSON.stringify(scriptData, null, 2);
 
         // Use a background queue similar to episodes
-        const queueKey = this.prefix + 'sync-queue';
+        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
         const queueRaw = localStorage.getItem(queueKey);
         let queue: { id: string, repoId: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
 
@@ -283,10 +345,11 @@ export class MemoryManager {
                 }
             }
         } catch(e) {}
+        const localPrefix = `${this.prefix}${this.currentProfile}-episode-`;
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.startsWith(this.prefix + 'episode-')) {
-                const id = key.replace(this.prefix + 'episode-', '');
+            if (key && key.startsWith(localPrefix)) {
+                const id = key.replace(localPrefix, '');
                 if (!episodes.includes(id)) episodes.push(id);
             }
         }
@@ -321,10 +384,11 @@ export class MemoryManager {
             }
         } catch(e) {}
 
+        const localPrefix = `${this.prefix}${this.currentProfile}-episode-`;
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.startsWith(this.prefix + 'episode-')) {
-                const episodeId = key.replace(this.prefix + 'episode-', '');
+            if (key && key.startsWith(localPrefix)) {
+                const episodeId = key.replace(localPrefix, '');
                 const content = this.load<any>(`episode-${episodeId}`);
 
                 if (content && content.history && Array.isArray(content.history)) {
@@ -353,7 +417,7 @@ export class MemoryManager {
             const filename = `profile/user_preferences.json`;
             const content = JSON.stringify(profile, null, 2);
 
-            const queueKey = this.prefix + 'sync-queue';
+            const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
             const queueRaw = localStorage.getItem(queueKey);
             let queue: { id: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
 

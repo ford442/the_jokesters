@@ -174,6 +174,12 @@ async function initApp() {
               <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
               <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
             </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <label style="color: #888; font-size: 0.8em;">Profile</label>
+              <input type="text" id="user-profile-input" value="default" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.8em; border-radius: 4px;">
+              <button id="switch-profile-btn" style="background: #4ecdc4; color: #0a0a1a; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer;">Switch</button>
+            </div>
           </div>
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
@@ -276,6 +282,8 @@ async function initApp() {
   const seedInput = document.getElementById('global-seed') as HTMLInputElement
   const profanitySlider = document.getElementById('profanity-level') as HTMLInputElement
   const profanityVal = document.getElementById('profanity-val')!
+  const userProfileInput = document.getElementById('user-profile-input') as HTMLInputElement
+  const switchProfileBtn = document.getElementById('switch-profile-btn') as HTMLButtonElement
 
   // Disable all inputs until fully initialized
   setInputsEnabled(false)
@@ -361,6 +369,24 @@ async function initApp() {
       groupChatManager.setProfanityLevel(level)
     }
 
+    // Switch Profile Listener
+    switchProfileBtn.addEventListener('click', () => {
+      const newProfile = userProfileInput.value.trim() || 'default';
+
+      // Initialize memory manager if we had access, but for now we rely on the window
+      // global if director exposes it, or we trigger a UI notification
+      if ((window as any).getDirector) {
+        const director = (window as any).getDirector();
+        if (director && director.memoryManager) {
+          director.memoryManager.switchProfile(newProfile);
+          addMessage('System', `Switched to profile: ${newProfile}`, '#4ecdc4');
+        }
+      } else {
+        // We might not have director directly exposed in main.ts without modifying it
+        addMessage('System', 'Profile switching requires Director to be running', '#ff6b6b');
+      }
+    });
+
     // Update next agent info
     const updateNextAgentUI = () => {
       const nextAgent = groupChatManager.getCurrentAgent()
@@ -370,12 +396,29 @@ async function initApp() {
     updateNextAgentUI()
 
     // Add message to chat log
-    const addMessage = (sender: string, message: string, color: string) => {
+    const addMessage = (sender: string, message: string, color: string, agentId?: string) => {
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
       messageDiv.innerHTML = `
         <strong style="color: ${color}">${sender}:</strong> ${message}
       `
+      if (agentId) {
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.className = 'feedback-controls';
+          feedbackDiv.style.cssText = 'display: inline-block; margin-left: 10px; font-size: 0.8em; opacity: 0.5; cursor: pointer;';
+          feedbackDiv.innerHTML = `<span class="thumb-up">👍</span> <span class="thumb-down">👎</span>`;
+
+          feedbackDiv.querySelector('.thumb-up')?.addEventListener('click', () => {
+              groupChatManager.evolvePersonality(agentId, 'positive');
+              feedbackDiv.innerHTML = '✨';
+          });
+          feedbackDiv.querySelector('.thumb-down')?.addEventListener('click', () => {
+              groupChatManager.evolvePersonality(agentId, 'negative');
+              feedbackDiv.innerHTML = '📉';
+          });
+
+          messageDiv.appendChild(feedbackDiv);
+      }
       chatLog.appendChild(messageDiv)
       chatLog.scrollTop = chatLog.scrollHeight
     }
@@ -438,6 +481,22 @@ async function initApp() {
         const messageDiv = document.createElement('div');
         messageDiv.className = 'message';
         messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`;
+
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'feedback-controls';
+        feedbackDiv.style.cssText = 'display: inline-block; margin-left: 10px; font-size: 0.8em; opacity: 0.5; cursor: pointer;';
+        feedbackDiv.innerHTML = `<span class="thumb-up">👍</span> <span class="thumb-down">👎</span>`;
+
+        feedbackDiv.querySelector('.thumb-up')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'positive');
+            feedbackDiv.innerHTML = '✨';
+        });
+        feedbackDiv.querySelector('.thumb-down')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'negative');
+            feedbackDiv.innerHTML = '📉';
+        });
+        messageDiv.appendChild(feedbackDiv);
+
         chatLog.appendChild(messageDiv);
         const contentSpan = messageDiv.querySelector('.content')!;
 
@@ -752,6 +811,22 @@ async function initApp() {
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
       messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content"></span>`
+
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'feedback-controls';
+        feedbackDiv.style.cssText = 'display: inline-block; margin-left: 10px; font-size: 0.8em; opacity: 0.5; cursor: pointer;';
+        feedbackDiv.innerHTML = `<span class="thumb-up">👍</span> <span class="thumb-down">👎</span>`;
+
+        feedbackDiv.querySelector('.thumb-up')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'positive');
+            feedbackDiv.innerHTML = '✨';
+        });
+        feedbackDiv.querySelector('.thumb-down')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'negative');
+            feedbackDiv.innerHTML = '📉';
+        });
+        messageDiv.appendChild(feedbackDiv);
+
       chatLog.appendChild(messageDiv)
       const contentSpan = messageDiv.querySelector('.content')!
 
@@ -810,6 +885,22 @@ async function initApp() {
         const messageDiv = document.createElement('div')
         messageDiv.className = 'message'
         messageDiv.innerHTML = `<strong style="color: ${agent.color}">${agent.name}:</strong> <span class="content">...</span>`
+
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'feedback-controls';
+        feedbackDiv.style.cssText = 'display: inline-block; margin-left: 10px; font-size: 0.8em; opacity: 0.5; cursor: pointer;';
+        feedbackDiv.innerHTML = `<span class="thumb-up">👍</span> <span class="thumb-down">👎</span>`;
+
+        feedbackDiv.querySelector('.thumb-up')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'positive');
+            feedbackDiv.innerHTML = '✨';
+        });
+        feedbackDiv.querySelector('.thumb-down')?.addEventListener('click', () => {
+            groupChatManager.evolvePersonality(agent.id, 'negative');
+            feedbackDiv.innerHTML = '📉';
+        });
+        messageDiv.appendChild(feedbackDiv);
+
         chatLog.appendChild(messageDiv)
         const contentSpan = messageDiv.querySelector('.content')!
 

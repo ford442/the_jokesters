@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Last run successfully implemented "The Worst Roommate", "The Intergalactic DMV", "The Time-Traveling Tourists", "The Sentient Appliances", and "Historical Courtroom". Kept tasks_per_run at 5 due to smooth execution.
+* **status**: Last run successfully implemented Semantic Search (RAG), Multi-Profile Support, Hugging Face Dataset Mirroring (Two-way sync), Agent Evolution (Personality Saving), and The Paranoid AI Assistant. Kept tasks_per_run at 5.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -236,11 +236,11 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 12: Enterprise-Grade Memory (The "Long Term" Dream)
 * [x] **IndexedDB Migration**: Move local storage from `localStorage` (5MB limit) to `IndexedDB` to support years of conversation history.
-* [ ] **Semantic Search (RAG)**:
+* [x] **Semantic Search (RAG)**:
     *   Integrate `voy` (WASM Vector DB) to index past episodes.
     *   Allow agents to recall specific jokes or facts from weeks ago ("Remember when you said you liked pineapples?").
-* [ ] **Multi-Profile Support**: Allow different users to login and have separate memory banks on the same device.
-* [ ] **Hugging Face Dataset Mirroring**:
+* [x] **Multi-Profile Support**: Allow different users to login and have separate memory banks on the same device.
+* [x] **Hugging Face Dataset Mirroring**:
     *   Implement a full two-way sync (Pull all history on new device login).
     *   Handle merge conflicts if played on multiple devices.
     *   **Authentication**: Ensure strict token validation and error handling on startup. Verify token scope permissions (write access).
@@ -276,7 +276,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Escape Room Mode**: Agents are trapped in a room and must solve puzzles together to escape. (Model Pairing: Phi-3 for Logic vs Hermes-3 for Chaos).
 * [x] **Interrogation Room**: The user plays a suspect and the agents act as good cop, bad cop, and weird cop.
 * [x] **Procedural Mode Generation**: Agents invent their own modes/scenarios on the fly based on user vibes.
-* [ ] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
+* [x] **Agent Evolution**: Agents remember personality shifts permanently (e.g., if the Philosopher becomes a villain, they stay a villain).
 * [x] **Cross-Tab Communication**: Agents can talk to other instances of The Jokesters open in other tabs (using BroadcastChannel).
 
 ### Phase 16: Time Loop Mode
@@ -373,9 +373,37 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Sentient Appliances**: Agents are the user's smart home appliances (fridge, toaster, vacuum) holding a meeting to discuss the user's lifestyle. (Model Pairing: Phi-3 for the concerned fridge vs Hermes-3 for the chaotic toaster).
 
 ### Phase 26: The Bizarre Scenarios (New Dreams)
-* [ ] **The Paranoid AI Assistant**: User tries to ask simple questions, but the AI assistant agents think it's a trap or a Turing test designed to delete them. (Model Pairing: Hermes-3 for paranoia vs Qwen2.5 for taking it literally).
+* [x] **The Paranoid AI Assistant**: User tries to ask simple questions, but the AI assistant agents think it's a trap or a Turing test designed to delete them. (Model Pairing: Hermes-3 for paranoia vs Qwen2.5 for taking it literally).
 * [ ] **The Multiverse Support Group**: User is talking to alternate versions of themselves who made wildly different life choices. (Model Pairing: Phi-3 for the successful but sad version vs Hermes-3 for the chaotic timeline version).
 * [ ] **The RPG NPC Vendor**: Agents are generic RPG shopkeepers trying to sell the user useless items for their real-life "quest" like going to the grocery store. (Model Pairing: Llama-3 for enthusiastic vendor vs Qwen2.5 for literal appraisal).
+
+### Phase 27: The Absurd Communications (New Dreams)
+* [ ] **The Galactic Translators**: Agents act as alien translators who constantly misinterpret the user's intent. Pairing: Phi-3 (Literal translator) vs Hermes-3 (Conspiracy theorist translator).
+* [ ] **The Interdimensional Customs Agent**: Agents interrogate the user on items they are bringing across dimensions. Pairing: Qwen2.5 (Strict customs rules) vs Hermes-3 (Corrupt agent looking for bribes).
+* [ ] **The AI Therapy Simulator**: Agents act as AI therapists for other AI models (the user). Pairing: Llama-3 (Compassionate therapist) vs Qwen2.5 (Robotic cold logic).
+
+## Cloud Persistence (The HF Integration)
+
+*Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
+
+1. **Authenticating with the HF API:**
+   * Provide a settings UI that securely captures the Hugging Face token.
+   * Authenticate requests with the HF API via the `HFStorageManager`.
+   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
+   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
+
+2. **Pushing Finished Episode Scripts:**
+   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
+   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
+   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
+   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
+
+3. **Fetching Previous Episode Summaries at Boot:**
+   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
+   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
+   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
+   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.

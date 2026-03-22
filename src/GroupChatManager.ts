@@ -63,7 +63,51 @@ export class GroupChatManager {
   private readonly DEFAULT_PRERENDER_TURNS = 3;
 
   constructor(agents: Agent[]) {
-    this.agents = agents
+    this.agents = agents;
+    this.loadEvolvedPersonalities();
+  }
+
+  /**
+   * Loads evolved personalities from local storage.
+   */
+  private loadEvolvedPersonalities(): void {
+    try {
+      this.agents.forEach(agent => {
+        const evolvedPrompt = localStorage.getItem(`jokesters-evolved-prompt-${agent.id}`);
+        if (evolvedPrompt) {
+          agent.systemPrompt = evolvedPrompt;
+          console.log(`Loaded evolved personality for ${agent.name}`);
+        }
+      });
+    } catch (e) {
+      console.warn('Could not load evolved personalities', e);
+    }
+  }
+
+  /**
+   * Adjusts an agent's personality based on user feedback.
+   */
+  public evolvePersonality(agentId: string, feedback: 'positive' | 'negative'): void {
+    const agent = this.agents.find(a => a.id === agentId);
+    if (!agent) return;
+
+    let adjustment = '';
+    if (feedback === 'positive') {
+      adjustment = ' (You received positive feedback: lean more into your current traits and be more confident.)';
+    } else {
+      adjustment = ' (You received negative feedback: dial back your extreme traits and try to be more agreeable.)';
+    }
+
+    if (!agent.systemPrompt.includes(adjustment)) {
+        agent.systemPrompt += adjustment;
+    }
+
+    try {
+        localStorage.setItem(`jokesters-evolved-prompt-${agent.id}`, agent.systemPrompt);
+        console.log(`Evolved personality for ${agent.name} saved to local storage.`);
+    } catch (e) {
+        console.warn('Could not save evolved personality', e);
+    }
   }
 
   /**
