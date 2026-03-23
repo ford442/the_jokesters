@@ -427,6 +427,39 @@ export async function runParanoidAILoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runMultiverseSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌌 MULTIVERSE SUPPORT: You are talking to alternate versions of yourself!`, '#8e44ad');
+
+    const successfulSelf = 'philosopher'; // Phi-3
+    const chaoticSelf = 'comedian'; // Hermes-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(successfulSelf);
+    await ctx.manager.chatForAgent(successfulSelf, `(MULTIVERSE: You are a highly successful, incredibly wealthy alternate universe version of the User. However, you are deeply sad and unfulfilled because you made a different life choice years ago. Introduce yourself to the User and sigh about your golden cage.)`, async (s) => await ctx.callbacks.onSpeak(s, successfulSelf, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('You (Prime Timeline)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Chaotic Self Reacts
+            ctx.callbacks.onTurnStart(chaoticSelf);
+            await ctx.manager.chatForAgent(chaoticSelf, `(MULTIVERSE: The User said: "${userInput}". You are the chaotic, broke, but wildly happy alternate version of the User who made the WORST possible life choices. Mock the successful version's sadness. Share a bizarre anecdote from your timeline.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticSelf, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Successful Self Reacts
+            ctx.callbacks.onTurnStart(successfulSelf);
+            await ctx.manager.chatForAgent(successfulSelf, `(MULTIVERSE: The User said: "${userInput}". You are the successful but sad alternate version. Give them terrible advice based on your success that clearly wouldn't work in their timeline. Long for the simple things.)`, async (s) => await ctx.callbacks.onSpeak(s, successfulSelf, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
     const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
     ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');
