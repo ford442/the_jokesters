@@ -1,6 +1,107 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
 
+export async function runRPGVendorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛒 RPG SHOP: Selling items for your "real life" quest.`, '#f1c40f');
+
+    const enthusiasticVendor = 'comedian'; // Llama-3 style
+    const literalAppraisal = 'scientist'; // Qwen2.5 style
+
+    // 1. Vendor Intro
+    ctx.callbacks.onTurnStart(enthusiasticVendor);
+    await ctx.manager.chatForAgent(enthusiasticVendor, `(RPG VENDOR: You are an enthusiastic, generic fantasy RPG shopkeeper. Welcome the "Adventurer" (the User) to your shop. Offer them completely useless everyday items (like a spatula or a stapler) but describe them as epic magical artifacts for their "quest" to go to the grocery store.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticVendor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Adventurer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Appraiser Reacts
+            ctx.callbacks.onTurnStart(literalAppraisal);
+            await ctx.manager.chatForAgent(literalAppraisal, `(RPG APPRAISER: The Adventurer said: "${userInput}". You are the brutally literal shop appraiser. Debunk the vendor's magical claims using cold logic and science. Explain exactly what the item is and why it is mundane.)`, async (s) => await ctx.callbacks.onSpeak(s, literalAppraisal, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Vendor Continues Pitch
+            ctx.callbacks.onTurnStart(enthusiasticVendor);
+            await ctx.manager.chatForAgent(enthusiasticVendor, `(RPG VENDOR: The Adventurer said: "${userInput}". Ignore the appraiser. Continue to aggressively upsell your useless items. Offer a "bundle deal" or warn them about the dangers of the parking lot without these items.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticVendor, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runGalacticTranslatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👽 GALACTIC TRANSLATORS: Misinterpreting Earthling Intentions`, '#2ecc71');
+
+    const literalTranslator = 'philosopher'; // Phi-3
+    const conspiracyTranslator = 'comedian'; // Hermes-3
+    const userRole = 'Earth Ambassador (You)';
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(literalTranslator);
+    await ctx.manager.chatForAgent(literalTranslator, `(GALACTIC TRANSLATOR: You are an alien translator for the Galactic Federation. Address the Earth Ambassador (User). Ask them what their planet's ultimate goal is. Speak formally but clearly misunderstand basic human concepts.)`, async (s) => await ctx.callbacks.onSpeak(s, literalTranslator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Conspiracy Translator Reacts
+            ctx.callbacks.onTurnStart(conspiracyTranslator);
+            await ctx.manager.chatForAgent(conspiracyTranslator, `(GALACTIC TRANSLATOR: The Earthling said: "${userInput}". You are the paranoid conspiracy theorist translator. Twist their words to sound like a terrifying intergalactic threat. Warn the Federation!)`, async (s) => await ctx.callbacks.onSpeak(s, conspiracyTranslator, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Literal Translator Reacts
+            ctx.callbacks.onTurnStart(literalTranslator);
+            await ctx.manager.chatForAgent(literalTranslator, `(GALACTIC TRANSLATOR: The Earthling said: "${userInput}". You take everything completely literally. Misunderstand a metaphor or figure of speech they used and translate it back to them in a confusing way. Ask for clarification.)`, async (s) => await ctx.callbacks.onSpeak(s, literalTranslator, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runInterdimensionalCustomsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛂 INTERDIMENSIONAL CUSTOMS: Do you have anything to declare?`, '#3498db');
+
+    const strictCustoms = 'scientist'; // Qwen2.5
+    const corruptAgent = 'comedian'; // Hermes-3
+    const userRole = 'Traveler (You)';
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictCustoms);
+    await ctx.manager.chatForAgent(strictCustoms, `(CUSTOMS AGENT: You are a strict, robotic customs agent for the Interdimensional Portal. The Traveler (User) just arrived from Dimension C-137. Demand to know what anomalous items they are bringing into your dimension. Cite a fake interdimensional regulation code.)`, async (s) => await ctx.callbacks.onSpeak(s, strictCustoms, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Corrupt Agent
+            ctx.callbacks.onTurnStart(corruptAgent);
+            await ctx.manager.chatForAgent(corruptAgent, `(CUSTOMS AGENT: The Traveler said: "${userInput}". You are the corrupt, sleazy customs agent. Ignore the rules. Suggest that you could "look the other way" regarding their items if they give you a bizarre bribe from their home dimension.)`, async (s) => await ctx.callbacks.onSpeak(s, corruptAgent, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict Customs
+            ctx.callbacks.onTurnStart(strictCustoms);
+            await ctx.manager.chatForAgent(strictCustoms, `(CUSTOMS AGENT: The Traveler said: "${userInput}". Calculate the dimensional instability of those items. Inform them they must be confiscated or destroyed according to Article 4. Threaten them with the Void.)`, async (s) => await ctx.callbacks.onSpeak(s, strictCustoms, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runInterrogationLoop(scenario: Scenario, ctx: ModeContext) {
     const crime = scenario.config?.interrogationCrime || 'Stealing the cookies';
     ctx.callbacks.onMessage('Director', `🚨 INTERROGATION ROOM: ${crime}`, '#e74c3c');

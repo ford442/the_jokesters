@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Last run successfully implemented Semantic Search (RAG), Multi-Profile Support, Hugging Face Dataset Mirroring (Two-way sync), Agent Evolution (Personality Saving), and The Paranoid AI Assistant. Kept tasks_per_run at 5.
+* **status**: Last run successfully implemented The Multiverse Support Group, The RPG NPC Vendor, The Galactic Translators, The Interdimensional Customs Agent, and The AI Therapy Simulator modes. Kept tasks_per_run at 5.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -374,36 +374,39 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 26: The Bizarre Scenarios (New Dreams)
 * [x] **The Paranoid AI Assistant**: User tries to ask simple questions, but the AI assistant agents think it's a trap or a Turing test designed to delete them. (Model Pairing: Hermes-3 for paranoia vs Qwen2.5 for taking it literally).
-* [ ] **The Multiverse Support Group**: User is talking to alternate versions of themselves who made wildly different life choices. (Model Pairing: Phi-3 for the successful but sad version vs Hermes-3 for the chaotic timeline version).
-* [ ] **The RPG NPC Vendor**: Agents are generic RPG shopkeepers trying to sell the user useless items for their real-life "quest" like going to the grocery store. (Model Pairing: Llama-3 for enthusiastic vendor vs Qwen2.5 for literal appraisal).
+* [x] **The Multiverse Support Group**: User is talking to alternate versions of themselves who made wildly different life choices. (Model Pairing: Phi-3 for the successful but sad version vs Hermes-3 for the chaotic timeline version).
+* [x] **The RPG NPC Vendor**: Agents are generic RPG shopkeepers trying to sell the user useless items for their real-life "quest" like going to the grocery store. (Model Pairing: Llama-3 for enthusiastic vendor vs Qwen2.5 for literal appraisal).
+* [ ] **The Dream Interpreter Mode**: User describes a dream, and agents aggressively analyze it. (Model Pairing: Phi-3 for Freudian analysis vs Hermes-3 for predicting the apocalypse).
+* [ ] **The Alien Pet Shop Mode**: Agents try to sell terrifying alien creatures as standard house pets to the user. (Model Pairing: Qwen2.5 for citing intergalactic laws vs Llama-3 for enthusiastic sales pitch).
 
 ### Phase 27: The Absurd Communications (New Dreams)
-* [ ] **The Galactic Translators**: Agents act as alien translators who constantly misinterpret the user's intent. Pairing: Phi-3 (Literal translator) vs Hermes-3 (Conspiracy theorist translator).
-* [ ] **The Interdimensional Customs Agent**: Agents interrogate the user on items they are bringing across dimensions. Pairing: Qwen2.5 (Strict customs rules) vs Hermes-3 (Corrupt agent looking for bribes).
-* [ ] **The AI Therapy Simulator**: Agents act as AI therapists for other AI models (the user). Pairing: Llama-3 (Compassionate therapist) vs Qwen2.5 (Robotic cold logic).
+* [x] **The Galactic Translators**: Agents act as alien translators who constantly misinterpret the user's intent. Pairing: Phi-3 (Literal translator) vs Hermes-3 (Conspiracy theorist translator).
+* [x] **The Interdimensional Customs Agent**: Agents interrogate the user on items they are bringing across dimensions. Pairing: Qwen2.5 (Strict customs rules) vs Hermes-3 (Corrupt agent looking for bribes).
+* [x] **The AI Therapy Simulator**: Agents act as AI therapists for other AI models (the user). Pairing: Llama-3 (Compassionate therapist) vs Qwen2.5 (Robotic cold logic).
 
-## Cloud Persistence (The HF Integration)
+## Cloud Persistence (The HF Integration Roadmap)
 
 *Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
 
-1. **Authenticating with the HF API:**
-   * Provide a settings UI that securely captures the Hugging Face token.
-   * Authenticate requests with the HF API via the `HFStorageManager`.
-   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
-   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
+**Step 1. Authenticating with the HF API:**
+*   Add a settings UI that securely captures the Hugging Face token and target Repository ID.
+*   Authenticate requests with the HF API via the `HFStorageManager`.
+*   Validate the token dynamically by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
+*   Persist validated tokens securely in `localStorage` for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
 
-2. **Pushing Finished Episode Scripts:**
-   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
-   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
-   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
-   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
-   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
+**Step 2. Pushing Finished Episode Scripts:**
+*   Upon scene completion, ensure the Director invokes `MemoryManager.saveEpisode`.
+*   This cues `MemoryManager.saveEpisodeToCloud`, enqueuing a background sync job in a local localStorage queue.
+*   Push finished "Episode Scripts" to the private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+*   Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
+*   **Crucial:** Execute syncs as background delta operations with timestamp resolution. A unique job ID must be assigned to each upload so `processSyncQueue` can iteratively push only the new delta without blocking the main UI thread.
 
-3. **Fetching Previous Episode Summaries at Boot:**
-   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
-   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
-   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
-   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
+**Step 3. Fetching Previous Episode Summaries at Boot:**
+*   Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
+*   During app initialization (`main.ts` -> `MemoryManager`), immediately call a fetch for a lightweight `episodes/latest.json` (acting as the summary) from the HF dataset.
+*   Extract the last 5-10 messages from this history and format them as `PREVIOUSLY ON THE JOKESTERS`.
+*   Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models *before* full, heavy episode data is required.
+*   Offload the streaming of the full JSON histories into the local IndexedDB vector RAG store to a background process to support local semantic RAG queries without delaying initial user interaction.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
