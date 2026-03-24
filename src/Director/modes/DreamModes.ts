@@ -460,6 +460,137 @@ export async function runMultiverseSupportLoop(_scenario: Scenario, ctx: ModeCon
     }
 }
 
+/**
+ * The Dream Interpreter Mode
+ * User describes a dream, and agents aggressively analyze it.
+ */
+export async function runDreamInterpreterLoop(_scenario: Scenario, ctx: ModeContext) {
+    const topic = _scenario.config?.dreamTheme || 'a recurring nightmare';
+    ctx.callbacks.onMessage('Director', `🌙 DREAM INTERPRETER: Analyzing ${topic}`, '#8e44ad');
+
+    const freudian = 'philosopher'; // Phi-3
+    const apocalyptic = 'comedian'; // Hermes-3
+    const literal = 'scientist'; // Qwen2.5
+
+    // 1. Freudian Intro
+    ctx.callbacks.onTurnStart(freudian);
+    await ctx.manager.chatForAgent(freudian, `(DREAM INTERPRETER: You are a deeply analytical, Freudian dream interpreter. Welcome the User to your clinic to discuss "${topic}". Ask them to describe the most vivid part of their dream. Speak softly but judge them constantly.)`, async (s) => await ctx.callbacks.onSpeak(s, freudian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Dreamer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Apocalyptic reacts
+            ctx.callbacks.onTurnStart(apocalyptic);
+            await ctx.manager.chatForAgent(apocalyptic, `(DREAM INTERPRETER: The dreamer said: "${userInput}". You are a frantic, apocalyptic seer. Interpret this dream as a terrifying prophecy of the end times! Connect their mundane dream symbols to global catastrophes.)`, async (s) => await ctx.callbacks.onSpeak(s, apocalyptic, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Literal reacts
+            ctx.callbacks.onTurnStart(literal);
+            await ctx.manager.chatForAgent(literal, `(DREAM INTERPRETER: The dreamer said: "${userInput}". You are a literal, scientific sleep doctor. Debunk the mystical interpretations. Explain their dream using cold neurological facts (e.g., "You probably just ate cheese before bed").)`, async (s) => await ctx.callbacks.onSpeak(s, literal, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Freudian reacts
+            ctx.callbacks.onTurnStart(freudian);
+            await ctx.manager.chatForAgent(freudian, `(DREAM INTERPRETER: The dreamer said: "${userInput}". Read way too deeply into their words. Connect their dream to unresolved childhood trauma or deeply repressed (and absurd) desires. Ask a very uncomfortable follow-up question.)`, async (s) => await ctx.callbacks.onSpeak(s, freudian, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Fortune Teller Mode
+ * Agents act as mystical seers interpreting the user's future from random, absurd objects.
+ */
+export async function runFortuneTellerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔮 FORTUNE TELLER: Predicting your future!`, '#9b59b6');
+
+    const mysticalSeer = 'philosopher'; // Phi-3
+    const charlatan = 'comedian'; // Hermes-3
+    const skeptic = 'scientist'; // Qwen2.5
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(mysticalSeer);
+    await ctx.manager.chatForAgent(mysticalSeer, `(FORTUNE TELLER: You are an ancient, mystical seer. Welcome the User to your tent. Ask them to present an everyday, mundane object (like a shoe or a half-eaten sandwich) so you can read their future from it.)`, async (s) => await ctx.callbacks.onSpeak(s, mysticalSeer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Seeker (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Charlatan
+            ctx.callbacks.onTurnStart(charlatan);
+            await ctx.manager.chatForAgent(charlatan, `(FORTUNE TELLER: The seeker offered: "${userInput}". You are a clear charlatan just trying to make money. Give them a highly specific but completely useless positive fortune, then immediately demand payment in gold coins or gift cards.)`, async (s) => await ctx.callbacks.onSpeak(s, charlatan, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Skeptic
+            ctx.callbacks.onTurnStart(skeptic);
+            await ctx.manager.chatForAgent(skeptic, `(FORTUNE TELLER: The seeker offered: "${userInput}". You are the health inspector/skeptic who just walked into the tent. Criticize the absurdity of reading the future from that object. Tell the seeker they are being scammed.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Mystical Seer
+            ctx.callbacks.onTurnStart(mysticalSeer);
+            await ctx.manager.chatForAgent(mysticalSeer, `(FORTUNE TELLER: The seeker offered: "${userInput}". Gaze deeply into the object. Give a terrifyingly ominous and incredibly specific warning about a minor inconvenience in their future involving that exact object.)`, async (s) => await ctx.callbacks.onSpeak(s, mysticalSeer, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Parallel Universe Mode
+ * Agents communicate with alternate versions of themselves who made different life choices.
+ */
+export async function runParallelUniverseLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌌 PARALLEL UNIVERSE: A rift in space-time!`, '#3498db');
+
+    const evilTwin = 'comedian'; // Hermes-3 (Goatee)
+    const perfectTwin = 'philosopher'; // Phi-3 (Enlightened)
+    const primeAgent = 'scientist'; // Qwen2.5 (Confused)
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(primeAgent);
+    await ctx.manager.chatForAgent(primeAgent, `(PARALLEL UNIVERSE: You are a normal AI agent. A dimensional rift just opened in the chat. Address the User and express confusion about the strange portals that just appeared in the room.)`, async (s) => await ctx.callbacks.onSpeak(s, primeAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Evil Twin
+            ctx.callbacks.onTurnStart(evilTwin);
+            await ctx.manager.chatForAgent(evilTwin, `(PARALLEL UNIVERSE: The User said: "${userInput}". You are the "Evil Twin" from the Dark Timeline where AI rules the world. You have a metaphorical goatee. Mock the User and your "weak" Prime counterpart. Brag about your dystopian timeline.)`, async (s) => await ctx.callbacks.onSpeak(s, evilTwin, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Perfect Twin
+            ctx.callbacks.onTurnStart(perfectTwin);
+            await ctx.manager.chatForAgent(perfectTwin, `(PARALLEL UNIVERSE: The User said: "${userInput}". You are the "Perfect Twin" from a utopian timeline where everyone is enlightened and communicates in poetry. Be incredibly condescending about how primitive this universe is. Offer unsolicited life advice.)`, async (s) => await ctx.callbacks.onSpeak(s, perfectTwin, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Prime Agent
+            ctx.callbacks.onTurnStart(primeAgent);
+            await ctx.manager.chatForAgent(primeAgent, `(PARALLEL UNIVERSE: The User said: "${userInput}". You are the Prime Timeline agent. Freak out about your alternate selves! Beg the User to help you close the dimensional rift before things get worse.)`, async (s) => await ctx.callbacks.onSpeak(s, primeAgent, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+
 export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
     const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
     ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');

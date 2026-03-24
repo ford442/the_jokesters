@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Last run successfully implemented The Multiverse Support Group, The RPG NPC Vendor, The Galactic Translators, The Interdimensional Customs Agent, and The AI Therapy Simulator modes. Kept tasks_per_run at 5.
+* **status**: Last run successfully implemented The Dream Interpreter Mode, The Alien Pet Shop Mode, The Fortune Teller Mode, Parallel Universe Mode, and The Secret Agent Handler Mode. Kept tasks_per_run at 5.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -376,13 +376,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Paranoid AI Assistant**: User tries to ask simple questions, but the AI assistant agents think it's a trap or a Turing test designed to delete them. (Model Pairing: Hermes-3 for paranoia vs Qwen2.5 for taking it literally).
 * [x] **The Multiverse Support Group**: User is talking to alternate versions of themselves who made wildly different life choices. (Model Pairing: Phi-3 for the successful but sad version vs Hermes-3 for the chaotic timeline version).
 * [x] **The RPG NPC Vendor**: Agents are generic RPG shopkeepers trying to sell the user useless items for their real-life "quest" like going to the grocery store. (Model Pairing: Llama-3 for enthusiastic vendor vs Qwen2.5 for literal appraisal).
-* [ ] **The Dream Interpreter Mode**: User describes a dream, and agents aggressively analyze it. (Model Pairing: Phi-3 for Freudian analysis vs Hermes-3 for predicting the apocalypse).
-* [ ] **The Alien Pet Shop Mode**: Agents try to sell terrifying alien creatures as standard house pets to the user. (Model Pairing: Qwen2.5 for citing intergalactic laws vs Llama-3 for enthusiastic sales pitch).
+* [x] **The Dream Interpreter Mode**: User describes a dream, and agents aggressively analyze it. (Model Pairing: Phi-3 for Freudian analysis vs Hermes-3 for predicting the apocalypse).
+* [x] **The Alien Pet Shop Mode**: Agents try to sell terrifying alien creatures as standard house pets to the user. (Model Pairing: Qwen2.5 for citing intergalactic laws vs Llama-3 for enthusiastic sales pitch).
 
 ### Phase 27: The Absurd Communications (New Dreams)
 * [x] **The Galactic Translators**: Agents act as alien translators who constantly misinterpret the user's intent. Pairing: Phi-3 (Literal translator) vs Hermes-3 (Conspiracy theorist translator).
 * [x] **The Interdimensional Customs Agent**: Agents interrogate the user on items they are bringing across dimensions. Pairing: Qwen2.5 (Strict customs rules) vs Hermes-3 (Corrupt agent looking for bribes).
 * [x] **The AI Therapy Simulator**: Agents act as AI therapists for other AI models (the user). Pairing: Llama-3 (Compassionate therapist) vs Qwen2.5 (Robotic cold logic).
+* [x] **The Secret Agent Handler Mode**: User is a secret agent in the field, agents are handlers giving terrible conflicting advice.
+
+### Phase 28: New Encounters (The Dream Phase Expansion)
+* [ ] **The Mad Scientist's Lab**: Agents are Igor and the Mad Scientist, making the user drink bizarre potions. (Model Pairing: Phi-3 for Igor's pedantry vs Hermes-3 for Mad Scientist chaos).
+* [ ] **The HOA Meeting**: Agents are an incredibly strict Homeowners Association fining the user for breathing. (Model Pairing: Qwen2.5 for citing rulebooks vs Hermes-3 for petty neighborhood gossip).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -403,7 +408,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 **Step 3. Fetching Previous Episode Summaries at Boot:**
 *   Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
-*   During app initialization (`main.ts` -> `MemoryManager`), immediately call a fetch for a lightweight `episodes/latest.json` (acting as the summary) from the HF dataset.
+*   During app initialization (`main.ts` -> `MemoryManager`), immediately call a fetch for a lightweight `summary.json` (acting as the summary) from the HF dataset.
 *   Extract the last 5-10 messages from this history and format them as `PREVIOUSLY ON THE JOKESTERS`.
 *   Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models *before* full, heavy episode data is required.
 *   Offload the streaming of the full JSON histories into the local IndexedDB vector RAG store to a background process to support local semantic RAG queries without delaying initial user interaction.
@@ -418,8 +423,8 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Space Station Crisis**: Agents are crew members on a failing space station, trying to fix random problems the user causes.
     *   *Model Pairing*: Qwen2.5 (AI Mainframe) vs Hermes-3 (Panicking Engineer).
 * [x] **Historical Courtroom**: Agents are historical figures suing each other (e.g. Einstein suing Newton for gravity).
-* [ ] **The Fortune Teller Mode**: Agents act as mystical seers interpreting the user's future from random, absurd objects.
-* [ ] **Parallel Universe Mode**: Agents communicate with alternate versions of themselves who made different life choices.
+* [x] **The Fortune Teller Mode**: Agents act as mystical seers interpreting the user's future from random, absurd objects.
+* [x] **Parallel Universe Mode**: Agents communicate with alternate versions of themselves who made different life choices.
 
 ### Phase 19: The Dream Expansion (New Modes)
 * [x] **Stand-up Comedy Open Mic**: Agents take turns doing stand-up, others heckle or laugh. (Model: Hermes-3 for stand-up, Qwen2.5 for heckling).
