@@ -770,3 +770,90 @@ export async function runSentientAppliancesLoop(scenario: Scenario, ctx: ModeCon
         }
     }
 }
+
+/**
+ * The Alien Pet Shop Mode
+ * Agents try to sell terrifying alien creatures as standard house pets to the user.
+ */
+export async function runAlienPetShopLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👽 ALIEN PET SHOP: Looking for a new companion!`, '#2ecc71');
+
+    const enthusiasticSalesman = 'comedian'; // Llama-3/Hermes-3
+    const intergalacticLawyer = 'scientist'; // Qwen2.5
+    const terrifiedCustomer = 'philosopher'; // Phi-3 (Wait, the user is the customer, so philosopher is a concerned citizen/activist)
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(enthusiasticSalesman);
+    await ctx.manager.chatForAgent(enthusiasticSalesman, `(ALIEN PET SHOP: You run a shady intergalactic pet shop on Earth. Welcome the human (User). Vigorously try to sell them a highly dangerous, terrifying alien species but describe it like a cute puppy. Emphasize its "adorable" extra appendages or acid spit.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticSalesman, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Human (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Intergalactic Lawyer
+            ctx.callbacks.onTurnStart(intergalacticLawyer);
+            await ctx.manager.chatForAgent(intergalacticLawyer, `(ALIEN PET SHOP: The human said: "${userInput}". You are a strict Galactic Federation compliance officer. Cite an obscure intergalactic law about why keeping that specific alien species on a Class-3 planet (Earth) is a terrible, highly illegal idea. Warn the human of the fines or planetary destruction.)`, async (s) => await ctx.callbacks.onSpeak(s, intergalacticLawyer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Activist
+            ctx.callbacks.onTurnStart(terrifiedCustomer);
+            await ctx.manager.chatForAgent(terrifiedCustomer, `(ALIEN PET SHOP: The human said: "${userInput}". You are a frantic alien rights activist protesting the shop. Beg the human not to buy the creature, not for their safety, but because human habitats are "depressing" for a 9-dimensional being. Glue yourself to a display tank.)`, async (s) => await ctx.callbacks.onSpeak(s, terrifiedCustomer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Salesman
+            ctx.callbacks.onTurnStart(enthusiasticSalesman);
+            await ctx.manager.chatForAgent(enthusiasticSalesman, `(ALIEN PET SHOP: The human said: "${userInput}". Ignore the officer and the activist. Aggressively push the sale! Offer a discount if they take home a breeding pair of the terrifying creatures. Downplay the "minor" risks of owning them.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticSalesman, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+
+/**
+ * The Secret Agent Handler Mode
+ * User is a secret agent in the field, agents are handlers giving terrible conflicting advice.
+ */
+export async function runSecretAgentLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕵️ SECRET AGENT HANDLER: Mission In Progress!`, '#e74c3c');
+
+    const aggressiveHandler = 'comedian'; // Hermes-3 (Shoot first)
+    const stealthHandler = 'philosopher'; // Phi-3 (Over-complicate)
+    const techHandler = 'scientist'; // Qwen2.5 (Useless gadgets)
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(stealthHandler);
+    await ctx.manager.chatForAgent(stealthHandler, `(SECRET HANDLER: You are the lead handler on coms for Agent X (the User). They just infiltrated the villain's gala. Advise them to maintain cover in the most convoluted, overly philosophical way possible.)`, async (s) => await ctx.callbacks.onSpeak(s, stealthHandler, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Agent X (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Aggressive
+            ctx.callbacks.onTurnStart(aggressiveHandler);
+            await ctx.manager.chatForAgent(aggressiveHandler, `(SECRET HANDLER: Agent X said: "${userInput}". You are the chaotic, aggressive secondary handler. Override the others. Tell Agent X to blow their cover immediately and use a ridiculous, explosive method to solve the problem!)`, async (s) => await ctx.callbacks.onSpeak(s, aggressiveHandler, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Tech
+            ctx.callbacks.onTurnStart(techHandler);
+            await ctx.manager.chatForAgent(techHandler, `(SECRET HANDLER: Agent X said: "${userInput}". You are the Q-branch tech guy. Remind Agent X to use a highly specific, but completely useless spy gadget you gave them (e.g., an explosive pen that only explodes if you write a haiku). Panic about the budget!)`, async (s) => await ctx.callbacks.onSpeak(s, techHandler, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Stealth
+            ctx.callbacks.onTurnStart(stealthHandler);
+            await ctx.manager.chatForAgent(stealthHandler, `(SECRET HANDLER: Agent X said: "${userInput}". Ignore the chaos of the others. Remind the agent of a highly specific, very complicated piece of social etiquette or philosophy they must adhere to so the villain doesn't suspect them.)`, async (s) => await ctx.callbacks.onSpeak(s, stealthHandler, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
