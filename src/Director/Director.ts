@@ -14,7 +14,7 @@ import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
 import { runTimeTravelLoop, runChefLoop, runMedicalLoop, runTimeTravelersDilemmaLoop, runMatrixLoop, runDebateCreatorLoop, runReverseTuringLoop, runTimeTravelingTouristsLoop, runHistoricalCourtroomLoop, runParanoidAILoop, runMultiverseSupportLoop, runDreamInterpreterLoop, runFortuneTellerLoop, runParallelUniverseLoop } from './modes/DreamModes';
 import { runRoastLoop, runStoryLoop, runDebateLoop, runMusicalLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
-import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop, runAIAuditLoop, runInterdimensionalCableLoop, runTelemarketerTakedownLoop, runSpaceStationCrisisLoop, runConspiracyGeneratorLoop, runNatureDocumentaryLoop, runWorstRoommateLoop, runIntergalacticDMVLoop, runSentientAppliancesLoop, runAlienPetShopLoop, runSecretAgentLoop } from './modes/ExpandedRealityModes';
+import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop, runAIAuditLoop, runInterdimensionalCableLoop, runTelemarketerTakedownLoop, runSpaceStationCrisisLoop, runConspiracyGeneratorLoop, runNatureDocumentaryLoop, runWorstRoommateLoop, runIntergalacticDMVLoop, runSentientAppliancesLoop, runAlienPetShopLoop, runSecretAgentLoop, runMadScientistLoop, runHOAMeetingLoop, runTimeTravelingCavemanLoop, runSubmarineCrisisLoop, runGalacticBakeOffLoop } from './modes/ExpandedRealityModes';
 import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop, runRPGVendorLoop, runGalacticTranslatorsLoop, runInterdimensionalCustomsLoop } from './modes/InteractiveMode';
 import { runTimeLoopLoop } from './modes/DreamModes';
@@ -54,7 +54,7 @@ export interface ReporterSegment {
 }
 
 export interface Scenario {
-    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'lightning_round' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that' | 'worst_roommate' | 'intergalactic_dmv' | 'time_traveling_tourists' | 'sentient_appliances' | 'historical_courtroom' | 'paranoid_ai' | 'multiverse_support' | 'rpg_vendor' | 'galactic_translators' | 'interdimensional_customs' | 'ai_therapy' | 'dream_interpreter' | 'fortune_teller' | 'parallel_universe' | 'alien_pet_shop' | 'secret_agent';
+    type: 'improv' | 'script' | 'reaction' | 'narrative' | 'reporter' | 'roast' | 'story' | 'debate' | 'musical' | 'podcast' |'interview' | 'dungeon_master' | 'autonomous' | 'trivia' | 'dream' | 'vision' | 'trial' | 'tech_support' | 'historical' | 'commentary' | 'mystery' | 'pitch' | 'code_review' | 'therapy' | 'philosopher' | 'alien' | 'time_travel' | 'chef' | 'medical' | 'haunted' | 'sports' | 'reality_tv' | 'auction_house' | 'escape_room' | 'interrogation' | 'museum_tour' | 'job_interview' | 'cooking_show' | 'procedural' | 'time_loop' | 'superhero' | 'conspiracy' | 'silent_film' | 'standup' | 'meltdown' | 'dating_show' | 'silent_treatment' | 'rap_battle_visuals' | 'time_travelers_dilemma' | 'intervention' | 'ghost_hunters' | 'newsroom' | 'matrix' | 'support_group' | 'heist_planner' | 'debate_creator' | 'reverse_turing' | 'customer_service_hell' | 'ai_audit' | 'interdimensional_cable' | 'telemarketer_takedown' | 'space_station_crisis' | 'book_club' | 'elevator_pitch' | 'conspiracy_generator' | 'nature_documentary' | 'lightning_round' | 'rapid_fire_trivia' | 'rapid_fire_roast' | 'rapid_fire_association' | 'rapid_fire_this_or_that' | 'worst_roommate' | 'intergalactic_dmv' | 'time_traveling_tourists' | 'sentient_appliances' | 'historical_courtroom' | 'paranoid_ai' | 'multiverse_support' | 'rpg_vendor' | 'galactic_translators' | 'interdimensional_customs' | 'ai_therapy' | 'dream_interpreter' | 'fortune_teller' | 'parallel_universe' | 'alien_pet_shop' | 'secret_agent' | 'mad_scientist' | 'hoa_meeting' | 'time_traveling_caveman' | 'submarine_crisis' | 'galactic_bake_off';
     title: string;
     description: string;
     config?: {
@@ -149,6 +149,11 @@ export interface Scenario {
         startWord?: string;
         lightningRoundTopic?: string;
         lightningRoundRounds?: number;
+        potionType?: string;
+        hoaViolation?: string;
+        modernTech?: string;
+        subDepth?: string;
+        galacticPastry?: string;
     };
 }
 
@@ -247,6 +252,11 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     parallel_universe: runParallelUniverseLoop,
     alien_pet_shop: runAlienPetShopLoop,
     secret_agent: runSecretAgentLoop,
+    mad_scientist: runMadScientistLoop,
+    hoa_meeting: runHOAMeetingLoop,
+    time_traveling_caveman: runTimeTravelingCavemanLoop,
+    submarine_crisis: runSubmarineCrisisLoop,
+    galactic_bake_off: runGalacticBakeOffLoop,
 };
 
 export class Director {
