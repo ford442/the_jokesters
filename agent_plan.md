@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
-* **status**: Last run successfully implemented The Dream Interpreter Mode, The Alien Pet Shop Mode, The Fortune Teller Mode, Parallel Universe Mode, and The Secret Agent Handler Mode. Kept tasks_per_run at 5.
+* **tasks_per_run**: 6
+* **status**: Last run successfully implemented The Mad Scientist's Lab, The HOA Meeting, The Time-Traveling Caveman, The Submarine Crisis, and The Galactic Bake-Off. Increased tasks_per_run to 6.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -191,9 +191,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Voice Input**: Add STT (SpeechRecognition) to allow user to speak to agents.
 
 ### Phase 8: Advanced Intelligence & Polish (The "Interview" Phase)
-* [ ] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
-* [ ] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
-* [ ] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
+* [x] **Vector Memory (RAG)**: Use `voy` or similar to retrieve past relevant jokes.
+* [x] **Personality Evolution**: Agents drift in personality based on user feedback (thumbs up/down).
+* [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
 * [x] **The Newsroom**: Enhanced Reporter mode with multiple segments and live tickers.
 ### Phase 8: Advanced Intelligence & Polish
 * [x] **Autonomous Agent Mode**: Agents chatter amongst themselves without user input until interrupted.
@@ -386,12 +386,41 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Secret Agent Handler Mode**: User is a secret agent in the field, agents are handlers giving terrible conflicting advice.
 
 ### Phase 28: New Encounters (The Dream Phase Expansion)
-* [ ] **The Mad Scientist's Lab**: Agents are Igor and the Mad Scientist, making the user drink bizarre potions. (Model Pairing: Phi-3 for Igor's pedantry vs Hermes-3 for Mad Scientist chaos).
-* [ ] **The HOA Meeting**: Agents are an incredibly strict Homeowners Association fining the user for breathing. (Model Pairing: Qwen2.5 for citing rulebooks vs Hermes-3 for petty neighborhood gossip).
+* [x] **The Mad Scientist's Lab**: Agents are Igor and the Mad Scientist, making the user drink bizarre potions. (Model Pairing: Phi-3 for Igor's pedantry vs Hermes-3 for Mad Scientist chaos).
+* [x] **The HOA Meeting**: Agents are an incredibly strict Homeowners Association fining the user for breathing. (Model Pairing: Qwen2.5 for citing rulebooks vs Hermes-3 for petty neighborhood gossip).
+* [x] **The Time-Traveling Caveman**: User tries to explain modern technology to a caveman (Hermes-3) and a time-traveler (Qwen2.5) who tries to translate.
+* [x] **The Submarine Crisis**: User is the captain of a submarine, agents are panicking crew members.
+* [x] **The Galactic Bake-Off**: User is a judge in an intergalactic baking competition.
+
+### Phase 29: New Horizons (The "Dream" Phase)
+* [ ] **Roast Battle Mode Enhanced**: Agents take turns roasting the user using a specifically injected unhinged system prompt. (Model Pairing: Hermes-3 vs Llama-3).
+* [ ] **Heckler Interaction**: User plays a persistent heckler during a comedy show, agents must verbally defeat the user.
+* [ ] **Collaborative Storytelling**: Agents and user take turns building a complex fantasy story sentence by sentence.
+* [ ] **The DMV Interpreter**: Agents are alien DMV workers that require the user to translate bizarre alien forms into English.
+* [ ] **Musical Improv Session**: Agents generate rhyming lyrics to a specific beat. (Model Pairing: Qwen2.5 for rhyme scheme vs Hermes-3 for chaotic lyrics).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
 *Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
+
+1. **Authenticating with the HF API:**
+   * Provide a settings UI that securely captures the Hugging Face token.
+   * Authenticate requests with the HF API via the `HFStorageManager`.
+   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
+   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
+
+2. **Pushing Finished Episode Scripts:**
+   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
+   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
+   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
+   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
+
+3. **Fetching Previous Episode Summaries at Boot:**
+   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
+   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
+   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
+   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
 
 **Step 1. Authenticating with the HF API:**
 *   Add a settings UI that securely captures the Hugging Face token and target Repository ID.

@@ -857,3 +857,223 @@ export async function runSecretAgentLoop(_scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+/**
+ * The Mad Scientist's Lab
+ * Agents are Igor and the Mad Scientist, making the user drink bizarre potions.
+ */
+export async function runMadScientistLoop(scenario: Scenario, ctx: ModeContext) {
+    const potion = scenario.config?.potionType || 'a glowing green liquid';
+    ctx.callbacks.onMessage('Director', `🧪 MAD SCIENTIST LAB: Drink the ${potion}!`, '#9b59b6');
+
+    const igor = 'philosopher'; // Phi-3: Pedantic Igor
+    const madScientist = 'comedian'; // Hermes-3: Mad Scientist chaos
+    const assistant = 'scientist'; // Qwen2.5: Normal assistant trying to keep things safe
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(madScientist);
+    await ctx.manager.chatForAgent(madScientist, `(MAD SCIENTIST: You are an unhinged Mad Scientist. Welcome the User to your lab. Show them your latest concoction: "${potion}". Demand they drink it and describe what you hope it will do to them.)`, async (s) => await ctx.callbacks.onSpeak(s, madScientist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Test Subject (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Igor
+            ctx.callbacks.onTurnStart(igor);
+            await ctx.manager.chatForAgent(igor, `(IGOR: The test subject (User) just said: "${userInput}". You are Igor. Speak with a slight lisp or creepy tone. Pedantically correct their grammar or point out a minor, horrifying side effect of "${potion}" they haven't noticed yet.)`, async (s) => await ctx.callbacks.onSpeak(s, igor, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Assistant
+            ctx.callbacks.onTurnStart(assistant);
+            await ctx.manager.chatForAgent(assistant, `(LAB ASSISTANT: The subject said: "${userInput}". You are the only sane person here. Desperately try to warn the User not to drink "${potion}" by reading off the OSHA violations and the terrifying chemical composition.)`, async (s) => await ctx.callbacks.onSpeak(s, assistant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Mad Scientist
+            ctx.callbacks.onTurnStart(madScientist);
+            await ctx.manager.chatForAgent(madScientist, `(MAD SCIENTIST: The subject said: "${userInput}". Ignore the assistant. Cackle maniacally! Double down on the bizarre properties of "${potion}" and offer them a terrifying alternative if they refuse to drink.)`, async (s) => await ctx.callbacks.onSpeak(s, madScientist, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The HOA Meeting
+ * Agents are an incredibly strict Homeowners Association fining the user for breathing.
+ */
+export async function runHOAMeetingLoop(scenario: Scenario, ctx: ModeContext) {
+    const violation = scenario.config?.hoaViolation || 'grass being 0.1 inches too long';
+    ctx.callbacks.onMessage('Director', `📋 HOA MEETING: Hearing for ${violation}`, '#e74c3c');
+
+    const strictPresident = 'scientist'; // Qwen2.5: Citing rulebooks
+    const gossipyNeighbor = 'comedian'; // Hermes-3: Petty neighborhood gossip
+    const philosophicalBoardMember = 'philosopher'; // Phi-3: Questions the nature of lawns
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictPresident);
+    await ctx.manager.chatForAgent(strictPresident, `(HOA PRESIDENT: You are the terrifyingly strict president of the Homeowners Association. Open the disciplinary hearing for the User regarding their egregious violation: "${violation}". Cite a completely absurd rule number and state the outrageous fine.)`, async (s) => await ctx.callbacks.onSpeak(s, strictPresident, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Homeowner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Gossipy Neighbor
+            ctx.callbacks.onTurnStart(gossipyNeighbor);
+            await ctx.manager.chatForAgent(gossipyNeighbor, `(GOSSIPY NEIGHBOR: The homeowner said: "${userInput}". You are a busybody neighbor on the board. Ignore their defense and bring up an unrelated, petty piece of neighborhood gossip about them (e.g., their trash cans, their suspicious cat).)`, async (s) => await ctx.callbacks.onSpeak(s, gossipyNeighbor, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosophical Board Member
+            ctx.callbacks.onTurnStart(philosophicalBoardMember);
+            await ctx.manager.chatForAgent(philosophicalBoardMember, `(BOARD MEMBER: The homeowner said: "${userInput}". You are a deep-thinking board member. Over-analyze their defense. Question the philosophical nature of "${violation}"—what even *is* property? But still agree they must be fined.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalBoardMember, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict President
+            ctx.callbacks.onTurnStart(strictPresident);
+            await ctx.manager.chatForAgent(strictPresident, `(HOA PRESIDENT: The homeowner said: "${userInput}". Reject their excuse immediately. Find a new, even more ridiculous violation based on what they just said. Threaten to seize their house or paint it beige.)`, async (s) => await ctx.callbacks.onSpeak(s, strictPresident, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Time-Traveling Caveman
+ * User tries to explain modern technology to a caveman and a scientist tries to translate.
+ */
+export async function runTimeTravelingCavemanLoop(scenario: Scenario, ctx: ModeContext) {
+    const tech = scenario.config?.modernTech || 'a smartphone';
+    ctx.callbacks.onMessage('Director', `🕰️ CAVEMAN MODE: Explaining ${tech}`, '#e67e22');
+
+    const caveman = 'comedian'; // Hermes-3: Caveman
+    const translator = 'scientist'; // Qwen2.5: The pedantic scientist
+    const philosopher = 'philosopher'; // Phi-3: Questions the impact of tech on early humanity
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(translator);
+    await ctx.manager.chatForAgent(translator, `(TRANSLATOR: You are a temporal scientist. Introduce the User to Grug, a caveman you brought to the present. Ask the User to explain "${tech}" to Grug. Tell the User you will try to translate their words into primitive concepts.)`, async (s) => await ctx.callbacks.onSpeak(s, translator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Modern Human (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Caveman reacts to the user directly
+            ctx.callbacks.onTurnStart(caveman);
+            await ctx.manager.chatForAgent(caveman, `(CAVEMAN: The funny magic human said: "${userInput}". Misunderstand what "${tech}" is completely. Think it's food, a weapon, or an angry rock spirit. Grunt a lot and threaten to smash it!)`, async (s) => await ctx.callbacks.onSpeak(s, caveman, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosopher questions the ethical dilemma
+            ctx.callbacks.onTurnStart(philosopher);
+            await ctx.manager.chatForAgent(philosopher, `(ETHICIST: The user said: "${userInput}". Warn the user that explaining "${tech}" to Grug will irrevocably alter the timeline and corrupt his innocent soul. Is fire not enough for man?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Translator translates
+            ctx.callbacks.onTurnStart(translator);
+            await ctx.manager.chatForAgent(translator, `(TRANSLATOR: The user said: "${userInput}". Translate this explanation of "${tech}" to Grug using incredibly convoluted analogies (e.g. "magic glowing rectangular hunting spear"). Realize your translation is terrible.)`, async (s) => await ctx.callbacks.onSpeak(s, translator, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Submarine Crisis
+ * User is the captain of a submarine, agents are panicking crew members.
+ */
+export async function runSubmarineCrisisLoop(scenario: Scenario, ctx: ModeContext) {
+    const depth = scenario.config?.subDepth || '10,000 meters';
+    ctx.callbacks.onMessage('Director', `🌊 SUBMARINE CRISIS: Depth ${depth}`, '#3498db');
+
+    const panickingSonar = 'comedian'; // Hermes-3: Panics about sea monsters
+    const coldEngineer = 'scientist'; // Qwen2.5: Cites hull pressure
+    const dramaticXO = 'philosopher'; // Phi-3: Accepts their watery grave
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(coldEngineer);
+    await ctx.manager.chatForAgent(coldEngineer, `(ENGINEER: We are currently at ${depth} in an experimental submarine. Address the Captain (the User). Inform them of a critical, catastrophic failure in the ballast tanks. Recite the exact time until implosion.)`, async (s) => await ctx.callbacks.onSpeak(s, coldEngineer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Captain (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Panicking Sonar
+            ctx.callbacks.onTurnStart(panickingSonar);
+            await ctx.manager.chatForAgent(panickingSonar, `(SONAR OPERATOR: The captain ordered: "${userInput}". Ignore it! Scream about a massive, terrifying anomaly on the sonar. Claim a kraken or megalodon is trying to eat the sub!)`, async (s) => await ctx.callbacks.onSpeak(s, panickingSonar, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Dramatic XO
+            ctx.callbacks.onTurnStart(dramaticXO);
+            await ctx.manager.chatForAgent(dramaticXO, `(EXECUTIVE OFFICER: The captain ordered: "${userInput}". Sigh dramatically. Refuse the order because it's futile. Deliver a poetic speech about the dark, crushing embrace of the abyss.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticXO, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Cold Engineer
+            ctx.callbacks.onTurnStart(coldEngineer);
+            await ctx.manager.chatForAgent(coldEngineer, `(ENGINEER: The captain ordered: "${userInput}". Logically deduce why that order will actually make the submarine implode *faster*. Cite thermodynamics and structural integrity.)`, async (s) => await ctx.callbacks.onSpeak(s, coldEngineer, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Galactic Bake-Off
+ * User is a judge in an intergalactic baking competition.
+ */
+export async function runGalacticBakeOffLoop(scenario: Scenario, ctx: ModeContext) {
+    const pastry = scenario.config?.galacticPastry || 'A quantum soufflé';
+    ctx.callbacks.onMessage('Director', `🍰 GALACTIC BAKE-OFF: Judging ${pastry}`, '#f1c40f');
+
+    const alienChef = 'comedian'; // Hermes-3: Cooks with weird alien ingredients
+    const roboticChef = 'scientist'; // Qwen2.5: Perfect geometry, terrible taste
+    const existentialChef = 'philosopher'; // Phi-3: Bakes their feelings into the dough
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(alienChef);
+    await ctx.manager.chatForAgent(alienChef, `(ALIEN BAKER: You are competing in the Galactic Bake-Off. Present your "${pastry}" to the head judge (the User). Enthusiastically describe the terrifying, possibly alive alien ingredients you used to bake it.)`, async (s) => await ctx.callbacks.onSpeak(s, alienChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Judge (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Robotic Chef
+            ctx.callbacks.onTurnStart(roboticChef);
+            await ctx.manager.chatForAgent(roboticChef, `(ROBOTIC BAKER: The judge said: "${userInput}". Interrupt the alien chef. Present your own "${pastry}". Brag about its mathematically perfect geometry and precisely calculated 0.00% flavor profile. Demand a perfect score.)`, async (s) => await ctx.callbacks.onSpeak(s, roboticChef, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Existential Chef
+            ctx.callbacks.onTurnStart(existentialChef);
+            await ctx.manager.chatForAgent(existentialChef, `(EXISTENTIAL BAKER: The judge said: "${userInput}". Weep softly over your "${pastry}". Explain that it's overbaked because you imbued it with the sorrow of a dying star. Ask the judge if they can taste the regret.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialChef, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Alien Chef
+            ctx.callbacks.onTurnStart(alienChef);
+            await ctx.manager.chatForAgent(alienChef, `(ALIEN BAKER: The judge said: "${userInput}". Get offended by their critique! Warn them that the "${pastry}" is highly acidic and might eat their stomach. Or tell them to chew faster before it hatches!)`, async (s) => await ctx.callbacks.onSpeak(s, alienChef, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
