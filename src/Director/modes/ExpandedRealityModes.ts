@@ -731,6 +731,40 @@ export async function runIntergalacticDMVLoop(scenario: Scenario, ctx: ModeConte
  * The Sentient Appliances Mode
  * Agents are smart home appliances holding a meeting about the user.
  */
+export async function runDMVInterpreterLoop(scenario: Scenario, ctx: ModeContext) {
+    const formName = scenario.config?.dmvPermit || 'Form 89-Z for a Hyperdrive License';
+    ctx.callbacks.onMessage('Director', `👽 DMV INTERPRETER: Translating ${formName}`, '#9b59b6');
+
+    const alienClerk = 'comedian'; // Hermes-3: Speaks bizarre alien language
+    const strictSupervisor = 'scientist'; // Qwen2.5: Demands perfect compliance
+
+    // 1. Clerk Intro
+    ctx.callbacks.onTurnStart(alienClerk);
+    await ctx.manager.chatForAgent(alienClerk, `(ALIEN DMV: You are an alien clerk at the DMV. Address the User who is trying to submit "${formName}". Speak entirely in a bizarre, made-up alien language with weird punctuation. Only say one or two words in English that vaguely hint at what you need (like "blood" or "seventh dimension").)`, async (s) => await ctx.callbacks.onSpeak(s, alienClerk, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Applicant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Strict Supervisor Reacts
+            ctx.callbacks.onTurnStart(strictSupervisor);
+            await ctx.manager.chatForAgent(strictSupervisor, `(ALIEN DMV SUPERVISOR: The user just said: "${userInput}". Translate what the alien clerk was asking for, but explain that the user's answer was completely wrong in this dimension. Give them an incredibly complex, logically impossible instruction to correct their form.)`, async (s) => await ctx.callbacks.onSpeak(s, strictSupervisor, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Alien Clerk Continues
+            ctx.callbacks.onTurnStart(alienClerk);
+            await ctx.manager.chatForAgent(alienClerk, `(ALIEN DMV: The user said: "${userInput}". Get frustrated in your bizarre alien language. Make strange physical gestures (described in asterisks). Hint that they forgot a crucial stamp or signature.)`, async (s) => await ctx.callbacks.onSpeak(s, alienClerk, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runSentientAppliancesLoop(scenario: Scenario, ctx: ModeContext) {
     const habit = scenario.config?.applianceHabit || 'eating cheese at 3 AM';
     ctx.callbacks.onMessage('Director', `🔌 SMART HOME MEETING: Discussing the User's ${habit}`, '#34495e');
