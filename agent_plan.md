@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 6
-* **status**: Last run successfully implemented The Mad Scientist's Lab, The HOA Meeting, The Time-Traveling Caveman, The Submarine Crisis, and The Galactic Bake-Off. Increased tasks_per_run to 6.
+* **status**: Last run successfully implemented Roast Battle Mode Enhanced, Heckler Interaction, Collaborative Storytelling, The DMV Interpreter, and Musical Improv Session. Keeping tasks_per_run at 6.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -317,29 +317,6 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Telemarketer Takedown**: User plays a telemarketer, while agents employ increasingly absurd tactics to keep the user on the line, waste their time, or confuse them.
     * *Model Pairing*: Hermes-3 (Chaos/Absurd questions) vs Phi-3 (Pretends to be a deeply confused elderly person).
 
-## Cloud Persistence (The HF Integration)
-
-*Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
-
-1. **Authenticating with the HF API:**
-   * Provide a settings UI that securely captures the Hugging Face token.
-   * Authenticate requests with the HF API via the `HFStorageManager`.
-   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
-   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
-
-2. **Pushing Finished Episode Scripts:**
-   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
-   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
-   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
-   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
-   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
-
-3. **Fetching Previous Episode Summaries at Boot:**
-   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
-   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
-   * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
-   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
-
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**
     *   Goal: Overcome `localStorage` 5MB limit.
@@ -393,54 +370,37 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Galactic Bake-Off**: User is a judge in an intergalactic baking competition.
 
 ### Phase 29: New Horizons (The "Dream" Phase)
-* [ ] **Roast Battle Mode Enhanced**: Agents take turns roasting the user using a specifically injected unhinged system prompt. (Model Pairing: Hermes-3 vs Llama-3).
-* [ ] **Heckler Interaction**: User plays a persistent heckler during a comedy show, agents must verbally defeat the user.
-* [ ] **Collaborative Storytelling**: Agents and user take turns building a complex fantasy story sentence by sentence.
-* [ ] **The DMV Interpreter**: Agents are alien DMV workers that require the user to translate bizarre alien forms into English.
-* [ ] **Musical Improv Session**: Agents generate rhyming lyrics to a specific beat. (Model Pairing: Qwen2.5 for rhyme scheme vs Hermes-3 for chaotic lyrics).
+* [x] **Roast Battle Mode Enhanced**: Agents take turns roasting the user using a specifically injected unhinged system prompt. (Model Pairing: Hermes-3 vs Llama-3).
+* [x] **Heckler Interaction**: User plays a persistent heckler during a comedy show, agents must verbally defeat the user.
+* [x] **Collaborative Storytelling**: Agents and user take turns building a complex fantasy story sentence by sentence.
+* [x] **The DMV Interpreter**: Agents are alien DMV workers that require the user to translate bizarre alien forms into English.
+* [x] **Musical Improv Session**: Agents generate rhyming lyrics to a specific beat. (Model Pairing: Qwen2.5 for rhyme scheme vs Hermes-3 for chaotic lyrics).
+
+### Phase 30: New Horizons (The "Dream" Phase Expansion)
+* [ ] **The Conspiracy Corkboard Mode**: Agents try to link completely unrelated user inputs using red string logic. (Phi-3 vs Hermes-3).
+* [ ] **The Overly Honest AI**: Agents refuse to perform tasks and instead psychoanalyze why the user asked them. (Llama-3 vs Phi-3).
+* [ ] **The Intergalactic Cooking Show Disaster**: Agents are alien chefs trying to cook Earth food based on vague descriptions. (Qwen2.5 vs Hermes-3).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
 *Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.*
 
 1. **Authenticating with the HF API:**
-   * Provide a settings UI that securely captures the Hugging Face token.
-   * Authenticate requests with the HF API via the `HFStorageManager`.
-   * Validate the token by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
-   * Persist tokens securely (sandboxed in `localStorage`) for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
+   * Provide a settings UI that securely captures the Hugging Face token and target Dataset ID.
+   * Authenticate requests with the HF API via the `HFStorageManager` by validating the token against the REST endpoint `https://huggingface.co/api/whoami-v2`.
+   * Persist tokens securely (sandboxed in `localStorage` keys `jokesters-hf-token` and `jokesters-hf-repo`) for returning sessions via `MemoryManager.setCloudCredentials`.
 
 2. **Pushing Finished Episode Scripts:**
-   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`.
-   * This cues `MemoryManager.saveEpisodeToCloud`, enqueuing the background sync job in a local IndexedDB or localStorage queue.
-   * Push finished "Episode Scripts" to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
-   * Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
-   * Execute syncs as background delta operations with timestamp resolution. Only push new episodes/vectors to conserve bandwidth and ensure the main UI thread remains unblocked.
+   * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
+   * This cues `MemoryManager.saveEpisodeToCloud`, which enqueues the background sync job into a local `localStorage` queue (e.g., `jokesters-sync-queue`).
+   * Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
 
 3. **Fetching Previous Episode Summaries at Boot:**
-   * Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
-   * During app initialization (`main.ts` -> `MemoryManager`), immediately fetch a lightweight `summary.json` (or the `latest.json` pointer) from the HF dataset.
+   * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
+   * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
-   * Offload the streaming of full histories into IndexedDB to a background process to support local semantic RAG queries without delaying user interaction.
-
-**Step 1. Authenticating with the HF API:**
-*   Add a settings UI that securely captures the Hugging Face token and target Repository ID.
-*   Authenticate requests with the HF API via the `HFStorageManager`.
-*   Validate the token dynamically by calling `https://huggingface.co/api/whoami-v2` within `HFStorageManager`.
-*   Persist validated tokens securely in `localStorage` for returning sessions. Use `MemoryManager.setCloudCredentials` to cache the token and target dataset `repoId`.
-
-**Step 2. Pushing Finished Episode Scripts:**
-*   Upon scene completion, ensure the Director invokes `MemoryManager.saveEpisode`.
-*   This cues `MemoryManager.saveEpisodeToCloud`, enqueuing a background sync job in a local localStorage queue.
-*   Push finished "Episode Scripts" to the private Hugging Face Dataset (e.g. `user/jokesters-episodes`) using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
-*   Structure data under `episodes/episode-{id}.json` containing the scene history, state, and metadata.
-*   **Crucial:** Execute syncs as background delta operations with timestamp resolution. A unique job ID must be assigned to each upload so `processSyncQueue` can iteratively push only the new delta without blocking the main UI thread.
-
-**Step 3. Fetching Previous Episode Summaries at Boot:**
-*   Fetch "Previous Episode Summaries" automatically during initial startup to maintain contextual continuity.
-*   During app initialization (`main.ts` -> `MemoryManager`), immediately call a fetch for a lightweight `summary.json` (acting as the summary) from the HF dataset.
-*   Extract the last 5-10 messages from this history and format them as `PREVIOUSLY ON THE JOKESTERS`.
-*   Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models *before* full, heavy episode data is required.
-*   Offload the streaming of the full JSON histories into the local IndexedDB vector RAG store to a background process to support local semantic RAG queries without delaying initial user interaction.
+   * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process, enabling local semantic RAG queries without delaying user interaction.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
