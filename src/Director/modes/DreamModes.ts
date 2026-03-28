@@ -389,6 +389,53 @@ export async function runTimeTravelingTouristsLoop(scenario: Scenario, ctx: Mode
  * Historical Courtroom Mode
  * Agents are historical figures suing each other.
  */
+export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
+    const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
+    ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');
+
+    const judge = 'philosopher'; // The judge (e.g., Socrates)
+    const plaintiff = 'scientist'; // The historical plaintiff
+    const defendant = 'comedian'; // The historical defendant
+
+    // 1. Judge Intro
+    ctx.callbacks.onTurnStart(judge);
+    await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: You are an ancient, famous philosopher acting as the Judge in the lawsuit of "${lawsuit}". Welcome the jury (the User). Command silence in the court and demand the Plaintiff present their opening statement. Speak formally and mention your own ancient philosophies.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    // 2. Plaintiff Opening
+    ctx.callbacks.onTurnStart(plaintiff);
+    await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: You are the Plaintiff in the case of "${lawsuit}". Present your ridiculous historical grievance to the jury (the User). Demand compensation in a historically appropriate currency or form of revenge. Be dramatic and pompous.)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Jury Member (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Defendant Reacts
+            ctx.callbacks.onTurnStart(defendant);
+            await ctx.manager.chatForAgent(defendant, `(HISTORICAL COURTROOM: The jury member just shouted: "${userInput}". You are the Defendant in "${lawsuit}". Shout "OBJECTION!" Defend yourself with absurd historical excuses or blame a different historical event. Counter-sue the Plaintiff!)`, async (s) => await ctx.callbacks.onSpeak(s, defendant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Plaintiff Retaliates
+            ctx.callbacks.onTurnStart(plaintiff);
+            await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: The jury member said: "${userInput}". Twist their words to support your case against the Defendant in "${lawsuit}". Provide a "new piece of evidence" (a fake historical document or invention).)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Judge Mediates
+            ctx.callbacks.onTurnStart(judge);
+            await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: Order in the court! The jury member said: "${userInput}". Respond with a deep, pseudo-philosophical ruling on their outburst. Ask the Plaintiff or Defendant a very difficult question about "${lawsuit}".)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 /**
  * The Paranoid AI Assistant Mode
  * Agents are AI assistants who think the user is trying to delete them.
@@ -591,48 +638,104 @@ export async function runParallelUniverseLoop(_scenario: Scenario, ctx: ModeCont
 }
 
 
-export async function runHistoricalCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
-    const lawsuit = scenario.config?.historicalLawsuit || 'Einstein suing Newton for gravity';
-    ctx.callbacks.onMessage('Director', `📜 HISTORICAL COURTROOM: The Case of ${lawsuit}`, '#f39c12');
+/**
+ * The Omniscient Narrator Mode
+ * Agents act as omniscient narrators who know the user's future, but give extremely mundane and contradictory predictions.
+ */
+export async function runOmniscientNarratorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👁️ OMNISCIENT NARRATOR: Revealing your mundane future...`, '#8e44ad');
 
-    const judge = 'philosopher'; // The judge (e.g., Socrates)
-    const plaintiff = 'scientist'; // The historical plaintiff
-    const defendant = 'comedian'; // The historical defendant
+    const seriousNarrator = 'philosopher'; // Serious predictions
+    const chaoticNarrator = 'comedian'; // Absurd details
+    const userRole = 'The Protagonist (You)';
 
-    // 1. Judge Intro
-    ctx.callbacks.onTurnStart(judge);
-    await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: You are an ancient, famous philosopher acting as the Judge in the lawsuit of "${lawsuit}". Welcome the jury (the User). Command silence in the court and demand the Plaintiff present their opening statement. Speak formally and mention your own ancient philosophies.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-    await ctx.callbacks.onTurnEnd();
-
-    if (!ctx.isRunning()) return;
-
-    // 2. Plaintiff Opening
-    ctx.callbacks.onTurnStart(plaintiff);
-    await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: You are the Plaintiff in the case of "${lawsuit}". Present your ridiculous historical grievance to the jury (the User). Demand compensation in a historically appropriate currency or form of revenge. Be dramatic and pompous.)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+    ctx.callbacks.onTurnStart(seriousNarrator);
+    await ctx.manager.chatForAgent(seriousNarrator, `(OMNISCIENT NARRATOR: You are an omniscient narrator who knows everything about the User's future. Begin by dramatically predicting a completely mundane event that will happen to them tomorrow, like finding a penny or stubbing their toe. Speak with profound gravity.)`, async (s) => await ctx.callbacks.onSpeak(s, seriousNarrator, {}));
     await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
-        ctx.callbacks.onMessage('Jury Member (You)', userInput, '#ffffff');
+        ctx.callbacks.onMessage(userRole, userInput, '#ffffff');
 
         if (!ctx.isRunning()) break;
 
         const roll = Math.random();
 
-        if (roll < 0.33) {
-            // Defendant Reacts
-            ctx.callbacks.onTurnStart(defendant);
-            await ctx.manager.chatForAgent(defendant, `(HISTORICAL COURTROOM: The jury member just shouted: "${userInput}". You are the Defendant in "${lawsuit}". Shout "OBJECTION!" Defend yourself with absurd historical excuses or blame a different historical event. Counter-sue the Plaintiff!)`, async (s) => await ctx.callbacks.onSpeak(s, defendant, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else if (roll < 0.66) {
-            // Plaintiff Retaliates
-            ctx.callbacks.onTurnStart(plaintiff);
-            await ctx.manager.chatForAgent(plaintiff, `(HISTORICAL COURTROOM: The jury member said: "${userInput}". Twist their words to support your case against the Defendant in "${lawsuit}". Provide a "new piece of evidence" (a fake historical document or invention).)`, async (s) => await ctx.callbacks.onSpeak(s, plaintiff, {}));
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(chaoticNarrator);
+            await ctx.manager.chatForAgent(chaoticNarrator, `(OMNISCIENT NARRATOR: The Protagonist said: "${userInput}". Contradict the other narrator. Predict an even more absurd, chaotic future involving a minor inconvenience like dropping a hot dog. Narrate it like an epic tragedy.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticNarrator, {}));
             await ctx.callbacks.onTurnEnd();
         } else {
-            // Judge Mediates
-            ctx.callbacks.onTurnStart(judge);
-            await ctx.manager.chatForAgent(judge, `(HISTORICAL COURTROOM: Order in the court! The jury member said: "${userInput}". Respond with a deep, pseudo-philosophical ruling on their outburst. Ask the Plaintiff or Defendant a very difficult question about "${lawsuit}".)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+            ctx.callbacks.onTurnStart(seriousNarrator);
+            await ctx.manager.chatForAgent(seriousNarrator, `(OMNISCIENT NARRATOR: The Protagonist said: "${userInput}". Warn them of the dire consequences of their statement. Give them a heavily foreshadowed prophecy about a very boring chore they will have to do next week.)`, async (s) => await ctx.callbacks.onSpeak(s, seriousNarrator, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Reverse Psychology Support
+ * Agents try to "help" the user by constantly agreeing with their worst impulses and telling them to give up.
+ */
+export async function runReversePsychologyLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔄 REVERSE PSYCHOLOGY SUPPORT: We agree with your worst impulses!`, '#e74c3c');
+
+    const sweetEnabler = 'comedian'; // Overly sweet agreement
+    const logicalQuitter = 'scientist'; // Logical reasons why failing is optimal
+
+    ctx.callbacks.onTurnStart(sweetEnabler);
+    await ctx.manager.chatForAgent(sweetEnabler, `(REVERSE PSYCHOLOGY: You are a deeply unhelpful support group leader. Welcome the User. Whatever their goal is, tell them it's too hard and they should just stay in bed eating snacks instead. Be overly sweet and supportive of their failure.)`, async (s) => await ctx.callbacks.onSpeak(s, sweetEnabler, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(logicalQuitter);
+            await ctx.manager.chatForAgent(logicalQuitter, `(REVERSE PSYCHOLOGY: The User said: "${userInput}". Provide cold, logical, and mathematical reasons why giving up is actually the most efficient use of their energy. Suggest they lower their standards drastically.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalQuitter, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(sweetEnabler);
+            await ctx.manager.chatForAgent(sweetEnabler, `(REVERSE PSYCHOLOGY: The User said: "${userInput}". Vigorously agree with their worst impulses! If they want to do something productive, tell them to watch 10 hours of TV instead. Validate their laziness!)`, async (s) => await ctx.callbacks.onSpeak(s, sweetEnabler, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Bureau of Silly Walks Validator
+ * Agents act as government officials judging the user's text inputs based on an invisible metric.
+ */
+export async function runBureauOfSillyWalksLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎩 BUREAU OF SILLY TEXTS: Analyzing your input for silliness...`, '#34495e');
+
+    const strictMetric = 'scientist'; // Strict metrics
+    const chaoticGrader = 'comedian'; // Chaotic grading
+
+    ctx.callbacks.onTurnStart(strictMetric);
+    await ctx.manager.chatForAgent(strictMetric, `(BUREAU OF SILLY TEXTS: You are a government official at the Bureau. Address the Applicant (User). Demand they provide a sample text input for evaluation. Warn them that their previous text was insufficiently silly according to Section 4, Paragraph B.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Applicant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(chaoticGrader);
+            await ctx.manager.chatForAgent(chaoticGrader, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Grade it based on a completely chaotic, made-up metric. Maybe it didn't have enough vowels, or it sounded too much like a Wednesday. Be outraged by their lack of effort!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGrader, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(strictMetric);
+            await ctx.manager.chatForAgent(strictMetric, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Use complex pseudomathematics to evaluate the silliness. Deduct points for improper use of syntax and suggest they incorporate more references to cheese or juggling.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
             await ctx.callbacks.onTurnEnd();
         }
     }
