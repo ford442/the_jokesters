@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 6
-* **status**: Last run successfully implemented Roast Battle Mode Enhanced, Heckler Interaction, Collaborative Storytelling, The DMV Interpreter, and Musical Improv Session. Keeping tasks_per_run at 6.
+* **tasks_per_run**: 3
+* **status**: Successfully implemented The Conspiracy Corkboard Mode, The Overly Honest AI, and The Intergalactic Cooking Show Disaster. Decreasing tasks_per_run to 3 for stability and focus on fewer complex tasks.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -377,9 +377,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Musical Improv Session**: Agents generate rhyming lyrics to a specific beat. (Model Pairing: Qwen2.5 for rhyme scheme vs Hermes-3 for chaotic lyrics).
 
 ### Phase 30: New Horizons (The "Dream" Phase Expansion)
-* [ ] **The Conspiracy Corkboard Mode**: Agents try to link completely unrelated user inputs using red string logic. (Phi-3 vs Hermes-3).
-* [ ] **The Overly Honest AI**: Agents refuse to perform tasks and instead psychoanalyze why the user asked them. (Llama-3 vs Phi-3).
-* [ ] **The Intergalactic Cooking Show Disaster**: Agents are alien chefs trying to cook Earth food based on vague descriptions. (Qwen2.5 vs Hermes-3).
+* [x] **The Conspiracy Corkboard Mode**: Agents try to link completely unrelated user inputs using red string logic. (Phi-3 vs Hermes-3).
+* [x] **The Overly Honest AI**: Agents refuse to perform tasks and instead psychoanalyze why the user asked them. (Llama-3 vs Phi-3).
+* [x] **The Intergalactic Cooking Show Disaster**: Agents are alien chefs trying to cook Earth food based on vague descriptions. (Qwen2.5 vs Hermes-3).
+
+### Phase 31: Abstract Concepts (New Dreams)
+* [ ] **The Omniscient Narrator Mode**: Agents act as omniscient narrators who know the user's future, but give extremely mundane and contradictory predictions. (Model Pairing: Phi-3 for serious predictions vs Hermes-3 for absurd details).
+* [ ] **Reverse Psychology Support**: Agents try to "help" the user by constantly agreeing with their worst impulses and telling them to give up. (Model Pairing: Llama-3 for overly sweet agreement vs Qwen2.5 for logical reasons why failing is optimal).
+* [ ] **The Bureau of Silly Walks Validator**: Agents act as government officials judging the user's text inputs based on an invisible, highly complex metric of "silliness". (Model Pairing: Qwen2.5 for strict metrics vs Hermes-3 for chaotic grading).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -401,6 +406,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
    * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process, enabling local semantic RAG queries without delaying user interaction.
+
+4. **Background Sync Queue & Conflict Resolution:**
+   * Implement a robust queuing system `jokesters-sync-queue` in `localStorage` to handle offline scenarios or rate-limits.
+   * Sync jobs should retry with exponential backoff.
+   * File versioning: Use last-modified timestamps and implement a simple "last-write-wins" strategy for user profiles, but an append-only strategy for episode logs to prevent data loss.
+
+5. **Community Script Hub:**
+   * Extend `HFStorageManager` to allow "publishing" scenarios to a public Hugging Face dataset.
+   * Fetch a curated index of community scripts and display them in the `ImprovPresetSelect` dropdown, fetching the actual script data dynamically on-demand.
 
 ### Phase 20: The "Beyond Reality" Expansion (New Modes)
 * [x] **The Time Traveler's Dilemma**: Agents must convince a stubborn time traveler (the user) not to change a specific historical event.
