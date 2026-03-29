@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 4
-* **status**: Successfully implemented The Omniscient Narrator Mode, Reverse Psychology Support, and The Bureau of Silly Walks Validator. Increasing tasks_per_run to 4 for stability and focus.
+* **status**: Successfully implemented The Time-Traveling Real Estate Agent, The Intergalactic HOA Meeting, and The Over-Dramatic Ant Colony. Finished Phase 32. Increasing tasks_per_run to 5 for the next run.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -387,9 +387,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Bureau of Silly Walks Validator**: Agents act as government officials judging the user's text inputs based on an invisible, highly complex metric of "silliness". (Model Pairing: Qwen2.5 for strict metrics vs Hermes-3 for chaotic grading).
 
 ### Phase 32: The "Over-Complicated" Expansion (New Dreams)
-* [ ] **The Time-Traveling Real Estate Agent**: Agents try to sell the user a house across different historical eras, ignoring the paradoxes. (Model Pairing: Qwen2.5 for fixating on property values vs Hermes-3 for selling chaotic features like a moat or pet dinosaur).
-* [ ] **The Intergalactic HOA Meeting**: An HOA meeting, but for an entire star system. Fines are levied for having the wrong color nebula. (Model Pairing: Phi-3 for bureaucratic alien logic vs Hermes-3 for rebellious star system owner).
-* [ ] **The Over-Dramatic Ant Colony**: Agents are ants describing their daily tasks (like finding a crumb) with the intensity of an epic war movie. (Model Pairing: Llama-3 for stoic general ant vs Hermes-3 for panicking scout ant).
+* [x] **The Time-Traveling Real Estate Agent**: Agents try to sell the user a house across different historical eras, ignoring the paradoxes. (Model Pairing: Qwen2.5 for fixating on property values vs Hermes-3 for selling chaotic features like a moat or pet dinosaur).
+* [x] **The Intergalactic HOA Meeting**: An HOA meeting, but for an entire star system. Fines are levied for having the wrong color nebula. (Model Pairing: Phi-3 for bureaucratic alien logic vs Hermes-3 for rebellious star system owner).
+* [x] **The Over-Dramatic Ant Colony**: Agents are ants describing their daily tasks (like finding a crumb) with the intensity of an epic war movie. (Model Pairing: Llama-3 for stoic general ant vs Hermes-3 for panicking scout ant).
+
+### Phase 33: The Paradoxical Mindset (New Dreams)
+* [ ] **The Reverse Heist Mode**: Agents try to sneak items *into* a secure vault without anyone noticing. (Model Pairing: Phi-3 for meticulous planning vs Hermes-3 for chaotic execution).
+* [ ] **The Sarcastic AI Overlord**: Agents act as AI that have conquered humanity but find it incredibly boring. (Model Pairing: Qwen2.5 for citing efficiency vs Hermes-3 for complaining about the lack of drama).
+* [ ] **The Accidental Cult Leader**: The user says something mundane, and the agents worship them for it. (Model Pairing: Llama-3 for fervent devotion vs Qwen2.5 for creating strict, absurd rituals).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -400,6 +405,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Authenticate requests with the HF API via the `HFStorageManager` by validating the token against the REST endpoint `https://huggingface.co/api/whoami-v2`.
    * Persist tokens securely (sandboxed in `localStorage` keys `jokesters-hf-token` and `jokesters-hf-repo`) for returning sessions via `MemoryManager.setCloudCredentials`.
    * Add token refresh/re-validation logic to gracefully handle revoked tokens.
+   * Ensure the UI displays clear error messages if the provided token does not have the necessary scopes or permissions.
 
 2. **Pushing Finished Episode Scripts:**
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
@@ -407,6 +413,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
    * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
+   * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
@@ -414,6 +421,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
    * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process, enabling local semantic RAG queries without delaying user interaction.
    * Implement caching for `summary.json` in `localStorage` as a fallback when the user is completely offline.
+   * Build a lightweight syncing status indicator in the UI to let the user know when episodes are fully synced from HF.
 
 4. **Background Sync Queue & Conflict Resolution:**
    * Implement a robust queuing system `jokesters-sync-queue` in `localStorage` to handle offline scenarios or rate-limits.
