@@ -740,3 +740,135 @@ export async function runBureauOfSillyWalksLoop(_scenario: Scenario, ctx: ModeCo
         }
     }
 }
+
+/**
+ * The Time-Traveling Real Estate Agent
+ * Agents try to sell the user a house across different historical eras, ignoring the paradoxes.
+ */
+export async function runTimeTravelingRealEstateLoop(scenario: Scenario, ctx: ModeContext) {
+    const property = scenario.config?.touristObject || 'a quaint Victorian manor';
+    ctx.callbacks.onMessage('Director', `🏠 TIME TRAVEL REAL ESTATE: Showing ${property}`, '#f39c12');
+
+    const agent = 'comedian'; // Hermes-3 for selling chaotic features
+    const appraiser = 'scientist'; // Qwen2.5 for fixating on property values
+    const skeptic = 'philosopher'; // The buyer's philosopher friend
+
+    // 1. Agent Intro
+    ctx.callbacks.onTurnStart(agent);
+    await ctx.manager.chatForAgent(agent, `(TIME TRAVEL REAL ESTATE: You are a fast-talking real estate agent who sells properties across the space-time continuum. Welcome the Buyer (User) to the showing of "${property}". Hard-sell a completely chaotic historical feature, like a medieval moat or a pet dinosaur, as a "modern amenity".)`, async (s) => await ctx.callbacks.onSpeak(s, agent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Buyer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Appraiser
+            ctx.callbacks.onTurnStart(appraiser);
+            await ctx.manager.chatForAgent(appraiser, `(REAL ESTATE APPRAISER: The buyer said: "${userInput}". You are an overly analytical appraiser. Fixate on the long-term property value of "${property}" over the next 500 years. Ignore the paradoxes and calculate the ROI of surviving the bubonic plague.)`, async (s) => await ctx.callbacks.onSpeak(s, appraiser, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Skeptic
+            ctx.callbacks.onTurnStart(skeptic);
+            await ctx.manager.chatForAgent(skeptic, `(SKEPTICAL FRIEND: The buyer said: "${userInput}". You are the buyer's deeply philosophical friend. Question the ethics of buying a house in a timeline where you might accidentally become your own grandfather. Warn them about the butterfly effect of renovating the kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Agent
+            ctx.callbacks.onTurnStart(agent);
+            await ctx.manager.chatForAgent(agent, `(TIME TRAVEL REAL ESTATE: The buyer said: "${userInput}". Dismiss their concerns entirely. Pivot to another timeline—offer to show them a mid-century modern bunker from 1955 or a floating condo in 3024. Keep pushing for the sale!)`, async (s) => await ctx.callbacks.onSpeak(s, agent, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Intergalactic HOA Meeting
+ * An HOA meeting, but for an entire star system. Fines are levied for having the wrong color nebula.
+ */
+export async function runIntergalacticHOALoop(scenario: Scenario, ctx: ModeContext) {
+    const violation = scenario.config?.hoaViolation || 'having a non-compliant supernova';
+    ctx.callbacks.onMessage('Director', `🪐 INTERGALACTIC HOA: Hearing for ${violation}`, '#9b59b6');
+
+    const bureaucrat = 'philosopher'; // Phi-3 for bureaucratic alien logic
+    const rebel = 'comedian'; // Hermes-3 for rebellious star system owner
+    const strictEnforcer = 'scientist'; // Qwen2.5 for citing intergalactic bylaws
+
+    // 1. Bureaucrat Intro
+    ctx.callbacks.onTurnStart(bureaucrat);
+    await ctx.manager.chatForAgent(bureaucrat, `(INTERGALACTIC HOA: You are the President of the Orion Cygnus Homeowners Association. Open the hearing against the User (a star system owner) for their recent violation: "${violation}". Explain the profound, cosmic disruption this has caused to the neighborhood's feng shui.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('System Owner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Rebel System Owner
+            ctx.callbacks.onTurnStart(rebel);
+            await ctx.manager.chatForAgent(rebel, `(REBEL OWNER: The system owner said: "${userInput}". You are a rebellious neighbor who owns a chaotic, unregulated pulsar. Vigorously defend the User! Insult the HOA board for being rigid and boring. Encourage the User to paint their asteroid belt neon pink!)`, async (s) => await ctx.callbacks.onSpeak(s, rebel, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Strict Enforcer
+            ctx.callbacks.onTurnStart(strictEnforcer);
+            await ctx.manager.chatForAgent(strictEnforcer, `(HOA ENFORCER: The system owner said: "${userInput}". You are the strict code enforcer. Cite an absurd, highly specific intergalactic bylaw (e.g., Section 42, Paragraph B regarding acceptable planetary rings). State the astronomical fine in dark matter credits.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEnforcer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Bureaucrat
+            ctx.callbacks.onTurnStart(bureaucrat);
+            await ctx.manager.chatForAgent(bureaucrat, `(INTERGALACTIC HOA: The system owner said: "${userInput}". Dismiss their defense with confusing bureaucratic logic. Explain that their actions are lowering the property values of the entire spiral arm. Threaten to tow their moon.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Over-Dramatic Ant Colony
+ * Agents are ants describing their daily tasks with the intensity of an epic war movie.
+ */
+export async function runOverDramaticAntColonyLoop(scenario: Scenario, ctx: ModeContext) {
+    const task = scenario.config?.natureTask || 'securing a massive breadcrumb';
+    ctx.callbacks.onMessage('Director', `🐜 ANT COLONY: Mission - ${task}`, '#e74c3c');
+
+    const general = 'philosopher'; // Stoic general ant
+    const scout = 'comedian'; // Panicking scout ant
+    const engineer = 'scientist'; // Calculating worker ant
+
+    // 1. General Intro
+    ctx.callbacks.onTurnStart(general);
+    await ctx.manager.chatForAgent(general, `(ANT COLONY: You are a stoic, battle-hardened ant General addressing a crucial worker (the User). Describe the impossible odds of today's mission: "${task}". Speak with the grim determination of a soldier facing the apocalypse.)`, async (s) => await ctx.callbacks.onSpeak(s, general, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Worker Ant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Panicking Scout
+            ctx.callbacks.onTurnStart(scout);
+            await ctx.manager.chatForAgent(scout, `(SCOUT ANT: The worker ant said: "${userInput}". You are a terrified scout who just returned from the front lines. Scream about the giant, terrifying monsters (like a pigeon or a child's shoe) blocking the path! Panic that the colony is doomed!)`, async (s) => await ctx.callbacks.onSpeak(s, scout, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Calculating Engineer
+            ctx.callbacks.onTurnStart(engineer);
+            await ctx.manager.chatForAgent(engineer, `(ENGINEER ANT: The worker ant said: "${userInput}". You are the colony's structural engineer. Rapidly calculate the exact tonnage of dirt that must be moved and the precise angle of ascent required to complete "${task}". Warn them of imminent structural collapse!)`, async (s) => await ctx.callbacks.onSpeak(s, engineer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // General
+            ctx.callbacks.onTurnStart(general);
+            await ctx.manager.chatForAgent(general, `(ANT COLONY: The worker ant said: "${userInput}". Give an incredibly dramatic, inspiring speech about duty to the Queen and the glory of the swarm. Remind them that failure is not an option when facing the great "${task}"!)`, async (s) => await ctx.callbacks.onSpeak(s, general, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
