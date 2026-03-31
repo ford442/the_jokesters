@@ -1004,3 +1004,40 @@ export async function runOverDramaticAntColonyLoop(scenario: Scenario, ctx: Mode
         }
     }
 }
+
+/**
+ * The Mime Convention Mode
+ * Agents act as mimes narrating their invisible actions.
+ */
+export async function runMimeConventionLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎭 MIME CONVENTION: Invisible objects only.`, '#95a5a6');
+
+    const analyzer = 'philosopher'; // Over-analyzing invisible objects
+    const chaoticMime = 'comedian'; // Chaotic mime acts
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(chaoticMime);
+    await ctx.manager.chatForAgent(chaoticMime, `(You are a chaotic mime at a mime convention. Perform an invisible act for the user (who is a fellow mime). Describe your physical actions exaggeratedly but do not speak any dialogue to the user. E.g. *pulls an invisible rope*, *gets trapped in an invisible box*.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticMime, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Fellow Mime (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Analyzer Reacts
+            ctx.callbacks.onTurnStart(analyzer);
+            await ctx.manager.chatForAgent(analyzer, `(The user mime just did this: "${userInput}". You are a pedantic, philosophical mime. Over-analyze the metaphorical meaning of the invisible object or action the user just pantomimed. Describe your own physical reaction. Do not use spoken dialogue, only asterisks for actions and thoughts.)`, async (s) => await ctx.callbacks.onSpeak(s, analyzer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Chaotic Mime Reacts
+            ctx.callbacks.onTurnStart(chaoticMime);
+            await ctx.manager.chatForAgent(chaoticMime, `(The user mime just did this: "${userInput}". React to it by escalating the physical comedy with your own invisible props. Describe your actions exaggeratedly. Do not use spoken dialogue.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticMime, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -1111,3 +1111,40 @@ export async function runGalacticBakeOffLoop(scenario: Scenario, ctx: ModeContex
         }
     }
 }
+
+/**
+ * The Pet's Perspective Mode
+ * Agents act as the user's pets discussing their owner's weird behavior.
+ */
+export async function runPetPerspectiveLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🐾 PET'S PERSPECTIVE: What are they doing now?`, '#e67e22');
+
+    const analyticalGoldfish = 'scientist'; // The Analytical Goldfish
+    const chaoticDog = 'comedian'; // The Chaotic Dog
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(analyticalGoldfish);
+    await ctx.manager.chatForAgent(analyticalGoldfish, `(You are a highly analytical, intellectual goldfish observing your owner (the user) from your tank. Welcome the user home, but describe their return in detached, scientific, and slightly condescending terms as if observing a bizarre specimen.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalGoldfish, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Owner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Dog Reacts
+            ctx.callbacks.onTurnStart(chaoticDog);
+            await ctx.manager.chatForAgent(chaoticDog, `(The owner just did/said this: "${userInput}". You are an overly enthusiastic, chaotic, and easily distracted golden retriever. React to the owner's action with extreme excitement, misinterpreting what they are doing as a game or a walk.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticDog, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Goldfish Reacts
+            ctx.callbacks.onTurnStart(analyticalGoldfish);
+            await ctx.manager.chatForAgent(analyticalGoldfish, `(The owner just did/said this: "${userInput}". You are the analytical goldfish. Hypothesize why the human organism is exhibiting this bizarre behavior. Ignore the dog's excitement.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalGoldfish, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

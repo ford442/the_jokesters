@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Successfully implemented The Reverse Heist Mode, The Sarcastic AI Overlord, and The Accidental Cult Leader. Finished Phase 33. Kept tasks_per_run at 5 for the next run.
+* **status**: Successfully implemented The Mime Convention and The Pet's Perspective, finishing Phase 34. Expanded the Dream Phase roadmap and enriched the HF persistence strategy. Kept tasks_per_run at 5.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -397,8 +397,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Accidental Cult Leader**: The user says something mundane, and the agents worship them for it. (Model Pairing: Llama-3 for fervent devotion vs Qwen2.5 for creating strict, absurd rituals).
 
 ### Phase 34: Animal & Abstract Scenarios (New Dreams)
-* [ ] **The Mime Convention**: Agents act as mimes narrating their invisible actions. (Philosopher for over-analyzing invisible objects vs Comedian for chaotic mime acts).
-* [ ] **The Pet's Perspective**: Agents act as the user's pets (e.g., cat, dog, goldfish) discussing their owner's weird behavior. (Scientist for analytical goldfish vs Comedian for chaotic dog).
+* [x] **The Mime Convention**: Agents act as mimes narrating their invisible actions. (Philosopher for over-analyzing invisible objects vs Comedian for chaotic mime acts).
+* [x] **The Pet's Perspective**: Agents act as the user's pets (e.g., cat, dog, goldfish) discussing their owner's weird behavior. (Scientist for analytical goldfish vs Comedian for chaotic dog).
+
+### Phase 35: The Next Frontier (New Dreams)
+* [ ] **The Sentient Plant Caretaker**: User acts as the caretaker for extremely demanding sentient houseplants. Agents are a dramatic orchid (Hermes-3) and a stubborn cactus (Qwen2.5).
+* [ ] **The Galactic Real Estate Agent**: Agents try to sell the user a terrifyingly dangerous alien planet as a luxury vacation home. (Qwen2.5 for listing dangerous stats as perks vs Hermes-3 for making up alien amenities).
+* [ ] **The Imaginary Friend Reunion**: Agents act as the user's childhood imaginary friends who have come back and are very disappointed in the user's adult life.
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -408,6 +413,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Provide a settings UI that securely captures the Hugging Face token and target Dataset ID.
    * Authenticate requests with the HF API via the `HFStorageManager` by validating the token against the REST endpoint `https://huggingface.co/api/whoami-v2`.
    * Persist tokens securely (sandboxed in `localStorage` keys `jokesters-hf-token` and `jokesters-hf-repo`) for returning sessions via `MemoryManager.setCloudCredentials`.
+   * Implement a background worker periodically validating the `jokesters-hf-token` against the `/whoami-v2` API, clearing the token automatically upon revocation.
    * Add token refresh/re-validation logic to gracefully handle revoked tokens.
    * Ensure the UI displays clear error messages if the provided token does not have the necessary scopes or permissions.
 
@@ -415,12 +421,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
    * This cues `MemoryManager.saveEpisodeToCloud`, which enqueues the background sync job into a local `localStorage` queue (e.g., `jokesters-sync-queue`).
    * Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Implement a web worker for `storage_manager` to monitor the `jokesters-sync-queue` and execute batch pushes of generated scripts, releasing main-thread pressure.
    * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
    * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
+   * Expand `storage_manager` to intercept the bootstrap phase: pull `summary.json` from the HF dataset if it's newer than the `localStorage` version.
    * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
    * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process, enabling local semantic RAG queries without delaying user interaction.
