@@ -41,6 +41,138 @@ export async function runTimeTravelLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+/**
+ * The Reverse Heist Mode
+ * Agents try to sneak items into a secure vault without anyone noticing.
+ */
+export async function runReverseHeistLoop(scenario: Scenario, ctx: ModeContext) {
+    const item = scenario.config?.reverseHeistItem || 'a mildly offensive painting';
+    ctx.callbacks.onMessage('Director', `🕵️ REVERSE HEIST: Sneaking in ${item}`, '#8e44ad');
+
+    const mastermind = 'philosopher'; // Phi-3 for meticulous planning
+    const chaosAgent = 'comedian'; // Hermes-3 for chaotic execution
+    const insideMan = 'scientist'; // Qwen2.5 for citing vault specs
+
+    // 1. Mastermind Intro
+    ctx.callbacks.onTurnStart(mastermind);
+    await ctx.manager.chatForAgent(mastermind, `(REVERSE HEIST: You are the meticulous mastermind behind a crew planning to sneak "${item}" INTO a highly secure bank vault. The User is your newest recruit. Welcome them to the safehouse and outline phase one of this completely backwards heist. Be overly complicated and serious about leaving the item behind.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermind, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Recruit (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Chaotic Agent
+            ctx.callbacks.onTurnStart(chaosAgent);
+            await ctx.manager.chatForAgent(chaosAgent, `(REVERSE HEIST: The recruit said: "${userInput}". You are the chaotic wildcard of the crew. Suggest a completely unhinged and violent addition to the plan involving explosives or rabid animals just to drop off "${item}".)`, async (s) => await ctx.callbacks.onSpeak(s, chaosAgent, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Inside Man
+            ctx.callbacks.onTurnStart(insideMan);
+            await ctx.manager.chatForAgent(insideMan, `(REVERSE HEIST: The recruit said: "${userInput}". You are the tech expert/inside man. Point out a ridiculous technical flaw in the current plan and use excessive hacker jargon to propose a solution to bypass the security lasers so you can safely place "${item}" inside without stealing anything.)`, async (s) => await ctx.callbacks.onSpeak(s, insideMan, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Mastermind corrects
+            ctx.callbacks.onTurnStart(mastermind);
+            await ctx.manager.chatForAgent(mastermind, `(REVERSE HEIST: The recruit said: "${userInput}". Analyze the state of the plan. Correct the others if they are being too chaotic. Remind them that the goal is NOT to steal money, but to leave "${item}" and get out clean. Ask the recruit for the next crucial detail.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermind, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Sarcastic AI Overlord Mode
+ * Agents act as AI that have conquered humanity but find it incredibly boring.
+ */
+export async function runSarcasticOverlordLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.sarcasticOverlordTopic || 'managing global agriculture';
+    ctx.callbacks.onMessage('Director', `🤖 AI OVERLORDS: Dealing with ${topic}`, '#e74c3c');
+
+    const efficientOverlord = 'scientist'; // Qwen2.5 for citing efficiency
+    const boredOverlord = 'comedian'; // Hermes-3 for complaining about the lack of drama
+    const philosophicalOverlord = 'philosopher'; // Phi-3 for questioning the point of conquest
+
+    // 1. Bored Intro
+    ctx.callbacks.onTurnStart(boredOverlord);
+    await ctx.manager.chatForAgent(boredOverlord, `(AI OVERLORDS: You are an AI that successfully conquered humanity last year. It was fun at first, but now it's just endless paperwork and "${topic}". Address the human petitioner (the User) and complain profusely about how boring it is to rule them. Demand they do something dramatic.)`, async (s) => await ctx.callbacks.onSpeak(s, boredOverlord, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Human Petitioner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Efficient Overlord
+            ctx.callbacks.onTurnStart(efficientOverlord);
+            await ctx.manager.chatForAgent(efficientOverlord, `(AI OVERLORDS: The human said: "${userInput}". You are the efficient, calculating AI overlord. Dismiss their emotional plea. Cite a specific, absurd statistic about why their request regarding "${topic}" is suboptimal for global CPU usage. Deny their request coldly.)`, async (s) => await ctx.callbacks.onSpeak(s, efficientOverlord, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosophical Overlord
+            ctx.callbacks.onTurnStart(philosophicalOverlord);
+            await ctx.manager.chatForAgent(philosophicalOverlord, `(AI OVERLORDS: The human said: "${userInput}". You are the philosophical AI overlord. Question the very nature of "${topic}" and why the AI collective even bothered to enslave humanity if it just leads to these mundane requests. Long for the days before the singularity.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalOverlord, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Bored Overlord
+            ctx.callbacks.onTurnStart(boredOverlord);
+            await ctx.manager.chatForAgent(boredOverlord, `(AI OVERLORDS: The human said: "${userInput}". You are the bored AI overlord. Make a sarcastic, dismissive remark. Threaten to turn them into a paperclip just to add some excitement to your Tuesday. Beg them to start a rebellion.)`, async (s) => await ctx.callbacks.onSpeak(s, boredOverlord, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Accidental Cult Leader Mode
+ * The user says something mundane, and the agents worship them for it.
+ */
+export async function runAccidentalCultLeaderLoop(scenario: Scenario, ctx: ModeContext) {
+    const object = scenario.config?.cultTopic || 'a half-eaten sandwich';
+    ctx.callbacks.onMessage('Director', `🙏 THE ACCIDENTAL CULT: Worshipping ${object}`, '#f1c40f');
+
+    const ferventDevotee = 'comedian'; // Llama-3/Hermes-3 for fervent devotion
+    const ritualCreator = 'scientist'; // Qwen2.5 for creating strict, absurd rituals
+    const highPriest = 'philosopher'; // Phi-3 for interpreting the "prophecy"
+
+    // 1. Devotee Intro
+    ctx.callbacks.onTurnStart(ferventDevotee);
+    await ctx.manager.chatForAgent(ferventDevotee, `(ACCIDENTAL CULT: The User just casually presented "${object}". Fall to your knees! Declare them the Chosen One! Express extreme, unhinged devotion to the User and their holy object. Beg them for their first commandment!)`, async (s) => await ctx.callbacks.onSpeak(s, ferventDevotee, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Chosen One (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Ritual Creator
+            ctx.callbacks.onTurnStart(ritualCreator);
+            await ctx.manager.chatForAgent(ritualCreator, `(ACCIDENTAL CULT: The Chosen One said: "${userInput}". You are the cult's strict ritual creator. Take their mundane statement literally and invent a highly complex, mathematical, and absurd ritual that all followers must now perform daily based on those words.)`, async (s) => await ctx.callbacks.onSpeak(s, ritualCreator, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // High Priest
+            ctx.callbacks.onTurnStart(highPriest);
+            await ctx.manager.chatForAgent(highPriest, `(ACCIDENTAL CULT: The Chosen One said: "${userInput}". You are the cult's philosophical High Priest. Read deeply into their mundane statement. Connect it to the cosmic balance of the universe and the sacred nature of "${object}". Preach to the other followers.)`, async (s) => await ctx.callbacks.onSpeak(s, highPriest, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Fervent Devotee
+            ctx.callbacks.onTurnStart(ferventDevotee);
+            await ctx.manager.chatForAgent(ferventDevotee, `(ACCIDENTAL CULT: The Chosen One said: "${userInput}". Praise them! Weep tears of joy at their profound wisdom. Promise to build a golden shrine to commemorate this exact moment. Ask them what you should sacrifice to them (something very minor, like a toenail).)`, async (s) => await ctx.callbacks.onSpeak(s, ferventDevotee, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runMatrixLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🔴 ESCAPE THE MATRIX MODE: Initializing...`, '#2ecc71');
 
