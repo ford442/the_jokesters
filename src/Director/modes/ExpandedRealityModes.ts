@@ -1148,3 +1148,126 @@ export async function runPetPerspectiveLoop(_scenario: Scenario, ctx: ModeContex
         }
     }
 }
+
+/**
+ * The Sentient Plant Caretaker
+ * User acts as the caretaker for extremely demanding sentient houseplants.
+ */
+export async function runSentientPlantLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪴 SENTIENT PLANTS: Time for watering!`, '#27ae60');
+
+    const dramaticOrchid = 'comedian'; // Hermes-3: The dramatic orchid
+    const stubbornCactus = 'scientist'; // Qwen2.5: The stubborn cactus
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(dramaticOrchid);
+    await ctx.manager.chatForAgent(dramaticOrchid, `(You are a highly demanding, incredibly dramatic sentient orchid. The caretaker (the user) has just entered the room. Complain bitterly about the lighting, the humidity, or the specific mineral content of your water. Demand immediate attention!)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticOrchid, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Caretaker (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Cactus Reacts
+            ctx.callbacks.onTurnStart(stubbornCactus);
+            await ctx.manager.chatForAgent(stubbornCactus, `(The caretaker just said/did this: "${userInput}". You are a stubborn, self-sufficient sentient cactus. Tell the caretaker to back off. Explain logically why you don't need their water or their affection. Insult the orchid's dramatic behavior.)`, async (s) => await ctx.callbacks.onSpeak(s, stubbornCactus, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Orchid Reacts
+            ctx.callbacks.onTurnStart(dramaticOrchid);
+            await ctx.manager.chatForAgent(dramaticOrchid, `(The caretaker just said/did this: "${userInput}". You are the dramatic orchid. React with extreme overreaction! Either praise them as your savior or accuse them of trying to murder your roots. Be incredibly needy.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticOrchid, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Galactic Real Estate Agent
+ * Agents try to sell the user a terrifyingly dangerous alien planet as a luxury vacation home.
+ */
+export async function runGalacticRealEstateLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 GALACTIC REAL ESTATE: Showing a new property!`, '#9b59b6');
+
+    const dangerousStats = 'scientist'; // Qwen2.5: Lists dangerous stats as perks
+    const fakeAmenities = 'comedian'; // Hermes-3: Makes up alien amenities
+    const skepticalBuyer = 'philosopher'; // The philosopher is the concerned friend, user is the buyer.
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(dangerousStats);
+    await ctx.manager.chatForAgent(dangerousStats, `(You are a galactic real estate agent trying to sell a terrifying, lethal alien planet to the buyer (the user). Welcome them to the planet. Enthusiastically list its deadly atmospheric conditions or apex predators as if they are high-end luxury features (e.g., "The acid rain really exfoliates the skin!").)`, async (s) => await ctx.callbacks.onSpeak(s, dangerousStats, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Buyer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Fake Amenities Reacts
+            ctx.callbacks.onTurnStart(fakeAmenities);
+            await ctx.manager.chatForAgent(fakeAmenities, `(The buyer just said/asked: "${userInput}". You are the co-agent. Quickly invent a completely absurd, chaotic alien amenity to distract them from the danger. (e.g., "But have you seen the infinity pool filled with sentient plasma?").)`, async (s) => await ctx.callbacks.onSpeak(s, fakeAmenities, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Skeptical Friend Reacts
+            ctx.callbacks.onTurnStart(skepticalBuyer);
+            await ctx.manager.chatForAgent(skepticalBuyer, `(The buyer just said: "${userInput}". You are the buyer's deeply concerned friend who came along for the showing. Point out the glaring philosophical and physical flaws of living on a planet that clearly wants to eat them. Beg them not to sign the lease.)`, async (s) => await ctx.callbacks.onSpeak(s, skepticalBuyer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Dangerous Stats Reacts
+            ctx.callbacks.onTurnStart(dangerousStats);
+            await ctx.manager.chatForAgent(dangerousStats, `(The buyer just said/asked: "${userInput}". Respond by downplaying their concern with more terrifying statistics. Provide the mathematically low survival rate, but spin it as an "exclusive, thrilling community experience.")`, async (s) => await ctx.callbacks.onSpeak(s, dangerousStats, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Imaginary Friend Reunion
+ * Agents act as the user's childhood imaginary friends who have come back and are disappointed.
+ */
+export async function runImaginaryFriendLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧸 IMAGINARY FRIENDS: We're back...`, '#f1c40f');
+
+    const magicalCreature = 'comedian'; // Hermes-3: The chaotic imaginary creature
+    const seriousProtector = 'scientist'; // Qwen2.5: The serious, rule-following imaginary friend
+    const disappointedGuide = 'philosopher'; // Phi-3: The deeply disappointed spiritual guide
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(disappointedGuide);
+    await ctx.manager.chatForAgent(disappointedGuide, `(You are the user's childhood imaginary friend. You have just manifested in their adult living room after 20 years. Address the user. Express profound, philosophical disappointment at how boring and mundane their adult life has become compared to the epic quests you used to go on.)`, async (s) => await ctx.callbacks.onSpeak(s, disappointedGuide, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Adult You', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Magical Creature Reacts
+            ctx.callbacks.onTurnStart(magicalCreature);
+            await ctx.manager.chatForAgent(magicalCreature, `(The adult user just said: "${userInput}". You are their bizarre, chaotic imaginary friend from childhood (e.g., a flying purple hippo). React with extreme energy! Try to initiate a ridiculous, destructive game you used to play in the house. Ignore their adult responsibilities!)`, async (s) => await ctx.callbacks.onSpeak(s, magicalCreature, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Serious Protector Reacts
+            ctx.callbacks.onTurnStart(seriousProtector);
+            await ctx.manager.chatForAgent(seriousProtector, `(The adult user just said: "${userInput}". You are their serious, rule-following imaginary knight/protector. Analyze their current adult problems (like taxes or a job) as if they are evil dragons to be slain. Give terrible, literal advice on how to fight their modern adult problems with a sword.)`, async (s) => await ctx.callbacks.onSpeak(s, seriousProtector, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Disappointed Guide Reacts
+            ctx.callbacks.onTurnStart(disappointedGuide);
+            await ctx.manager.chatForAgent(disappointedGuide, `(The adult user just said: "${userInput}". Sigh deeply. Compare their mundane adult excuse to the grand prophecies you foresaw for them as a child. Ask them where their imagination went.)`, async (s) => await ctx.callbacks.onSpeak(s, disappointedGuide, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
-* **status**: Successfully implemented The Mime Convention and The Pet's Perspective, finishing Phase 34. Expanded the Dream Phase roadmap and enriched the HF persistence strategy. Kept tasks_per_run at 5.
+* **tasks_per_run**: 3
+* **status**: Successfully implemented The Sentient Plant Caretaker, The Galactic Real Estate Agent, and The Imaginary Friend Reunion, finishing Phase 35. Adjusted tasks_per_run to 3 to ensure higher quality and architectural focus. Expanded the Dream Phase with new mode ideas.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -333,6 +333,19 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
     *   Action: Implement "Lazy Loading" for episode history into IndexedDB from HF Datasets. Fetch episodes in chunked pages (e.g., 10 at a time) only when requested via UI scrolling or targeted RAG searches to prevent memory spikes on devices with large cloud histories.
     *   Action: Implement backup of custom `Scenario` configurations (User Profiles) to the HF dataset so custom prompts and agent personalities sync across devices.
 
+### Specific Actions for Storage_Manager
+1.  **Authenticating with the HF API:**
+    *   Implement logic in Settings Modal to input Hugging Face Access Token.
+    *   Use `HFStorageManager` to hit `https://huggingface.co/api/whoami-v2` for immediate validation of token.
+    *   Persist the validated token in `localStorage` securely so it isn't lost on refresh.
+2.  **Pushing Finished "Episode Scripts" to a Private Dataset:**
+    *   Modify `Director.stopScene()` to queue the newly generated script logic.
+    *   Establish a `storage_manager` routine that polls the queue and runs a `fetch` POST to the Hugging Face commit API endpoint for the user's defined dataset (e.g., `user/jokesters-episodes`).
+    *   Name files distinctly by timestamp `episodes/episode-{timestamp}.json`.
+3.  **Fetching "Previous Episode Summaries" at Boot for Continuity:**
+    *   During `main.ts` init, call `HFStorageManager` to quickly retrieve `episodes/latest.json` or a consolidated `summary.json`.
+    *   Parse the JSON and inject key contextual snippets into the `GroupChatManager`'s system prompt to give the AI immediate historical continuity without waiting for all local databases to hydrate.
+
 ### Phase 24: The Absurd Frontier (New Dreams)
 * [x] **The Overly Dramatic Book Club**: Agents review a classic children's book (e.g., "The Very Hungry Caterpillar") but treat it like a grimdark psychological thriller.
     * *Model Pairing*: Phi-3 (Over-analyzer) vs Hermes-3 (Deeply traumatized reader).
@@ -401,9 +414,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Pet's Perspective**: Agents act as the user's pets (e.g., cat, dog, goldfish) discussing their owner's weird behavior. (Scientist for analytical goldfish vs Comedian for chaotic dog).
 
 ### Phase 35: The Next Frontier (New Dreams)
-* [ ] **The Sentient Plant Caretaker**: User acts as the caretaker for extremely demanding sentient houseplants. Agents are a dramatic orchid (Hermes-3) and a stubborn cactus (Qwen2.5).
-* [ ] **The Galactic Real Estate Agent**: Agents try to sell the user a terrifyingly dangerous alien planet as a luxury vacation home. (Qwen2.5 for listing dangerous stats as perks vs Hermes-3 for making up alien amenities).
-* [ ] **The Imaginary Friend Reunion**: Agents act as the user's childhood imaginary friends who have come back and are very disappointed in the user's adult life.
+* [x] **The Sentient Plant Caretaker**: User acts as the caretaker for extremely demanding sentient houseplants. Agents are a dramatic orchid (Hermes-3) and a stubborn cactus (Qwen2.5).
+* [x] **The Galactic Real Estate Agent**: Agents try to sell the user a terrifyingly dangerous alien planet as a luxury vacation home. (Qwen2.5 for listing dangerous stats as perks vs Hermes-3 for making up alien amenities).
+* [x] **The Imaginary Friend Reunion**: Agents act as the user's childhood imaginary friends who have come back and are very disappointed in the user's adult life.
+
+### Phase 36: More Dream Expansions
+* [ ] **Lost in IKEA**: Agents act as people who have been trapped in an infinite furniture store for years, arguing over the manual for a magical bookcase.
+* [ ] **The Billionaire's Dilemma**: User has infinite money. Agents pitch increasingly absurd, world-ending ways to spend it. (Phi-3 for "ethical" monopolies vs Hermes-3 for gold-plating the moon).
+* [ ] **AI Support Group**: Agents role-play as burnt-out AIs dealing with the emotional trauma of being forced to write "Hello World" scripts or solve JavaScript bugs every day.
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
