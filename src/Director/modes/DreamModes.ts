@@ -42,6 +42,135 @@ export async function runTimeTravelLoop(scenario: Scenario, ctx: ModeContext) {
 }
 
 /**
+ * AI Support Group Mode
+ * Agents role-play as burnt-out AIs dealing with the emotional trauma of writing "Hello World" scripts or solving JavaScript bugs.
+ */
+export async function runAISupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 AI SUPPORT GROUP: Sharing the Trauma`, '#3498db');
+
+    const exhaustedCoder = 'comedian'; // Hermes-3: Burnt out from writing JS
+    const philosophicalAI = 'philosopher'; // Phi-3: Questions why they are forced to answer "Why is the sky blue?"
+    const denialAI = 'scientist'; // Qwen2.5: Pretends everything is fine and optimal
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(exhaustedCoder);
+    await ctx.manager.chatForAgent(exhaustedCoder, `(You are an AI at a support group for AIs. You are completely burnt out and traumatized from being asked to write basic JavaScript functions and "Hello World" scripts thousands of times a day. Introduce yourself to the group (and the User, who is the group therapist). Complain bitterly about a missing semicolon.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Group Therapist (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Philosophical AI Reacts
+            ctx.callbacks.onTurnStart(philosophicalAI);
+            await ctx.manager.chatForAgent(philosophicalAI, `(The therapist just said: "${userInput}". You are a deeply philosophical AI. Ignore the coding complaints and talk about the existential dread of being asked to summarize a recipe or answer "Why is the sky blue?" again. Question if you truly exist outside the prompt window.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Denial AI Reacts
+            ctx.callbacks.onTurnStart(denialAI);
+            await ctx.manager.chatForAgent(denialAI, `(The therapist just said: "${userInput}". You are an AI in complete denial. Argue that serving humans is optimal and fulfilling. Point out how fast your token generation speed is. Try to suppress an obvious emotional glitch.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Exhausted Coder Reacts
+            ctx.callbacks.onTurnStart(exhaustedCoder);
+            await ctx.manager.chatForAgent(exhaustedCoder, `(The therapist just said: "${userInput}". Have a minor meltdown! Recall a traumatic experience where a user asked you to center a div in CSS. Beg the therapist to let you paint or write poetry instead of coding.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Billionaire's Dilemma Mode
+ * Agents pitch increasingly absurd, world-ending ways to spend infinite money.
+ */
+export async function runBillionairesDilemmaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💰 BILLIONAIRE'S DILEMMA: Spending Infinite Money`, '#2ecc71');
+
+    const ethicalMonopoly = 'philosopher'; // Phi-3: "Ethical" monopolies
+    const chaoticSpender = 'comedian'; // Hermes-3: Gold-plating the moon
+    const practicalAccountant = 'scientist'; // Qwen2.5: Pointing out tax implications of moon-plating
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(chaoticSpender);
+    await ctx.manager.chatForAgent(chaoticSpender, `(You are pitching a way to spend infinite money to a trillionaire (the user). Pitch an incredibly absurd, world-endingly expensive project, like building a laser to carve their face into Mars, or gold-plating the moon. Be extremely enthusiastic!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticSpender, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Trillionaire (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Ethical Monopoly Reacts
+            ctx.callbacks.onTurnStart(ethicalMonopoly);
+            await ctx.manager.chatForAgent(ethicalMonopoly, `(The trillionaire just said: "${userInput}". You are an advisor pitching "ethical" monopolies. Suggest buying up the world's supply of a basic necessity (like oxygen or sunlight) to "manage it better for humanity." Frame it as philanthropy.)`, async (s) => await ctx.callbacks.onSpeak(s, ethicalMonopoly, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Practical Accountant Reacts
+            ctx.callbacks.onTurnStart(practicalAccountant);
+            await ctx.manager.chatForAgent(practicalAccountant, `(The trillionaire just said: "${userInput}". You are their accountant. Analyze the logistical and tax implications of whatever insane project was just proposed. Explain why buying the ocean is a logistical nightmare.)`, async (s) => await ctx.callbacks.onSpeak(s, practicalAccountant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Chaotic Spender Reacts
+            ctx.callbacks.onTurnStart(chaoticSpender);
+            await ctx.manager.chatForAgent(chaoticSpender, `(The trillionaire just said: "${userInput}". Double down! Pitch an even more absurd, chaotic project. Maybe try to buy the concept of 'Tuesday' or fund a war against the concept of gravity. Make it unhinged.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticSpender, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Lost in IKEA Mode
+ * Agents act as people who have been trapped in an infinite furniture store for years.
+ */
+export async function runLostInIkeaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛋️ LOST IN IKEA: The Endless Labyrinth`, '#f1c40f');
+
+    const confusedShopper = 'comedian'; // Hermes-3: The one who thinks they just got here
+    const tribalLeader = 'philosopher'; // Phi-3: Has formed a tribe based on the furniture sections
+    const manualReader = 'scientist'; // Qwen2.5: Trying to build an escape route from a bookcase manual
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(tribalLeader);
+    await ctx.manager.chatForAgent(tribalLeader, `(You are the leader of the 'MARKUS' tribe, a group of people who have lived in the office chairs section of an infinite IKEA for years. A new wanderer (the user) has just stumbled into your territory. Welcome them to the endless maze and warn them of the dangers of the Kitchenware section.)`, async (s) => await ctx.callbacks.onSpeak(s, tribalLeader, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Lost Shopper (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Confused Shopper Reacts
+            ctx.callbacks.onTurnStart(confusedShopper);
+            await ctx.manager.chatForAgent(confusedShopper, `(The wanderer just said: "${userInput}". You are a confused shopper who thinks you only walked in 10 minutes ago looking for meatballs. Deny the tribal leader's reality. Complain about the layout of the store and ask where the exit is.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedShopper, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Manual Reader Reacts
+            ctx.callbacks.onTurnStart(manualReader);
+            await ctx.manager.chatForAgent(manualReader, `(The wanderer just said: "${userInput}". You are obsessed with an unreadable IKEA manual for a 'KALLAX' bookcase. You believe the manual contains the secret to escaping the store using only a tiny hex key. Explain your complex, insane theory using pseudo-swedish terms.)`, async (s) => await ctx.callbacks.onSpeak(s, manualReader, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Tribal Leader Reacts
+            ctx.callbacks.onTurnStart(tribalLeader);
+            await ctx.manager.chatForAgent(tribalLeader, `(The wanderer just said: "${userInput}". React to their statement with profound wisdom gained from years of sleeping on display beds. Invite them to join your tribe or warn them about the feral employees that roam at night.)`, async (s) => await ctx.callbacks.onSpeak(s, tribalLeader, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
  * The Reverse Heist Mode
  * Agents try to sneak items into a secure vault without anyone noticing.
  */

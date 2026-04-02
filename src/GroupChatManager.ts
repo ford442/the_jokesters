@@ -2,9 +2,6 @@ import * as webllm from '@mlc-ai/web-llm'
 import { loadModelWithDynamicContext } from './utils/dynamicContext'
 import { 
   appConfig, 
-  defaultModelId, 
-  OPTIMIZED_MODELS, 
-  VPS_FP32_MODELS,
   checkF16Support,
   getModelFallbackChain,
   getModelInfo

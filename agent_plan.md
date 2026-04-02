@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Successfully implemented The Sentient Plant Caretaker, The Galactic Real Estate Agent, and The Imaginary Friend Reunion, finishing Phase 35. Adjusted tasks_per_run to 3 to ensure higher quality and architectural focus. Expanded the Dream Phase with new mode ideas.
+* **tasks_per_run**: 4
+* **status**: Successfully implemented Lost in IKEA, The Billionaire's Dilemma, and AI Support Group, finishing Phase 36. Adjusted tasks_per_run to 4 as things went smoothly. Expanded the Dream Phase with new mode ideas.
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -419,9 +419,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Imaginary Friend Reunion**: Agents act as the user's childhood imaginary friends who have come back and are very disappointed in the user's adult life.
 
 ### Phase 36: More Dream Expansions
-* [ ] **Lost in IKEA**: Agents act as people who have been trapped in an infinite furniture store for years, arguing over the manual for a magical bookcase.
-* [ ] **The Billionaire's Dilemma**: User has infinite money. Agents pitch increasingly absurd, world-ending ways to spend it. (Phi-3 for "ethical" monopolies vs Hermes-3 for gold-plating the moon).
-* [ ] **AI Support Group**: Agents role-play as burnt-out AIs dealing with the emotional trauma of being forced to write "Hello World" scripts or solve JavaScript bugs every day.
+* [x] **Lost in IKEA**: Agents act as people who have been trapped in an infinite furniture store for years, arguing over the manual for a magical bookcase.
+* [x] **The Billionaire's Dilemma**: User has infinite money. Agents pitch increasingly absurd, world-ending ways to spend it. (Phi-3 for "ethical" monopolies vs Hermes-3 for gold-plating the moon).
+* [x] **AI Support Group**: Agents role-play as burnt-out AIs dealing with the emotional trauma of being forced to write "Hello World" scripts or solve JavaScript bugs every day.
+
+### Phase 37: Escaping Reality (New Dreams)
+* [ ] **The Superhero Therapy Session**: Agents role-play as a superhero and their sidekick having a therapy session. (Model Pairing: Hermes-3 as the angry sidekick vs Phi-3 as the calm therapist).
+* [ ] **Intergalactic Cooking Competition**: Agents are judges in a cooking competition featuring alien ingredients. (Model Pairing: Qwen2.5 as the robotic judge vs Hermes-3 as the chaotic chef).
+* [ ] **The Time-Traveling IRS**: Agents act as IRS auditors from the future collecting temporal taxes. (Model Pairing: Phi-3 as the strict temporal tax auditor vs Llama-3 as the confused taxpayer).
+* [ ] **Escape the Backrooms**: Agents are trapped in the Backrooms, trying to figure out the rules of their reality. (Model Pairing: Hermes-3 as the panicked wanderer vs Qwen2.5 as the analytical entity).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
