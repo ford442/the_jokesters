@@ -1,0 +1,215 @@
+
+    <!-- WebGPU Error Screen -->
+    <div id="webgpu-error" class="visible">
+      <h1>⚠️ WebGPU Not Available</h1>
+      <p>The Jokesters requires <strong>WebGPU</strong> to run AI models directly in your browser.</p>
+      <p>Your current browser or device does not support WebGPU.</p>
+
+      <div class="browser-list">
+        <p><strong>Supported Browsers:</strong></p>
+        <ul>
+          <li><strong>Chrome</strong> 113+ (recommended)</li>
+          <li><strong>Edge</strong> 113+</li>
+          <li><strong>Opera</strong> 99+</li>
+          <li><strong>Chrome Android</strong> 121+</li>
+          <li><strong>Safari</strong> - WebGPU support coming soon</li>
+          <li><strong>Firefox</strong> - WebGPU support in development</li>
+        </ul>
+      </div>
+
+      <p>Please update your browser or switch to a supported browser to continue.</p>
+
+      <div class="tech-info" id="browser-info">Browser: Chrome | User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 S...<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags</div>
+    </div>
+
+    <div id="app">
+    <div class="container">
+      <h1>The Jokesters</h1>
+      <p class="subtitle">Multi-Agent Chat powered by Llama-3 &amp; WebGPU</p>
+      <div id="loading" class="loading">
+        <!-- Model picker (shown before loading starts) -->
+        <div id="model-picker" style="width:100%;max-width:480px;margin:0 auto;">
+          <h3 style="color:#4ecdc4;margin:0 0 6px;font-size:1.1em;">Choose Your AI Model</h3>
+          <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">All models run locally in your browser via WebGPU. Weights are cached after the first download.</p>
+          <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
+            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · Fast · ~2 GB VRAM ★ Recommended</option>
+            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · Fast · ~2.5 GB VRAM</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · All GPUs · ~2 GB VRAM (no f16 needed)</option>
+            <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · All GPUs · ~2.5 GB VRAM (no f16 needed)</option>
+            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · All GPUs · ~4 GB VRAM (no f16 needed)</option>
+            <option value="ford442/vicuna-7b-q4f32-webllm">Vicuna 7B q4f32 · All GPUs · ~4 GB VRAM (Llama-2 / Vicuna tuned)</option>
+            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
+            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
+          </select>
+          <select id="context-size-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
+            <option value="auto">Auto (detect VRAM)</option>
+            <option value="4096">4096 tokens (full)</option>
+            <option value="2048">2048 tokens</option>
+            <option value="1024">1024 tokens</option>
+            <option value="512">512 tokens</option>
+            <option value="256">256 tokens</option>
+            <option value="128">128 tokens (minimal VRAM)</option>
+          </select>
+          <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:2em;margin:0 0 12px;">Fine-tuned for instruction following. Best default choice on modern GPUs.</p>
+          <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
+        </div>
+        <!-- Progress bar (hidden until launch) -->
+        <div id="progress-section" style="display:none;width:100%;">
+          <div class="progress-bar">
+            <div id="progress" class="progress-fill"></div>
+          </div>
+          <p id="status">Initializing WebLLM...</p>
+        </div>
+      </div>
+      <div id="chat-container" class="chat-container" style="display: none;">
+        <canvas id="scene"></canvas>
+        <div class="controls">
+          <div class="settings-panel" style="margin-bottom: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">TTS Quality (Steps)</label>
+              <input type="range" id="tts-steps" min="1" max="30" value="10" style="flex: 1;">
+              <span id="tts-steps-val" style="color: #4ecdc4; font-size: 0.8em; width: 20px;">10</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Director Chaos</label>
+              <input type="range" id="director-chaos" min="0" max="100" value="30" style="flex: 1;">
+              <span id="director-chaos-val" style="color: #ff6b6b; font-size: 0.8em; width: 20px;">30%</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <label style="color: #888; font-size: 0.8em;">Seed (Optional)</label>
+              <input type="number" id="global-seed" placeholder="Random" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px;">
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Language</label>
+              <input type="range" id="profanity-level" min="0" max="3" value="2" style="flex: 1;">
+              <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <label style="color: #888; font-size: 0.8em;">Profile</label>
+              <input type="text" id="user-profile-input" value="default" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.8em; border-radius: 4px;">
+              <button id="switch-profile-btn" style="background: #4ecdc4; color: #0a0a1a; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer;">Switch</button>
+            </div>
+          </div>
+          <div class="mode-selector">
+            <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
+            <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
+          </div>
+          <div id="chat-log" class="chat-log"></div>
+
+          <!-- Chat Mode Controls -->
+          <div id="chat-mode-controls" class="input-group">
+            <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
+            <button id="send-btn">Send</button>
+          </div>
+
+          <!-- Improv Mode Controls -->
+          <div id="improv-mode-controls" class="improv-controls" style="display: none;">
+            <div class="input-group">
+              <select id="improv-preset-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #0f3460; color: white; font-size: 0.95em; margin-bottom: 8px;">
+                <option value="">-- Use a Preset Scenario --</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <input type="text" id="scene-title" placeholder="Scene title (e.g., 'At the Coffee Shop')..." autocomplete="off">
+            </div>
+            <div class="input-group">
+              <textarea id="scene-description" placeholder="Scene description (e.g., 'Three friends meet at a coffee shop and discuss their latest adventures')..." rows="3" autocomplete="off"></textarea>
+            </div>
+            <div class="improv-buttons">
+              <button id="start-improv-btn" class="primary-btn">Start Scene</button>
+              <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
+            </div>
+          </div>
+
+          <div class="agent-info">
+            <p>Next speaker: <span id="next-agent">-</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script>
+      // WebGPU Detection
+      (function() {
+        const browserInfo = document.getElementById('browser-info');
+        const webgpuError = document.getElementById('webgpu-error');
+
+        // Get browser info
+        const ua = navigator.userAgent;
+        const browserName = (function() {
+          if (ua.includes('Chrome')) return 'Chrome';
+          if (ua.includes('Firefox')) return 'Firefox';
+          if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+          if (ua.includes('Edge')) return 'Edge';
+          if (ua.includes('Opera')) return 'Opera';
+          return 'Unknown';
+        })();
+
+        browserInfo.textContent = `Browser: ${browserName} | User Agent: ${ua.substring(0, 100)}...`;
+
+        // Check for WebGPU support
+        if (!navigator.gpu) {
+          webgpuError.classList.add('visible');
+          console.error('WebGPU is not supported in this browser');
+          return;
+        }
+
+        // Additional check: try to request adapter
+        navigator.gpu.requestAdapter().then(adapter => {
+          if (!adapter) {
+            webgpuError.classList.add('visible');
+            browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
+            console.error('WebGPU adapter not available');
+          } else {
+            console.log('WebGPU is supported:', adapter);
+          }
+        }).catch(err => {
+          webgpuError.classList.add('visible');
+          browserInfo.innerHTML += `<br><br>Error requesting WebGPU adapter: ${err.message}`;
+          console.error('Error requesting WebGPU adapter:', err);
+        });
+      })();
+    </script>
+
+    <script>
+      // Surface runtime errors directly in the page to help diagnose missing UI
+      window.addEventListener('error', e => {
+        try {
+          const container = document.getElementById('app') || document.body;
+          const msg = (e && e.message) ? e.message : String(e.error || e);
+          const pre = document.createElement('pre');
+          pre.style.color = 'white';
+          pre.style.background = '#ff6b6b';
+          pre.style.padding = '12px';
+          pre.style.borderRadius = '6px';
+          pre.textContent = `Runtime error: ${msg}`;
+          container.prepend(pre);
+          console.error('Captured runtime error:', e);
+        } catch (err) {
+          console.error('Failed to render runtime error to page:', err);
+        }
+      });
+      window.addEventListener('unhandledrejection', e => {
+        try {
+          const container = document.getElementById('app') || document.body;
+          const pre = document.createElement('pre');
+          pre.style.color = 'white';
+          pre.style.background = '#ff6b6b';
+          pre.style.padding = '12px';
+          pre.style.borderRadius = '6px';
+          pre.textContent = `Unhandled Rejection: ${String(e.reason)}`;
+          container.prepend(pre);
+          console.error('Unhandled rejection:', e);
+        } catch (err) {
+          console.error('Failed to render unhandled rejection to page:', err);
+        }
+      });
+    </script>
+    <div id="news-ticker-container" style="display:none;">
+      <div id="news-ticker-content">BREAKING NEWS: The simulation has been paused for maintenance.</div>
+    </div>
