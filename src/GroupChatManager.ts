@@ -1,6 +1,14 @@
 import * as webllm from '@mlc-ai/web-llm'
 import { loadModelWithDynamicContext } from './utils/dynamicContext'
-import { appConfig, defaultModelId, OPTIMIZED_MODELS } from './config/models'
+import { 
+  appConfig, 
+  defaultModelId, 
+  OPTIMIZED_MODELS, 
+  VPS_FP32_MODELS,
+  checkF16Support,
+  getModelFallbackChain,
+  getModelInfo
+} from './config/models'
 import { parallelDownloadManager } from './services/ParallelDownloadManager'
 
 // ============================================================================
@@ -186,35 +194,30 @@ export class GroupChatManager {
     // Probe the GPU adapter to check for f16 shader support.
     // q4f16_1 models require the 'shader-f16' feature; without it they crash
     // with "extension 'f16' is not allowed in the current environment".
-    let supportsF16 = false
-    try {
-      const nav = navigator as unknown as { gpu: { requestAdapter(): Promise<{ features: Set<string> } | null> } }
-      const adapter = await nav.gpu.requestAdapter()
-      supportsF16 = adapter?.features.has('shader-f16') ?? false
-      console.log(`[ModelLoader] GPU adapter f16 support: ${supportsF16}`)
-    } catch {
-      console.warn('[ModelLoader] Could not query GPU adapter features; assuming no f16 support')
+    const supportsF16 = await checkF16Support()
+    console.log(`[ModelLoader] GPU adapter f16 support: ${supportsF16}`)
+
+    if (!supportsF16) {
+      console.log('[ModelLoader] WebGPU does not support shader-f16, using FP32 models only')
     }
 
-    // Build fallback chain based on f16 capability.
-    // q4f16_1 = faster/less VRAM but needs f16 shader extension.
-    // q4f32_1 = universally compatible fallback.
-    const autoFallbacks = supportsF16
-      ? [
-          defaultModelId,                                   // Hermes-3-3B-q4f16 (primary)
-          OPTIMIZED_MODELS.LLAMA_3_2_3B_Q4F16.model_id,   // Llama-3.2-3B-q4f16 (fallback)
-        ]
-      : [
-          'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',            // Hermes-3-3B-q4f32 (compatible primary)
-          'Llama-3.2-3B-Instruct-q4f32_1-MLC',            // Llama-3.2-3B-q4f32 (compatible fallback)
-        ]
+    // Build fallback chain prioritizing VPS-hosted FP32 models
+    const autoFallbacks = getModelFallbackChain()
+    
+    // Filter out f16 models if not supported
+    const compatibleFallbacks = supportsF16 
+      ? autoFallbacks
+      : autoFallbacks.filter(id => {
+          const info = getModelInfo(id)
+          return !info?.requires_f16 && !id.includes('q4f16')
+        })
 
-    // If user explicitly chose a model, try it first, then fall back to auto chain
+    // If user explicitly chose a model, try it first, then fall back to chain
     const modelFallbacks = preferredModelId
-      ? [preferredModelId, ...autoFallbacks.filter(id => id !== preferredModelId)]
-      : autoFallbacks
+      ? [preferredModelId, ...compatibleFallbacks.filter(id => id !== preferredModelId)]
+      : compatibleFallbacks
 
-    console.log(`[ModelLoader] Using ${supportsF16 ? 'f16 (optimized)' : 'f32 (compatible)'} model chain:`, modelFallbacks)
+    console.log(`[ModelLoader] Model fallback chain (${supportsF16 ? 'f16 enabled' : 'f32 only'}):`, modelFallbacks)
 
     let lastError: unknown = null
 
