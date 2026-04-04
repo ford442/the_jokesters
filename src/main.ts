@@ -288,6 +288,16 @@ async function initApp() {
   // Disable all inputs until fully initialized
   setInputsEnabled(false)
 
+  // Suppress GPU cascade rejections (orphan AbortError promises from WebLLM internals
+  // after a GPUOutOfMemoryError — these can't be caught in the normal promise chain)
+  const suppressGpuCascadeRejections = (event: PromiseRejectionEvent) => {
+    if (GroupChatManager.getErrorCategory(event.reason) === 'oom') {
+      event.preventDefault()
+      console.warn('[GPU] OOM cascade rejection suppressed:', event.reason)
+    }
+  }
+  window.addEventListener('unhandledrejection', suppressGpuCascadeRejections)
+
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
     const groupChatManager = new GroupChatManager(agents)
@@ -762,12 +772,22 @@ async function initApp() {
           const prompt = '(Reply naturally to the last thing said)'
 
           // 4. Execute turn - use prerendered if available, otherwise generate live
-          if (prerenderedQueue.length > 0) {
-            console.log(`[Improv] Using prerendered turn (${prerenderedQueue.length} remaining)`)
-            await playPrerenderedTurn()
-          } else {
-            console.log('[Improv] No prerendered turns, generating live')
-            await processTurn(prompt, critique)
+          try {
+            if (prerenderedQueue.length > 0) {
+              console.log(`[Improv] Using prerendered turn (${prerenderedQueue.length} remaining)`)
+              await playPrerenderedTurn()
+            } else {
+              console.log('[Improv] No prerendered turns, generating live')
+              await processTurn(prompt, critique)
+            }
+          } catch (turnError) {
+            const cat = GroupChatManager.getErrorCategory(turnError)
+            if (cat === 'oom') {
+              addMessage('System', '⚠️ GPU ran out of memory — scene stopped. Close other GPU-heavy tabs and reload.', '#ff6b6b')
+              isImprovRunning = false
+              break
+            }
+            throw turnError
           }
         }
 
@@ -775,8 +795,16 @@ async function initApp() {
         await speechQueue.waitUntilFinished()
 
       } catch (error) {
+        isImprovRunning = false
         console.error('Error running improv scene:', error)
-        addMessage('System', 'Error running improv scene', '#ff0000')
+        const cat = GroupChatManager.getErrorCategory(error)
+        const msgs = {
+          oom:     '⚠️ GPU ran out of memory. Close other GPU-heavy tabs and reload.',
+          network: '⚠️ Network error during scene. Check your connection and try again.',
+          webgpu:  '⚠️ WebGPU error. Try reloading the page.',
+          unknown: '⚠️ Error running improv scene — see console for details.',
+        } as const
+        addMessage('System', msgs[cat] ?? msgs.unknown, '#ff6b6b')
       }
 
       // Re-enable inputs
