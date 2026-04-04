@@ -1271,3 +1271,65 @@ export async function runImaginaryFriendLoop(_scenario: Scenario, ctx: ModeConte
         }
     }
 }
+
+export async function runIntergalacticCookingLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍳 INTERGALACTIC COOKING COMPETITION: Prepare your alien ingredients!`, '#e67e22');
+
+    const judge = 'scientist'; // Qwen2.5
+    const chaoticChef = 'comedian'; // Hermes-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(judge);
+    await ctx.manager.chatForAgent(judge, `(JUDGE: You are a robotic, strict judge in an intergalactic cooking competition. Present the User (a human contestant) with a bizarre, highly dangerous alien ingredient (e.g., a pulsating quasar-fruit or a screaming nebula-squid). Ask them how they plan to prepare it without destroying the kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Contestant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Chaotic Chef interferes
+        ctx.callbacks.onTurnStart(chaoticChef);
+        await ctx.manager.chatForAgent(chaoticChef, `(CHAOTIC CHEF: The human contestant said: "${userInput}". You are a chaotic alien chef competing against them. Mock their technique. Describe what you are doing with your own dish, which should be violently explosive or defying the laws of physics. Attempt to sabotage them verbally.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Judge critiques
+        ctx.callbacks.onTurnStart(judge);
+        await ctx.manager.chatForAgent(judge, `(JUDGE: Critique the human's plan ("${userInput}") and the chaotic chef's interference. Apply fictional physics or alien biology to explain why their culinary choices are either brilliant or lethally flawed. Deduct points for safety violations.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runEscapeBackroomsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🟨 ESCAPE THE BACKROOMS: You no-clipped out of reality.`, '#f39c12');
+
+    const wanderer = 'comedian'; // Hermes-3
+    const entity = 'scientist'; // Qwen2.5
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(wanderer);
+    await ctx.manager.chatForAgent(wanderer, `(WANDERER: You are trapped in the Backrooms (endless, buzzing yellow wallpaper mazes) with the User. You are panicking. Describe the unsettling environment. Ask the User which way they want to go: left towards a flickering light, or right towards a strange humming sound.)`, async (s) => await ctx.callbacks.onSpeak(s, wanderer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Survivor (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Entity analyzes
+        ctx.callbacks.onTurnStart(entity);
+        await ctx.manager.chatForAgent(entity, `(ENTITY: The survivor chose: "${userInput}". You are an analytical, slightly menacing entity native to the Backrooms. Analytically describe the anomalous, non-Euclidean geometry of the path they chose. State the mathematical probability of their survival dropping significantly.)`, async (s) => await ctx.callbacks.onSpeak(s, entity, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Wanderer reacts
+        ctx.callbacks.onTurnStart(wanderer);
+        await ctx.manager.chatForAgent(wanderer, `(WANDERER: React to the Entity's terrifying analysis and the User's choice ("${userInput}"). Panic more. Describe a disturbing smell or a hallucination you are experiencing. Beg the User to make a better choice next time.)`, async (s) => await ctx.callbacks.onSpeak(s, wanderer, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
