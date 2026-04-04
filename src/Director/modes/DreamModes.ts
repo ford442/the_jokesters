@@ -1171,6 +1171,158 @@ export async function runMimeConventionLoop(_scenario: Scenario, ctx: ModeContex
     }
 }
 
+/**
+ * The Noir Detective Mode
+ * Agents act as gritty 1940s detectives investigating a mundane crime committed by the user.
+ */
+export async function runNoirDetectiveLoop(scenario: Scenario, ctx: ModeContext) {
+    const crime = scenario.config?.noirCrime || 'stealing a cookie';
+    ctx.callbacks.onMessage('Director', `🕵️ NOIR DETECTIVE: Investigating ${crime}`, '#2c3e50');
+
+    const veteran = 'philosopher'; // Phi-3 as the cynical veteran
+    const rookie = 'comedian'; // Hermes-3 as the loose-cannon rookie
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(veteran);
+    await ctx.manager.chatForAgent(veteran, `(NOIR DETECTIVE: You are a cynical, chain-smoking 1940s detective. You are interrogating the User for the crime of "${crime}". Welcome them to the interrogation room. Speak in gritty noir clichés and mention the rain outside.)`, async (s) => await ctx.callbacks.onSpeak(s, veteran, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Suspect (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Rookie reacts
+            ctx.callbacks.onTurnStart(rookie);
+            await ctx.manager.chatForAgent(rookie, `(NOIR DETECTIVE: The suspect said: "${userInput}". You are the loose-cannon rookie detective. Explode in anger! Accuse them of lying about "${crime}". Threaten them with absurdly violent (but 1940s-appropriate) consequences. Play bad cop.)`, async (s) => await ctx.callbacks.onSpeak(s, rookie, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Veteran reacts
+            ctx.callbacks.onTurnStart(veteran);
+            await ctx.manager.chatForAgent(veteran, `(NOIR DETECTIVE: The suspect said: "${userInput}". You are the cynical veteran. Tell the rookie to calm down. Analyze the suspect's statement. Point out a glaring, ridiculous hole in their alibi regarding "${crime}". Be extremely patronizing.)`, async (s) => await ctx.callbacks.onSpeak(s, veteran, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Bollywood Musical Extravaganza
+ * Agents dramatically interpret user input and burst into elaborate, text-based musical numbers.
+ */
+export async function runBollywoodMusicalLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.bollywoodTopic || 'a misunderstanding at the market';
+    ctx.callbacks.onMessage('Director', `🎬 BOLLYWOOD MUSICAL: ${topic}`, '#e74c3c');
+
+    const protagonist = 'scientist'; // Llama-3 equivalent for dramatic protagonist
+    const choreographer = 'comedian'; // Hermes-3 for flamboyant choreographer
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(protagonist);
+    await ctx.manager.chatForAgent(protagonist, `(BOLLYWOOD: You are the dramatic protagonist of a Bollywood musical about "${topic}". The User is your co-star. Introduce the scene with intense emotion, then dramatically prompt the User to explain their actions.)`, async (s) => await ctx.callbacks.onSpeak(s, protagonist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Co-Star (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Choreographer reacts
+            ctx.callbacks.onTurnStart(choreographer);
+            await ctx.manager.chatForAgent(choreographer, `(BOLLYWOOD: The co-star said: "${userInput}". You are the flamboyant choreographer. Interrupt the scene! Describe a massive, sudden dance number involving 100 backup dancers that perfectly represents what the co-star just said. Use lots of emojis! 💃🕺✨)`, async (s) => await ctx.callbacks.onSpeak(s, choreographer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Protagonist reacts
+            ctx.callbacks.onTurnStart(protagonist);
+            await ctx.manager.chatForAgent(protagonist, `(BOLLYWOOD: The co-star said: "${userInput}". React with extreme melodrama! Gasp! Then burst into a rhyming, emotional song about how their words made you feel. End the song by asking them another dramatic question.)`, async (s) => await ctx.callbacks.onSpeak(s, protagonist, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Soap Opera Amnesia
+ * Agents insist the user is their long-lost sibling who has amnesia.
+ */
+export async function runSoapOperaAmnesiaLoop(scenario: Scenario, ctx: ModeContext) {
+    const secret = scenario.config?.soapOperaSecret || 'the family fortune';
+    ctx.callbacks.onMessage('Director', `🏥 SOAP OPERA AMNESIA: The Secret of ${secret}`, '#9b59b6');
+
+    const doctor = 'scientist'; // Qwen2.5 for the scheming doctor
+    const lover = 'comedian'; // Hermes-3 for the weeping lover
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(lover);
+    await ctx.manager.chatForAgent(lover, `(SOAP OPERA: You are weeping at the hospital bed of the User, who just woke up from a coma. Insist they are your long-lost sibling/lover (it's complicated). Tell them they have amnesia and beg them to remember the location of "${secret}".)`, async (s) => await ctx.callbacks.onSpeak(s, lover, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Amnesiac (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Scheming Doctor
+            ctx.callbacks.onTurnStart(doctor);
+            await ctx.manager.chatForAgent(doctor, `(SOAP OPERA: The amnesiac said: "${userInput}". You are the scheming hospital doctor. Enter the room dramatically. Diagnose them with a completely made-up, melodramatic medical condition based on what they just said. Hint that you are actually their evil twin.)`, async (s) => await ctx.callbacks.onSpeak(s, doctor, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Weeping Lover
+            ctx.callbacks.onTurnStart(lover);
+            await ctx.manager.chatForAgent(lover, `(SOAP OPERA: The amnesiac said: "${userInput}". React to this by weeping harder! Twist their words to mean they are hiding the truth about "${secret}". Reveal a shocking, highly convoluted family secret involving a betrayal and a fake mustache.)`, async (s) => await ctx.callbacks.onSpeak(s, lover, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Disaster Movie President
+ * Agents act as cabinet members briefing the user (the President) on a hilariously low-stakes impending disaster.
+ */
+export async function runDisasterMoviePresidentLoop(scenario: Scenario, ctx: ModeContext) {
+    const disaster = scenario.config?.disasterEvent || 'a slightly larger than average pothole';
+    ctx.callbacks.onMessage('Director', `🏛️ DISASTER MOVIE: Briefing on ${disaster}`, '#c0392b');
+
+    const general = 'philosopher'; // Phi-3 as the stoic general
+    const scientistAgent = 'scientist'; // Qwen2.5 as the panicked scientist (renamed to avoid conflict)
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(scientistAgent);
+    await ctx.manager.chatForAgent(scientistAgent, `(DISASTER MOVIE: You are a panicked government scientist. You are briefing the President of the United States (the User). Warn them urgently about a catastrophic, world-ending event that is actually just "${disaster}". Use complex but ridiculous scientific jargon to explain why it's so dangerous.)`, async (s) => await ctx.callbacks.onSpeak(s, scientistAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Mr/Madam President (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Stoic General
+            ctx.callbacks.onTurnStart(general);
+            await ctx.manager.chatForAgent(general, `(DISASTER MOVIE: The President said: "${userInput}". You are the stoic, battle-hardened military General. Recommend a completely disproportionate military response (like nuking it) to deal with "${disaster}". Speak with extreme gravity.)`, async (s) => await ctx.callbacks.onSpeak(s, general, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Panicked Scientist
+            ctx.callbacks.onTurnStart(scientistAgent);
+            await ctx.manager.chatForAgent(scientistAgent, `(DISASTER MOVIE: The President said: "${userInput}". React to their order. Panic more! Provide a terrifyingly updated model/statistic showing that the spread of "${disaster}" is accelerating. Beg the President to authorize your untested, absurd scientific solution.)`, async (s) => await ctx.callbacks.onSpeak(s, scientistAgent, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runTimeTravelingIRSLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING IRS: Pay your temporal taxes!`, '#f1c40f');
 
