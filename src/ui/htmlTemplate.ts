@@ -124,6 +124,10 @@ export function getAppTemplate(): string {
             <button id="autonomous-mode-btn" class="mode-btn">Auto Mode</button>
             <button id="trivia-mode-btn" class="mode-btn">Trivia Mode</button>
             <button id="dream-mode-btn" class="mode-btn">Dream Mode</button>
+            <button id="superhero-therapy-mode-btn" class="mode-btn">Superhero Therapy</button>
+            <button id="cooking-comp-mode-btn" class="mode-btn">Cooking Comp</button>
+            <button id="irs-mode-btn" class="mode-btn">Temporal IRS</button>
+            <button id="backrooms-mode-btn" class="mode-btn">Backrooms</button>
             <button id="vision-mode-btn" class="mode-btn">Vision Mode</button>
             <button id="trial-mode-btn" class="mode-btn">The Trial</button>
             <button id="interrogation-mode-btn" class="mode-btn">Interrogation</button>
@@ -363,6 +367,34 @@ export function getAppTemplate(): string {
             <div class="improv-buttons">
               <button id="start-dream-btn" class="primary-btn" disabled>Start Dream</button>
               <button id="stop-dream-btn" class="secondary-btn" style="display: none;" disabled>Stop Dream</button>
+            </div>
+          </div>
+
+          <div id="superhero-therapy-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-superhero-therapy-btn" class="primary-btn" disabled>Start Superhero Therapy</button>
+              <button id="stop-superhero-therapy-btn" class="secondary-btn" style="display: none;" disabled>Stop Therapy</button>
+            </div>
+          </div>
+
+          <div id="cooking-comp-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-cooking-comp-btn" class="primary-btn" disabled>Start Cooking Competition</button>
+              <button id="stop-cooking-comp-btn" class="secondary-btn" style="display: none;" disabled>Stop Competition</button>
+            </div>
+          </div>
+
+          <div id="irs-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-irs-btn" class="primary-btn" disabled>Start Temporal IRS</button>
+              <button id="stop-irs-btn" class="secondary-btn" style="display: none;" disabled>Stop IRS</button>
+            </div>
+          </div>
+
+          <div id="backrooms-controls" class="improv-controls" style="display: none;">
+            <div class="improv-buttons">
+              <button id="start-backrooms-btn" class="primary-btn" disabled>Enter the Backrooms</button>
+              <button id="stop-backrooms-btn" class="secondary-btn" style="display: none;" disabled>Escape</button>
             </div>
           </div>
 

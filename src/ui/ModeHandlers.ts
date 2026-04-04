@@ -276,6 +276,10 @@ export function enableModeControls(el: ModeElements) {
   el.triviaTopicInput.disabled = false;
   el.startDreamBtn.disabled = false;
   el.dreamThemeInput.disabled = false;
+  (document.getElementById('start-superhero-therapy-btn') as HTMLButtonElement).disabled = false;
+  (document.getElementById('start-cooking-comp-btn') as HTMLButtonElement).disabled = false;
+  (document.getElementById('start-irs-btn') as HTMLButtonElement).disabled = false;
+  (document.getElementById('start-backrooms-btn') as HTMLButtonElement).disabled = false;
   el.startVisionBtn.disabled = false;
   el.visionUrlInput.disabled = false;
   el.visionFileInput.disabled = false;
@@ -637,6 +641,58 @@ export function registerModeHandlers(
     });
   });
   el.stopDreamBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Superhero Therapy Mode
+  switchMode('superhero-therapy-mode-btn', 'superhero-therapy-controls');
+  const startSuperheroBtn = document.getElementById('start-superhero-therapy-btn') as HTMLButtonElement;
+  const stopSuperheroBtn = document.getElementById('stop-superhero-therapy-btn') as HTMLButtonElement;
+  startSuperheroBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    startSuperheroBtn.style.display = 'none';
+    stopSuperheroBtn.style.display = 'inline-block';
+    await d.playScenario({ type: 'superhero_therapy', title: 'Superhero Therapy', description: 'Therapy session with your sidekick.' });
+  });
+  stopSuperheroBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Cooking Competition Mode
+  switchMode('cooking-comp-mode-btn', 'cooking-comp-controls');
+  const startCookingBtn = document.getElementById('start-cooking-comp-btn') as HTMLButtonElement;
+  const stopCookingBtn = document.getElementById('stop-cooking-comp-btn') as HTMLButtonElement;
+  startCookingBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    startCookingBtn.style.display = 'none';
+    stopCookingBtn.style.display = 'inline-block';
+    await d.playScenario({ type: 'intergalactic_cooking', title: 'Intergalactic Cooking', description: 'Cook with alien ingredients.' });
+  });
+  stopCookingBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Temporal IRS Mode
+  switchMode('irs-mode-btn', 'irs-controls');
+  const startIrsBtn = document.getElementById('start-irs-btn') as HTMLButtonElement;
+  const stopIrsBtn = document.getElementById('stop-irs-btn') as HTMLButtonElement;
+  startIrsBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    startIrsBtn.style.display = 'none';
+    stopIrsBtn.style.display = 'inline-block';
+    await d.playScenario({ type: 'time_traveling_irs', title: 'Temporal IRS', description: 'Audited for time-travel tax evasion.' });
+  });
+  stopIrsBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
+
+  // Backrooms Mode
+  switchMode('backrooms-mode-btn', 'backrooms-controls');
+  const startBackroomsBtn = document.getElementById('start-backrooms-btn') as HTMLButtonElement;
+  const stopBackroomsBtn = document.getElementById('stop-backrooms-btn') as HTMLButtonElement;
+  startBackroomsBtn.addEventListener('click', async () => {
+    const d = director();
+    if (!d) return;
+    startBackroomsBtn.style.display = 'none';
+    stopBackroomsBtn.style.display = 'inline-block';
+    await d.playScenario({ type: 'escape_backrooms', title: 'Escape the Backrooms', description: 'Navigate non-Euclidean geometry.' });
+  });
+  stopBackroomsBtn.addEventListener('click', () => { const d = director(); d && d.stopScene(); });
 
   // Vision Mode
   switchMode('vision-mode-btn', 'vision-mode-controls');

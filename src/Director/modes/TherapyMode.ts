@@ -67,3 +67,34 @@ export async function runTherapyLoop(scenario: Scenario, ctx: ModeContext) {
         await ctx.manager.chatForAgent(freudian, `(FREUDIAN: Ignore the others. Ask a probing question about a childhood memory related to "${userFeeling}". Connect it to a repressed desire.)`, async (s) => await ctx.callbacks.onSpeak(s, freudian, {}));
     }
 }
+
+export async function runSuperheroTherapyLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🦸‍♂️ SUPERHERO THERAPY: The Sidekick Speaks Up`, '#e74c3c');
+
+    const sidekick = 'comedian'; // Hermes-3
+    const therapist = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(therapist);
+    await ctx.manager.chatForAgent(therapist, `(THERAPIST: You are a calm, professional therapist. You are starting a session with the User, who is a famous superhero, and their sidekick. Ask the superhero how they feel about their sidekick's recent outbursts during missions.)`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Superhero (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Sidekick complains
+        ctx.callbacks.onTurnStart(sidekick);
+        await ctx.manager.chatForAgent(sidekick, `(SIDEKICK: The superhero just said: "${userInput}". You are their angry, disgruntled sidekick. Complain about the lack of credit, the terrible costume you have to wear, and how you do all the actual work while they strike poses. Be very dramatic and petty.)`, async (s) => await ctx.callbacks.onSpeak(s, sidekick, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Therapist mediates
+        ctx.callbacks.onTurnStart(therapist);
+        await ctx.manager.chatForAgent(therapist, `(THERAPIST: Mediate the conflict. Validate the sidekick's feelings but gently remind the superhero to be more empathetic. Offer a ridiculous team-building exercise.)`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

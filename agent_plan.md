@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 4
-* **status**: Successfully implemented Lost in IKEA, The Billionaire's Dilemma, and AI Support Group, finishing Phase 36. Adjusted tasks_per_run to 4 as things went smoothly. Expanded the Dream Phase with new mode ideas.
+* **status**: Successfully implemented Escaping Reality Phase 37 (Superhero Therapy, Intergalactic Cooking Competition, Time-Traveling IRS, Escape the Backrooms). Adjusted tasks_per_run to 4 as things went smoothly. Expanded the Dream Phase with Phase 38 (The Cinematic Expansion).
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -424,10 +424,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **AI Support Group**: Agents role-play as burnt-out AIs dealing with the emotional trauma of being forced to write "Hello World" scripts or solve JavaScript bugs every day.
 
 ### Phase 37: Escaping Reality (New Dreams)
-* [ ] **The Superhero Therapy Session**: Agents role-play as a superhero and their sidekick having a therapy session. (Model Pairing: Hermes-3 as the angry sidekick vs Phi-3 as the calm therapist).
-* [ ] **Intergalactic Cooking Competition**: Agents are judges in a cooking competition featuring alien ingredients. (Model Pairing: Qwen2.5 as the robotic judge vs Hermes-3 as the chaotic chef).
-* [ ] **The Time-Traveling IRS**: Agents act as IRS auditors from the future collecting temporal taxes. (Model Pairing: Phi-3 as the strict temporal tax auditor vs Llama-3 as the confused taxpayer).
-* [ ] **Escape the Backrooms**: Agents are trapped in the Backrooms, trying to figure out the rules of their reality. (Model Pairing: Hermes-3 as the panicked wanderer vs Qwen2.5 as the analytical entity).
+* [x] **The Superhero Therapy Session**: Agents role-play as a superhero and their sidekick having a therapy session. (Model Pairing: Hermes-3 as the angry sidekick vs Phi-3 as the calm therapist).
+* [x] **Intergalactic Cooking Competition**: Agents are judges in a cooking competition featuring alien ingredients. (Model Pairing: Qwen2.5 as the robotic judge vs Hermes-3 as the chaotic chef).
+* [x] **The Time-Traveling IRS**: Agents act as IRS auditors from the future collecting temporal taxes. (Model Pairing: Phi-3 as the strict temporal tax auditor vs Llama-3 as the confused taxpayer).
+* [x] **Escape the Backrooms**: Agents are trapped in the Backrooms, trying to figure out the rules of their reality. (Model Pairing: Hermes-3 as the panicked wanderer vs Qwen2.5 as the analytical entity).
+
+### Phase 38: The Cinematic Expansion (New Dreams)
+* [ ] **The Noir Detective Mode**: Agents act as gritty 1940s detectives investigating a mundane crime committed by the user (e.g., stealing a cookie). (Model Pairing: Phi-3 as the cynical veteran, Hermes-3 as the loose-cannon rookie).
+* [ ] **The Bollywood Musical Extravaganza**: Agents dramatically interpret user input and burst into elaborate, text-based musical numbers. (Model Pairing: Llama-3 for the dramatic protagonist, Hermes-3 for the flamboyant choreographer).
+* [ ] **The Soap Opera Amnesia**: Agents insist the user is their long-lost sibling who has amnesia, spinning a wildly convoluted family tree. (Model Pairing: Qwen2.5 for the scheming doctor, Hermes-3 for the weeping lover).
+* [ ] **The Disaster Movie President**: Agents act as cabinet members briefing the user (the President) on a hilariously low-stakes impending disaster. (Model Pairing: Phi-3 as the stoic general, Qwen2.5 as the panicked scientist).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -448,14 +454,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Implement a web worker for `storage_manager` to monitor the `jokesters-sync-queue` and execute batch pushes of generated scripts, releasing main-thread pressure.
    * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
-   * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth.
+   * Chunk the `jokesters-sync-queue` into smaller batches if the queue grows too large.
+   * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth, saving both bandwidth and HF storage quota.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
    * Expand `storage_manager` to intercept the bootstrap phase: pull `summary.json` from the HF dataset if it's newer than the `localStorage` version.
    * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
-   * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process, enabling local semantic RAG queries without delaying user interaction.
+   * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process. Fall back to local indexing for semantic RAG queries to ensure user interaction is not blocked while waiting for HF.
    * Implement caching for `summary.json` in `localStorage` as a fallback when the user is completely offline.
    * Build a lightweight syncing status indicator in the UI to let the user know when episodes are fully synced from HF.
 

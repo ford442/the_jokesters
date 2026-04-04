@@ -1170,3 +1170,34 @@ export async function runMimeConventionLoop(_scenario: Scenario, ctx: ModeContex
         }
     }
 }
+
+export async function runTimeTravelingIRSLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING IRS: Pay your temporal taxes!`, '#f1c40f');
+
+    const auditor = 'philosopher'; // Phi-3
+    const taxpayer = 'scientist'; // Llama-3 fallback
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(auditor);
+    await ctx.manager.chatForAgent(auditor, `(AUDITOR: You are a strict, bureaucratic IRS auditor from the year 4022. You are auditing the User for "Temporal Tax Evasion". Accuse them of causing a temporal paradox (e.g., stepping on a butterfly in the Cretaceous period, or buying Apple stock in 1980) that resulted in a massive tax deficiency. Demand an explanation.)`, async (s) => await ctx.callbacks.onSpeak(s, auditor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Taxpayer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Confused taxpayer chimes in
+        ctx.callbacks.onTurnStart(taxpayer);
+        await ctx.manager.chatForAgent(taxpayer, `(TAXPAYER: The user said: "${userInput}". You are another time-traveling taxpayer sitting in the waiting room. Offer the user terrible advice on how to exploit loopholes in the laws of physics to avoid paying the temporal tax.)`, async (s) => await ctx.callbacks.onSpeak(s, taxpayer, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Auditor penalizes
+        ctx.callbacks.onTurnStart(auditor);
+        await ctx.manager.chatForAgent(auditor, `(AUDITOR: Reject the user's excuse ("${userInput}") and the other taxpayer's advice. Apply bizarre, convoluted temporal tax laws (e.g., Form 1040-Time-Loop, Schedule C-Wormhole) to calculate a hilariously absurd penalty, payable only in tachyons or historical artifacts.)`, async (s) => await ctx.callbacks.onSpeak(s, auditor, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
