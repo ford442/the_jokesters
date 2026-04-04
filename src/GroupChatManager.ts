@@ -127,9 +127,11 @@ export class GroupChatManager {
       return 'webgpu'
     }
 
-    // Out of memory
+    // Out of memory — includes WebGPU buffer cascade errors (AbortError from mapAsync, device loss)
     if (msgLower.includes('oom') || msgLower.includes('memory') ||
-        msgLower.includes('createbuffer') || msgLower.includes('allocation')) {
+        msgLower.includes('createbuffer') || msgLower.includes('allocation') ||
+        msgLower.includes('mapasync') || msgLower.includes('buffer was unmapped') ||
+        msgLower.includes('device is lost') || msgLower.includes('device lost')) {
       return 'oom'
     }
 
