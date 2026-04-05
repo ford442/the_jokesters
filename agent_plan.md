@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 4
-* **status**: Successfully implemented Escaping Reality Phase 37 (Superhero Therapy, Intergalactic Cooking Competition, Time-Traveling IRS, Escape the Backrooms). Adjusted tasks_per_run to 4 as things went smoothly. Expanded the Dream Phase with Phase 38 (The Cinematic Expansion).
+* **tasks_per_run**: 5
+* **status**: Successfully implemented Cinematic Expansion Phase 38 (Noir Detective, Bollywood Musical, Soap Opera Amnesia, Disaster Movie President). Adjusted tasks_per_run to 5 as things went smoothly. Expanded the Dream Phase with Phase 39 (The Corporate Dystopia).
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -430,10 +430,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Escape the Backrooms**: Agents are trapped in the Backrooms, trying to figure out the rules of their reality. (Model Pairing: Hermes-3 as the panicked wanderer vs Qwen2.5 as the analytical entity).
 
 ### Phase 38: The Cinematic Expansion (New Dreams)
-* [ ] **The Noir Detective Mode**: Agents act as gritty 1940s detectives investigating a mundane crime committed by the user (e.g., stealing a cookie). (Model Pairing: Phi-3 as the cynical veteran, Hermes-3 as the loose-cannon rookie).
-* [ ] **The Bollywood Musical Extravaganza**: Agents dramatically interpret user input and burst into elaborate, text-based musical numbers. (Model Pairing: Llama-3 for the dramatic protagonist, Hermes-3 for the flamboyant choreographer).
-* [ ] **The Soap Opera Amnesia**: Agents insist the user is their long-lost sibling who has amnesia, spinning a wildly convoluted family tree. (Model Pairing: Qwen2.5 for the scheming doctor, Hermes-3 for the weeping lover).
-* [ ] **The Disaster Movie President**: Agents act as cabinet members briefing the user (the President) on a hilariously low-stakes impending disaster. (Model Pairing: Phi-3 as the stoic general, Qwen2.5 as the panicked scientist).
+* [x] **The Noir Detective Mode**: Agents act as gritty 1940s detectives investigating a mundane crime committed by the user (e.g., stealing a cookie). (Model Pairing: Phi-3 as the cynical veteran, Hermes-3 as the loose-cannon rookie).
+* [x] **The Bollywood Musical Extravaganza**: Agents dramatically interpret user input and burst into elaborate, text-based musical numbers. (Model Pairing: Llama-3 for the dramatic protagonist, Hermes-3 for the flamboyant choreographer).
+* [x] **The Soap Opera Amnesia**: Agents insist the user is their long-lost sibling who has amnesia, spinning a wildly convoluted family tree. (Model Pairing: Qwen2.5 for the scheming doctor, Hermes-3 for the weeping lover).
+* [x] **The Disaster Movie President**: Agents act as cabinet members briefing the user (the President) on a hilariously low-stakes impending disaster. (Model Pairing: Phi-3 as the stoic general, Qwen2.5 as the panicked scientist).
+
+### Phase 39: The Corporate Dystopia (Dreams)
+* [ ] **The HR Exit Interview**: Agents are unhinged HR reps conducting an exit interview for a job the user never had. (Model Pairing: Qwen2.5 for the strict process follower, Hermes-3 for the inappropriate personal questions).
+* [ ] **The Startup Pivot**: Agents are desperate founders demanding the user (their only remaining investor) fund increasingly bizarre pivots for their failing app. (Model Pairing: Phi-3 for the "visionary" CEO, Hermes-3 for the chaotic CTO).
+* [ ] **The Synergy Sync**: Agents speak entirely in meaningless corporate jargon to plan a pointless quarterly offsite. (Model Pairing: Llama-3 for the enthusiastic middle manager, Qwen2.5 for the passive-aggressive operations lead).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -442,7 +447,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 1. **Authenticating with the HF API:**
    * Provide a settings UI that securely captures the Hugging Face token and target Dataset ID.
    * Authenticate requests with the HF API via the `HFStorageManager` by validating the token against the REST endpoint `https://huggingface.co/api/whoami-v2`.
-   * Persist tokens securely (sandboxed in `localStorage` keys `jokesters-hf-token` and `jokesters-hf-repo`) for returning sessions via `MemoryManager.setCloudCredentials`.
+   * **Storage Manager Action:** Persist tokens securely (sandboxed in `localStorage` keys `jokesters-hf-token` and `jokesters-hf-repo`) for returning sessions via `MemoryManager.setCloudCredentials`.
    * Implement a background worker periodically validating the `jokesters-hf-token` against the `/whoami-v2` API, clearing the token automatically upon revocation.
    * Add token refresh/re-validation logic to gracefully handle revoked tokens.
    * Ensure the UI displays clear error messages if the provided token does not have the necessary scopes or permissions.
@@ -450,7 +455,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 2. **Pushing Finished Episode Scripts:**
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
    * This cues `MemoryManager.saveEpisodeToCloud`, which enqueues the background sync job into a local `localStorage` queue (e.g., `jokesters-sync-queue`).
-   * Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * **Storage Manager Action:** Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
    * Implement a web worker for `storage_manager` to monitor the `jokesters-sync-queue` and execute batch pushes of generated scripts, releasing main-thread pressure.
    * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
@@ -459,7 +464,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
-   * Expand `storage_manager` to intercept the bootstrap phase: pull `summary.json` from the HF dataset if it's newer than the `localStorage` version.
+   * **Storage Manager Action:** Expand `storage_manager` to intercept the bootstrap phase: pull `summary.json` from the HF dataset if it's newer than the `localStorage` version.
    * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
    * Inject this historical summary directly into the `GroupChatManager`'s system context prompt to prime the models before full episode data loads.
    * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process. Fall back to local indexing for semantic RAG queries to ensure user interaction is not blocked while waiting for HF.
