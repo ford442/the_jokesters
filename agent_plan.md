@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
-* **status**: Successfully implemented Cinematic Expansion Phase 38 (Noir Detective, Bollywood Musical, Soap Opera Amnesia, Disaster Movie President). Adjusted tasks_per_run to 5 as things went smoothly. Expanded the Dream Phase with Phase 39 (The Corporate Dystopia).
+* **tasks_per_run**: 6
+* **status**: Successfully implemented The Corporate Dystopia Phase 39 (HR Exit Interview, Startup Pivot, Synergy Sync). Adjusted tasks_per_run to 6 as things went smoothly. Expanded the Dream Phase with Phase 40 (The Fantasy Tavern).
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -436,9 +436,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Disaster Movie President**: Agents act as cabinet members briefing the user (the President) on a hilariously low-stakes impending disaster. (Model Pairing: Phi-3 as the stoic general, Qwen2.5 as the panicked scientist).
 
 ### Phase 39: The Corporate Dystopia (Dreams)
-* [ ] **The HR Exit Interview**: Agents are unhinged HR reps conducting an exit interview for a job the user never had. (Model Pairing: Qwen2.5 for the strict process follower, Hermes-3 for the inappropriate personal questions).
-* [ ] **The Startup Pivot**: Agents are desperate founders demanding the user (their only remaining investor) fund increasingly bizarre pivots for their failing app. (Model Pairing: Phi-3 for the "visionary" CEO, Hermes-3 for the chaotic CTO).
-* [ ] **The Synergy Sync**: Agents speak entirely in meaningless corporate jargon to plan a pointless quarterly offsite. (Model Pairing: Llama-3 for the enthusiastic middle manager, Qwen2.5 for the passive-aggressive operations lead).
+* [x] **The HR Exit Interview**: Agents are unhinged HR reps conducting an exit interview for a job the user never had. (Model Pairing: Qwen2.5 for the strict process follower, Hermes-3 for the inappropriate personal questions).
+* [x] **The Startup Pivot**: Agents are desperate founders demanding the user (their only remaining investor) fund increasingly bizarre pivots for their failing app. (Model Pairing: Phi-3 for the "visionary" CEO, Hermes-3 for the chaotic CTO).
+* [x] **The Synergy Sync**: Agents speak entirely in meaningless corporate jargon to plan a pointless quarterly offsite. (Model Pairing: Llama-3 for the enthusiastic middle manager, Qwen2.5 for the passive-aggressive operations lead).
+
+### Phase 40: The Fantasy Tavern (Dreams)
+* [ ] **The Bouncer's Dilemma**: Agents are bouncers at a fantasy tavern and the user is trying to get in with absurd fake IDs. (Model Pairing: Qwen2.5 for the strict bouncer, Hermes-3 for the chaotic bouncer).
+* [ ] **The Quest Board Rejects**: Agents are adventurers trying to sell the user on terrible, rejected quests. (Model Pairing: Phi-3 for the meticulous quest designer, Hermes-3 for the wild adventurer).
+* [ ] **The Suspicious Barkeep**: Agents are barkeeps accusing the user of stealing a legendary artifact. (Model Pairing: Llama-3 for the friendly barkeep, Qwen2.5 for the suspicious one).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -461,6 +466,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
    * Chunk the `jokesters-sync-queue` into smaller batches if the queue grows too large.
    * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth, saving both bandwidth and HF storage quota.
+   * Extend the sync worker to support resumable uploads for extremely large episode files to ensure reliability on unstable networks.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
