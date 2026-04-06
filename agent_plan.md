@@ -2,7 +2,9 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 6
-* **status**: Successfully implemented The Corporate Dystopia Phase 39 (HR Exit Interview, Startup Pivot, Synergy Sync). Adjusted tasks_per_run to 6 as things went smoothly. Expanded the Dream Phase with Phase 40 (The Fantasy Tavern).
+* **status**: Successfully implemented The Fantasy Tavern Phase 40 (Bouncer's Dilemma, Quest Board Rejects, Suspicious Barkeep). Kept tasks_per_run to 6 as I completed the tasks smoothly, though there were only 3 pending tasks so I did all of them. Expanded the Dream Phase with Phase 41 (The Sci-Fi Space Station) and refined the Cloud Persistence integration roadmap.
+
+*Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
 ## 1. System Philosophy: "The Digital Director"
 Our architecture relies on a **Centralized Director / Stateless Actor** model.
@@ -441,9 +443,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Synergy Sync**: Agents speak entirely in meaningless corporate jargon to plan a pointless quarterly offsite. (Model Pairing: Llama-3 for the enthusiastic middle manager, Qwen2.5 for the passive-aggressive operations lead).
 
 ### Phase 40: The Fantasy Tavern (Dreams)
-* [ ] **The Bouncer's Dilemma**: Agents are bouncers at a fantasy tavern and the user is trying to get in with absurd fake IDs. (Model Pairing: Qwen2.5 for the strict bouncer, Hermes-3 for the chaotic bouncer).
-* [ ] **The Quest Board Rejects**: Agents are adventurers trying to sell the user on terrible, rejected quests. (Model Pairing: Phi-3 for the meticulous quest designer, Hermes-3 for the wild adventurer).
-* [ ] **The Suspicious Barkeep**: Agents are barkeeps accusing the user of stealing a legendary artifact. (Model Pairing: Llama-3 for the friendly barkeep, Qwen2.5 for the suspicious one).
+* [x] **The Bouncer's Dilemma**: Agents are bouncers at a fantasy tavern and the user is trying to get in with absurd fake IDs. (Model Pairing: Qwen2.5 for the strict bouncer, Hermes-3 for the chaotic bouncer).
+* [x] **The Quest Board Rejects**: Agents are adventurers trying to sell the user on terrible, rejected quests. (Model Pairing: Phi-3 for the meticulous quest designer, Hermes-3 for the wild adventurer).
+* [x] **The Suspicious Barkeep**: Agents are barkeeps accusing the user of stealing a legendary artifact. (Model Pairing: Llama-3 for the friendly barkeep, Qwen2.5 for the suspicious one).
+
+### Phase 41: The Sci-Fi Space Station (Dreams)
+* [ ] **The AI Ship Core**: The user is a captain, the agents are competing personalities of the ship's AI arguing over navigation.
+* [ ] **The Alien Stowaway**: The agents are the crew, the user is an alien stowaway trying to blend in.
+* [ ] **The Intergalactic Trade Negotiator**: User negotiates a trade with two bizarre alien species with incompatible cultures.
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -456,6 +463,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Implement a background worker periodically validating the `jokesters-hf-token` against the `/whoami-v2` API, clearing the token automatically upon revocation.
    * Add token refresh/re-validation logic to gracefully handle revoked tokens.
    * Ensure the UI displays clear error messages if the provided token does not have the necessary scopes or permissions.
+   * **Storage Manager Action:** Verify that the validated token has write access to the targeted Dataset to prevent silent sync failures.
 
 2. **Pushing Finished Episode Scripts:**
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
@@ -467,6 +475,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Chunk the `jokesters-sync-queue` into smaller batches if the queue grows too large.
    * Add a compression layer (e.g., gzip or pako) before uploading large episodic JSONs to minimize bandwidth, saving both bandwidth and HF storage quota.
    * Extend the sync worker to support resumable uploads for extremely large episode files to ensure reliability on unstable networks.
+   * **Storage Manager Action:** Compress the JSON payload before pushing to the HF API to further reduce bandwidth usage and improve upload speeds.
 
 3. **Fetching Previous Episode Summaries at Boot:**
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
@@ -476,6 +485,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Offload the streaming of full JSON histories into the local `IndexedDB` backend to a separate background process. Fall back to local indexing for semantic RAG queries to ensure user interaction is not blocked while waiting for HF.
    * Implement caching for `summary.json` in `localStorage` as a fallback when the user is completely offline.
    * Build a lightweight syncing status indicator in the UI to let the user know when episodes are fully synced from HF.
+   * **Storage Manager Action:** Asynchronously stream older episodes into the local `IndexedDB` backend in the background so that long conversation histories become accessible for vector queries without stalling initial boot.
 
 4. **Background Sync Queue & Conflict Resolution:**
    * Implement a robust queuing system `jokesters-sync-queue` in `localStorage` to handle offline scenarios or rate-limits.
