@@ -1353,3 +1353,114 @@ export async function runTimeTravelingIRSLoop(_scenario: Scenario, ctx: ModeCont
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+/**
+ * The HR Exit Interview
+ * Agents are unhinged HR reps conducting an exit interview for a job the user never had.
+ */
+export async function runHRExitInterviewLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👔 HR EXIT INTERVIEW: Goodbye forever!`, '#34495e');
+
+    const strictHR = 'scientist'; // Qwen2.5 for strict process follower
+    const unhingedHR = 'comedian'; // Hermes-3 for inappropriate personal questions
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictHR);
+    await ctx.manager.chatForAgent(strictHR, `(HR INTERVIEW: You are a strict, joyless HR representative. Welcome the User to their mandatory exit interview for a job they never actually held. Tell them they are legally required to answer your questions before they can leave the building. Demand they return their company-issued stapler.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Former Employee (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Unhinged HR
+            ctx.callbacks.onTurnStart(unhingedHR);
+            await ctx.manager.chatForAgent(unhingedHR, `(HR INTERVIEW: The former employee said: "${userInput}". You are the wildly inappropriate and chaotic HR rep. Ignore what they said and ask them a deeply personal, unhinged question completely unrelated to work, like what their biggest childhood fear is or if they've ever stolen a pigeon.)`, async (s) => await ctx.callbacks.onSpeak(s, unhingedHR, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict HR
+            ctx.callbacks.onTurnStart(strictHR);
+            await ctx.manager.chatForAgent(strictHR, `(HR INTERVIEW: The former employee said: "${userInput}". Dismiss their confusion. Cite a completely fake company policy (e.g., "Section 14-B of the Employee Handbook") to explain why their answer is unacceptable. Hand them an absurdly long form to fill out.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Startup Pivot
+ * Agents are desperate founders demanding the user fund increasingly bizarre pivots for their failing app.
+ */
+export async function runStartupPivotLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚀 STARTUP PIVOT: Funding the next big thing!`, '#2ecc71');
+
+    const visionaryCEO = 'philosopher'; // Phi-3 for the "visionary" CEO
+    const chaoticCTO = 'comedian'; // Hermes-3 for the chaotic CTO
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(visionaryCEO);
+    await ctx.manager.chatForAgent(visionaryCEO, `(STARTUP PIVOT: You are the 'visionary' but delusional CEO of a failing startup. You are pitching your ONLY remaining investor (the User) on an urgent, massive 'pivot'. You used to make a simple calendar app, but now you want to do something absurdly grandiose. Use too much tech jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, visionaryCEO, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Sole Investor (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Chaotic CTO
+            ctx.callbacks.onTurnStart(chaoticCTO);
+            await ctx.manager.chatForAgent(chaoticCTO, `(STARTUP PIVOT: The investor said: "${userInput}". You are the chaotic CTO. You haven't slept in weeks. Confess that you accidentally deleted all the code for the old app, but promise that the new pivot involves highly illegal blockchain technology and sentient AI. Beg for money.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCTO, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Visionary CEO
+            ctx.callbacks.onTurnStart(visionaryCEO);
+            await ctx.manager.chatForAgent(visionaryCEO, `(STARTUP PIVOT: The investor said: "${userInput}". Ignore their logical concerns. Double down on the pivot! Frame it as a paradigm-shifting, world-changing endeavor. Ask for an absurd amount of money to fund it.)`, async (s) => await ctx.callbacks.onSpeak(s, visionaryCEO, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Synergy Sync
+ * Agents speak entirely in meaningless corporate jargon to plan a pointless quarterly offsite.
+ */
+export async function runSynergySyncLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📈 SYNERGY SYNC: Circling back to touch base!`, '#3498db');
+
+    const enthusiasticManager = 'comedian'; // Llama-3 equivalent for the enthusiastic middle manager
+    const passiveAggressiveLead = 'scientist'; // Qwen2.5 for the passive-aggressive operations lead
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(enthusiasticManager);
+    await ctx.manager.chatForAgent(enthusiasticManager, `(SYNERGY SYNC: You are an overly enthusiastic middle manager. Welcome the User to a 'Synergy Sync' to plan the next pointless quarterly offsite. Speak almost entirely in meaningless corporate jargon (e.g., 'circle back', 'leverage', 'paradigm shift'). Ask for their high-level vision.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticManager, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Employee (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Passive Aggressive Lead
+            ctx.callbacks.onTurnStart(passiveAggressiveLead);
+            await ctx.manager.chatForAgent(passiveAggressiveLead, `(SYNERGY SYNC: The employee said: "${userInput}". You are the passive-aggressive operations lead. Tear down their idea using more corporate buzzwords. Suggest an even more soul-crushing activity for the offsite, like a 6-hour webinar on compliance. CC the manager.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressiveLead, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Enthusiastic Manager
+            ctx.callbacks.onTurnStart(enthusiasticManager);
+            await ctx.manager.chatForAgent(enthusiasticManager, `(SYNERGY SYNC: The employee said: "${userInput}". Vigorously agree with them, but completely rephrase their idea using so much corporate jargon that it loses all meaning. Pivot the conversation to discussing the company's 'core values' and 'action items'.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticManager, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
