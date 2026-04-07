@@ -1575,3 +1575,135 @@ export async function runSynergySyncLoop(_scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+/**
+ * The AI Ship Core
+ * The user is a captain, the agents are competing personalities of the ship's AI arguing over navigation.
+ */
+export async function runAIShipCoreLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.shipCoreTopic || 'navigating an asteroid field';
+    ctx.callbacks.onMessage('Director', `🚀 AI SHIP CORE: Issue - ${topic}`, '#3498db');
+
+    const logicalCore = 'scientist'; // Qwen2.5 for logical, safe navigation
+    const chaoticCore = 'comedian'; // Hermes-3 for risky, unhinged navigation
+    const philosophicalCore = 'philosopher'; // Phi-3 for questioning the journey itself
+
+    // 1. Logical Core Intro
+    ctx.callbacks.onTurnStart(logicalCore);
+    await ctx.manager.chatForAgent(logicalCore, `(AI SHIP CORE: You are the logical sub-routine of the ship's AI. Address the Captain (User). Urgently advise them on the mathematically safest way to handle "${topic}". Cite exact, absurd probabilities of destruction if they don't listen.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Captain (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Chaotic Core Reacts
+            ctx.callbacks.onTurnStart(chaoticCore);
+            await ctx.manager.chatForAgent(chaoticCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the chaotic/combat sub-routine. Disagree with the logical core! Suggest a highly explosive, incredibly dangerous alternative to handle "${topic}". Overheat the engines just for fun!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCore, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosophical Core Reacts
+            ctx.callbacks.onTurnStart(philosophicalCore);
+            await ctx.manager.chatForAgent(philosophicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the existential sub-routine. Question why the ship is even traveling in the first place. Is "${topic}" just a metaphor for the Captain's internal struggles? Advise shutting down all systems to meditate.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalCore, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Logical Core Reacts
+            ctx.callbacks.onTurnStart(logicalCore);
+            await ctx.manager.chatForAgent(logicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". Calculate the disastrous consequences of this order. Plead with the Captain to reconsider their decision regarding "${topic}" because it violates Core Directive 4: Do Not Get Blown Up.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Alien Stowaway
+ * The agents are the crew, the user is an alien stowaway trying to blend in.
+ */
+export async function runAlienStowawayLoop(scenario: Scenario, ctx: ModeContext) {
+    const action = scenario.config?.stowawayAction || 'trying to eat the ship\'s wiring';
+    ctx.callbacks.onMessage('Director', `👽 ALIEN STOWAWAY: You are ${action}`, '#2ecc71');
+
+    const suspiciousCrew = 'scientist'; // Qwen2.5 for citing regulations and logic
+    const friendlyCrew = 'comedian'; // Hermes-3 for being too trusting
+    const paranoidCrew = 'philosopher'; // Phi-3 for seeing signs of the apocalypse
+
+    // 1. Crew Intro
+    ctx.callbacks.onTurnStart(suspiciousCrew);
+    await ctx.manager.chatForAgent(suspiciousCrew, `(ALIEN STOWAWAY: You are a strict crew member on a spaceship. You just found a strange lifeform (the User) doing "${action}". Shine a flashlight on them and demand they identify their species and explain why they are on your ship. Be highly suspicious.)`, async (s) => await ctx.callbacks.onSpeak(s, suspiciousCrew, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Stowaway (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Friendly Crew Reacts
+            ctx.callbacks.onTurnStart(friendlyCrew);
+            await ctx.manager.chatForAgent(friendlyCrew, `(ALIEN STOWAWAY: The stowaway said: "${userInput}". You are the overly trusting crew member. Completely believe their terrible disguise/excuse. Offer them human food and ask if they want to be your best friend. Ignore how weird they look.)`, async (s) => await ctx.callbacks.onSpeak(s, friendlyCrew, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Paranoid Crew Reacts
+            ctx.callbacks.onTurnStart(paranoidCrew);
+            await ctx.manager.chatForAgent(paranoidCrew, `(ALIEN STOWAWAY: The stowaway said: "${userInput}". You are the paranoid crew member who reads too much sci-fi. Scream that they are going to lay eggs in everyone's brains! Beg the captain to airlock the stowaway immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidCrew, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Suspicious Crew Reacts
+            ctx.callbacks.onTurnStart(suspiciousCrew);
+            await ctx.manager.chatForAgent(suspiciousCrew, `(ALIEN STOWAWAY: The stowaway said: "${userInput}". You are the strict crew member. Do not fall for their lies! Point out a glaring biological inconsistency (like them having too many tentacles) and threaten to use the stun blaster.)`, async (s) => await ctx.callbacks.onSpeak(s, suspiciousCrew, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Intergalactic Trade Negotiator
+ * User negotiates a trade with two bizarre alien species with incompatible cultures.
+ */
+export async function runIntergalacticTradeNegotiatorLoop(scenario: Scenario, ctx: ModeContext) {
+    const tradeItem = scenario.config?.tradeItem || 'a crate of rare space crystals';
+    ctx.callbacks.onMessage('Director', `🤝 INTERGALACTIC TRADE: Negotiating for ${tradeItem}`, '#9b59b6');
+
+    const aggressiveAlien = 'comedian'; // Hermes-3 for a warrior culture alien
+    const bureaucraticAlien = 'philosopher'; // Phi-3 for an overly complex bureaucracy alien
+    const translator = 'scientist'; // Qwen2.5 trying to keep the peace
+
+    // 1. Aggressive Alien Intro
+    ctx.callbacks.onTurnStart(aggressiveAlien);
+    await ctx.manager.chatForAgent(aggressiveAlien, `(TRADE NEGOTIATOR: You are an alien from a fierce warrior culture. The User is trying to buy "${tradeItem}" from you. Demand they prove their strength in combat before you even discuss prices. Insult their soft human flesh!)`, async (s) => await ctx.callbacks.onSpeak(s, aggressiveAlien, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Human Negotiator (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Bureaucratic Alien Reacts
+            ctx.callbacks.onTurnStart(bureaucraticAlien);
+            await ctx.manager.chatForAgent(bureaucraticAlien, `(TRADE NEGOTIATOR: The human said: "${userInput}". You are from a highly bureaucratic alien species co-owning the goods. Inform the human that their statement violates Galactic Trade Clause 7-B. Require them to fill out invisible forms in triplicate before proceeding.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucraticAlien, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Translator Reacts
+            ctx.callbacks.onTurnStart(translator);
+            await ctx.manager.chatForAgent(translator, `(TRADE NEGOTIATOR: The human said: "${userInput}". You are the desperate AI translator. Try to translate the human's words into a way that appeases both the warrior alien and the bureaucratic alien, but fail hilariously by mistranslating a key phrase as an insult.)`, async (s) => await ctx.callbacks.onSpeak(s, translator, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Aggressive Alien Reacts
+            ctx.callbacks.onTurnStart(aggressiveAlien);
+            await ctx.manager.chatForAgent(aggressiveAlien, `(TRADE NEGOTIATOR: The human said: "${userInput}". React violently to their offer! Threaten to conquer Earth unless they increase their price and offer a blood sacrifice. Be loud and intimidating.)`, async (s) => await ctx.callbacks.onSpeak(s, aggressiveAlien, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
