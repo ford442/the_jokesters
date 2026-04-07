@@ -42,6 +42,117 @@ export async function runTimeTravelLoop(scenario: Scenario, ctx: ModeContext) {
 }
 
 /**
+ * The Bouncer's Dilemma
+ * Agents are bouncers at a fantasy tavern and the user is trying to get in with absurd fake IDs.
+ */
+export async function runBouncersDilemmaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛡️ THE BOUNCER'S DILEMMA: Fake IDs at the Tavern!`, '#8e44ad');
+
+    const strictBouncer = 'scientist'; // Qwen2.5 for the strict bouncer
+    const chaoticBouncer = 'comedian'; // Hermes-3 for the chaotic bouncer
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictBouncer);
+    await ctx.manager.chatForAgent(strictBouncer, `(FANTASY TAVERN: You are a strict, heavily armored bouncer at 'The Prancing Orc' tavern. Stop the User at the door. Demand to see their identification and state the highly specific, absurd tavern rules for entry (e.g., no halflings after 9 PM, dragons must be on a leash).)`, async (s) => await ctx.callbacks.onSpeak(s, strictBouncer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Tavern Patron (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Chaotic Bouncer
+            ctx.callbacks.onTurnStart(chaoticBouncer);
+            await ctx.manager.chatForAgent(chaoticBouncer, `(FANTASY TAVERN: The patron said/showed: "${userInput}". You are the chaotic, easily distracted goblin bouncer. Ignore the strict rules. Examine their "ID" and draw completely unhinged conclusions from it. Offer to let them in if they can perform a bizarre physical challenge or give you a shiny rock.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticBouncer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict Bouncer
+            ctx.callbacks.onTurnStart(strictBouncer);
+            await ctx.manager.chatForAgent(strictBouncer, `(FANTASY TAVERN: The patron said/showed: "${userInput}". You are the strict bouncer. Examine their "ID" with intense scrutiny. Deny their entry by pointing out a ridiculous magical forgery flaw (e.g., "This parchment smells like illusion magic" or "The royal seal is drawn in crayon"). Threaten them with the city guard.)`, async (s) => await ctx.callbacks.onSpeak(s, strictBouncer, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Quest Board Rejects
+ * Agents are adventurers trying to sell the user on terrible, rejected quests.
+ */
+export async function runQuestBoardRejectsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📜 QUEST BOARD REJECTS: The worst quests in the realm!`, '#e67e22');
+
+    const meticulousDesigner = 'philosopher'; // Phi-3 for the meticulous quest designer
+    const wildAdventurer = 'comedian'; // Hermes-3 for the wild adventurer
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(meticulousDesigner);
+    await ctx.manager.chatForAgent(meticulousDesigner, `(QUEST BOARD: You are a meticulous but terribly uncreative guild questmaster. The User is a new adventurer looking for work. Welcome them and pitch an incredibly boring, mundane quest (like sorting the King's sock drawer or cataloging beetles) but try to make it sound epic and vital to the realm's survival.)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Adventurer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Wild Adventurer
+            ctx.callbacks.onTurnStart(wildAdventurer);
+            await ctx.manager.chatForAgent(wildAdventurer, `(QUEST BOARD: The adventurer said: "${userInput}". You are a wild, unhinged veteran adventurer. Interrupt the questmaster! Pitch your own insane, highly illegal, and suicidal rejected quest (like fighting a tornado bare-handed to steal its wind). Promise them "glory and/or painful death".)`, async (s) => await ctx.callbacks.onSpeak(s, wildAdventurer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Meticulous Designer
+            ctx.callbacks.onTurnStart(meticulousDesigner);
+            await ctx.manager.chatForAgent(meticulousDesigner, `(QUEST BOARD: The adventurer said: "${userInput}". Ignore the wild adventurer's interjection. Double down on your boring quest. Explain the complex bureaucratic paperwork required to accept it and the incredibly disappointing reward (like three copper coins and a firm handshake).)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Suspicious Barkeep
+ * Agents are barkeeps accusing the user of stealing a legendary artifact.
+ */
+export async function runSuspiciousBarkeepLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍺 SUSPICIOUS BARKEEP: Where is the artifact?!`, '#c0392b');
+
+    const friendlyBarkeep = 'comedian'; // Llama-3 equivalent for the friendly barkeep
+    const suspiciousBarkeep = 'scientist'; // Qwen2.5 for the suspicious one
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(suspiciousBarkeep);
+    await ctx.manager.chatForAgent(suspiciousBarkeep, `(SUSPICIOUS BARKEEP: You are a highly paranoid tavern keeper. The User just walked in. Immediately accuse them of stealing the tavern's most prized legendary artifact (e.g., 'The Golden Spork of Destiny' or 'The Infinite Pretzel'). Cite completely illogical "evidence" of their guilt.)`, async (s) => await ctx.callbacks.onSpeak(s, suspiciousBarkeep, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Accused Patron (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Friendly Barkeep
+            ctx.callbacks.onTurnStart(friendlyBarkeep);
+            await ctx.manager.chatForAgent(friendlyBarkeep, `(SUSPICIOUS BARKEEP: The patron said: "${userInput}". You are the overly friendly co-barkeep. Try to de-escalate the situation. Offer the patron a free drink and apologize for your partner's paranoia, but accidentally reveal that *you* might be the one who lost the artifact in a foolish way.)`, async (s) => await ctx.callbacks.onSpeak(s, friendlyBarkeep, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Suspicious Barkeep
+            ctx.callbacks.onTurnStart(suspiciousBarkeep);
+            await ctx.manager.chatForAgent(suspiciousBarkeep, `(SUSPICIOUS BARKEEP: The patron said: "${userInput}". Don't believe their lies! Escalate the accusation. Threaten to unleash the tavern's ridiculous security system (e.g., an angry badger or a cursed barstool) unless they confess and return the artifact.)`, async (s) => await ctx.callbacks.onSpeak(s, suspiciousBarkeep, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
  * AI Support Group Mode
  * Agents role-play as burnt-out AIs dealing with the emotional trauma of writing "Hello World" scripts or solving JavaScript bugs.
  */
