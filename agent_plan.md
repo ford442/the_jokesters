@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 6
-* **status**: Successfully implemented The Fantasy Tavern Phase 40 (Bouncer's Dilemma, Quest Board Rejects, Suspicious Barkeep). Kept tasks_per_run to 6 as I completed the tasks smoothly, though there were only 3 pending tasks so I did all of them. Expanded the Dream Phase with Phase 41 (The Sci-Fi Space Station) and refined the Cloud Persistence integration roadmap.
+* **tasks_per_run**: 3
+* **status**: Successfully implemented The Sci-Fi Space Station Phase 41 (The AI Ship Core, The Alien Stowaway, The Intergalactic Trade Negotiator). Reduced tasks_per_run to 3 to match the available tasks in this phase and successfully completed them. Expanded the Dream Phase with Phase 42 (The Magical Academy) and refined the Cloud Persistence integration roadmap.
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -448,9 +448,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Suspicious Barkeep**: Agents are barkeeps accusing the user of stealing a legendary artifact. (Model Pairing: Llama-3 for the friendly barkeep, Qwen2.5 for the suspicious one).
 
 ### Phase 41: The Sci-Fi Space Station (Dreams)
-* [ ] **The AI Ship Core**: The user is a captain, the agents are competing personalities of the ship's AI arguing over navigation.
-* [ ] **The Alien Stowaway**: The agents are the crew, the user is an alien stowaway trying to blend in.
-* [ ] **The Intergalactic Trade Negotiator**: User negotiates a trade with two bizarre alien species with incompatible cultures.
+* [x] **The AI Ship Core**: The user is a captain, the agents are competing personalities of the ship's AI arguing over navigation.
+* [x] **The Alien Stowaway**: The agents are the crew, the user is an alien stowaway trying to blend in.
+* [x] **The Intergalactic Trade Negotiator**: User negotiates a trade with two bizarre alien species with incompatible cultures.
+
+### Phase 42: The Magical Academy (Dreams)
+* [ ] **The Wizard's Familiar**: User is a wizard, agents are different magical familiars arguing over the best way to help cast a spell. (Qwen2.5 for the strict owl, Hermes-3 for the chaotic goblin).
+* [ ] **The Magical Detention**: Agents are teachers giving the user detention for a bizarre magical infraction. (Phi-3 for the disappointed headmaster, Hermes-3 for the unhinged potions master).
+* [ ] **The Forbidden Spellbook**: Agents act as different locked chapters of a forbidden spellbook, demanding the user pass absurd tests to read them.
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -464,8 +469,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Add token refresh/re-validation logic to gracefully handle revoked tokens.
    * Ensure the UI displays clear error messages if the provided token does not have the necessary scopes or permissions.
    * **Storage Manager Action:** Verify that the validated token has write access to the targeted Dataset to prevent silent sync failures.
+   * Ensure token is persisted properly in localStorage.
 
 2. **Pushing Finished Episode Scripts:**
+   * Push finished "Episode Scripts" to a private Dataset.
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
    * This cues `MemoryManager.saveEpisodeToCloud`, which enqueues the background sync job into a local `localStorage` queue (e.g., `jokesters-sync-queue`).
    * **Storage Manager Action:** Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
@@ -478,6 +485,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * **Storage Manager Action:** Compress the JSON payload before pushing to the HF API to further reduce bandwidth usage and improve upload speeds.
 
 3. **Fetching Previous Episode Summaries at Boot:**
+   * Fetch "Previous Episode Summaries" at boot for continuity.
    * During app initialization (`main.ts` -> `MemoryManager`), automatically fetch "Previous Episode Summaries" to maintain continuity.
    * **Storage Manager Action:** Expand `storage_manager` to intercept the bootstrap phase: pull `summary.json` from the HF dataset if it's newer than the `localStorage` version.
    * Fetch a lightweight `summary.json` from the Dataset at boot to quickly extract the last few messages or contextual snippets.
