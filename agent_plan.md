@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Successfully implemented The Sci-Fi Space Station Phase 41 (The AI Ship Core, The Alien Stowaway, The Intergalactic Trade Negotiator). Reduced tasks_per_run to 3 to match the available tasks in this phase and successfully completed them. Expanded the Dream Phase with Phase 42 (The Magical Academy) and refined the Cloud Persistence integration roadmap.
+* **tasks_per_run**: 4
+* **status**: Successfully implemented The Magical Academy Phase 42 (The Wizard's Familiar, The Magical Detention, The Forbidden Spellbook). Increased tasks_per_run to 4 for the next run as implementation was smooth. Expanded the Dream Phase with Phase 43 (The Absurd Gameshow) and further refined the Cloud Persistence integration roadmap with details on Dexie.js and Web Workers.
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -322,20 +322,34 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Cloud Persistence Strategy (Roadmap to IndexedDB & Local-First)
 1.  **Phase A: Local-First Migration**
     *   Goal: Overcome `localStorage` 5MB limit.
-    *   Action: Integrate `idb-keyval` or `Dexie.js` to handle `MemoryManager` episode saving and local recall.
-    *   Outcome: Support massive localized histories without HF integration as a baseline.
-2.  **Phase B: Intelligent Syncing**
-    *   Goal: Seamlessly push local IndexedDB episodes to Hugging Face datasets without blocking the UI.
-    *   Action: Refine the background sync queue to handle chunked uploads and timestamp-based conflict resolution, preventing offline sessions from overwriting online ones. specifically relying on a background worker queue pattern using unique jobs in localStorage.
-3.  **Phase C: Universal Recall (RAG)**
-    *   Goal: Give agents context of the past automatically.
-    *   Action: Use a lightweight vector store (e.g. `voy`) inside a WebWorker. Index fetched "Previous Episode Summaries" and allow `GroupChatManager` to silently query the DB based on user keywords before generating a response.
+    *   Action: Fully integrate `Dexie.js` for robust, structured IndexedDB management to handle `MemoryManager` episode saving and local recall seamlessly.
+    *   Outcome: Support massive localized histories without HF integration as a reliable baseline.
+2.  **Phase B: Intelligent Syncing (Web Workers)**
+    *   Goal: Seamlessly push local IndexedDB episodes to Hugging Face datasets without blocking the UI thread.
+    *   Action: Move the background sync queue logic entirely into a dedicated Web Worker. This worker will monitor IndexedDB for changes and handle chunked uploads and timestamp-based conflict resolution.
+    *   Outcome: True asynchronous syncing that never interrupts LLM generation or UI animations.
+3.  **Phase C: Universal Recall (RAG in Worker)**
+    *   Goal: Give agents context of the past automatically and quickly.
+    *   Action: Embed a lightweight vector store (e.g. `voy`) inside the same syncing Web Worker. Index fetched "Previous Episode Summaries" in the background.
+    *   Action: Allow `GroupChatManager` to send asynchronous queries to the Web Worker based on user keywords to retrieve context *before* generating a response.
     *   Action: Specifically, pull down an overarching `summary.json` at boot time to prime the context window immediately while large histories stream into the IndexedDB backend.
-    *   Action: Background fetching using `fetchPreviousSummaries` method inside MemoryManager will provide rapid context injection.
     *   Action: Implement "Lazy Loading" for episode history into IndexedDB from HF Datasets. Fetch episodes in chunked pages (e.g., 10 at a time) only when requested via UI scrolling or targeted RAG searches to prevent memory spikes on devices with large cloud histories.
     *   Action: Implement backup of custom `Scenario` configurations (User Profiles) to the HF dataset so custom prompts and agent personalities sync across devices.
 
 ### Specific Actions for Storage_Manager
+1.  **Authenticating with the HF API:**
+    *   Implement logic in Settings Modal to input Hugging Face Access Token.
+    *   Use `HFStorageManager` to hit `https://huggingface.co/api/whoami-v2` for immediate validation of token.
+    *   Persist the validated token in `localStorage` securely so it isn't lost on refresh.
+2.  **Pushing Finished "Episode Scripts" to a Private Dataset:**
+    *   Modify `Director.stopScene()` to queue the newly generated script logic.
+    *   Establish a `storage_manager` routine that polls the queue and runs a `fetch` POST to the Hugging Face commit API endpoint for the user's defined dataset (e.g., `user/jokesters-episodes`).
+    *   Name files distinctly by timestamp `episodes/episode-{timestamp}.json`.
+3.  **Fetching "Previous Episode Summaries" at Boot for Continuity:**
+    *   During `main.ts` init, call `HFStorageManager` to quickly retrieve `episodes/latest.json` or a consolidated `summary.json`.
+    *   Parse the JSON and inject key contextual snippets into the `GroupChatManager`'s system prompt to give the AI immediate historical continuity without waiting for all local databases to hydrate.
+
+### Detailed Implementation Details for Storage_Manager
 1.  **Authenticating with the HF API:**
     *   Implement logic in Settings Modal to input Hugging Face Access Token.
     *   Use `HFStorageManager` to hit `https://huggingface.co/api/whoami-v2` for immediate validation of token.
@@ -453,9 +467,14 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Intergalactic Trade Negotiator**: User negotiates a trade with two bizarre alien species with incompatible cultures.
 
 ### Phase 42: The Magical Academy (Dreams)
-* [ ] **The Wizard's Familiar**: User is a wizard, agents are different magical familiars arguing over the best way to help cast a spell. (Qwen2.5 for the strict owl, Hermes-3 for the chaotic goblin).
-* [ ] **The Magical Detention**: Agents are teachers giving the user detention for a bizarre magical infraction. (Phi-3 for the disappointed headmaster, Hermes-3 for the unhinged potions master).
-* [ ] **The Forbidden Spellbook**: Agents act as different locked chapters of a forbidden spellbook, demanding the user pass absurd tests to read them.
+* [x] **The Wizard's Familiar**: User is a wizard, agents are different magical familiars arguing over the best way to help cast a spell. (Qwen2.5 for the strict owl, Hermes-3 for the chaotic goblin).
+* [x] **The Magical Detention**: Agents are teachers giving the user detention for a bizarre magical infraction. (Phi-3 for the disappointed headmaster, Hermes-3 for the unhinged potions master).
+* [x] **The Forbidden Spellbook**: Agents act as different locked chapters of a forbidden spellbook, demanding the user pass absurd tests to read them.
+
+### Phase 43: The Absurd Gameshow (Dreams)
+* [ ] **The Intergalactic Bake-Off Challenge**: Agents judge a cake baked by the user out of literal stars and dark matter. (Llama-3 for the supportive host, Qwen2.5 for the pedantic technical judge, Hermes-3 for the chaotic judge who wants to eat the user).
+* [ ] **The Infinite Escape Room**: Agents are trapped in a room with the user, but every puzzle solved just leads to a stupider room. (Phi-3 for overthinking, Hermes-3 for breaking things).
+* [ ] **The Reverse Auction**: Agents pay the user to take away terrible, cursed items. (Qwen2.5 for appraising curses, Hermes-3 for begging).
 
 ## Cloud Persistence (The HF Integration Roadmap)
 

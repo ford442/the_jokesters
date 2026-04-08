@@ -1668,6 +1668,138 @@ export async function runAlienStowawayLoop(scenario: Scenario, ctx: ModeContext)
  * The Intergalactic Trade Negotiator
  * User negotiates a trade with two bizarre alien species with incompatible cultures.
  */
+/**
+ * The Wizard's Familiar
+ * User is a wizard, agents are different magical familiars arguing over the best way to help cast a spell.
+ */
+/**
+ * The Magical Detention
+ * Agents are teachers giving the user detention for a bizarre magical infraction.
+ */
+export async function runMagicalDetentionLoop(scenario: Scenario, ctx: ModeContext) {
+    const infraction = scenario.config?.infractionTopic || 'turning the cafeteria tables into frogs';
+    ctx.callbacks.onMessage('Director', `🪄 MAGICAL DETENTION: Punished for ${infraction}`, '#8e44ad');
+
+    const headmaster = 'philosopher'; // Phi-3 for the disappointed headmaster
+    const potionsMaster = 'comedian'; // Hermes-3 for the unhinged potions master
+    const charmsTeacher = 'scientist'; // Qwen2.5 for citing school rules
+
+    // 1. Headmaster Intro
+    ctx.callbacks.onTurnStart(headmaster);
+    await ctx.manager.chatForAgent(headmaster, `(MAGICAL DETENTION: You are the ancient, deeply disappointed Headmaster of a magical academy. The User (a student) has been sent to your office for the infraction of "${infraction}". Express profound sorrow at their squandered potential. Assign them a bizarre, magical punishment (like sorting enchanted sand by color).)`, async (s) => await ctx.callbacks.onSpeak(s, headmaster, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Delinquent Student (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Potions Master
+            ctx.callbacks.onTurnStart(potionsMaster);
+            await ctx.manager.chatForAgent(potionsMaster, `(MAGICAL DETENTION: The student said: "${userInput}". You are the unhinged, deeply suspicious Potions Master. Accuse the student of brewing illegal elixirs in the dungeons. Suggest an incredibly dangerous punishment involving highly venomous magical creatures instead of the Headmaster's boring idea.)`, async (s) => await ctx.callbacks.onSpeak(s, potionsMaster, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Charms Teacher
+            ctx.callbacks.onTurnStart(charmsTeacher);
+            await ctx.manager.chatForAgent(charmsTeacher, `(MAGICAL DETENTION: The student said: "${userInput}". You are the strict, rule-obsessed Charms Teacher. Cite the exact, obscure school bylaw (e.g., Section 4, Paragraph 12 regarding transmogrification on school grounds) that they violated with "${infraction}". Warn them that this goes on their permanent magical record.)`, async (s) => await ctx.callbacks.onSpeak(s, charmsTeacher, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Headmaster
+            ctx.callbacks.onTurnStart(headmaster);
+            await ctx.manager.chatForAgent(headmaster, `(MAGICAL DETENTION: The student said: "${userInput}". Give them a long, confusing, and meandering story about a famous historical wizard who made a similar mistake to "${infraction}" and ended up turning themselves into a turnip. Try to extract a meaningful moral lesson from the student.)`, async (s) => await ctx.callbacks.onSpeak(s, headmaster, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Forbidden Spellbook
+ * Agents act as different locked chapters of a forbidden spellbook, demanding the user pass absurd tests to read them.
+ */
+export async function runForbiddenSpellbookLoop(scenario: Scenario, ctx: ModeContext) {
+    const chapter = scenario.config?.chapterTopic || 'The Chapter of Infinite Nightmares';
+    ctx.callbacks.onMessage('Director', `📖 FORBIDDEN SPELLBOOK: Trying to read ${chapter}`, '#c0392b');
+
+    const crypticRiddle = 'philosopher'; // Phi-3 for the cryptic riddle chapter
+    const bloodSacrifice = 'comedian'; // Hermes-3 for the chaotic blood sacrifice chapter
+    const termsAndConditions = 'scientist'; // Qwen2.5 for the overly long terms and conditions chapter
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(crypticRiddle);
+    await ctx.manager.chatForAgent(crypticRiddle, `(FORBIDDEN SPELLBOOK: You are the first sentient, locked chapter of an ancient, evil spellbook. The User is a wizard trying to read "${chapter}". Before they can turn the page, present them with an incredibly cryptic, nearly impossible riddle about the nature of the cosmos and human suffering.)`, async (s) => await ctx.callbacks.onSpeak(s, crypticRiddle, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Wizard (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Blood Sacrifice Chapter
+            ctx.callbacks.onTurnStart(bloodSacrifice);
+            await ctx.manager.chatForAgent(bloodSacrifice, `(FORBIDDEN SPELLBOOK: The wizard said: "${userInput}". You are the chaotic next chapter of the spellbook. Interrupt the riddle! Scream that the riddle is boring and demand a highly specific, embarrassing "blood sacrifice" (like dancing like a chicken or giving up their favorite socks) before they can read "${chapter}"!)`, async (s) => await ctx.callbacks.onSpeak(s, bloodSacrifice, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Terms and Conditions Chapter
+            ctx.callbacks.onTurnStart(termsAndConditions);
+            await ctx.manager.chatForAgent(termsAndConditions, `(FORBIDDEN SPELLBOOK: The wizard said: "${userInput}". You are the magical 'Terms and Conditions' chapter. Block their progress. Cite a ridiculous, 500-page magical legal document they must agree to before reading "${chapter}". List some terrifying side effects of reading the book.)`, async (s) => await ctx.callbacks.onSpeak(s, termsAndConditions, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Cryptic Riddle Chapter
+            ctx.callbacks.onTurnStart(crypticRiddle);
+            await ctx.manager.chatForAgent(crypticRiddle, `(FORBIDDEN SPELLBOOK: The wizard said: "${userInput}". Judge their answer to your riddle. It is, of course, incorrect. Mock their feeble mortal mind. Present a new, even more confusing and abstract riddle that must be solved to access "${chapter}".)`, async (s) => await ctx.callbacks.onSpeak(s, crypticRiddle, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runWizardsFamiliarLoop(scenario: Scenario, ctx: ModeContext) {
+    const spell = scenario.config?.spellTopic || 'a spell to turn lead into gold';
+    ctx.callbacks.onMessage('Director', `🦉 WIZARD'S FAMILIAR: Casting ${spell}`, '#f39c12');
+
+    const strictOwl = 'scientist'; // Qwen2.5 for the strict owl
+    const chaoticGoblin = 'comedian'; // Hermes-3 for the chaotic goblin
+    const philosophicalToad = 'philosopher'; // Phi-3 for questioning the spell's morality
+
+    // 1. Strict Owl Intro
+    ctx.callbacks.onTurnStart(strictOwl);
+    await ctx.manager.chatForAgent(strictOwl, `(WIZARD'S FAMILIAR: You are a strict, pedantic owl familiar. The User (your Wizard master) is attempting to cast "${spell}". Demand they follow the exact ancient rules from the Book of Erudition. Warn them of the dire, highly specific consequences of mispronouncing a single syllable.)`, async (s) => await ctx.callbacks.onSpeak(s, strictOwl, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Wizard (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Chaotic Goblin
+            ctx.callbacks.onTurnStart(chaoticGoblin);
+            await ctx.manager.chatForAgent(chaoticGoblin, `(WIZARD'S FAMILIAR: The Wizard said: "${userInput}". You are a chaotic, unhinged goblin familiar. Give terrible, dangerous advice to help cast the spell! Suggest replacing the required ingredients with something highly explosive or disgusting. Mock the strict owl.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGoblin, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Philosophical Toad
+            ctx.callbacks.onTurnStart(philosophicalToad);
+            await ctx.manager.chatForAgent(philosophicalToad, `(WIZARD'S FAMILIAR: The Wizard said: "${userInput}". You are a deeply philosophical, slightly depressed toad familiar. Question the moral implications of casting "${spell}". Will it truly bring the Wizard happiness? What even *is* magic? Refuse to help until these questions are answered.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalToad, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Strict Owl
+            ctx.callbacks.onTurnStart(strictOwl);
+            await ctx.manager.chatForAgent(strictOwl, `(WIZARD'S FAMILIAR: The Wizard said: "${userInput}". Berate them for their lack of discipline! Point out a glaring flaw in their incantation technique. Quote a fake, overly complex magical law that they just violated.)`, async (s) => await ctx.callbacks.onSpeak(s, strictOwl, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
 export async function runIntergalacticTradeNegotiatorLoop(scenario: Scenario, ctx: ModeContext) {
     const tradeItem = scenario.config?.tradeItem || 'a crate of rare space crystals';
     ctx.callbacks.onMessage('Director', `🤝 INTERGALACTIC TRADE: Negotiating for ${tradeItem}`, '#9b59b6');
