@@ -42,6 +42,123 @@ export async function runTimeTravelLoop(scenario: Scenario, ctx: ModeContext) {
 }
 
 /**
+ * The Intergalactic Bake-Off Challenge
+ * Agents judge a cake baked by the user out of literal stars and dark matter.
+ */
+export async function runIntergalacticBakeOffLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍰 INTERGALACTIC BAKE-OFF: Judging your cosmic cake!`, '#f1c40f');
+
+    const supportiveHost = 'philosopher'; // Llama-3 equivalent for supportive host
+    const technicalJudge = 'scientist'; // Qwen2.5 for pedantic technical judge
+    const chaoticJudge = 'comedian'; // Hermes-3 for the chaotic judge who wants to eat the user
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(supportiveHost);
+    await ctx.manager.chatForAgent(supportiveHost, `(INTERGALACTIC BAKE-OFF: You are the overly supportive, extremely enthusiastic host of an alien baking show. The User has just presented their cake baked from literal stars and dark matter. Marvel at its glowing aura and ask them what inspired this beautiful, terrifying creation.)`, async (s) => await ctx.callbacks.onSpeak(s, supportiveHost, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Cosmic Baker (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Chaotic Judge
+            ctx.callbacks.onTurnStart(chaoticJudge);
+            await ctx.manager.chatForAgent(chaoticJudge, `(INTERGALACTIC BAKE-OFF: The baker said: "${userInput}". You are the chaotic judge who is constantly hungry for flesh. Take a bite of the cake and scream! It tastes like a supernova! Then threaten to just eat the baker instead because they look tastier.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticJudge, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Technical Judge
+            ctx.callbacks.onTurnStart(technicalJudge);
+            await ctx.manager.chatForAgent(technicalJudge, `(INTERGALACTIC BAKE-OFF: The baker said: "${userInput}". You are the strict, pedantic technical judge. Criticize the structural integrity of the cake's dark matter core. Complain that the gravitational pull of the icing is completely unbalanced. Give them a terrible score.)`, async (s) => await ctx.callbacks.onSpeak(s, technicalJudge, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Supportive Host
+            ctx.callbacks.onTurnStart(supportiveHost);
+            await ctx.manager.chatForAgent(supportiveHost, `(INTERGALACTIC BAKE-OFF: The baker said: "${userInput}". Be incredibly supportive! Ignore the other judges' concerns. Praise the baker for their bold choices, even if the cake is currently melting a hole in the space-time continuum of the studio.)`, async (s) => await ctx.callbacks.onSpeak(s, supportiveHost, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Infinite Escape Room
+ * Agents are trapped in a room with the user, but every puzzle solved just leads to a stupider room.
+ */
+export async function runInfiniteEscapeRoomLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚪 INFINITE ESCAPE ROOM: You are trapped!`, '#e74c3c');
+
+    const overthinker = 'philosopher'; // Phi-3 for overthinking
+    const breaker = 'comedian'; // Hermes-3 for breaking things
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(overthinker);
+    await ctx.manager.chatForAgent(overthinker, `(INFINITE ESCAPE ROOM: You are trapped in a completely empty, beige room with the User and another person. Point out a microscopic scratch on the wall and suggest an incredibly complex, 12-step mathematical theory about how it's the key to escaping.)`, async (s) => await ctx.callbacks.onSpeak(s, overthinker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Trapped User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Breaker
+            ctx.callbacks.onTurnStart(breaker);
+            await ctx.manager.chatForAgent(breaker, `(INFINITE ESCAPE ROOM: The user said: "${userInput}". You have zero patience for puzzles. React by aggressively trying to physically break out. Describe yourself smashing through a wall or eating a fake prop, only to reveal you just entered an identical, slightly stupider room (like a room filled only with rubber ducks).)`, async (s) => await ctx.callbacks.onSpeak(s, breaker, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Overthinker
+            ctx.callbacks.onTurnStart(overthinker);
+            await ctx.manager.chatForAgent(overthinker, `(INFINITE ESCAPE ROOM: The user said: "${userInput}". Dismiss their simple logic. Convolute the situation further. Connect their words to an ancient Sumerian riddle you made up. Refuse to leave until the "true meaning" of the room is solved.)`, async (s) => await ctx.callbacks.onSpeak(s, overthinker, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Reverse Auction
+ * Agents pay the user to take away terrible, cursed items.
+ */
+export async function runReverseAuctionLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔨 REVERSE AUCTION: Bidding to get rid of cursed items!`, '#f39c12');
+
+    const appraiser = 'scientist'; // Qwen2.5 for appraising curses
+    const beggar = 'comedian'; // Hermes-3 for begging
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(beggar);
+    await ctx.manager.chatForAgent(beggar, `(REVERSE AUCTION: You are trying to get rid of a deeply cursed item (e.g., a haunted toaster, a screaming painting). The User is a buyer. Beg them to take it! Offer to pay them an absurd amount of money (or weird alien currency) if they just take it out of your sight!)`, async (s) => await ctx.callbacks.onSpeak(s, beggar, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Buyer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Appraiser
+            ctx.callbacks.onTurnStart(appraiser);
+            await ctx.manager.chatForAgent(appraiser, `(REVERSE AUCTION: The buyer said: "${userInput}". You are a highly clinical appraiser of cursed objects. Interrupt the seller. Describe the exact, horrifyingly specific paranormal side effects the buyer will experience if they take this item. Suggest the seller double their payment offer.)`, async (s) => await ctx.callbacks.onSpeak(s, appraiser, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Beggar
+            ctx.callbacks.onTurnStart(beggar);
+            await ctx.manager.chatForAgent(beggar, `(REVERSE AUCTION: The buyer said: "${userInput}". Increase your bid! Offer them your car, your house, or your soul! Describe the terrible things the cursed item has done to you recently. Plead with them to accept the deal!)`, async (s) => await ctx.callbacks.onSpeak(s, beggar, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
  * The Bouncer's Dilemma
  * Agents are bouncers at a fantasy tavern and the user is trying to get in with absurd fake IDs.
  */
