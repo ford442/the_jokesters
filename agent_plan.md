@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
-* **status**: Successfully implemented The Absurd Gameshow Phase 43 (Intergalactic Bake-Off, Infinite Escape Room, Reverse Auction). Increased tasks_per_run to 5 for the next run. Expanded the Dream Phase with Phase 44 (The Cosmic Office) and further refined the Cloud Persistence integration roadmap with details on Dexie.js and Web Workers.
+* **tasks_per_run**: 3
+* **status**: Successfully implemented The Absurd Gameshow Phase 43 (Intergalactic Bake-Off, Infinite Escape Room, Reverse Auction). Decreased tasks_per_run to 3 for the next run. Expanded the Dream Phase with Phase 44 (The Cosmic Office) and further refined the Cloud Persistence integration roadmap with details on Dexie.js and Web Workers.
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -477,9 +477,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Reverse Auction**: Agents pay the user to take away terrible, cursed items. (Qwen2.5 for appraising curses, Hermes-3 for begging).
 
 ### Phase 44: The Cosmic Office (Dreams)
-* [ ] **The Multiversal DMV Mode**: Agents process forms from 11-dimensional beings, applying impossible logic to user requests.
-* [ ] **The Intergalactic Talent Show**: Agents judge the user's bizarre space talents with extreme prejudice and alien bias.
-* [ ] **The Sentient Spreadsheet**: Agents act as formulas inside a spreadsheet demanding data from the user and arguing over formatting.
+* [x] **The Multiversal DMV Mode**: Agents process forms from 11-dimensional beings, applying impossible logic to user requests.
+* [x] **The Intergalactic Talent Show**: Agents judge the user's bizarre space talents with extreme prejudice and alien bias.
+* [x] **The Sentient Spreadsheet**: Agents act as formulas inside a spreadsheet demanding data from the user and arguing over formatting.
 
 ## Cloud Persistence (The HF Integration Roadmap)
 
@@ -546,3 +546,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **News Anchor Meltdown**: A reporter mode where the teleprompter breaks, forcing agents to improvise absurd news.
 * [x] **The Silent Treatment Mode**: Agents stubbornly refuse to speak, forcing the user to talk.
 * [x] **Dating Show Contestants**: Agents try to woo the user in a dating game show.
+
+### Phase 45: The Absurd Job Market (Dreams)
+* [ ] **The Supervillain Temp Agency**: Agents act as recruiters trying to place the user in various henchman roles. (Model Pairing: Qwen2.5 for citing benefits vs Hermes-3 for detailing the horrific workplace hazards).
+* [ ] **The Intergalactic Gig Economy**: Agents pitch terrible space gigs to the user, like delivering pizza to a black hole. (Model Pairing: Llama-3 for enthusiastic hustle culture vs Phi-3 for pointing out the impossibility).
+* [ ] **The Reincarnation Bureau**: Agents process the user's soul for their next life, offering terrible downgrade options. (Model Pairing: Qwen2.5 for karma accounting vs Hermes-3 for offering to let the user be a cockroach).
+
+### Storage Manager Integration Steps
+1. Authenticate with the HF API securely and persist credentials via localStorage keys (jokesters-hf-token, jokesters-hf-repo).
+2. Push finished "Episode Scripts" to a private Dataset as background delta operations using the queue mechanism. Ensure background sync resolves conflict resolution intelligently using timestamps and version markers.
+3. Fetch "Previous Episode Summaries" at boot for continuity by parsing the dataset and extracting contextual snippets. specifically download summary.json at boot to prime the context window.
