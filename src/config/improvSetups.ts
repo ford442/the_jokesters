@@ -230,4 +230,19 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     title: 'The Improv Game Show Host',
     description: 'One character is the host of an improv game show, constantly coming up with new ridiculous games for the other characters to play. The games keep getting more and more absurd, and the host keeps breaking the fourth wall to explain the rules.',
   },
-]
+  {
+    id: 'multiversal-dmv',
+    title: 'The Multiversal DMV',
+    description: 'Agents process forms from 11-dimensional beings, applying impossible logic to user requests.',
+  },
+  {
+    id: 'intergalactic-talent-show',
+    title: 'Intergalactic Talent Show',
+    description: 'Agents judge the user\'s bizarre space talents with extreme prejudice and alien bias.',
+  },
+  {
+    id: 'sentient-spreadsheet',
+    title: 'The Sentient Spreadsheet',
+    description: 'Agents act as formulas inside a spreadsheet demanding data from the user and arguing over formatting.',
+  }
+];

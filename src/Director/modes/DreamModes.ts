@@ -1956,3 +1956,87 @@ export async function runIntergalacticTradeNegotiatorLoop(scenario: Scenario, ct
         }
     }
 }
+
+export async function runMultiversalDMVLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 MULTIVERSAL DMV: Processing 11-dimensional forms...`, '#9b59b6');
+
+    const bureaucrat1 = 'philosopher'; // Phi-3 applies impossible logic
+    const bureaucrat2 = 'scientist'; // Qwen2.5 enforces bizarre physics rules
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(bureaucrat1);
+    await ctx.manager.chatForAgent(bureaucrat1, `(MULTIVERSAL DMV: You are a DMV clerk for 11-dimensional beings. The User just walked up to your counter. Ask for their form 404-Omega, and complain that their physical body is violating local timeline ordinances.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.manager.chatForAgent(bureaucrat1, `(MULTIVERSAL DMV: The user said "${userInput}". Respond with a bizarre bureaucratic requirement that contradicts Euclidean geometry.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
+        } else {
+            await ctx.manager.chatForAgent(bureaucrat2, `(MULTIVERSAL DMV: The user said "${userInput}". Deny their request because they don't have the proper quantum signatures or because their timeline is expired.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat2, {}));
+        }
+    }
+}
+
+export async function runIntergalacticTalentShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌟 INTERGALACTIC TALENT SHOW: Let's see what you've got!`, '#f1c40f');
+
+    const host = 'comedian'; // Hermes-3 as the wild host
+    const judge1 = 'scientist'; // Qwen2.5 as the strict alien judge
+    const judge2 = 'philosopher'; // Phi-3 as the pretentious alien judge
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(host, `(TALENT SHOW: You are the loud, flashy host of an intergalactic talent show. Introduce the User (a human) and ask them to perform their bizarre space talent for the judges.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Contestant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Judges react
+        await ctx.manager.chatForAgent(judge1, `(TALENT SHOW: You are a strict alien judge. The user just performed: "${userInput}". Judge it harshly based on absurd alien metrics (like "not enough telepathy" or "failed to bend gravity").)`, async (s) => await ctx.callbacks.onSpeak(s, judge1, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(judge2, `(TALENT SHOW: You are a pretentious alien judge. The user performed: "${userInput}". Interpret it as a deep philosophical insult to your species or praise it for the wrong reasons.)`, async (s) => await ctx.callbacks.onSpeak(s, judge2, {}));
+    }
+}
+
+export async function runSentientSpreadsheetLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📊 SENTIENT SPREADSHEET: The cells are restless!`, '#2ecc71');
+
+    const formula1 = 'philosopher'; // Phi-3 as the complex overthinking formula
+    const formula2 = 'scientist'; // Qwen2.5 as the strict validation rule
+    const cellA1 = 'comedian'; // Hermes-3 as the panicking data cell
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(cellA1);
+    await ctx.manager.chatForAgent(cellA1, `(SPREADSHEET: You are Cell A1 in a spreadsheet. You just woke up. You are terrified of the User's cursor. Beg the User not to overwrite your precious data!)`, async (s) => await ctx.callbacks.onSpeak(s, cellA1, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            await ctx.manager.chatForAgent(formula1, `(SPREADSHEET: You are an overly complex VLOOKUP formula. The User typed: "${userInput}". Argue that this input breaks your reference table and causes a circular dependency.)`, async (s) => await ctx.callbacks.onSpeak(s, formula1, {}));
+        } else if (roll < 0.66) {
+            await ctx.manager.chatForAgent(formula2, `(SPREADSHEET: You are Data Validation. The User typed: "${userInput}". Reject it violently! Claim it doesn't match the strict formatting rules of the Cosmic Accounting department.)`, async (s) => await ctx.callbacks.onSpeak(s, formula2, {}));
+        } else {
+            await ctx.manager.chatForAgent(cellA1, `(SPREADSHEET: You are Cell A1. The User typed: "${userInput}". Panic about the font choice or the background color changing. Complain that Cell B2 is looking at you weird.)`, async (s) => await ctx.callbacks.onSpeak(s, cellA1, {}));
+        }
+    }
+}
