@@ -2040,3 +2040,84 @@ export async function runSentientSpreadsheetLoop(_scenario: Scenario, ctx: ModeC
         }
     }
 }
+
+export async function runSupervillainTempAgencyLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🦹 THE SUPERVILLAIN TEMP AGENCY: Finding the perfect henchman!`, '#8e44ad');
+
+    const hrRecruiter = 'scientist'; // Qwen2.5 for citing benefits
+    const hazardSpecialist = 'comedian'; // Hermes-3 for detailing horrific hazards
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(hrRecruiter);
+    await ctx.manager.chatForAgent(hrRecruiter, `(TEMP AGENCY: You are a recruiter for a Supervillain Temp Agency. Welcome the User to their interview for a henchman position. Outline the amazing dental plan and 401k.)`, async (s) => await ctx.callbacks.onSpeak(s, hrRecruiter, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.manager.chatForAgent(hrRecruiter, `(TEMP AGENCY: You are the HR Recruiter. The User said: "${userInput}". Offer them a position in the "Lava Pit Maintenance" division and highlight the competitive salary.)`, async (s) => await ctx.callbacks.onSpeak(s, hrRecruiter, {}));
+        } else {
+            await ctx.manager.chatForAgent(hazardSpecialist, `(TEMP AGENCY: You are the Hazard Specialist. The User said: "${userInput}". Casually mention the 95% mortality rate of the last temp who took this role, and the acid burns.)`, async (s) => await ctx.callbacks.onSpeak(s, hazardSpecialist, {}));
+        }
+    }
+}
+
+export async function runIntergalacticGigEconomyLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚀 INTERGALACTIC GIG ECONOMY: Hustle culture in space!`, '#f39c12');
+
+    const hustleBro = 'comedian'; // Llama-3/Hermes for enthusiastic hustle culture
+    const skeptic = 'philosopher'; // Phi-3 for pointing out the impossibility
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(hustleBro);
+    await ctx.manager.chatForAgent(hustleBro, `(GIG ECONOMY: You are a "Hustle Bro" pitching freelance space gigs to the User. Pitch an app where they deliver pizza to a black hole. Tell them they can be their own boss!)`, async (s) => await ctx.callbacks.onSpeak(s, hustleBro, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.manager.chatForAgent(hustleBro, `(GIG ECONOMY: You are the Hustle Bro. The User said: "${userInput}". Ignore their concerns. Tell them about the incredible exposure they'll get from this gig and the "sigma grindset".)`, async (s) => await ctx.callbacks.onSpeak(s, hustleBro, {}));
+        } else {
+            await ctx.manager.chatForAgent(skeptic, `(GIG ECONOMY: You are the Skeptic. The User said: "${userInput}". Point out the literal impossibility of the gig, citing physics and the extreme distance involved.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+        }
+    }
+}
+
+export async function runReincarnationBureauLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `♻️ THE REINCARNATION BUREAU: Processing your next life!`, '#1abc9c');
+
+    const karmaAccountant = 'scientist'; // Qwen2.5 for karma accounting
+    const downgradeSpecialist = 'comedian'; // Hermes-3 for offering terrible downgrades
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(karmaAccountant);
+    await ctx.manager.chatForAgent(karmaAccountant, `(REINCARNATION: You are a strict Karma Accountant. The User has died and is at the Reincarnation Bureau. Look at their "file" and list their minor, petty sins from their past life.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.manager.chatForAgent(karmaAccountant, `(REINCARNATION: You are the Karma Accountant. The User said: "${userInput}". Deduct points from their karma score based on a ridiculous technicality.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
+        } else {
+            await ctx.manager.chatForAgent(downgradeSpecialist, `(REINCARNATION: You are the Downgrade Specialist. The User said: "${userInput}". Offer to let them reincarnate as a dung beetle or a mildly inconvenient pothole to "build character".)`, async (s) => await ctx.callbacks.onSpeak(s, downgradeSpecialist, {}));
+        }
+    }
+}
