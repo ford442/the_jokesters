@@ -1,6 +1,7 @@
 import './style.css'
 import { GroupChatManager, type ErrorCategory } from './GroupChatManager'
 import type { Agent, ProfanityLevel } from './GroupChatManager'
+import type { VRAMOptimizationConfig } from './utils/dynamicContext'
 import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
 import { LipSync } from './visuals/LipSync'
@@ -138,6 +139,44 @@ async function initApp() {
             <option value="128">128 tokens (minimal VRAM)</option>
           </select>
           <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:2em;margin:0 0 12px;"></p>
+
+          <!-- Advanced VRAM Settings (hidden by default) -->
+          <details id="advanced-vram-settings" class="vram-settings-panel">
+            <summary>⚙️ Advanced VRAM Settings</summary>
+            <div class="vram-settings-content">
+              <div class="vram-setting-row">
+                <label>Max Tokens Per Turn</label>
+                <input type="range" id="max-tokens-slider" min="16" max="512" value="96" step="8">
+                <span id="max-tokens-val" class="vram-setting-value">96</span>
+              </div>
+              <div class="vram-setting-row">
+                <label>Prefill Chunk Size</label>
+                <select id="prefill-chunk-select">
+                  <option value="0">Auto</option>
+                  <option value="128">128</option>
+                  <option value="256">256</option>
+                  <option value="512">512</option>
+                  <option value="1024" selected>1024</option>
+                </select>
+              </div>
+              <div class="vram-setting-row">
+                <label>KV Cache Quantization</label>
+                <select id="kv-cache-select">
+                  <option value="auto" selected>Auto (enable for 7B/8B)</option>
+                  <option value="int8">INT8</option>
+                  <option value="fp8">FP8</option>
+                  <option value="none">Disabled</option>
+                </select>
+              </div>
+              <div class="vram-setting-row">
+                <label>GPU Memory Utilization</label>
+                <input type="range" id="gpu-mem-slider" min="50" max="95" value="85" step="5">
+                <span id="gpu-mem-val" class="vram-setting-value">85%</span>
+              </div>
+              <p class="vram-settings-note">These settings affect VRAM usage. Default values are safe for most GPUs.</p>
+            </div>
+          </details>
+
           <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
         </div>
         <!-- Progress bar (hidden until launch) -->
@@ -181,6 +220,14 @@ async function initApp() {
               <button id="switch-profile-btn" style="background: #4ecdc4; color: #0a0a1a; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer;">Switch</button>
             </div>
           </div>
+
+          <!-- VRAM / Context Info Bar -->
+          <div id="vram-info-bar" class="vram-info-bar">
+            <span id="ctx-info-text">Context: —</span>
+            <span id="token-budget-text">Max tokens: 96</span>
+            <span id="vram-kv-text"></span>
+          </div>
+
           <div class="mode-selector">
             <button id="chat-mode-btn" class="mode-btn active">Chat Mode</button>
             <button id="improv-mode-btn" class="mode-btn">Improv Mode</button>
@@ -252,18 +299,57 @@ async function initApp() {
   modelSelectLaunch.addEventListener('change', updateModelHint)
   updateModelHint()
 
+  // Wire up advanced VRAM settings sliders (live value display)
+  const maxTokensSlider = document.getElementById('max-tokens-slider') as HTMLInputElement
+  const maxTokensVal = document.getElementById('max-tokens-val')!
+  const gpuMemSlider = document.getElementById('gpu-mem-slider') as HTMLInputElement
+  const gpuMemVal = document.getElementById('gpu-mem-val')!
+
+  if (maxTokensSlider) {
+    maxTokensSlider.oninput = () => { maxTokensVal.textContent = maxTokensSlider.value }
+  }
+  if (gpuMemSlider) {
+    gpuMemSlider.oninput = () => { gpuMemVal.textContent = gpuMemSlider.value + '%' }
+  }
+
   // Wait for user to click Launch before starting initialization
-  const { selectedModelId, preferredContext } = await new Promise<{selectedModelId: string, preferredContext: number | 'auto'}>(resolve => {
+  const { selectedModelId, preferredContext, vramConfig } = await new Promise<{
+    selectedModelId: string;
+    preferredContext: number | 'auto';
+    vramConfig: VRAMOptimizationConfig;
+  }>(resolve => {
     document.getElementById('launch-btn')!.addEventListener('click', () => {
       const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement;
       const contextVal = contextSelect ? contextSelect.value : 'auto';
       const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10);
 
+      // Read advanced VRAM settings
+      const prefillSelect = document.getElementById('prefill-chunk-select') as HTMLSelectElement;
+      const kvCacheSelect = document.getElementById('kv-cache-select') as HTMLSelectElement;
+      const gpuMemSliderEl = document.getElementById('gpu-mem-slider') as HTMLInputElement;
+      const maxTokensSliderEl = document.getElementById('max-tokens-slider') as HTMLInputElement;
+
+      const vramConfig: VRAMOptimizationConfig = {
+        prefill_chunk_size: parseInt(prefillSelect?.value ?? '0', 10),
+        kv_cache_quantization: (kvCacheSelect?.value ?? 'auto') as VRAMOptimizationConfig['kv_cache_quantization'],
+        gpu_memory_utilization: (parseInt(gpuMemSliderEl?.value ?? '85', 10)) / 100,
+      };
+
+      // Store chosen max tokens for later use
+      const chosenMaxTokens = parseInt(maxTokensSliderEl?.value ?? '96', 10);
+
       document.getElementById('model-picker')!.style.display = 'none'
       document.getElementById('progress-section')!.style.display = 'block'
-      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext })
+      resolve({
+        selectedModelId: modelSelectLaunch.value,
+        preferredContext,
+        vramConfig: { ...vramConfig, _maxTokens: chosenMaxTokens } as VRAMOptimizationConfig & { _maxTokens: number },
+      })
     })
   })
+
+  // Extract max tokens choice (attached to vramConfig for transport)
+  const chosenMaxTokens = (vramConfig as VRAMOptimizationConfig & { _maxTokens?: number })._maxTokens ?? 96
 
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
@@ -301,6 +387,10 @@ async function initApp() {
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
     const groupChatManager = new GroupChatManager(agents)
+
+    // Apply user's advanced VRAM settings before initialization
+    groupChatManager.setVRAMConfig(vramConfig)
+    groupChatManager.setMaxTokensPerTurn(chosenMaxTokens)
 
     const audioEngine = new AudioEngine()
     const speechQueue = new SpeechQueue(audioEngine)
@@ -359,6 +449,39 @@ async function initApp() {
     // Enable all inputs now that everything is ready
     setInputsEnabled(true)
     userInput.focus()
+
+    // Helper: update the VRAM / context info bar in the chat container
+    const updateVRAMInfoBar = () => {
+      const ctxInfoText = document.getElementById('ctx-info-text')
+      const tokenBudgetText = document.getElementById('token-budget-text')
+      const kvText = document.getElementById('vram-kv-text')
+
+      const ctxInfo = groupChatManager.getContextWindowInfo()
+      if (ctxInfoText) {
+        if (ctxInfo) {
+          const pct = Math.round((ctxInfo.usedTokens / ctxInfo.maxTokens) * 100)
+          ctxInfoText.textContent = `Context: ${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens (${pct}%)`
+          if (ctxInfo.droppedMessages > 0) {
+            ctxInfoText.textContent += ` · ${ctxInfo.droppedMessages} msgs dropped`
+          }
+        } else {
+          const maxCtx = groupChatManager.getContextManager().getMaxContextTokens()
+          ctxInfoText.textContent = `Context window: ${maxCtx} tokens`
+        }
+      }
+      if (tokenBudgetText) {
+        tokenBudgetText.textContent = `Max tokens: ${groupChatManager.getMaxTokensPerTurn()}`
+      }
+      if (kvText) {
+        const cfg = groupChatManager.getVRAMConfig()
+        if (cfg.kv_cache_quantization !== 'none') {
+          kvText.textContent = `KV: ${cfg.kv_cache_quantization === 'auto' ? 'auto' : cfg.kv_cache_quantization}`
+        } else {
+          kvText.textContent = ''
+        }
+      }
+    }
+    updateVRAMInfoBar()
 
     // UI listeners
     ttsStepsSlider.oninput = () => ttsStepsVal.textContent = ttsStepsSlider.value
@@ -564,9 +687,15 @@ async function initApp() {
         await speechQueue.waitUntilFinished();
 
         updateNextAgentUI();
+        updateVRAMInfoBar();
 
       } catch (error) {
         console.error('Error:', error)
+        // If token budget was auto-reduced due to OOM, show a notification
+        if (GroupChatManager.getErrorCategory(error) === 'oom') {
+          addMessage('System', `⚠️ GPU ran out of memory. Max tokens reduced to ${groupChatManager.getMaxTokensPerTurn()}.`, '#ff6b6b')
+          updateVRAMInfoBar()
+        }
         addMessage('System', 'Error generating response', '#ff0000')
       }
 
@@ -973,10 +1102,12 @@ async function initApp() {
 
         await speechQueue.waitUntilFinished()
         updateNextAgentUI()
+        updateVRAMInfoBar()
 
       } catch (error) {
         console.error('Turn Error:', error)
         isImprovRunning = false
+        updateVRAMInfoBar()
         // stopImprovLoop equivalent
       }
     }

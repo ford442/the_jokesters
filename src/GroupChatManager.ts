@@ -1,5 +1,11 @@
 import * as webllm from '@mlc-ai/web-llm'
-import { loadModelWithDynamicContext } from './utils/dynamicContext'
+import {
+  loadModelWithDynamicContext,
+  DynamicContextManager,
+  type VRAMOptimizationConfig,
+  type ContextWindowInfo,
+  DEFAULT_VRAM_CONFIG,
+} from './utils/dynamicContext'
 import { 
   appConfig, 
   checkF16Support,
@@ -29,8 +35,10 @@ const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
   UNCENSORED: `Full language freedom. No sexual/violent content.`,
 }
 
-// Max conversation history to keep (prevents VRAM exhaustion)
-const MAX_HISTORY_MESSAGES = 8
+// Default max tokens per generation turn (user-adjustable via UI slider)
+const DEFAULT_MAX_TOKENS = 96
+// Absolute ceiling — never exceed this regardless of user setting
+const ABSOLUTE_MAX_TOKENS = 512
 
 export interface Agent {
   id: string
@@ -56,6 +64,16 @@ export class GroupChatManager {
   private isInitialized = false
   private loadedModelId: string | null = null
 
+  // Token-level context window manager
+  private contextManager: DynamicContextManager
+  private lastContextInfo: ContextWindowInfo | null = null
+
+  // User-configurable max tokens per turn (exposed via UI slider)
+  private maxTokensPerTurn: number = DEFAULT_MAX_TOKENS
+
+  // VRAM optimization config
+  private vramConfig: VRAMOptimizationConfig = { ...DEFAULT_VRAM_CONFIG }
+
   // Style instruction - can be changed at runtime via setProfanityLevel()
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
   private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
@@ -69,6 +87,8 @@ export class GroupChatManager {
 
   constructor(agents: Agent[]) {
     this.agents = agents;
+    // Default context budget; updated after model loads with actual context_window_size
+    this.contextManager = new DynamicContextManager(4096);
     this.loadEvolvedPersonalities();
   }
 
@@ -165,6 +185,52 @@ export class GroupChatManager {
     return this.loadedModelId
   }
 
+  // =========================================================================
+  // Token Budget / Max Output Capping
+  // =========================================================================
+
+  /**
+   * Set the per-turn max token limit. Clamped to [16, ABSOLUTE_MAX_TOKENS].
+   * The UI slider calls this. When OOM occurs during generation the value
+   * is automatically reduced.
+   */
+  setMaxTokensPerTurn(tokens: number): void {
+    this.maxTokensPerTurn = Math.max(16, Math.min(tokens, ABSOLUTE_MAX_TOKENS))
+    console.log(`[TokenBudget] Max tokens per turn: ${this.maxTokensPerTurn}`)
+  }
+
+  getMaxTokensPerTurn(): number {
+    return this.maxTokensPerTurn
+  }
+
+  // =========================================================================
+  // VRAM Optimization Config
+  // =========================================================================
+
+  /** Update VRAM optimization overrides (called from advanced settings UI) */
+  setVRAMConfig(config: Partial<VRAMOptimizationConfig>): void {
+    this.vramConfig = { ...this.vramConfig, ...config }
+    console.log('[VRAMConfig] Updated:', this.vramConfig)
+  }
+
+  getVRAMConfig(): VRAMOptimizationConfig {
+    return { ...this.vramConfig }
+  }
+
+  // =========================================================================
+  // Context Window Info
+  // =========================================================================
+
+  /** Get the last computed context window usage info (for UI display) */
+  getContextWindowInfo(): ContextWindowInfo | null {
+    return this.lastContextInfo
+  }
+
+  /** Get the DynamicContextManager instance */
+  getContextManager(): DynamicContextManager {
+    return this.contextManager
+  }
+
   async initialize(
     onProgress?: (progress: webllm.InitProgressReport) => void,
     preferredModelId?: string,
@@ -237,7 +303,8 @@ export class GroupChatManager {
         this.engine = await loadModelWithDynamicContext(
           modelConfig,
           preferredContext,
-          onProgress
+          onProgress,
+          this.vramConfig,
         )
 
         // Add repetition penalty separately if possible, or assume handled by webllm defaults
@@ -247,7 +314,11 @@ export class GroupChatManager {
         this.loadedModelId = modelId
 
         const actualContext = (this.engine as any).chatOpts?.context_window_size ||
-                              (this.engine as any).chatConfig?.context_window_size || 'unknown';
+                              (this.engine as any).chatConfig?.context_window_size || 4096;
+        // Sync the DynamicContextManager with the actual context window loaded
+        if (typeof actualContext === 'number') {
+          this.contextManager.setMaxContextTokens(actualContext);
+        }
         console.log(`GroupChatManager initialized successfully with model: ${modelId} and context: ${actualContext}`)
         return
 
@@ -330,12 +401,26 @@ export class GroupChatManager {
     }
 
     // Create messages array with single merged system prompt
-    // Truncate history to MAX_HISTORY_MESSAGES to prevent VRAM exhaustion
-    const recentHistory = this.conversationHistory.slice(-MAX_HISTORY_MESSAGES)
-    const messages: Message[] = [
-      { role: 'system', content: fullSystemPrompt },
-      ...recentHistory,
-    ]
+    // Token-level truncation via DynamicContextManager (replaces old message-count cap)
+    const effectiveMaxTokens = Math.min(
+      options.maxTokens || this.maxTokensPerTurn,
+      this.maxTokensPerTurn,
+      ABSOLUTE_MAX_TOKENS,
+    )
+    const { messages, info: ctxInfo } = this.contextManager.truncate(
+      fullSystemPrompt,
+      this.conversationHistory,
+      effectiveMaxTokens,
+    )
+    this.lastContextInfo = ctxInfo
+
+    if (ctxInfo.droppedMessages > 0) {
+      console.log(
+        `[ContextTruncation] Dropped ${ctxInfo.droppedMessages} messages ` +
+        `(${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens used, ` +
+        `summary: ${ctxInfo.hasSummary})`
+      )
+    }
 
     try {
       // Generate response with stricter sampling to prevent repetition
@@ -343,8 +428,8 @@ export class GroupChatManager {
         messages: messages as webllm.ChatCompletionMessageParam[],
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Hard cap at 96 tokens to reduce VRAM usage
-        max_tokens: Math.min(options.maxTokens || 96, 96),
+        // Respect the user-configurable max token cap
+        max_tokens: effectiveMaxTokens,
         stream: true,
         // Use a stop token plus fallbacks to catch structural shifts
         stop: ["###", "Director:", "User:"],
@@ -439,6 +524,15 @@ export class GroupChatManager {
         response: fullResponse,
       }
     } catch (error) {
+      // On OOM during generation, automatically reduce max tokens for future turns
+      const category = GroupChatManager.getErrorCategory(error)
+      if (category === 'oom' && this.maxTokensPerTurn > 32) {
+        const reduced = Math.max(32, Math.floor(this.maxTokensPerTurn * 0.6))
+        console.warn(
+          `[TokenBudget] OOM during generation — reducing maxTokensPerTurn from ${this.maxTokensPerTurn} to ${reduced}`
+        )
+        this.maxTokensPerTurn = reduced
+      }
       console.error('Error generating response:', error)
       throw error
     }
@@ -557,18 +651,29 @@ export class GroupChatManager {
           options.hiddenInstruction
         )
 
-        const messages: Message[] = [
-          { role: 'system', content: systemMessage },
+        const effectiveMaxTokens = Math.min(
+          options.maxTokens || this.maxTokensPerTurn,
+          this.maxTokensPerTurn,
+          ABSOLUTE_MAX_TOKENS,
+        )
+
+        // Token-level truncation for prerender context
+        const historyWithPrompt: Message[] = [
           ...this.conversationHistory,
-          { role: 'user', content: currentPrompt }
+          { role: 'user', content: currentPrompt },
         ]
+        const { messages } = this.contextManager.truncate(
+          systemMessage,
+          historyWithPrompt,
+          effectiveMaxTokens,
+        )
 
         // Generate response (non-streaming for prerender)
         const completion = await this.engine.chat.completions.create({
           messages: messages as webllm.ChatCompletionMessageParam[],
           temperature: currentAgent.temperature,
           top_p: currentAgent.top_p,
-          max_tokens: options.maxTokens || 96,
+          max_tokens: effectiveMaxTokens,
           stream: false,
           stop: ["###", "Director:", "User:"],
           // @ts-ignore - seed is supported by WebLLM but not in base OpenAI types

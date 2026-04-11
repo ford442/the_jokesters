@@ -545,3 +545,103 @@ input:focus, textarea:focus {
     background: #1a5a7a;
     box-shadow: 0 4px 12px rgba(78, 205, 196, 0.2);
 }
+
+/* ============================================================================
+   VRAM Settings Panel (Advanced, hidden by default behind <details>)
+   ============================================================================ */
+
+.vram-settings-panel {
+    margin: 12px 0;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: #0d1b3e;
+    font-size: 0.85em;
+}
+
+.vram-settings-panel summary {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #888;
+    font-size: 0.9em;
+    user-select: none;
+}
+
+.vram-settings-panel summary:hover {
+    color: #4ecdc4;
+}
+
+.vram-settings-panel[open] summary {
+    border-bottom: 1px solid #333;
+    color: #4ecdc4;
+}
+
+.vram-settings-content {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vram-setting-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vram-setting-row label {
+    color: #888;
+    font-size: 0.85em;
+    min-width: 140px;
+    white-space: nowrap;
+}
+
+.vram-setting-row input[type="range"] {
+    flex: 1;
+    accent-color: #4ecdc4;
+}
+
+.vram-setting-row select {
+    flex: 1;
+    background: #0f3460;
+    border: 1px solid #444;
+    color: white;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.vram-setting-value {
+    color: #4ecdc4;
+    font-size: 0.85em;
+    min-width: 36px;
+    text-align: right;
+}
+
+.vram-settings-note {
+    color: #666;
+    font-size: 0.78em;
+    margin: 4px 0 0;
+    font-style: italic;
+}
+
+/* ============================================================================
+   VRAM Info Bar (shown in chat container below settings)
+   ============================================================================ */
+
+.vram-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 5px 10px;
+    background: #0d1b3e;
+    border: 1px solid #222;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 0.75em;
+    color: #888;
+    flex-wrap: wrap;
+}
+
+.vram-info-bar span {
+    white-space: nowrap;
+}

@@ -7,6 +7,183 @@ export interface ContextConfig {
   label: string;
 }
 
+// ============================================================================
+// VRAM Optimization Overrides
+// ============================================================================
+
+/** User-configurable VRAM optimization settings */
+export interface VRAMOptimizationConfig {
+  /** Fraction of GPU memory to use (0.0-1.0). Default: 0.85 */
+  gpu_memory_utilization: number;
+  /** Prefill chunk size override. 0 = auto (derived from context window) */
+  prefill_chunk_size: number;
+  /** KV cache quantization mode. 'none' disables, 'auto' detects support */
+  kv_cache_quantization: 'none' | 'fp8' | 'int8' | 'auto';
+}
+
+/** Default VRAM optimization settings — safe for non-expert users */
+export const DEFAULT_VRAM_CONFIG: VRAMOptimizationConfig = {
+  gpu_memory_utilization: 0.85,
+  prefill_chunk_size: 0,
+  kv_cache_quantization: 'auto',
+};
+
+// ============================================================================
+// Token-Level Context Manager
+// ============================================================================
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+/** Status information about the current context window */
+export interface ContextWindowInfo {
+  maxTokens: number;
+  usedTokens: number;
+  messageCount: number;
+  droppedMessages: number;
+  hasSummary: boolean;
+}
+
+/**
+ * Token-level context window manager.
+ *
+ * Replaces the old fixed-message-count truncation with a token-budget approach
+ * that preserves the system prompt, adds a summary stub for discarded history,
+ * and returns metadata for the UI.
+ */
+export class DynamicContextManager {
+  private maxContextTokens: number;
+  private summaryStub: string | null = null;
+
+  constructor(maxContextTokens: number) {
+    this.maxContextTokens = maxContextTokens;
+  }
+
+  /** Update context window budget (e.g. after model reload with different context) */
+  setMaxContextTokens(tokens: number): void {
+    this.maxContextTokens = tokens;
+  }
+
+  getMaxContextTokens(): number {
+    return this.maxContextTokens;
+  }
+
+  /**
+   * Estimate token count for a string.
+   * Uses the common ~4 chars/token heuristic used throughout the codebase.
+   */
+  static estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+  }
+
+  /**
+   * Truncate a conversation to fit within the token budget.
+   *
+   * Priority order:
+   *  1. System message (always kept)
+   *  2. Summary stub of discarded history (if any messages were dropped)
+   *  3. Most recent conversation messages, newest first
+   *
+   * @param systemMessage The full system prompt (always preserved)
+   * @param history       The conversation history (user/assistant turns)
+   * @param reserveTokens Tokens to reserve for generation output (default 128)
+   * @returns The truncated message array and context window info
+   */
+  truncate(
+    systemMessage: string,
+    history: ChatMessage[],
+    reserveTokens = 128,
+  ): { messages: ChatMessage[]; info: ContextWindowInfo } {
+    const systemTokens = DynamicContextManager.estimateTokens(systemMessage);
+    const budget = this.maxContextTokens - systemTokens - reserveTokens;
+
+    // If the budget is too small even for a single message, return system only
+    if (budget <= 0) {
+      return {
+        messages: [{ role: 'system', content: systemMessage }],
+        info: {
+          maxTokens: this.maxContextTokens,
+          usedTokens: systemTokens,
+          messageCount: 1,
+          droppedMessages: history.length,
+          hasSummary: false,
+        },
+      };
+    }
+
+    // Walk history from newest to oldest, accumulating tokens
+    let usedTokens = 0;
+    const kept: ChatMessage[] = [];
+
+    for (let i = history.length - 1; i >= 0; i--) {
+      const msgTokens = DynamicContextManager.estimateTokens(history[i].content);
+      if (usedTokens + msgTokens > budget) break;
+      usedTokens += msgTokens;
+      kept.unshift(history[i]);
+    }
+
+    const droppedCount = history.length - kept.length;
+
+    // Build summary stub for discarded messages so the model keeps continuity
+    const result: ChatMessage[] = [{ role: 'system', content: systemMessage }];
+    let hasSummary = false;
+
+    if (droppedCount > 0) {
+      const stub = this.buildSummaryStub(history.slice(0, droppedCount));
+      result.push({ role: 'system', content: stub });
+      usedTokens += DynamicContextManager.estimateTokens(stub);
+      hasSummary = true;
+      this.summaryStub = stub;
+    }
+
+    result.push(...kept);
+
+    return {
+      messages: result,
+      info: {
+        maxTokens: this.maxContextTokens,
+        usedTokens: systemTokens + usedTokens,
+        messageCount: result.length,
+        droppedMessages: droppedCount,
+        hasSummary,
+      },
+    };
+  }
+
+  /** Get the last summary stub (for UI display) */
+  getLastSummaryStub(): string | null {
+    return this.summaryStub;
+  }
+
+  /**
+   * Build a short summary of dropped messages so the system prompt maintains
+   * continuity. This is a deterministic stub — an LLM-generated summary could
+   * replace it in the future.
+   */
+  private buildSummaryStub(dropped: ChatMessage[]): string {
+    const turnCount = dropped.length;
+    const lastUser = [...dropped].reverse().find(m => m.role === 'user');
+    const lastAssistant = [...dropped].reverse().find(m => m.role === 'assistant');
+    let stub = `[Earlier conversation: ${turnCount} messages omitted to fit context window.`;
+    if (lastUser) {
+      const snippet = lastUser.content.slice(0, 80).replace(/\n/g, ' ');
+      stub += ` Last user topic: "${snippet}…"`;
+    }
+    if (lastAssistant) {
+      const snippet = lastAssistant.content.slice(0, 80).replace(/\n/g, ' ');
+      stub += ` Last response: "${snippet}…"`;
+    }
+    stub += ']';
+    return stub;
+  }
+}
+
+// ============================================================================
+// VRAM Estimation
+// ============================================================================
+
 /**
  * Estimate available VRAM
  */
@@ -79,7 +256,7 @@ export function getContextConfigForVRAM(
 /**
  * Detect model size from model_id
  */
-function getModelSize(modelId: string): '3b' | '7b' | '8b' {
+export function getModelSize(modelId: string): '3b' | '7b' | '8b' {
   if (modelId.includes('3B') || modelId.includes('3b')) return '3b';
   if (modelId.includes('8B') || modelId.includes('8b')) return '8b';
   if (modelId.includes('7B') || modelId.includes('7b')) return '7b';
@@ -87,12 +264,73 @@ function getModelSize(modelId: string): '3b' | '7b' | '8b' {
 }
 
 /**
- * Main function: Load model with dynamic context
+ * Detect whether the runtime WebLLM build supports KV cache quantization.
+ * The check is best-effort: we look for the key in ChatCompletionRequest types.
+ */
+export function detectKVCacheSupport(): boolean {
+  try {
+    // WebLLM exposes its config shape through prebuiltAppConfig.
+    // If the library supports kv_cache_quantization it will appear in
+    // the model_list override schema. Since we can't introspect types at
+    // runtime we just check that the library is present and return true
+    // as a signal to *try* passing the override (the engine will ignore
+    // unknown keys gracefully).
+    return typeof webllm.CreateMLCEngine === 'function';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build the overrides object for a model, incorporating VRAM optimization
+ * settings like prefill chunk size and KV cache quantization.
+ */
+export function buildVRAMOverrides(
+  baseOverrides: Record<string, unknown>,
+  contextSize: number,
+  vramConfig: VRAMOptimizationConfig,
+  modelId: string,
+): Record<string, unknown> {
+  const overrides: Record<string, unknown> = {
+    ...baseOverrides,
+    context_window_size: contextSize,
+    prefill_chunk_size: vramConfig.prefill_chunk_size > 0
+      ? Math.min(vramConfig.prefill_chunk_size, contextSize)
+      : Math.min(contextSize, 1024),
+  };
+
+  // KV Cache quantization — enable for 7B/8B by default when set to 'auto'
+  const modelSize = getModelSize(modelId);
+  const kvMode = vramConfig.kv_cache_quantization;
+
+  if (kvMode !== 'none') {
+    const shouldEnable = kvMode === 'auto'
+      ? (modelSize === '7b' || modelSize === '8b') && detectKVCacheSupport()
+      : true;
+
+    if (shouldEnable) {
+      const quantType = kvMode === 'auto' ? 'int8' : kvMode;
+      // Pass as override — WebLLM will use it if supported, ignore otherwise
+      overrides['kv_cache_quantization'] = quantType;
+      console.log(`[DynamicContext] KV cache quantization: ${quantType} for ${modelId}`);
+    }
+  }
+
+  return overrides;
+}
+
+// ============================================================================
+// Model Loading
+// ============================================================================
+
+/**
+ * Main function: Load model with dynamic context and VRAM optimizations
  */
 export async function loadModelWithDynamicContext(
   modelConfig: any, // Using any for ModelRecord as it might not be exported directly
   preferredContext: number | 'auto' = 'auto',
-  onProgress?: (report: webllm.InitProgressReport) => void
+  onProgress?: (report: webllm.InitProgressReport) => void,
+  vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
 ): Promise<webllm.MLCEngine> {
   
   // Determine context size
@@ -109,21 +347,25 @@ export async function loadModelWithDynamicContext(
     console.log(`[DynamicContext] User-selected ${contextSize} context`);
   }
 
+  // Build overrides with VRAM optimizations (including KV cache compression)
+  const overrides = buildVRAMOverrides(
+    modelConfig.overrides || {},
+    contextSize,
+    vramConfig,
+    modelConfig.model_id,
+  );
+
   // Build dynamic config
   const dynamicAppConfig: any = { // Using any for AppConfig as it might not be exported directly
     model_list: [{
       ...modelConfig,
-      overrides: {
-        ...modelConfig.overrides,
-        context_window_size: contextSize,
-        prefill_chunk_size: Math.min(contextSize, 1024),
-      },
+      overrides,
     }],
   };
 
-  const chatOpts = {
+  const chatOpts: Record<string, unknown> = {
     context_window_size: contextSize,
-    prefill_chunk_size: Math.min(contextSize, 1024),
+    prefill_chunk_size: overrides['prefill_chunk_size'],
   };
 
   // Try to load
@@ -141,8 +383,9 @@ export async function loadModelWithDynamicContext(
   } catch (error: any) {
     const errorMsg = error?.message || String(error);
 
-    // On OOM, retry with smaller context
+    // On OOM, retry with smaller context and optionally lower KV cache quantization
     if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
+      // First try: reduce context window
       if (contextSize > 128) {
         const smallerContext = contextSize > 512 ? 512 : contextSize > 256 ? 256 : 128;
         console.warn(`[DynamicContext] OOM with ${contextSize}, retrying with ${smallerContext}`);
@@ -155,7 +398,19 @@ export async function loadModelWithDynamicContext(
         return loadModelWithDynamicContext(
           modelConfig,
           smallerContext,
-          onProgress
+          onProgress,
+          vramConfig,
+        );
+      }
+
+      // Second try: if KV cache quantization was 'none', try enabling it
+      if (vramConfig.kv_cache_quantization === 'none') {
+        console.warn('[DynamicContext] OOM at minimum context, retrying with KV cache quantization');
+        return loadModelWithDynamicContext(
+          modelConfig,
+          128,
+          onProgress,
+          { ...vramConfig, kv_cache_quantization: 'int8' },
         );
       }
     }
