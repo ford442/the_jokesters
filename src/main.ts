@@ -313,10 +313,11 @@ async function initApp() {
   }
 
   // Wait for user to click Launch before starting initialization
-  const { selectedModelId, preferredContext, vramConfig } = await new Promise<{
+  const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens } = await new Promise<{
     selectedModelId: string;
     preferredContext: number | 'auto';
     vramConfig: VRAMOptimizationConfig;
+    chosenMaxTokens: number;
   }>(resolve => {
     document.getElementById('launch-btn')!.addEventListener('click', () => {
       const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement;
@@ -335,21 +336,13 @@ async function initApp() {
         gpu_memory_utilization: (parseInt(gpuMemSliderEl?.value ?? '85', 10)) / 100,
       };
 
-      // Store chosen max tokens for later use
       const chosenMaxTokens = parseInt(maxTokensSliderEl?.value ?? '96', 10);
 
       document.getElementById('model-picker')!.style.display = 'none'
       document.getElementById('progress-section')!.style.display = 'block'
-      resolve({
-        selectedModelId: modelSelectLaunch.value,
-        preferredContext,
-        vramConfig: { ...vramConfig, _maxTokens: chosenMaxTokens } as VRAMOptimizationConfig & { _maxTokens: number },
-      })
+      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext, vramConfig, chosenMaxTokens })
     })
   })
-
-  // Extract max tokens choice (attached to vramConfig for transport)
-  const chosenMaxTokens = (vramConfig as VRAMOptimizationConfig & { _maxTokens?: number })._maxTokens ?? 96
 
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!

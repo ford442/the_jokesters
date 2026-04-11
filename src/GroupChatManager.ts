@@ -403,7 +403,7 @@ export class GroupChatManager {
     // Create messages array with single merged system prompt
     // Token-level truncation via DynamicContextManager (replaces old message-count cap)
     const effectiveMaxTokens = Math.min(
-      options.maxTokens || this.maxTokensPerTurn,
+      options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
       this.maxTokensPerTurn,
       ABSOLUTE_MAX_TOKENS,
     )

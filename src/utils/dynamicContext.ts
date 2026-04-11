@@ -157,6 +157,8 @@ export class DynamicContextManager {
     return this.summaryStub;
   }
 
+  private static readonly SUMMARY_SNIPPET_LENGTH = 80;
+
   /**
    * Build a short summary of dropped messages so the system prompt maintains
    * continuity. This is a deterministic stub — an LLM-generated summary could
@@ -168,11 +170,11 @@ export class DynamicContextManager {
     const lastAssistant = [...dropped].reverse().find(m => m.role === 'assistant');
     let stub = `[Earlier conversation: ${turnCount} messages omitted to fit context window.`;
     if (lastUser) {
-      const snippet = lastUser.content.slice(0, 80).replace(/\n/g, ' ');
+      const snippet = lastUser.content.slice(0, DynamicContextManager.SUMMARY_SNIPPET_LENGTH).replace(/\n/g, ' ');
       stub += ` Last user topic: "${snippet}…"`;
     }
     if (lastAssistant) {
-      const snippet = lastAssistant.content.slice(0, 80).replace(/\n/g, ' ');
+      const snippet = lastAssistant.content.slice(0, DynamicContextManager.SUMMARY_SNIPPET_LENGTH).replace(/\n/g, ' ');
       stub += ` Last response: "${snippet}…"`;
     }
     stub += ']';
