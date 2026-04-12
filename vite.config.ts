@@ -32,6 +32,8 @@ export default defineConfig({
         manualChunks: {
           // WebLLM engine - loaded on demand when user selects a model
           'webllm-engine': ['@mlc-ai/web-llm'],
+          // llama.cpp WASM engine - loaded for GGUF models
+          'llamacpp-engine': ['@wllama/wllama'],
           // Three.js core - split into smaller chunks
           'three-core': ['three'],
           // ONNX Runtime - loaded when TTS is needed
@@ -84,7 +86,7 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web']
+    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web', '@wllama/wllama']
   },
   worker: {
     format: 'es',

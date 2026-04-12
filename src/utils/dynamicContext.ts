@@ -19,6 +19,10 @@ export interface VRAMOptimizationConfig {
   prefill_chunk_size: number;
   /** KV cache quantization mode. 'none' disables, 'auto' detects support */
   kv_cache_quantization: 'none' | 'fp8' | 'int8' | 'auto';
+  /** Sliding window size for attention. 0 = disabled, -1 = auto, >0 = specific size */
+  sliding_window_size: number;
+  /** Number of attention sink tokens to keep from the beginning. Default: 4 */
+  attention_sink_size: number;
 }
 
 /** Default VRAM optimization settings — safe for non-expert users */
@@ -26,6 +30,8 @@ export const DEFAULT_VRAM_CONFIG: VRAMOptimizationConfig = {
   gpu_memory_utilization: 0.85,
   prefill_chunk_size: 0,
   kv_cache_quantization: 'auto',
+  sliding_window_size: 0,  // Disabled by default (use full context)
+  attention_sink_size: 4,  // Keep 4 initial tokens if sliding window enabled
 };
 
 // ============================================================================
@@ -300,6 +306,17 @@ export function buildVRAMOverrides(
       ? Math.min(vramConfig.prefill_chunk_size, contextSize)
       : Math.min(contextSize, 1024),
   };
+
+  // Sliding window attention — enable if explicitly set (> 0) or auto-detect for large contexts
+  const slidingWindowSize = vramConfig.sliding_window_size === -1
+    ? Math.floor(contextSize / 2)  // Auto: half the context window
+    : vramConfig.sliding_window_size;
+  
+  if (slidingWindowSize > 0) {
+    overrides['sliding_window_size'] = slidingWindowSize;
+    overrides['attention_sink_size'] = vramConfig.attention_sink_size ?? 4;
+    console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens)`);
+  }
 
   // KV Cache quantization — enable for 7B/8B by default when set to 'auto'
   const modelSize = getModelSize(modelId);

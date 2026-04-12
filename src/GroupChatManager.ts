@@ -10,9 +10,14 @@ import {
   appConfig, 
   checkF16Support,
   getModelFallbackChain,
-  getModelInfo
+  getModelInfo,
+  getUnifiedModelById,
 } from './config/models'
 import { parallelDownloadManager } from './services/ParallelDownloadManager'
+import type { LLMEngine, ChatMessage } from './llm/LLMEngine'
+import type { EngineType } from './llm/EngineFactory'
+import { EngineFactory } from './llm/EngineFactory'
+import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
 
 // ============================================================================
 // PROFANITY LEVEL CONFIGURATION
@@ -57,7 +62,8 @@ export interface Message {
 export type ErrorCategory = 'webgpu' | 'oom' | 'network' | 'unknown'
 
 export class GroupChatManager {
-  private engine: webllm.MLCEngine | null = null
+  private engine: LLMEngine | null = null
+  private engineType: EngineType = 'mlc'
   private agents: Agent[]
   private currentAgentIndex = 0
   private conversationHistory: Message[] = []
@@ -234,7 +240,8 @@ export class GroupChatManager {
   async initialize(
     onProgress?: (progress: webllm.InitProgressReport) => void,
     preferredModelId?: string,
-    preferredContext?: number | 'auto'
+    preferredContext?: number | 'auto',
+    enginePreference: EngineType = 'auto'
   ): Promise<void> {
     if (this.isInitialized) return
 
@@ -247,6 +254,66 @@ export class GroupChatManager {
       // Continue anyway - parallel downloads are optional optimization
     }
 
+    this.engineType = enginePreference
+
+    // Check if we're using legacy model IDs (MLC format) or unified model IDs
+    const unifiedModel = preferredModelId ? getUnifiedModelById(preferredModelId) : null
+
+    if (unifiedModel) {
+      // Use the new dual-engine path
+      await this.initializeUnified(unifiedModel, onProgress, preferredContext, enginePreference)
+    } else {
+      // Use the legacy MLC-only path for backward compatibility
+      await this.initializeLegacy(onProgress, preferredModelId, preferredContext)
+    }
+  }
+
+  /**
+   * Initialize using the new unified model configuration
+   */
+  private async initializeUnified(
+    modelConfig: import('./llm/LLMEngine').UnifiedModelConfig,
+    onProgress?: (progress: webllm.InitProgressReport) => void,
+    _preferredContext?: number | 'auto',
+    enginePreference: EngineType = 'auto'
+  ): Promise<void> {
+    // Select and create the appropriate engine
+    this.engine = await EngineFactory.selectEngine(modelConfig, enginePreference)
+    this.engineType = this.engine.id as EngineType as import('./llm/EngineFactory').EngineType
+
+    console.log(`[ModelLoader] Using ${this.engineType} engine for model: ${modelConfig.id}`)
+
+    try {
+      await this.engine.initialize(modelConfig, (report) => {
+        onProgress?.({
+          progress: report.progress,
+          timeElapsed: report.timeElapsed,
+          text: report.text,
+        })
+      })
+
+      this.isInitialized = true
+      this.loadedModelId = modelConfig.id
+
+      // Set context window size
+      const contextSize = modelConfig.context_window_size || 4096
+      this.contextManager.setMaxContextTokens(contextSize)
+
+      console.log(`GroupChatManager initialized successfully with unified model: ${modelConfig.id} (${this.engineType})`)
+    } catch (error) {
+      this.engine = null
+      throw error
+    }
+  }
+
+  /**
+   * Legacy initialization path for MLC-only models
+   */
+  private async initializeLegacy(
+    onProgress?: (progress: webllm.InitProgressReport) => void,
+    preferredModelId?: string,
+    preferredContext?: number | 'auto'
+  ): Promise<void> {
     // Pre-check WebGPU availability before attempting model load
     const gpu = (navigator as unknown as { gpu?: unknown }).gpu
     if (!gpu) {
@@ -257,8 +324,6 @@ export class GroupChatManager {
     }
 
     // Probe the GPU adapter to check for f16 shader support.
-    // q4f16_1 models require the 'shader-f16' feature; without it they crash
-    // with "extension 'f16' is not allowed in the current environment".
     const supportsF16 = await checkF16Support()
     console.log(`[ModelLoader] GPU adapter f16 support: ${supportsF16}`)
 
@@ -288,7 +353,7 @@ export class GroupChatManager {
 
     for (let i = 0; i < modelFallbacks.length; i++) {
       const modelId = modelFallbacks[i]
-      // Skip duplicates (e.g. if defaultModelId already matches a fallback entry)
+      // Skip duplicates
       if (i > 0 && modelId === modelFallbacks[i - 1]) continue
 
       console.log(`Loading model [${i + 1}/${modelFallbacks.length}]: ${modelId}`)
@@ -300,21 +365,43 @@ export class GroupChatManager {
           throw new Error(`Model ${modelId} not found in config`);
         }
 
-        this.engine = await loadModelWithDynamicContext(
+        // Use legacy load path
+        const mlcEngine = await loadModelWithDynamicContext(
           modelConfig,
           preferredContext,
           onProgress,
           this.vramConfig,
         )
 
-        // Add repetition penalty separately if possible, or assume handled by webllm defaults
-        // (dynamicContext loader currently doesn't pass repetition_penalty in chatOpts directly)
+        // Wrap the MLC engine in our adapter
+        const adapter = new MlcEngineAdapter()
+        // Manually set up the adapter with the loaded engine
+        ;(adapter as any).engine = mlcEngine
+        ;(adapter as any).initialized = true
+        ;(adapter as any).modelConfig = {
+          id: modelId,
+          name: modelId,
+          description: 'Legacy MLC model',
+          size: 'unknown',
+          defaultQuantization: modelId.includes('q4f16') ? 'q4f16' : 'q4f32',
+          mlc: {
+            modelId: modelId,
+            modelUrl: modelConfig.model,
+            modelLibUrl: modelConfig.model_lib,
+            contextWindowSize: modelConfig.overrides?.context_window_size || 4096,
+            prefillChunkSize: modelConfig.overrides?.prefill_chunk_size || 1024,
+            vramRequiredMB: modelConfig.vram_required_MB || 4000,
+            requiresF16: modelId.includes('q4f16'),
+          }
+        }
 
+        this.engine = adapter
         this.isInitialized = true
         this.loadedModelId = modelId
+        this.engineType = 'mlc'
 
-        const actualContext = (this.engine as any).chatOpts?.context_window_size ||
-                              (this.engine as any).chatConfig?.context_window_size || 4096;
+        const actualContext = (mlcEngine as any).chatOpts?.context_window_size ||
+                              (mlcEngine as any).chatConfig?.context_window_size || 4096;
         // Sync the DynamicContextManager with the actual context window loaded
         if (typeof actualContext === 'number') {
           this.contextManager.setMaxContextTokens(actualContext);
@@ -392,7 +479,6 @@ export class GroupChatManager {
     const currentAgent = this.agents[this.currentAgentIndex]
 
     // Build the full system prompt: agent persona + style guide + optional director note
-    // web-llm requires exactly ONE system message as the first entry
     let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
 
     // If a hiddenInstruction was provided, append it to the system prompt
@@ -423,29 +509,28 @@ export class GroupChatManager {
     }
 
     try {
-      // Generate response with stricter sampling to prevent repetition
-      const completion = await this.engine.chat.completions.create({
-        messages: messages as webllm.ChatCompletionMessageParam[],
+      // Generate response using the LLMEngine abstraction
+      const chatMessages: ChatMessage[] = messages.map(m => ({
+        role: m.role as 'system' | 'user' | 'assistant',
+        content: m.content,
+      }))
+
+      const stream = await this.engine.chat(chatMessages, {
+        max_tokens: effectiveMaxTokens,
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
-        // Respect the user-configurable max token cap
-        max_tokens: effectiveMaxTokens,
-        stream: true,
-        // Use a stop token plus fallbacks to catch structural shifts
-        stop: ["###", "Director:", "User:"],
-        // @ts-ignore - optional seed not on all runtime types
         seed: options.seed,
-        // @ts-ignore - WebLLM supports this even if types might complain
-        repetition_penalty: this.REPETITION_PENALTY, // Reduces repetitive patterns
-        presence_penalty: this.PRESENCE_PENALTY, // Encourages new topics
+        repetition_penalty: this.REPETITION_PENALTY,
+        presence_penalty: this.PRESENCE_PENALTY,
+        stop: ['###', 'Director:', 'User:'],
+        stream: true,
       })
 
       let fullResponse = ''
       let buffer = ''
 
       // Iterate over the stream
-      for await (const chunk of completion) {
-        const content = chunk.choices[0]?.delta?.content || ''
+      for await (const content of stream) {
         if (content) {
           fullResponse += content
           buffer += content
@@ -465,26 +550,23 @@ export class GroupChatManager {
             const stopIdx = earliestIdx
             let preStop = buffer.substring(0, stopIdx).trim()
             // Aggressively clean name and stop token
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
-            preStop = preStop.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+            preStop = preStop.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\\s*/gi, '').replace(/User:\\s*/gi, '').trim()
             if (preStop) onSentence?.(preStop)
             buffer = ''
           }
 
           // Simple sentence splitting logic
-          // Split by [.!?] followed by space or end of string
-          // We keep the delimiter with the sentence
           let match
-          while ((match = buffer.match(/([.!?])\s/))) {
+          while ((match = buffer.match(/([.!?])\\s/))) {
             const endIdx = match.index! + 1
             let sentence = buffer.substring(0, endIdx).trim()
 
             // CLEANUP: Remove "Agent Name:" and structural role prefixes from the start of sentences
-            // This fixes the issue where they say their own name
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
+            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
             sentence = sentence.replace(namePrefixRegex, '')
             // Remove explicit stop tokens if the model included them
-            sentence = sentence.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
+            sentence = sentence.replace(/###/g, '').replace(/Director:\\s*/gi, '').replace(/User:\\s*/gi, '').trim()
 
             if (sentence) {
               onSentence?.(sentence)
@@ -498,17 +580,16 @@ export class GroupChatManager {
       if (buffer.trim()) {
         let cleanBuffer = buffer.trim()
         // Clean name from the final chunk too
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
         cleanBuffer = cleanBuffer.replace(namePrefixRegex, '')
-        cleanBuffer = cleanBuffer.replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
+        cleanBuffer = cleanBuffer.replace(/###/g, '').replace(/Director:\\s*/gi, '').replace(/User:\\s*/gi, '').trim()
 
         onSentence?.(cleanBuffer)
       }
 
       // CLEANUP: Ensure the history doesn't contain the name prefix either
-      // (This prevents the model from learning to copy the pattern in the next turn)
-      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
-      const cleanFullResponse = fullResponse.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\s*/gi, '').replace(/User:\s*/gi, '').trim()
+      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+      const cleanFullResponse = fullResponse.replace(namePrefixRegex, '').replace(/###/g, '').replace(/Director:\\s*/gi, '').replace(/User:\\s*/gi, '').trim()
 
       // Add cleaned response to history
       this.conversationHistory.push({
@@ -564,16 +645,22 @@ export class GroupChatManager {
       `Output format: [STATUS]: [INSTRUCTION]`
 
     try {
-      const completion = await this.engine.chat.completions.create({
-        messages: [
-          { role: "system", content: directorSystemPrompt },
-          { role: "user", content: `RECENT DIALOGUE:\n${historyText}\n\nDIRECTOR DECISION:` }
-        ],
+      const stream = await this.engine.chat([
+        { role: 'system', content: directorSystemPrompt },
+        { role: 'user', content: `RECENT DIALOGUE:\n${historyText}\n\nDIRECTOR DECISION:` }
+      ], {
         temperature: 0.6,
         max_tokens: 60,
+        stream: false,
       })
 
-      return completion.choices[0]?.message?.content?.trim() || ""
+      // For non-streaming, collect the full response
+      let response = ''
+      for await (const chunk of stream) {
+        response += chunk
+      }
+      
+      return response.trim() || ""
     } catch (e) {
       console.warn("Director failed to think:", e)
       return ""
@@ -668,35 +755,42 @@ export class GroupChatManager {
           effectiveMaxTokens,
         )
 
+        // Convert to ChatMessage format
+        const chatMessages: ChatMessage[] = messages.map(m => ({
+          role: m.role as 'system' | 'user' | 'assistant',
+          content: m.content,
+        }))
+
         // Generate response (non-streaming for prerender)
-        const completion = await this.engine.chat.completions.create({
-          messages: messages as webllm.ChatCompletionMessageParam[],
+        const stream = await this.engine.chat(chatMessages, {
           temperature: currentAgent.temperature,
           top_p: currentAgent.top_p,
           max_tokens: effectiveMaxTokens,
           stream: false,
-          stop: ["###", "Director:", "User:"],
-          // @ts-ignore - seed is supported by WebLLM but not in base OpenAI types
+          stop: ['###', 'Director:', 'User:'],
           seed: options.seed ? options.seed + i : undefined,
-          // @ts-ignore - repetition_penalty is WebLLM-specific extension
           repetition_penalty: this.REPETITION_PENALTY,
           presence_penalty: this.PRESENCE_PENALTY,
         })
 
-        const fullResponse = completion.choices[0]?.message?.content || ''
+        // Collect full response
+        let fullResponse = ''
+        for await (const chunk of stream) {
+          fullResponse += chunk
+        }
         
         // Clean the response
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\s*`, 'i')
+        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
         const cleanResponse = fullResponse
           .replace(namePrefixRegex, '')
           .replace(/###/g, '')
-          .replace(/Director:\s*/gi, '')
-          .replace(/User:\s*/gi, '')
+          .replace(/Director:\\s*/gi, '')
+          .replace(/User:\\s*/gi, '')
           .trim()
 
         // Split into sentences for TTS
         const sentences = cleanResponse
-          .split(/([.!?])\s+/)
+          .split(/([.!?])\\s+/)
           .reduce((acc: string[], part: string, idx: number, arr: string[]) => {
             if (idx % 2 === 0 && part.trim()) {
               const sentence = part + (arr[idx + 1] || '')
@@ -778,9 +872,8 @@ export class GroupChatManager {
    * Note: Added back as it was missing.
    */
   async interrupt(): Promise<void> {
-    if (this.engine) {
-      // @ts-ignore - interruptGenerate might not be in the type definitions for this version of WebLLM
-      await this.engine.interruptGenerate?.();
+    if (this.engine?.interrupt) {
+      await this.engine.interrupt();
     }
   }
 
@@ -788,7 +881,28 @@ export class GroupChatManager {
 
   public getPerformanceReport() { return ""; }
 
-  public get completion() { return this.engine?.chat.completions; }
+  /**
+   * Get the underlying completion interface (for backward compatibility)
+   */
+  public get completion() { 
+    // For MLC engine, return the completions interface
+    if (this.engine instanceof MlcEngineAdapter) {
+      return (this.engine as any).engine?.chat?.completions;
+    }
+    return null;
+  }
 
-  public terminate() { if (this.engine) { this.engine.unload(); } this.isInitialized = false; }
+  public async terminate() { 
+    if (this.engine) { 
+      await this.engine.terminate();
+    }
+    this.isInitialized = false;
+  }
+
+  /**
+   * Get the current engine type
+   */
+  public getEngineType(): EngineType {
+    return this.engineType
+  }
 }

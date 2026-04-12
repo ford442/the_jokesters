@@ -11,6 +11,7 @@ import * as webllm from '@mlc-ai/web-llm'
 import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
+import { EngineFactory, type EngineType } from './llm/EngineFactory'
 
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
@@ -119,6 +120,16 @@ async function initApp() {
         <div id="model-picker" style="width:100%;max-width:480px;margin:0 auto;">
           <h3 style="color:#4ecdc4;margin:0 0 6px;font-size:1.1em;">Choose Your AI Model</h3>
           <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">All models run locally in your browser via WebGPU. Weights are cached after the first download.</p>
+          <!-- Engine selector -->
+          <select id="engine-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
+            <option value="auto">🤖 Auto (WebGPU preferred)</option>
+            <option value="mlc">⚡ MLC WebLLM (WebGPU)</option>
+            <option value="llamacpp">🧠 llama.cpp (WASM/CPU)</option>
+          </select>
+
+          <!-- Engine capability indicator -->
+          <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
+
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
             <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · Fast · ~2 GB VRAM ★ Recommended</option>
             <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · Fast · ~2.5 GB VRAM</option>
@@ -169,11 +180,29 @@ async function initApp() {
                 </select>
               </div>
               <div class="vram-setting-row">
+                <label>Sliding Window Attention</label>
+                <select id="sliding-window-select">
+                  <option value="0" selected>Disabled (use full context)</option>
+                  <option value="-1">Auto (half of context)</option>
+                  <option value="512">512 tokens</option>
+                  <option value="1024">1024 tokens</option>
+                  <option value="2048">2048 tokens</option>
+                </select>
+              </div>
+              <div class="vram-setting-row">
+                <label>Attention Sink Tokens</label>
+                <input type="range" id="attention-sink-slider" min="0" max="16" value="4" step="1">
+                <span id="attention-sink-val" class="vram-setting-value">4</span>
+              </div>
+              <div class="vram-setting-row">
                 <label>GPU Memory Utilization</label>
                 <input type="range" id="gpu-mem-slider" min="50" max="95" value="85" step="5">
                 <span id="gpu-mem-val" class="vram-setting-value">85%</span>
               </div>
-              <p class="vram-settings-note">These settings affect VRAM usage. Default values are safe for most GPUs.</p>
+              <p class="vram-settings-note">
+                <strong>Sliding Window:</strong> Reduces VRAM by only keeping recent tokens in attention. 
+                "Auto" uses half your context window. Attention sinks keep first N tokens for coherence.
+              </p>
             </div>
           </details>
 
@@ -304,6 +333,8 @@ async function initApp() {
   const maxTokensVal = document.getElementById('max-tokens-val')!
   const gpuMemSlider = document.getElementById('gpu-mem-slider') as HTMLInputElement
   const gpuMemVal = document.getElementById('gpu-mem-val')!
+  const attentionSinkSlider = document.getElementById('attention-sink-slider') as HTMLInputElement
+  const attentionSinkVal = document.getElementById('attention-sink-val')!
 
   if (maxTokensSlider) {
     maxTokensSlider.oninput = () => { maxTokensVal.textContent = maxTokensSlider.value }
@@ -311,28 +342,55 @@ async function initApp() {
   if (gpuMemSlider) {
     gpuMemSlider.oninput = () => { gpuMemVal.textContent = gpuMemSlider.value + '%' }
   }
+  if (attentionSinkSlider && attentionSinkVal) {
+    attentionSinkSlider.oninput = () => { attentionSinkVal.textContent = attentionSinkSlider.value }
+  }
+
+  // Update capability display
+  function updateCapabilityDisplay() {
+    const caps = EngineFactory.detectCapabilities()
+    const el = document.getElementById('engine-capabilities')
+    if (el) {
+      el.innerHTML = `
+        ${caps.webgpu ? '✅' : '❌'} WebGPU 
+        ${caps.wasm ? '✅' : '❌'} WASM 
+        ${caps.simd ? '✅' : '❌'} SIMD 
+        ${caps.threads ? '✅' : '❌'} Threads
+      `
+    }
+  }
+  updateCapabilityDisplay()
 
   // Wait for user to click Launch before starting initialization
-  const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens } = await new Promise<{
+  const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens, enginePreference } = await new Promise<{
     selectedModelId: string;
     preferredContext: number | 'auto';
     vramConfig: VRAMOptimizationConfig;
     chosenMaxTokens: number;
+    enginePreference: EngineType;
   }>(resolve => {
     document.getElementById('launch-btn')!.addEventListener('click', () => {
       const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement;
       const contextVal = contextSelect ? contextSelect.value : 'auto';
       const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10);
 
+      // Get engine preference
+      const engineSelect = document.getElementById('engine-select') as HTMLSelectElement
+      const enginePreference = (engineSelect?.value as EngineType) || 'auto'
+
       // Read advanced VRAM settings
       const prefillSelect = document.getElementById('prefill-chunk-select') as HTMLSelectElement;
       const kvCacheSelect = document.getElementById('kv-cache-select') as HTMLSelectElement;
+      const slidingWindowSelect = document.getElementById('sliding-window-select') as HTMLSelectElement;
+      const attentionSinkSliderEl = document.getElementById('attention-sink-slider') as HTMLInputElement;
       const gpuMemSliderEl = document.getElementById('gpu-mem-slider') as HTMLInputElement;
       const maxTokensSliderEl = document.getElementById('max-tokens-slider') as HTMLInputElement;
 
       const vramConfig: VRAMOptimizationConfig = {
         prefill_chunk_size: parseInt(prefillSelect?.value ?? '0', 10),
         kv_cache_quantization: (kvCacheSelect?.value ?? 'auto') as VRAMOptimizationConfig['kv_cache_quantization'],
+        sliding_window_size: parseInt(slidingWindowSelect?.value ?? '0', 10),
+        attention_sink_size: parseInt(attentionSinkSliderEl?.value ?? '4', 10),
         gpu_memory_utilization: (parseInt(gpuMemSliderEl?.value ?? '85', 10)) / 100,
       };
 
@@ -340,7 +398,7 @@ async function initApp() {
 
       document.getElementById('model-picker')!.style.display = 'none'
       document.getElementById('progress-section')!.style.display = 'block'
-      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext, vramConfig, chosenMaxTokens })
+      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext, vramConfig, chosenMaxTokens, enginePreference })
     })
   })
 
@@ -417,12 +475,12 @@ async function initApp() {
 
     // Stage 3: Initialize WebLLM with progress (55% of total progress)
     currentInitState = 'MODEL'
-    setProgress("Initializing WebLLM...", 35)
+    setProgress("Initializing LLM Engine...", 35)
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
       // Map WebLLM progress (0-1) to 35-90% of total progress
       const percentage = 35 + Math.round(progress.progress * 55)
       setProgress(progress.text, percentage)
-    }, selectedModelId, preferredContext)
+    }, selectedModelId, preferredContext, enginePreference)
 
     // Stage 4: Final setup and UI binding (90%)
     currentInitState = 'FINALIZING'

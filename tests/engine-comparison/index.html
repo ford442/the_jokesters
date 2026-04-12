@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM Engine Comparison - The Jokesters</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 20px; 
+      background: #0a0a1a; 
+      color: #fff; 
+      line-height: 1.6;
+    }
+    h1, h2, h3 { margin-top: 0; }
+    h1 { color: #4ecdc4; border-bottom: 2px solid #4ecdc4; padding-bottom: 10px; }
+    h2 { color: #4ecdc4; margin-top: 30px; }
+    
+    .engine-card { 
+      border: 1px solid #444; 
+      border-radius: 8px; 
+      padding: 16px; 
+      margin: 12px 0; 
+      background: #1a1a2e; 
+      transition: border-color 0.3s;
+    }
+    .engine-card.active { border-color: #4ecdc4; box-shadow: 0 0 10px rgba(78, 205, 196, 0.3); }
+    .engine-card.testing { border-color: #ffd700; }
+    .engine-card.error { border-color: #ff6b6b; }
+    
+    .metrics { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 12px; 
+      margin-top: 12px; 
+    }
+    .metric { 
+      background: #0f3460; 
+      padding: 12px; 
+      border-radius: 4px; 
+      text-align: center;
+    }
+    .metric-label { font-size: 0.8em; color: #888; }
+    .metric-value { font-size: 1.2em; font-weight: bold; color: #4ecdc4; }
+    
+    .output { 
+      background: #0a0a1a; 
+      color: #4ecdc4; 
+      padding: 12px; 
+      border-radius: 4px; 
+      font-family: 'Consolas', 'Monaco', monospace; 
+      white-space: pre-wrap; 
+      min-height: 100px; 
+      max-height: 300px; 
+      overflow-y: auto; 
+      margin-top: 12px;
+      border: 1px solid #333;
+    }
+    
+    button { 
+      padding: 12px 24px; 
+      border: none; 
+      border-radius: 6px; 
+      cursor: pointer; 
+      font-size: 1em;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+    
+    .btn-primary { 
+      background: #4ecdc4; 
+      color: #0a0a1a; 
+      font-weight: bold; 
+    }
+    .btn-primary:hover { background: #3dbdb4; }
+    .btn-primary:disabled { 
+      background: #2a4a48; 
+      color: #666; 
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    select, textarea { 
+      width: 100%; 
+      padding: 10px; 
+      border-radius: 6px; 
+      border: 1px solid #444; 
+      background: #0f3460; 
+      color: white; 
+      margin-bottom: 12px; 
+      font-size: 0.95em;
+    }
+    select:focus, textarea:focus {
+      outline: none;
+      border-color: #4ecdc4;
+    }
+    
+    label { 
+      display: block; 
+      margin-bottom: 6px; 
+      color: #aaa; 
+      font-size: 0.9em;
+    }
+    
+    #capability-report {
+      background: #1a1a2e;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #444;
+    }
+    
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .capability-item {
+      background: #0f3460;
+      padding: 10px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+    
+    .capability-item.supported { 
+      border-left: 3px solid #4ecdc4; 
+    }
+    .capability-item.unsupported { 
+      border-left: 3px solid #ff6b6b; 
+      opacity: 0.7;
+    }
+    
+    pre { 
+      background: #0a0a1a; 
+      padding: 12px; 
+      border-radius: 4px; 
+      overflow-x: auto;
+      font-size: 0.85em;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+    .status-idle { background: #444; }
+    .status-loading { background: #ffd700; color: #0a0a1a; }
+    .status-generating { background: #4ecdc4; color: #0a0a1a; }
+    .status-complete { background: #4ade80; color: #0a0a1a; }
+    .status-error { background: #ff6b6b; }
+    
+    .comparison-summary {
+      background: #1a1a2e;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+      border: 1px solid #444;
+    }
+    
+    .winner-badge {
+      background: #ffd700;
+      color: #0a0a1a;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+    
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #4ecdc4;
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <a href="../../" class="back-link">← Back to The Jokesters</a>
+  
+  <h1>🔬 LLM Engine Comparison Test</h1>
+  <p style="color: #888;">Compare MLC WebLLM (WebGPU) vs llama.cpp (WASM) performance and compatibility.</p>
+  
+  <div id="capability-report">
+    <h3>Browser Capabilities</h3>
+    <div class="capability-grid" id="capability-grid">
+      <div class="capability-item">Loading...</div>
+    </div>
+  </div>
+  
+  <h2>Test Configuration</h2>
+  <div>
+    <label for="test-model">Model:</label>
+    <select id="test-model">
+      <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B (MLC - WebGPU)</option>
+      <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B F16 (MLC - WebGPU)</option>
+      <option value="Hermes-3-Llama-3.2-3B-GGUF">Hermes-3 3B (GGUF - WASM)</option>
+      <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B (GGUF - WASM)</option>
+    </select>
+  </div>
+  
+  <div>
+    <label for="test-prompt">Prompt:</label>
+    <textarea id="test-prompt" rows="3">Tell me a short joke about programming.</textarea>
+  </div>
+  
+  <button class="btn-primary" id="run-test-btn" onclick="runComparison()">Run Comparison Test</button>
+  
+  <h2>Results</h2>
+  <div id="mlc-result" class="engine-card">
+    <h3>⚡ MLC WebLLM</h3>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Load Time</div>
+        <div class="metric-value" id="mlc-load">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Tokens/sec</div>
+        <div class="metric-value" id="mlc-speed">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Status</div>
+        <div class="metric-value" id="mlc-status">
+          <span class="status-badge status-idle">Not tested</span>
+        </div>
+      </div>
+    </div>
+    <div id="mlc-output" class="output"></div>
+  </div>
+  
+  <div id="llamacpp-result" class="engine-card">
+    <h3>🧠 llama.cpp WASM</h3>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Load Time</div>
+        <div class="metric-value" id="llamacpp-load">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Tokens/sec</div>
+        <div class="metric-value" id="llamacpp-speed">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Status</div>
+        <div class="metric-value" id="llamacpp-status">
+          <span class="status-badge status-idle">Not tested</span>
+        </div>
+      </div>
+    </div>
+    <div id="llamacpp-output" class="output"></div>
+  </div>
+  
+  <div class="comparison-summary" id="comparison-summary" style="display: none;">
+    <h3>📊 Comparison Summary</h3>
+    <div id="summary-content"></div>
+  </div>
+  
+  <script type="module" src="./test-runner.ts"></script>
+</body>
+</html>

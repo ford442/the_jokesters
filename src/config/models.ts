@@ -535,3 +535,85 @@ export function getModelFallbackChain(preferredModelId?: string): string[] {
   
   return chain;
 }
+
+// =============================================================================
+// UNIFIED MODEL CONFIGURATION - Dual-Engine Architecture
+// =============================================================================
+
+import type { UnifiedModelConfig } from '../llm/LLMEngine'
+
+/**
+ * Unified model configurations for the dual-engine architecture.
+ * These models can be used with either MLC WebLLM or llama.cpp WASM engines.
+ */
+export const UNIFIED_MODELS: UnifiedModelConfig[] = [
+  // MLC WebLLM Models
+  {
+    id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
+    name: 'Hermes 3 Llama 3.2 3B (MLC)',
+    vram_required_MB: 2500,
+    context_window_size: 4096,
+    mlc: {
+      model_url: 'https://storage.noahcohn.com/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/',
+      model_lib_url: 'https://storage.noahcohn.com/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+      overrides: {
+        context_window_size: 4096,
+        prefill_chunk_size: 1024,
+      },
+    },
+  },
+  
+  // llama.cpp WASM Models (GGUF format from HuggingFace)
+  {
+    id: 'Hermes-3-Llama-3.1-8B-GGUF',
+    name: 'Hermes 3 Llama 3.1 8B (GGUF)',
+    vram_required_MB: 5200,
+    context_window_size: 4096,
+    llamaCpp: {
+      gguf_url: 'https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF/resolve/main/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf',
+      hf_repo: 'NousResearch/Hermes-3-Llama-3.1-8B-GGUF',
+      hf_file: 'Hermes-3-Llama-3.1-8B.Q4_K_M.gguf',
+      context_size: 4096,
+    },
+  },
+  {
+    id: 'vicuna-7b-v1.5-GGUF',
+    name: 'Vicuna 7B v1.5 (GGUF)',
+    vram_required_MB: 4500,
+    context_window_size: 4096,
+    llamaCpp: {
+      gguf_url: 'https://huggingface.co/TheBloke/vicuna-7B-v1.5-GGUF/resolve/main/vicuna-7b-v1.5.Q4_K_M.gguf',
+      hf_repo: 'TheBloke/vicuna-7B-v1.5-GGUF',
+      hf_file: 'vicuna-7b-v1.5.Q4_K_M.gguf',
+      context_size: 4096,
+    },
+  },
+  {
+    id: 'Hermes-3-Llama-3.2-3B-GGUF',
+    name: 'Hermes 3 Llama 3.2 3B (GGUF)',
+    vram_required_MB: 2500,
+    context_window_size: 4096,
+    llamaCpp: {
+      gguf_url: 'https://huggingface.co/NousResearch/Hermes-3-Llama-3.2-3B-GGUF/resolve/main/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf',
+      hf_repo: 'NousResearch/Hermes-3-Llama-3.2-3B-GGUF',
+      hf_file: 'Hermes-3-Llama-3.2-3B.Q4_K_M.gguf',
+      context_size: 4096,
+    },
+  },
+]
+
+
+
+/**
+ * Get a unified model config by ID
+ */
+export function getUnifiedModelById(id: string): UnifiedModelConfig | undefined {
+  return UNIFIED_MODELS.find(m => m.id === id)
+}
+
+/**
+ * Get all models compatible with a specific engine type
+ */
+export function getModelsForEngine(engineType: 'mlc' | 'llamaCpp'): UnifiedModelConfig[] {
+  return UNIFIED_MODELS.filter(m => m[engineType] !== undefined)
+}

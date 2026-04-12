@@ -1,9 +1,11 @@
 import type { GroupChatManager } from './GroupChatManager'
 import * as webllm from '@mlc-ai/web-llm'
+import type { EngineType } from './llm/EngineFactory'
 
 export interface AgentModelMapping {
   agentId: string
   modelId: string
+  enginePreference?: EngineType  // NEW: Per-agent engine preference
 }
 
 export interface ModelSwapProgress {

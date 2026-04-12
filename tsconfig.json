@@ -19,7 +19,8 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    // Note: erasableSyntaxOnly disabled because @wllama/wllama uses non-erasable syntax
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
@@ -30,6 +31,7 @@
   "exclude": [
     "src/**/*.json",
     "src/test",
-    "src/test/**/*"
+    "src/test/**/*",
+    "node_modules/@wllama/**/*"
   ]
 }
