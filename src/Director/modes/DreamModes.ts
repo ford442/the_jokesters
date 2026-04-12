@@ -2121,3 +2121,96 @@ export async function runReincarnationBureauLoop(_scenario: Scenario, ctx: ModeC
         }
     }
 }
+
+export async function runGreekGodHOALoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⚡ THE GREEK GOD HOA: Mount Olympus rules are strict!`, '#1abc9c');
+
+    const athena = 'scientist'; // Qwen2.5 as Athena citing rules
+    const zeus = 'comedian'; // Hermes-3 as Zeus wanting to smite
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(athena);
+    await ctx.manager.chatForAgent(athena, `(GREEK GOD HOA: You are Athena, Goddess of Wisdom, currently citing the Mount Olympus Homeowners Association rules. The User is a mortal who has violated a minor HOA rule like leaving a chariot parked too long. Read them the rule.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Mortal)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.callbacks.onTurnStart(athena);
+            await ctx.manager.chatForAgent(athena, `(GREEK GOD HOA: You are Athena. The mortal said: "${userInput}". Explain why their logic violates subsection 4B of the Olympus zoning laws.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            await ctx.callbacks.onTurnStart(zeus);
+            await ctx.manager.chatForAgent(zeus, `(GREEK GOD HOA: You are Zeus. The mortal said: "${userInput}". Threaten to smite them with a lightning bolt for disrespecting the HOA board, but get distracted by something trivial.)`, async (s) => await ctx.callbacks.onSpeak(s, zeus, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runDragonsHoardConsultantLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🐉 THE DRAGON'S HOARD CONSULTANT: Diversifying your gold!`, '#1abc9c');
+
+    const seriousConsultant = 'philosopher'; // Phi-3 for serious financial advice
+    const chaoticConsultant = 'comedian'; // Hermes-3 for eating the competition
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(seriousConsultant);
+    await ctx.manager.chatForAgent(seriousConsultant, `(DRAGON'S HOARD: You are a serious financial consultant. The User is a dragon. Explain why keeping all their wealth in a single pile of gold coins in a cave is a terrible investment strategy.)`, async (s) => await ctx.callbacks.onSpeak(s, seriousConsultant, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Dragon)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.callbacks.onTurnStart(seriousConsultant);
+            await ctx.manager.chatForAgent(seriousConsultant, `(DRAGON'S HOARD: You are a serious financial consultant. The Dragon said: "${userInput}". Offer serious advice on diversifying their portfolio to include kidnapped royalty or enchanted swords.)`, async (s) => await ctx.callbacks.onSpeak(s, seriousConsultant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            await ctx.callbacks.onTurnStart(chaoticConsultant);
+            await ctx.manager.chatForAgent(chaoticConsultant, `(DRAGON'S HOARD: You are a chaotic consultant. The Dragon said: "${userInput}". Suggest that the best financial strategy is just to eat their competitors and burn down the local village.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticConsultant, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runExcaliburTechSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🗡️ EXCALIBUR TECH SUPPORT: Updating your sword!`, '#1abc9c');
+
+    const enthusiasticHelp = 'comedian'; // Llama-3 for enthusiastic magical help (fallback to comedian)
+    const strictEULA = 'scientist'; // Qwen2.5 for citing the EULA of Avalon
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictEULA);
+    await ctx.manager.chatForAgent(strictEULA, `(EXCALIBUR TECH: You are magical tech support for the sword Excalibur. The User just pulled the sword from the stone, but it needs a software update. Inform them that they must accept the 500-page End User License Agreement of Avalon.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEULA, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Chosen One)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await ctx.callbacks.onTurnStart(strictEULA);
+            await ctx.manager.chatForAgent(strictEULA, `(EXCALIBUR TECH: You are strict magical tech support. The User said: "${userInput}". Cite a ridiculous clause from the EULA of Avalon that they are violating by holding the sword incorrectly.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEULA, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            await ctx.callbacks.onTurnStart(enthusiasticHelp);
+            await ctx.manager.chatForAgent(enthusiasticHelp, `(EXCALIBUR TECH: You are enthusiastic magical tech support. The User said: "${userInput}". Ask them to try turning the sword off and on again by placing it back in the stone, or blowing on the hilt.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticHelp, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
