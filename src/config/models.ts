@@ -543,8 +543,59 @@ export function getModelFallbackChain(preferredModelId?: string): string[] {
 import type { UnifiedModelConfig } from '../llm/LLMEngine'
 
 /**
- * Unified model configurations for the dual-engine architecture.
- * These models can be used with either MLC WebLLM or llama.cpp WASM engines.
+ * Transformers.js Models (ONNX/WebGPU)
+ * These models use Hugging Face's Transformers.js with ONNX Runtime Web
+ */
+export const TRANSFORMERS_MODELS: UnifiedModelConfig[] = [
+  {
+    id: "Qwen2.5-0.5B-Instruct-ONNX",
+    name: "Qwen 2.5 0.5B (Transformers.js/WebGPU)",
+    vram_required_MB: 1500,
+    context_window_size: 32768,
+    transformers: {
+      model_id: "onnx-community/Qwen2.5-0.5B-Instruct",
+      device: "webgpu",
+      dtype: "q4f16"
+    }
+  },
+  {
+    id: "Qwen2.5-1.5B-Instruct-ONNX",
+    name: "Qwen 2.5 1.5B (Transformers.js/WebGPU)",
+    vram_required_MB: 2500,
+    context_window_size: 32768,
+    transformers: {
+      model_id: "onnx-community/Qwen2.5-1.5B-Instruct",
+      device: "webgpu",
+      dtype: "q4f16"
+    }
+  },
+  {
+    id: "Phi-3-mini-4k-instruct-ONNX",
+    name: "Phi-3 Mini 4K (Transformers.js/WebGPU)",
+    vram_required_MB: 3500,
+    context_window_size: 4096,
+    transformers: {
+      model_id: "onnx-community/Phi-3-mini-4k-instruct-onnx-web",
+      device: "webgpu",
+      dtype: "q4f16"
+    }
+  },
+  {
+    id: "Llama-3.2-1B-Instruct-ONNX",
+    name: "Llama 3.2 1B (Transformers.js/WebGPU)",
+    vram_required_MB: 1800,
+    context_window_size: 8192,
+    transformers: {
+      model_id: "onnx-community/Llama-3.2-1B-Instruct",
+      device: "webgpu",
+      dtype: "q4f16"
+    }
+  }
+]
+
+/**
+ * Unified model configurations for the triple-engine architecture.
+ * These models can be used with MLC WebLLM, llama.cpp WASM, or Transformers.js engines.
  */
 export const UNIFIED_MODELS: UnifiedModelConfig[] = [
   // MLC WebLLM Models
@@ -562,6 +613,9 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
       },
     },
   },
+  
+  // Transformers.js Models (ONNX/WebGPU)
+  ...TRANSFORMERS_MODELS,
   
   // llama.cpp WASM Models (GGUF format from HuggingFace)
   {

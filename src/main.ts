@@ -122,23 +122,39 @@ async function initApp() {
           <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">All models run locally in your browser via WebGPU. Weights are cached after the first download.</p>
           <!-- Engine selector -->
           <select id="engine-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <option value="auto">🤖 Auto (WebGPU preferred)</option>
-            <option value="mlc">⚡ MLC WebLLM (WebGPU)</option>
-            <option value="llamacpp">🧠 llama.cpp (WASM/CPU)</option>
+            <option value="auto">🤖 Auto (MLC → Transformers.js → llama.cpp)</option>
+            <option value="mlc">⚡ MLC WebLLM (Fastest WebGPU)</option>
+            <option value="transformers">🤗 Transformers.js (HF Hub Models)</option>
+            <option value="llamacpp">🧠 llama.cpp (Any GGUF)</option>
           </select>
+
+          <!-- Engine info display -->
+          <div id="engine-info" style="color:#888;font-size:0.78em;margin-bottom:12px;">
+            Speed: Auto | Models: Best available | VRAM: Auto
+          </div>
 
           <!-- Engine capability indicator -->
           <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
 
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · Fast · ~2 GB VRAM ★ Recommended</option>
-            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · Fast · ~2.5 GB VRAM</option>
-            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · All GPUs · ~2 GB VRAM (no f16 needed)</option>
-            <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · All GPUs · ~2.5 GB VRAM (no f16 needed)</option>
-            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · All GPUs · ~4 GB VRAM (no f16 needed)</option>
-            <option value="ford442/vicuna-7b-q4f32-webllm">Vicuna 7B q4f32 · All GPUs · ~4 GB VRAM (Llama-2 / Vicuna tuned)</option>
-            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
-            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · High quality · ~5.2 GB VRAM (needs f16 GPU)</option>
+            <!-- MLC WebLLM Models -->
+            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC/WebGPU · ~2 GB VRAM ★ Recommended</option>
+            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · MLC/WebGPU · ~2.5 GB VRAM</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · MLC/WebGPU · ~2 GB VRAM (no f16 needed)</option>
+            <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · MLC/WebGPU · ~2.5 GB VRAM (no f16 needed)</option>
+            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (no f16 needed)</option>
+            <option value="ford442/vicuna-7b-q4f32-webllm">Vicuna 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (Llama-2 / Vicuna tuned)</option>
+            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · MLC/WebGPU · ~5.2 GB VRAM (needs f16 GPU)</option>
+            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · MLC/WebGPU · ~5.2 GB VRAM (needs f16 GPU)</option>
+            
+            <!-- Transformers.js Models -->
+            <option value="Qwen2.5-0.5B-Instruct-ONNX">Qwen 2.5 0.5B · Transformers.js/WebGPU · ~1.5 GB VRAM</option>
+            <option value="Qwen2.5-1.5B-Instruct-ONNX">Qwen 2.5 1.5B · Transformers.js/WebGPU · ~2.5 GB VRAM</option>
+            <option value="Phi-3-mini-4k-instruct-ONNX">Phi-3 Mini · Transformers.js/WebGPU · ~3.5 GB VRAM</option>
+            <option value="Llama-3.2-1B-Instruct-ONNX">Llama 3.2 1B · Transformers.js/WebGPU · ~1.8 GB VRAM</option>
+            
+            <!-- GGUF Models (llama.cpp) -->
+            <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B · llama.cpp/WASM · ~4 GB RAM</option>
           </select>
           <select id="context-size-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
             <option value="auto">Auto (detect VRAM)</option>
@@ -360,6 +376,29 @@ async function initApp() {
     }
   }
   updateCapabilityDisplay()
+
+  // Update engine info display based on selection
+  function updateEngineInfo(engineType: string) {
+    const infoMap: Record<string, { speed: string; models: string; vram: string }> = {
+      'mlc': { speed: '⭐⭐⭐⭐⭐', models: 'MLC-optimized', vram: 'Low' },
+      'transformers': { speed: '⭐⭐⭐⭐', models: 'HuggingFace Hub', vram: 'Medium' },
+      'llamacpp': { speed: '⭐⭐', models: 'Any GGUF', vram: 'CPU-only' },
+      'auto': { speed: 'Auto', models: 'Best available', vram: 'Auto' }
+    }
+    
+    const info = infoMap[engineType] || infoMap['auto']
+    const el = document.getElementById('engine-info')
+    if (el) {
+      el.innerHTML = `Speed: ${info.speed} | Models: ${info.models} | VRAM: ${info.vram}`
+    }
+  }
+
+  // Wire up engine selector change listener
+  const engineSelectEl = document.getElementById('engine-select') as HTMLSelectElement
+  engineSelectEl?.addEventListener('change', () => {
+    updateEngineInfo(engineSelectEl.value)
+  })
+  updateEngineInfo(engineSelectEl?.value || 'auto')
 
   // Wait for user to click Launch before starting initialization
   const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens, enginePreference } = await new Promise<{

@@ -10,8 +10,9 @@
 import type { LLMEngine, UnifiedModelConfig } from './LLMEngine'
 import { MlcEngineAdapter } from './MlcEngineAdapter'
 import { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
+import { TransformersEngineAdapter } from './TransformersEngineAdapter'
 
-export type EngineType = 'auto' | 'mlc' | 'llamacpp'
+export type EngineType = 'auto' | 'mlc' | 'llamacpp' | 'transformers'
 
 export interface EngineCapabilities {
   /** WebGPU support available */
@@ -110,8 +111,10 @@ export interface ModelEngineSupport {
   mlc: boolean
   /** Whether the model supports llama.cpp engine */
   llamacpp: boolean
+  /** Whether the model supports Transformers.js engine */
+  transformers: boolean
   /** Recommended engine for this model */
-  recommended: 'mlc' | 'llamacpp'
+  recommended: 'mlc' | 'llamacpp' | 'transformers'
 }
 
 /**
@@ -126,30 +129,28 @@ export function getModelEngineSupport(
   const hasLlamaCpp = modelConfig.llamaCpp !== undefined || 
                       modelConfig.engineConfig?.ggufUrl !== undefined ||
                       modelConfig.engineConfig?.gguf_url !== undefined
+  const hasTransformers = modelConfig.transformers !== undefined
 
-  // If both are available, recommend based on capabilities
-  if (hasMlc && hasLlamaCpp) {
-    return {
-      mlc: true,
-      llamacpp: true,
-      recommended: capabilities.webgpu ? 'mlc' : 'llamacpp'
-    }
-  }
-
-  // If only one is available
-  if (hasMlc) {
-    return { mlc: true, llamacpp: false, recommended: 'mlc' }
-  }
-  if (hasLlamaCpp) {
-    return { mlc: false, llamacpp: true, recommended: 'llamacpp' }
+  // Determine recommended engine: MLC → Transformers.js → llama.cpp
+  let recommended: 'mlc' | 'llamacpp' | 'transformers'
+  if (hasMlc && capabilities.webgpu) {
+    recommended = 'mlc'
+  } else if (hasTransformers) {
+    recommended = 'transformers'
+  } else if (hasLlamaCpp) {
+    recommended = 'llamacpp'
+  } else if (capabilities.webgpu) {
+    recommended = 'mlc'
+  } else {
+    recommended = 'llamacpp'
   }
 
-  // Fallback: try to detect from capabilities
-  if (capabilities.webgpu) {
-    return { mlc: true, llamacpp: true, recommended: 'mlc' }
+  return {
+    mlc: hasMlc,
+    llamacpp: hasLlamaCpp,
+    transformers: hasTransformers,
+    recommended
   }
-  
-  return { mlc: false, llamacpp: true, recommended: 'llamacpp' }
 }
 
 /**
@@ -164,31 +165,53 @@ export async function selectEngine(
   const support = getModelEngineSupport(modelConfig, caps)
 
   // Respect user preference
+  if (preference === 'transformers') {
+    if (!support.transformers) {
+      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support Transformers.js engine. Falling back to auto.`)
+      // Fall through to auto-selection
+    } else {
+      console.log('[EngineFactory] Using Transformers.js (ONNX/WebGPU)')
+      return new TransformersEngineAdapter()
+    }
+  }
+
   if (preference === 'mlc') {
     if (!support.mlc) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support MLC engine. Falling back to llama.cpp.`)
-      return new LlamaCppEngineAdapter()
+      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support MLC engine. Falling back to auto.`)
+      // Fall through to auto-selection
+    } else {
+      if (!caps.webgpu) {
+        console.warn(`[EngineFactory] WebGPU not available. MLC engine may not work properly.`)
+      }
+      console.log('[EngineFactory] Using MLC (WebGPU optimized)')
+      return new MlcEngineAdapter()
     }
-    if (!caps.webgpu) {
-      console.warn(`[EngineFactory] WebGPU not available. MLC engine may not work properly.`)
-    }
-    return new MlcEngineAdapter()
   }
 
   if (preference === 'llamacpp') {
     if (!support.llamacpp) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support llama.cpp engine. Falling back to MLC.`)
-      return new MlcEngineAdapter()
+      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support llama.cpp engine. Falling back to auto.`)
+      // Fall through to auto-selection
+    } else {
+      console.log('[EngineFactory] Using llama.cpp (WASM/CPU)')
+      return new LlamaCppEngineAdapter()
     }
-    return new LlamaCppEngineAdapter()
   }
 
   // Auto-select based on model support and capabilities
+  // Priority: MLC → Transformers.js → llama.cpp
   if (support.recommended === 'mlc' && caps.webgpu) {
+    console.log('[EngineFactory] Auto-selected MLC (WebGPU optimized)')
     return new MlcEngineAdapter()
+  }
+  
+  if (support.recommended === 'transformers' || support.transformers) {
+    console.log('[EngineFactory] Auto-selected Transformers.js (ONNX/WebGPU)')
+    return new TransformersEngineAdapter()
   }
 
   // Fall back to llama.cpp for compatibility
+  console.log('[EngineFactory] Auto-selected llama.cpp (WASM/CPU)')
   return new LlamaCppEngineAdapter()
 }
 
@@ -204,6 +227,7 @@ export function getCompatibleEngines(
 
   const engines: string[] = []
   if (support.mlc) engines.push('mlc')
+  if (support.transformers) engines.push('transformers')
   if (support.llamacpp) engines.push('llamacpp')
 
   return engines
@@ -261,12 +285,14 @@ export class EngineFactory {
   /**
    * Create a specific engine by type.
    */
-  static createEngine(type: 'mlc' | 'llamacpp'): LLMEngine {
+  static createEngine(type: 'mlc' | 'llamacpp' | 'transformers'): LLMEngine {
     switch (type) {
       case 'mlc':
         return new MlcEngineAdapter()
       case 'llamacpp':
         return new LlamaCppEngineAdapter()
+      case 'transformers':
+        return new TransformersEngineAdapter()
       default:
         throw new Error(`Unknown engine type: ${type}`)
     }

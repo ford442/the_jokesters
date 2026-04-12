@@ -31,11 +31,13 @@ export type {
   UnifiedModelConfig,
   MlcEngineConfig,
   LlamaCppEngineConfig,
+  TransformersEngineConfig,
 } from './LLMEngine'
 
 // Engine implementations
 export { MlcEngineAdapter } from './MlcEngineAdapter'
 export { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
+export { TransformersEngineAdapter } from './TransformersEngineAdapter'
 
 // Factory and utilities
 export {

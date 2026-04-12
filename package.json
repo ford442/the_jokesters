@@ -21,6 +21,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.0.1",
     "@mlc-ai/web-llm": "^0.2.8",
     "@wllama/wllama": "^2.3.7",
     "onnxruntime-web": "^1.17.0",

@@ -5,7 +5,7 @@
  * between MLC WebLLM and llama.cpp WASM engines without breaking existing functionality.
  */
 
-export type EngineType = 'mlc' | 'llamacpp' | 'auto'
+export type EngineType = 'mlc' | 'llamacpp' | 'transformers' | 'auto'
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -82,6 +82,12 @@ export interface LlamaCppEngineConfig {
   context_size: number
 }
 
+export interface TransformersEngineConfig {
+  model_id: string
+  device?: 'webgpu' | 'wasm' | 'cpu'
+  dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
+}
+
 export interface UnifiedModelConfig {
   id: string
   name: string
@@ -99,6 +105,8 @@ export interface UnifiedModelConfig {
   mlc?: MlcEngineConfig
   /** llama.cpp-specific configuration */
   llamaCpp?: LlamaCppEngineConfig
+  /** Transformers.js-specific configuration */
+  transformers?: TransformersEngineConfig
 }
 
 /**

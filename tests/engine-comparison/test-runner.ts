@@ -1,6 +1,8 @@
 import { EngineFactory } from '../../src/llm/EngineFactory'
 import { MlcEngineAdapter } from '../../src/llm/MlcEngineAdapter'
 import { LlamaCppEngineAdapter } from '../../src/llm/LlamaCppEngineAdapter'
+import { TransformersEngineAdapter } from '../../src/llm/TransformersEngineAdapter'
+import type { LLMEngine } from '../../src/llm/LLMEngine'
 import { UNIFIED_MODELS } from '../../src/config/models'
 
 interface TestResult {
@@ -38,7 +40,7 @@ function displayCapabilities() {
 
 displayCapabilities()
 
-function setStatus(engineType: 'mlc' | 'llamacpp', status: TestResult['status'], message?: string) {
+function setStatus(engineType: 'mlc' | 'llamacpp' | 'transformers', status: TestResult['status'], message?: string) {
   const statusEl = document.getElementById(`${engineType}-status`)!
   const card = document.getElementById(`${engineType}-result`)!
   
@@ -97,13 +99,20 @@ async function runComparison() {
   setStatus('llamacpp', 'idle')
   document.getElementById('comparison-summary')!.style.display = 'none'
   
-  const results: { mlc?: TestResult; llamacpp?: TestResult } = {}
+  const results: { mlc?: TestResult; transformers?: TestResult; llamacpp?: TestResult } = {}
   
   // Test MLC if available
   if (modelConfig.mlc) {
     results.mlc = await testEngine('mlc', modelConfig, prompt)
   } else {
     setStatus('mlc', 'idle', 'N/A (no MLC config)')
+  }
+  
+  // Test Transformers.js if available
+  if (modelConfig.transformers) {
+    results.transformers = await testEngine('transformers', modelConfig, prompt)
+  } else {
+    setStatus('transformers', 'idle', 'N/A (no Transformers.js config)')
   }
   
   // Test llama.cpp if available
@@ -121,12 +130,26 @@ async function runComparison() {
 }
 
 async function testEngine(
-  engineType: 'mlc' | 'llamacpp',
+  engineType: 'mlc' | 'llamacpp' | 'transformers',
   modelConfig: any,
   prompt: string
 ): Promise<TestResult> {
   const startTime = performance.now()
-  const engine = engineType === 'mlc' ? new MlcEngineAdapter() : new LlamaCppEngineAdapter()
+  
+  let engine: LLMEngine
+  switch (engineType) {
+    case 'mlc':
+      engine = new MlcEngineAdapter()
+      break
+    case 'llamacpp':
+      engine = new LlamaCppEngineAdapter()
+      break
+    case 'transformers':
+      engine = new TransformersEngineAdapter()
+      break
+    default:
+      throw new Error(`Unknown engine type: ${engineType}`)
+  }
   
   const result: TestResult = {
     loadTime: null,
@@ -188,45 +211,64 @@ async function testEngine(
   return result
 }
 
-function showComparisonSummary(results: { mlc?: TestResult; llamacpp?: TestResult }) {
+function showComparisonSummary(results: { mlc?: TestResult; transformers?: TestResult; llamacpp?: TestResult }) {
   const summaryEl = document.getElementById('comparison-summary')!
   const contentEl = document.getElementById('summary-content')!
   
   let html = ''
   
-  // Compare load times
-  if (results.mlc?.loadTime && results.llamacpp?.loadTime) {
-    const faster = results.mlc.loadTime < results.llamacpp.loadTime ? 'MLC WebLLM' : 'llama.cpp'
-    const diff = Math.abs(results.mlc.loadTime - results.llamacpp.loadTime).toFixed(2)
-    html += `<p><span class="winner-badge">${faster}</span> loaded ${diff}s faster</p>`
+  // Collect all successful results for comparison
+  const successfulEngines: Array<{ name: string; loadTime: number; tokensPerSec: number; result: TestResult }> = []
+  if (results.mlc?.status === 'complete' && results.mlc.loadTime && results.mlc.tokensPerSec) {
+    successfulEngines.push({ name: 'MLC WebLLM', loadTime: results.mlc.loadTime, tokensPerSec: results.mlc.tokensPerSec, result: results.mlc })
+  }
+  if (results.transformers?.status === 'complete' && results.transformers.loadTime && results.transformers.tokensPerSec) {
+    successfulEngines.push({ name: 'Transformers.js', loadTime: results.transformers.loadTime, tokensPerSec: results.transformers.tokensPerSec, result: results.transformers })
+  }
+  if (results.llamacpp?.status === 'complete' && results.llamacpp.loadTime && results.llamacpp.tokensPerSec) {
+    successfulEngines.push({ name: 'llama.cpp', loadTime: results.llamacpp.loadTime, tokensPerSec: results.llamacpp.tokensPerSec, result: results.llamacpp })
   }
   
-  // Compare generation speed
-  if (results.mlc?.tokensPerSec && results.llamacpp?.tokensPerSec) {
-    const faster = results.mlc.tokensPerSec > results.llamacpp.tokensPerSec ? 'MLC WebLLM' : 'llama.cpp'
-    const mlcSpeed = results.mlc.tokensPerSec.toFixed(1)
-    const llamaSpeed = results.llamacpp.tokensPerSec.toFixed(1)
-    const ratio = (Math.max(results.mlc.tokensPerSec, results.llamacpp.tokensPerSec) / 
-                   Math.min(results.mlc.tokensPerSec, results.llamacpp.tokensPerSec)).toFixed(1)
-    html += `<p><span class="winner-badge">${faster}</span> generated ${ratio}x faster (${mlcSpeed} vs ${llamaSpeed} tok/s)</p>`
+  // Compare load times (if 2+ engines succeeded)
+  if (successfulEngines.length >= 2) {
+    const fastestLoad = successfulEngines.reduce((a, b) => a.loadTime < b.loadTime ? a : b)
+    const slowestLoad = successfulEngines.reduce((a, b) => a.loadTime > b.loadTime ? a : b)
+    const loadDiff = (slowestLoad.loadTime - fastestLoad.loadTime).toFixed(2)
+    html += `<p><span class="winner-badge">${fastestLoad.name}</span> loaded ${loadDiff}s faster than ${slowestLoad.name}</p>`
+  }
+  
+  // Compare generation speed (if 2+ engines succeeded)
+  if (successfulEngines.length >= 2) {
+    const fastestGen = successfulEngines.reduce((a, b) => a.tokensPerSec > b.tokensPerSec ? a : b)
+    const slowestGen = successfulEngines.reduce((a, b) => a.tokensPerSec < b.tokensPerSec ? a : b)
+    const speedDiff = (fastestGen.tokensPerSec - slowestGen.tokensPerSec).toFixed(1)
+    html += `<p><span class="winner-badge">${fastestGen.name}</span> generated ${speedDiff} tok/s faster than ${slowestGen.name} (${fastestGen.tokensPerSec.toFixed(1)} vs ${slowestGen.tokensPerSec.toFixed(1)} tok/s)</p>`
   }
   
   // Show which engines had errors
   if (results.mlc?.status === 'error') {
     html += `<p>❌ MLC WebLLM failed: ${results.mlc.error?.substring(0, 100)}...</p>`
   }
+  if (results.transformers?.status === 'error') {
+    html += `<p>❌ Transformers.js failed: ${results.transformers.error?.substring(0, 100)}...</p>`
+  }
   if (results.llamacpp?.status === 'error') {
     html += `<p>❌ llama.cpp failed: ${results.llamacpp.error?.substring(0, 100)}...</p>`
   }
   
   // Recommendation
-  if (results.mlc?.status === 'complete' && results.llamacpp?.status === 'complete') {
+  if (successfulEngines.length >= 2) {
     const caps = EngineFactory.detectCapabilities()
-    if (caps.webgpu && results.mlc.tokensPerSec && results.mlc.tokensPerSec > (results.llamacpp.tokensPerSec || 0)) {
+    const fastest = successfulEngines.reduce((a, b) => a.tokensPerSec > b.tokensPerSec ? a : b)
+    if (caps.webgpu && fastest.name === 'MLC WebLLM') {
       html += `<p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;"><strong>💡 Recommendation:</strong> Use MLC WebLLM for best performance on this device.</p>`
+    } else if (caps.webgpu && fastest.name === 'Transformers.js') {
+      html += `<p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;"><strong>💡 Recommendation:</strong> Use Transformers.js for access to HuggingFace Hub models with good performance.</p>`
     } else {
       html += `<p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;"><strong>💡 Recommendation:</strong> Use llama.cpp for best compatibility on this device.</p>`
     }
+  } else if (successfulEngines.length === 1) {
+    html += `<p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;"><strong>💡 Recommendation:</strong> Only ${successfulEngines[0].name} worked on this device. Use that engine.</p>`
   }
   
   contentEl.innerHTML = html

@@ -188,7 +188,7 @@
   <a href="../../" class="back-link">← Back to The Jokesters</a>
   
   <h1>🔬 LLM Engine Comparison Test</h1>
-  <p style="color: #888;">Compare MLC WebLLM (WebGPU) vs llama.cpp (WASM) performance and compatibility.</p>
+  <p style="color: #888;">Compare MLC WebLLM (WebGPU) vs Transformers.js (ONNX/WebGPU) vs llama.cpp (WASM) performance and compatibility.</p>
   
   <div id="capability-report">
     <h3>Browser Capabilities</h3>
@@ -203,6 +203,10 @@
     <select id="test-model">
       <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B (MLC - WebGPU)</option>
       <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B F16 (MLC - WebGPU)</option>
+      <option value="Qwen2.5-0.5B-Instruct-ONNX">Qwen 2.5 0.5B (Transformers.js - ONNX/WebGPU)</option>
+      <option value="Qwen2.5-1.5B-Instruct-ONNX">Qwen 2.5 1.5B (Transformers.js - ONNX/WebGPU)</option>
+      <option value="Phi-3-mini-4k-instruct-ONNX">Phi-3 Mini (Transformers.js - ONNX/WebGPU)</option>
+      <option value="Llama-3.2-1B-Instruct-ONNX">Llama 3.2 1B (Transformers.js - ONNX/WebGPU)</option>
       <option value="Hermes-3-Llama-3.2-3B-GGUF">Hermes-3 3B (GGUF - WASM)</option>
       <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B (GGUF - WASM)</option>
     </select>
@@ -235,6 +239,27 @@
       </div>
     </div>
     <div id="mlc-output" class="output"></div>
+  </div>
+  
+  <div id="transformers-result" class="engine-card">
+    <h3>🤗 Transformers.js (ONNX/WebGPU)</h3>
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Load Time</div>
+        <div class="metric-value" id="transformers-load">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Tokens/sec</div>
+        <div class="metric-value" id="transformers-speed">-</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Status</div>
+        <div class="metric-value" id="transformers-status">
+          <span class="status-badge status-idle">Not tested</span>
+        </div>
+      </div>
+    </div>
+    <div id="transformers-output" class="output"></div>
   </div>
   
   <div id="llamacpp-result" class="engine-card">

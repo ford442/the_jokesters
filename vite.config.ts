@@ -34,6 +34,8 @@ export default defineConfig({
           'webllm-engine': ['@mlc-ai/web-llm'],
           // llama.cpp WASM engine - loaded for GGUF models
           'llamacpp-engine': ['@wllama/wllama'],
+          // Transformers.js engine - loaded for ONNX/WebGPU models
+          'transformers-engine': ['@huggingface/transformers'],
           // Three.js core - split into smaller chunks
           'three-core': ['three'],
           // ONNX Runtime - loaded when TTS is needed
@@ -86,7 +88,7 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web', '@wllama/wllama']
+    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web', '@wllama/wllama', '@huggingface/transformers']
   },
   worker: {
     format: 'es',
