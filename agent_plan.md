@@ -2,7 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 3
-* **status**: Successfully implemented The Absurd Job Market Phase 45 (Supervillain Temp Agency, Intergalactic Gig Economy, Reincarnation Bureau). Kept tasks_per_run at 3. Expanded the Dream Phase with Phase 46 (The Mythological Expansion).
+* **status**: Successfully implemented The Mythological Expansion Phase 46 (Greek God HOA, Dragon's Hoard Consultant, Excalibur Tech Support). Kept tasks_per_run at 3. Expanded the Dream Phase with Phase 47 (The Household Appliance Expansion).
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -553,11 +553,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Reincarnation Bureau**: Agents process the user's soul for their next life, offering terrible downgrade options. (Model Pairing: Qwen2.5 for karma accounting vs Hermes-3 for offering to let the user be a cockroach).
 
 ### Storage Manager Integration Steps
-1. Authenticate with the HF API securely and persist credentials via localStorage keys (jokesters-hf-token, jokesters-hf-repo).
-2. Push finished "Episode Scripts" to a private Dataset as background delta operations using the queue mechanism. Ensure background sync resolves conflict resolution intelligently using timestamps and version markers.
-3. Fetch "Previous Episode Summaries" at boot for continuity by parsing the dataset and extracting contextual snippets. specifically download summary.json at boot to prime the context window.
+1. **Authenticating with the HF API:** Implement robust logic in `HFStorageManager` to hit `https://huggingface.co/api/whoami-v2` for immediate validation of the token, and securely persist the credentials via `localStorage` keys (`jokesters-hf-token`, `jokesters-hf-repo`). Handle token revocation gracefully.
+2. **Pushing finished "Episode Scripts" to a private Dataset:** Establish a reliable background web worker monitoring `jokesters-sync-queue` that executes batched REST `POST` commits of new generated episode JSONs to the user's defined dataset. Employ delta updates and timestamp-based conflict resolution to avoid main-thread blocking or rate limits.
+3. **Fetching "Previous Episode Summaries" at boot for continuity:** Overhaul `main.ts` initialization and `MemoryManager` to quickly retrieve and parse a lightweight `summary.json` from the Hugging Face dataset. Inject these contextual snippets instantly into the `GroupChatManager` system prompt to grant the AI historical continuity, while full episodic databases hydrate in a separate background IndexedDB stream.
 
 ### Phase 46: The Mythological Expansion (Dreams)
-* [ ] **The Greek God HOA**: Agents act as Greek Gods complaining about the user's mortal actions violating the Mount Olympus Homeowners Association rules. (Model Pairing: Qwen2.5 as Athena citing rules vs Hermes-3 as Zeus wanting to smite).
-* [ ] **The Dragon's Hoard Consultant**: User is a dragon, agents are financial consultants advising the user on how to properly diversify their hoard of gold and kidnapped royalty. (Model Pairing: Phi-3 for serious financial advice vs Hermes-3 for eating the competition).
-* [ ] **The Excalibur Tech Support**: The user pulled the sword from the stone, but it needs a software update. Agents are magical tech support. (Model Pairing: Llama-3 for enthusiastic magical help vs Qwen2.5 for citing the EULA of Avalon).
+* [x] **The Greek God HOA**: Agents act as Greek Gods complaining about the user's mortal actions violating the Mount Olympus Homeowners Association rules. (Model Pairing: Qwen2.5 as Athena citing rules vs Hermes-3 as Zeus wanting to smite).
+* [x] **The Dragon's Hoard Consultant**: User is a dragon, agents are financial consultants advising the user on how to properly diversify their hoard of gold and kidnapped royalty. (Model Pairing: Phi-3 for serious financial advice vs Hermes-3 for eating the competition).
+* [x] **The Excalibur Tech Support**: The user pulled the sword from the stone, but it needs a software update. Agents are magical tech support. (Model Pairing: Llama-3 for enthusiastic magical help vs Qwen2.5 for citing the EULA of Avalon).
+
+### Phase 47: The Household Appliance Expansion (Dreams)
+* [ ] **The Sentient Vending Machine**: User tries to buy a snack, but agents are different parts of the vending machine arguing about user's dietary choices. (Model Pairing: Qwen2.5 for nutritional facts vs Hermes-3 for chaotic junk food pushing).
+* [ ] **The Traffic Light Operators**: Agents act as the tiny people inside a traffic light arguing over when to change the colors based on the user's driving. (Model Pairing: Llama-3 for safe driving vs Hermes-3 for causing chaos).
+* [ ] **The Microwave Critics**: Agents act as a high-end microwave critiquing the user's depressing frozen meals. (Model Pairing: Phi-3 for culinary snobbery vs Hermes-3 for chaotic heating logic).
