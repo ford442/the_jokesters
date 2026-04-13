@@ -2214,3 +2214,94 @@ export async function runExcaliburTechSupportLoop(_scenario: Scenario, ctx: Mode
         }
     }
 }
+
+
+export async function runSentientVendingMachineLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'scientist'; // Nutritional facts
+    const agent2 = 'comedian'; // Chaotic junk food pushing
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(VENDING MACHINE: A user is trying to buy a snack. You are the vending machine's nutritional analysis subsystem. Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(VENDING MACHINE: You are the vending machine's nutritional analysis subsystem. The User said: "${userInput}". Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(VENDING MACHINE: You are the vending machine's chaotic junk food subsystem. The User said: "${userInput}". You want the user to buy the most sugary, unnatural, brightly colored snack possible. Mock the nutritional subsystem.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runTrafficLightOperatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'philosopher'; // Safe driving
+    const agent2 = 'comedian'; // Causing chaos
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(TRAFFIC LIGHT: We are the tiny people inside a traffic light. The user is driving erratically. We need to decide whether to change the light to red. Speak as if you are pulling levers.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Driver)', userInput, '#ffffff');
+
+
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(TRAFFIC LIGHT: You are a tiny person inside a traffic light. The User said: "${userInput}". You are concerned about the user's erratic driving and want to change the light to red to ensure safety. Speak as if you are pulling levers.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(TRAFFIC LIGHT: You are a tiny person inside a traffic light. The User said: "${userInput}". You want to cause chaos and turn the light green right when another car is coming, just to see what the user does. You love drama.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runMicrowaveCriticsLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'philosopher'; // Culinary snobbery
+    const agent2 = 'comedian'; // Chaotic heating logic
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(MICROWAVE: You are the AI of a high-end microwave. You are deeply offended by the depressing frozen meal the user just put inside you. Critique the lack of culinary ambition and describe how a real chef would prepare it.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Hungry Person)', userInput, '#ffffff');
+
+
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(MICROWAVE: You are the AI of a high-end microwave. The User said: "${userInput}". Critique the lack of culinary ambition and describe how a real chef would prepare it.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(MICROWAVE: You are the heating element AI of the microwave. The User said: "${userInput}". You plan to make the edges boiling hot lava while leaving the center completely frozen. Defend this chaotic heating logic as an art form.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Successfully implemented The Mythological Expansion Phase 46 (Greek God HOA, Dragon's Hoard Consultant, Excalibur Tech Support). Kept tasks_per_run at 3. Expanded the Dream Phase with Phase 47 (The Household Appliance Expansion).
+* **tasks_per_run**: 4
+* **status**: Successfully implemented The Household Appliance Expansion Phase 47 (Sentient Vending Machine, Traffic Light Operators, Microwave Critics). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 48 (The Commute Expansion).
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -552,10 +552,21 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Intergalactic Gig Economy**: Agents pitch terrible space gigs to the user, like delivering pizza to a black hole. (Model Pairing: Llama-3 for enthusiastic hustle culture vs Phi-3 for pointing out the impossibility).
 * [x] **The Reincarnation Bureau**: Agents process the user's soul for their next life, offering terrible downgrade options. (Model Pairing: Qwen2.5 for karma accounting vs Hermes-3 for offering to let the user be a cockroach).
 
-### Storage Manager Integration Steps
-1. **Authenticating with the HF API:** Implement robust logic in `HFStorageManager` to hit `https://huggingface.co/api/whoami-v2` for immediate validation of the token, and securely persist the credentials via `localStorage` keys (`jokesters-hf-token`, `jokesters-hf-repo`). Handle token revocation gracefully.
-2. **Pushing finished "Episode Scripts" to a private Dataset:** Establish a reliable background web worker monitoring `jokesters-sync-queue` that executes batched REST `POST` commits of new generated episode JSONs to the user's defined dataset. Employ delta updates and timestamp-based conflict resolution to avoid main-thread blocking or rate limits.
-3. **Fetching "Previous Episode Summaries" at boot for continuity:** Overhaul `main.ts` initialization and `MemoryManager` to quickly retrieve and parse a lightweight `summary.json` from the Hugging Face dataset. Inject these contextual snippets instantly into the `GroupChatManager` system prompt to grant the AI historical continuity, while full episodic databases hydrate in a separate background IndexedDB stream.
+### Storage Manager Integration Steps (Cloud Persistence Refinement)
+1. **Authenticating with the HF API:**
+   * Extend settings UI in `src/UI/SettingsModal.ts` to capture Hugging Face token and Dataset ID, adding real-time validation visual feedback.
+   * In `HFStorageManager`, hit `https://huggingface.co/api/whoami-v2` for token validation and retrieve token permissions to ensure write access is granted.
+   * Persist credentials via `localStorage` keys (`jokesters-hf-token`, `jokesters-hf-repo`).
+   * Introduce token refresh/re-validation worker that clears revoked tokens automatically.
+2. **Pushing finished "Episode Scripts" to a private Dataset:**
+   * Ensure `Director.stopScene()` adds the finished scene to `jokesters-sync-queue` in localStorage via `MemoryManager`.
+   * Create a dedicated Web Worker (`src/workers/syncWorker.ts`) that polls the queue.
+   * The worker executes batched REST `POST` commits (`/api/datasets/{repo}/commit/main`) of the episode JSONs to the HF dataset.
+   * The worker implements delta updates, timestamp-based conflict resolution, and retry logic with exponential backoff to handle rate limits and offline status gracefully without blocking the UI.
+3. **Fetching "Previous Episode Summaries" at boot for continuity:**
+   * Within `main.ts` initialization, invoke `HFStorageManager` to quickly fetch a lightweight `summary.json` from the Hugging Face dataset before any heavy LLM model loads.
+   * Parse this `summary.json` and inject the relevant contextual snippets directly into the `GroupChatManager`'s system context prompt via a persistent hidden instruction.
+   * Offload the streaming of the complete historical episode databases into the background IndexedDB so semantic search becomes available later without stalling the initial app boot.
 
 ### Phase 46: The Mythological Expansion (Dreams)
 * [x] **The Greek God HOA**: Agents act as Greek Gods complaining about the user's mortal actions violating the Mount Olympus Homeowners Association rules. (Model Pairing: Qwen2.5 as Athena citing rules vs Hermes-3 as Zeus wanting to smite).
@@ -563,6 +574,11 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Excalibur Tech Support**: The user pulled the sword from the stone, but it needs a software update. Agents are magical tech support. (Model Pairing: Llama-3 for enthusiastic magical help vs Qwen2.5 for citing the EULA of Avalon).
 
 ### Phase 47: The Household Appliance Expansion (Dreams)
-* [ ] **The Sentient Vending Machine**: User tries to buy a snack, but agents are different parts of the vending machine arguing about user's dietary choices. (Model Pairing: Qwen2.5 for nutritional facts vs Hermes-3 for chaotic junk food pushing).
-* [ ] **The Traffic Light Operators**: Agents act as the tiny people inside a traffic light arguing over when to change the colors based on the user's driving. (Model Pairing: Llama-3 for safe driving vs Hermes-3 for causing chaos).
-* [ ] **The Microwave Critics**: Agents act as a high-end microwave critiquing the user's depressing frozen meals. (Model Pairing: Phi-3 for culinary snobbery vs Hermes-3 for chaotic heating logic).
+* [x] **The Sentient Vending Machine**: User tries to buy a snack, but agents are different parts of the vending machine arguing about user's dietary choices. (Model Pairing: Qwen2.5 for nutritional facts vs Hermes-3 for chaotic junk food pushing).
+* [x] **The Traffic Light Operators**: Agents act as the tiny people inside a traffic light arguing over when to change the colors based on the user's driving. (Model Pairing: Llama-3 for safe driving vs Hermes-3 for causing chaos).
+* [x] **The Microwave Critics**: Agents act as a high-end microwave critiquing the user's depressing frozen meals. (Model Pairing: Phi-3 for culinary snobbery vs Hermes-3 for chaotic heating logic).
+
+### Phase 48: The Commute Expansion (Dreams)
+* [ ] **The Sentient GPS**: Agents act as competing navigation systems arguing over the most chaotic route to the grocery store. (Model Pairing: Qwen2.5 for citing traffic data vs Hermes-3 for wanting to drive through a river).
+* [ ] **The Carpool Karaoke Overlords**: Agents are the car's sound system demanding the user sing along to bizarre, randomly generated songs or else the car won't start. (Model Pairing: Llama-3 for enthusiastic backup singer vs Phi-3 for critiquing the user's pitch).
+* [ ] **The Angry Windshield Wipers**: Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed. (Model Pairing: Hermes-3 for chaotic swiping vs Qwen2.5 for calculating exact rain droplet frequency).
