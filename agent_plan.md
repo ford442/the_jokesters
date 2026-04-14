@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 4
-* **status**: Successfully implemented The Household Appliance Expansion Phase 47 (Sentient Vending Machine, Traffic Light Operators, Microwave Critics). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 48 (The Commute Expansion).
+* **tasks_per_run**: 3
+* **status**: Successfully implemented The Household Appliance Expansion Phase 47 (Sentient Vending Machine, Traffic Light Operators, Microwave Critics). Decreased tasks_per_run to 3. Expanded the Dream Phase with Phase 48 (The Commute Expansion).
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -500,6 +500,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Upon scene completion, the Director invokes `MemoryManager.saveEpisode`, constructing a standardized filename `episodes/episode-{timestamp}.json`.
    * This cues `MemoryManager.saveEpisodeToCloud`, which enqueues the background sync job into a local `localStorage` queue (e.g., `jokesters-sync-queue`).
    * **Storage Manager Action:** Push finished "Episode Scripts" to a private Dataset as background delta operations using the REST API (`POST /api/datasets/{repo_id}/commit/main`).
+   * Use exponential backoff strategies to prevent HTTP 429 Too Many Requests errors when pushing large amounts of episodic data.
    * Implement a web worker for `storage_manager` to monitor the `jokesters-sync-queue` and execute batch pushes of generated scripts, releasing main-thread pressure.
    * **Conflict Resolution**: Background sync must intelligently resolve conflicts using timestamps, and only push new/delta files to ensure the main UI thread remains unblocked and bandwidth is conserved.
    * **Batch Syncing**: Implement batched commit operations to Hugging Face instead of single file uploads to prevent rate limiting.
@@ -579,6 +580,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Microwave Critics**: Agents act as a high-end microwave critiquing the user's depressing frozen meals. (Model Pairing: Phi-3 for culinary snobbery vs Hermes-3 for chaotic heating logic).
 
 ### Phase 48: The Commute Expansion (Dreams)
-* [ ] **The Sentient GPS**: Agents act as competing navigation systems arguing over the most chaotic route to the grocery store. (Model Pairing: Qwen2.5 for citing traffic data vs Hermes-3 for wanting to drive through a river).
-* [ ] **The Carpool Karaoke Overlords**: Agents are the car's sound system demanding the user sing along to bizarre, randomly generated songs or else the car won't start. (Model Pairing: Llama-3 for enthusiastic backup singer vs Phi-3 for critiquing the user's pitch).
-* [ ] **The Angry Windshield Wipers**: Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed. (Model Pairing: Hermes-3 for chaotic swiping vs Qwen2.5 for calculating exact rain droplet frequency).
+* [x] **The Sentient GPS**: Agents act as competing navigation systems arguing over the most chaotic route to the grocery store. (Model Pairing: Qwen2.5 for citing traffic data vs Hermes-3 for wanting to drive through a river).
+* [x] **The Carpool Karaoke Overlords**: Agents are the car's sound system demanding the user sing along to bizarre, randomly generated songs or else the car won't start. (Model Pairing: Llama-3 for enthusiastic backup singer vs Phi-3 for critiquing the user's pitch).
+* [x] **The Angry Windshield Wipers**: Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed. (Model Pairing: Hermes-3 for chaotic swiping vs Qwen2.5 for calculating exact rain droplet frequency).
+
+### Phase 49: The Absurd Scenarios (Dreams)
+* [ ] **Escape the Zoo**: Agents are animals plotting a convoluted escape from the zoo and need the user's help. (Model Pairing: Hermes-3 for the chaotic monkey vs Phi-3 for the mastermind penguin).
+* [ ] **Elevator Pitch from Hell**: Agents are venture capitalists trapped in an elevator listening to the user's terrible pitches. (Model Pairing: Qwen2.5 for citing market stats vs Llama-3 for overly enthusiastic feedback).
+* [ ] **Alien Game Show**: The user is a contestant on an alien game show where the rules change every second. (Model Pairing: Hermes-3 for the unhinged host vs Qwen2.5 for the pedantic rules judge).
+1. **Authenticating with the HF API**: Modify settings UI to take HF token and check against `/whoami-v2` API securely via `HFStorageManager`.
+2. **Fetching Previous Episode Summaries at Boot**: When app boots, have `HFStorageManager` quickly download `summary.json` to extract historical snippets before local dbs hydrate.

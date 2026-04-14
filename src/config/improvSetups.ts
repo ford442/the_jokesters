@@ -244,5 +244,20 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'sentient-spreadsheet',
     title: 'The Sentient Spreadsheet',
     description: 'Agents act as formulas inside a spreadsheet demanding data from the user and arguing over formatting.',
+  },
+  {
+    id: 'sentient-gps',
+    title: 'The Sentient GPS',
+    description: 'Agents act as competing navigation systems arguing over the most chaotic route to the grocery store.',
+  },
+  {
+    id: 'carpool-karaoke',
+    title: 'Carpool Karaoke Overlords',
+    description: 'Agents are the car\'s sound system demanding the user sing along to bizarre, randomly generated songs or else the car won\'t start.',
+  },
+  {
+    id: 'angry-windshield-wipers',
+    title: 'Angry Windshield Wipers',
+    description: 'Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed.',
   }
 ];
