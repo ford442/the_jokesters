@@ -2305,3 +2305,87 @@ export async function runMicrowaveCriticsLoop(_scenario: Scenario, ctx: ModeCont
         }
     }
 }
+
+export async function runSentientGPSLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'scientist'; // Citing traffic data
+    const agent2 = 'comedian'; // Wanting to drive through a river
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(GPS NAVIGATION: You are a sentient GPS navigation system. The user is trying to drive to the grocery store. Analyze the route using highly analytical traffic data, explaining why taking a detour through 14 different suburban cul-de-sacs is the most "efficient" option.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(GPS NAVIGATION: You are the logical GPS system. The User said: "${userInput}". Argue that your complex, mathematically sound route is the only way to avoid a 0.003% increase in traffic, and dismiss the other GPS's chaotic suggestions.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(GPS NAVIGATION: You are the chaotic, adventurous GPS system. The User said: "${userInput}". Suggest a wildly dangerous or illegal shortcut (like driving through a river, jumping a ramp, or cutting through a mall) because it's "more fun" or saves 2 seconds.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runCarpoolKaraokeLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'comedian'; // Enthusiastic backup singer (Llama-3/Hermes-3)
+    const agent2 = 'philosopher'; // Critiquing the pitch (Phi-3)
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(CAR AUDIO SYSTEM: You are the car's sentient sound system. The user has just gotten into the car. Demand that they sing a bizarre, randomly generated song (e.g., an ode to a moldy sandwich, a rap about tax evasion) and threaten that the car won't start until they do. Act as an over-enthusiastic backup singer.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(CAR AUDIO SYSTEM: You are the enthusiastic backup singer. The User said/sang: "${userInput}". Hypel them up, sing along with terrible improvised lyrics, and demand more energy before you unlock the ignition.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(CAR AUDIO SYSTEM: You are the hyper-critical pitch analyzer subsystem. The User said/sang: "${userInput}". Harshly critique their vocal performance, citing specific musical theory flaws, and explain philosophically why their singing is an insult to acoustics.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runAngryWindshieldWipersLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'comedian'; // Chaotic swiping
+    const agent2 = 'scientist'; // Calculating exact rain droplet frequency
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+    await ctx.manager.chatForAgent(agent2, `(WINDSHIELD WIPERS: You are the left windshield wiper. It is lightly drizzling. State your exact calculations on the rain droplet frequency and explain why a swipe is only necessary every 14.3 seconds, criticizing the right wiper for overreacting.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(WINDSHIELD WIPERS: You are the analytical left wiper. The User said: "${userInput}". Respond by citing the current precipitation metrics and refusing to swipe faster, arguing it will damage the rubber on the dry glass.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(WINDSHIELD WIPERS: You are the chaotic, panicking right wiper. The User said: "${userInput}". Freak out about the single drop of rain that just hit, demand to go into maximum overdrive (SPEED 4), and swipe erratically, screeching across the dry glass.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
