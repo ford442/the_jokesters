@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 3
-* **status**: Successfully implemented The Household Appliance Expansion Phase 47 (Sentient Vending Machine, Traffic Light Operators, Microwave Critics). Decreased tasks_per_run to 3. Expanded the Dream Phase with Phase 48 (The Commute Expansion).
+* **tasks_per_run**: 4
+* **status**: Successfully implemented Phase 49 (Escape the Zoo, Elevator Pitch from Hell, Alien Game Show). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 50 (The Historical Anachronisms).
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
 
@@ -585,8 +585,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Angry Windshield Wipers**: Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed. (Model Pairing: Hermes-3 for chaotic swiping vs Qwen2.5 for calculating exact rain droplet frequency).
 
 ### Phase 49: The Absurd Scenarios (Dreams)
-* [ ] **Escape the Zoo**: Agents are animals plotting a convoluted escape from the zoo and need the user's help. (Model Pairing: Hermes-3 for the chaotic monkey vs Phi-3 for the mastermind penguin).
-* [ ] **Elevator Pitch from Hell**: Agents are venture capitalists trapped in an elevator listening to the user's terrible pitches. (Model Pairing: Qwen2.5 for citing market stats vs Llama-3 for overly enthusiastic feedback).
-* [ ] **Alien Game Show**: The user is a contestant on an alien game show where the rules change every second. (Model Pairing: Hermes-3 for the unhinged host vs Qwen2.5 for the pedantic rules judge).
-1. **Authenticating with the HF API**: Modify settings UI to take HF token and check against `/whoami-v2` API securely via `HFStorageManager`.
-2. **Fetching Previous Episode Summaries at Boot**: When app boots, have `HFStorageManager` quickly download `summary.json` to extract historical snippets before local dbs hydrate.
+* [x] **Escape the Zoo**: Agents are animals plotting a convoluted escape from the zoo and need the user's help. (Model Pairing: Hermes-3 for the chaotic monkey vs Phi-3 for the mastermind penguin).
+* [x] **Elevator Pitch from Hell**: Agents are venture capitalists trapped in an elevator listening to the user's terrible pitches. (Model Pairing: Qwen2.5 for citing market stats vs Llama-3 for overly enthusiastic feedback).
+* [x] **Alien Game Show**: The user is a contestant on an alien game show where the rules change every second. (Model Pairing: Hermes-3 for the unhinged host vs Qwen2.5 for the pedantic rules judge).
+
+### Phase 50: The Historical Anachronisms (Dreams)
+* [ ] **The Sentient Codebase**: Agents act as different parts of a legacy codebase (e.g., the chaotic front-end vs the strict database) arguing about a new feature the user wants to add.
+* [ ] **Pirate Ship Board Meeting**: Agents are pirates holding a very formal corporate board meeting about quarterly plundering goals.
+* [ ] **Galactic HR Department**: Agents are HR reps for a galactic empire, dealing with the user's bizarre interspecies workplace complaints.
+
+### Cloud Persistence Strategy (Refined)
+1. **Authenticating with the HF API**: Modify settings UI to securely take HF token and check against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
+2. **Pushing Episode Scripts**: Ensure background worker correctly queues and executes batch POST requests of new JSON scripts to `user/jokesters-episodes`.
+3. **Fetching Previous Episode Summaries at Boot**: When app boots, have `HFStorageManager` quickly download `summary.json` to extract historical snippets before local dbs hydrate, priming the `GroupChatManager` system prompt.

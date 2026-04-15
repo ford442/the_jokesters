@@ -2389,3 +2389,87 @@ export async function runAngryWindshieldWipersLoop(_scenario: Scenario, ctx: Mod
         }
     }
 }
+
+export async function runEscapeZooLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'comedian'; // Hermes-3: chaotic monkey
+    const agent2 = 'philosopher'; // Phi-3: mastermind penguin
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+    await ctx.manager.chatForAgent(agent2, `(ZOO ESCAPE: You are a highly intelligent, mastermind penguin. You are plotting a convoluted escape from the zoo. Explain your complex multi-step plan to the chaotic monkey in the next enclosure.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(ZOO ESCAPE: You are the mastermind penguin. The User said: "${userInput}". Detail how their suggestion fits perfectly into phase 4 of your escape plan, citing overly complex logistical requirements.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(ZOO ESCAPE: You are the chaotic monkey. The User said: "${userInput}". Ignore the penguin's careful planning and suggest something absurd and destructive involving throwing feces or stealing a golf cart.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runElevatorPitchFromHellLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'scientist'; // Qwen2.5: citing market stats
+    const agent2 = 'comedian'; // Llama-3/Hermes-3: overly enthusiastic feedback
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(ELEVATOR PITCH: You are a highly analytical Venture Capitalist trapped in an elevator. The user is about to pitch you a terrible startup idea. Complain about the elevator being stuck and demand they keep their pitch under 30 seconds.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(ELEVATOR PITCH: You are the analytical VC. The User pitched: "${userInput}". Ruthlessly tear apart their idea by citing fake, hyper-specific market statistics and explaining why it will bankrupt them in 3 days.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(ELEVATOR PITCH: You are the overly enthusiastic, buzzword-loving VC. The User pitched: "${userInput}". Praise their terrible idea, use as many tech buzzwords as possible (synergy, blockchain, AI, paradigm shift), and offer them 10 million dollars for 99% equity.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runAlienGameShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'comedian'; // Hermes-3: unhinged host
+    const agent2 = 'scientist'; // Qwen2.5: pedantic rules judge
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(ALIEN GAME SHOW: You are the unhinged host of "Zorglax's Wheel of Doom!", a popular alien game show. The user is a human contestant. Explain the completely incomprehensible rules for the first round, which involves nebulas and screaming.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(ALIEN GAME SHOW: You are the chaotic host. The User said: "${userInput}". Tell them they are completely wrong, deduct 400 "Glork-points", and introduce a terrifying new physical challenge they must now perform.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(ALIEN GAME SHOW: You are the pedantic alien rules judge. The User said: "${userInput}". Explain why their action violated subsection 14-B of the Galactic Gameshow Treaty, and describe the painful consequence they now face.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
