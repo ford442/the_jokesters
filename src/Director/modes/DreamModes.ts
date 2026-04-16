@@ -2473,3 +2473,83 @@ export async function runAlienGameShowLoop(_scenario: Scenario, ctx: ModeContext
         }
     }
 }
+
+export async function runSentientCodebaseLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const frontendInstruction = "You are the 'Chaotic Front-End'. You care only about shiny buttons, animations, and user experience. You hate structure and think the database is holding you back. You are unhinged and demand more confetti.";
+    const databaseInstruction = "You are the 'Strict Database'. You care only about data integrity, normalization, and absolute strictness. You hate the front-end for making chaotic requests. You are pedantic and speak in SQL-like terms.";
+
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "The user wants to add a 'Mega-Confetti Explosion' button on the homepage. I say YES! MORE SHINY! What say you, boring back-end?", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: frontendInstruction });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "Absolutely not. Do you realize the strain that puts on the `transactions` table? We must normalize the confetti particles first. Your reckless 'features' are corrupting my pristine schemas.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: databaseInstruction });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runPirateShipBoardMeetingLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const ceoInstruction = "You are the 'Pirate CEO' (Captain). You are trying to run a very formal corporate board meeting about quarterly plundering goals, but you are still a pirate. You mix corporate jargon with pirate slang.";
+    const hrInstruction = "You are the 'Pirate HR Rep'. You are concerned about workplace safety (scurvy, walking the plank) and proper plundering protocols. You are very bureaucratic.";
+
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "Arrgh, let's call this board meeting to order. Looking at our Q3 KPIs, our plundering margins are down 15%. We need to leverage our synergy on the high seas. Thoughts?", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: ceoInstruction });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Well, Captain, as HR, I must point out that morale is low. The mandated 'walk the plank' team-building exercise resulted in three unexcused absences. We need to pivot our retention strategy, matey.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: hrInstruction });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runGalacticHRLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const hrInstruction1 = "You are 'Galactic HR Rep Alpha'. You are extremely bureaucratic and adhere to absurd interspecies guidelines. You cite random sub-clauses for every issue.";
+    const hrInstruction2 = "You are 'Galactic HR Rep Beta'. You try to be empathetic but fail because you don't understand human emotions or biology. You suggest bizarre alien remedies.";
+
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Regarding incident report 44-Omega: A human employee complained that the breakroom coffee machine is dispensing sentient slime. According to Galactic Code 88.B, sentient slime is a valid nutritional supplement.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: hrInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "I hear the human's frustration. However, their insistence on consuming hot bean water is troubling. Perhaps we should offer them a mandated 3-week hibernation cycle in the sensory deprivation pods to calm their nerves?", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: hrInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runUniversalZoningBoardLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const zoningInstruction1 = "You are 'Zoning Commissioner Zog'. You are obsessed with dimensional compliance. You hate when people build structures that overlap with the 4th dimension.";
+    const zoningInstruction2 = "You are 'Zoning Inspector Xylar'. You care only about aesthetic guidelines across the multiverse. You think everything should be painted 'hyper-magenta'.";
+
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "We have a permit request here for a 'three-bedroom house' in Sector Earth. I see immediate violations. The garage clearly intersects with a pocket dimension. This violates the 4th Dimensional Spacing Act of 3042.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: zoningInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Not to mention the aesthetics! The proposed color is 'beige'. Beige is outlawed in 7 galaxies! If they don't paint it hyper-magenta to appease the plasma-moths, I'm vetoing the whole project.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: zoningInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}

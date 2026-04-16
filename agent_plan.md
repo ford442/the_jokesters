@@ -2,6 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 4
+* **status**: Successfully implemented Phase 50 and kicked off Phase 51. The execution was straightforward, so tasks_per_run will remain at 4.
 * **status**: Successfully implemented Phase 49 (Escape the Zoo, Elevator Pitch from Hell, Alien Game Show). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 50 (The Historical Anachronisms).
 
 *Self-Regulation Logic: If tasks are completed smoothly and easily, tasks_per_run should be increased. If friction or struggles are encountered, it should be decreased.*
@@ -589,12 +590,26 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Elevator Pitch from Hell**: Agents are venture capitalists trapped in an elevator listening to the user's terrible pitches. (Model Pairing: Qwen2.5 for citing market stats vs Llama-3 for overly enthusiastic feedback).
 * [x] **Alien Game Show**: The user is a contestant on an alien game show where the rules change every second. (Model Pairing: Hermes-3 for the unhinged host vs Qwen2.5 for the pedantic rules judge).
 
+### Phase 51: The Bureaucratic Nightmare (Dreams)
+* [x] **The Universal Zoning Board**: Agents act as members of the Universal Zoning Board. The user requests a permit to build a basic house on Earth, but agents treat it like a multi-dimensional mega-structure project, citing absurd zoning laws. (Model Pairing: Qwen2.5 for citing inter-dimensional safety vs Hermes-3 for pushing chaotic architectural guidelines).
+* [ ] **Time Paradox Resolution Committee**: Agents are bureaucrats managing timelines. The user has accidentally created a minor paradox (like stepping on a bug in the Cretaceous) and the agents argue about the paperwork needed to fix the entire space-time continuum. (Model Pairing: Phi-3 for deterministic rules vs Llama-3 for enthusiastic timeline rewriting).
+* [ ] **Intergalactic IRS**: Agents act as alien tax auditors investigating the user for failing to declare emotional baggage and dream-state earnings on their cosmic tax return. (Model Pairing: Qwen2.5 for ruthless auditing vs Hermes-3 for inventing new unhinged tax loopholes).
+
 ### Phase 50: The Historical Anachronisms (Dreams)
-* [ ] **The Sentient Codebase**: Agents act as different parts of a legacy codebase (e.g., the chaotic front-end vs the strict database) arguing about a new feature the user wants to add.
-* [ ] **Pirate Ship Board Meeting**: Agents are pirates holding a very formal corporate board meeting about quarterly plundering goals.
-* [ ] **Galactic HR Department**: Agents are HR reps for a galactic empire, dealing with the user's bizarre interspecies workplace complaints.
+* [x] **The Sentient Codebase**: Agents act as different parts of a legacy codebase (e.g., the chaotic front-end vs the strict database) arguing about a new feature the user wants to add.
+* [x] **Pirate Ship Board Meeting**: Agents are pirates holding a very formal corporate board meeting about quarterly plundering goals.
+* [x] **Galactic HR Department**: Agents are HR reps for a galactic empire, dealing with the user's bizarre interspecies workplace complaints.
 
 ### Cloud Persistence Strategy (Refined)
-1. **Authenticating with the HF API**: Modify settings UI to securely take HF token and check against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
-2. **Pushing Episode Scripts**: Ensure background worker correctly queues and executes batch POST requests of new JSON scripts to `user/jokesters-episodes`.
-3. **Fetching Previous Episode Summaries at Boot**: When app boots, have `HFStorageManager` quickly download `summary.json` to extract historical snippets before local dbs hydrate, priming the `GroupChatManager` system prompt.
+1. **Authenticating with the HF API**:
+   * Modify settings UI in `src/UI/SettingsModal.ts` to securely take an HF token and user ID, and check against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
+   * Add a validation state indicator (Green/Red checkmarks) alongside the token input.
+2. **Pushing Episode Scripts**:
+   * Implement `jokesters-sync-queue` via IndexedDB to queue up episodes as soon as `Director.stopScene()` is called.
+   * Spawn a dedicated background `syncWorker.ts` Web Worker that polls this queue.
+   * Have the worker execute batched POST requests (via Hugging Face Datasets API) to push the local JSON scripts into `user/jokesters-episodes` without blocking the UI.
+   * Use exponential backoff for rate limiting and 429 Too Many Requests errors.
+3. **Fetching Previous Episode Summaries at Boot**:
+   * On initial app load (inside `main.ts`), invoke `HFStorageManager` to asynchronously fetch the most recent `summary.json`.
+   * Inject extracted context snippets directly into the `GroupChatManager` system prompt, immediately grounding the agents.
+   * Offload the background streaming of older episodic datasets into a local IndexedDB cache, providing fast local semantic search for subsequent RAG operations without stalling the UI.
