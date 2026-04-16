@@ -1,19 +1,27 @@
+<!-- From: /root/the_jokesters/AGENTS.md -->
 # The Jokesters - Agent Guide
 
 ## Project Overview
 
-**The Jokesters** is a multi-agent chat application that runs entirely in the browser using WebGPU acceleration. It features five AI agents with distinct personalities that engage in improvised comedy conversations powered by in-browser Large Language Models (LLM).
+**The Jokesters** is a multi-agent comedy chat application that runs entirely in the browser using WebGPU (and WASM fallback) acceleration. It features five AI agents with distinct personalities that engage in improvised comedy conversations powered by in-browser Large Language Models (LLM).
 
 ### Key Features
-- **In-browser LLM inference** using `@mlc-ai/web-llm` with WebGPU acceleration
-- **Multi-mode interactions**: 20+ distinct modes including Chat Mode, Improv Mode, Watcher Mode (media reaction), Reporter Mode, Roast Mode, Story Mode, Debate Mode, Musical Mode, Podcast/Interview Mode, Dungeon Master Mode, Trivia Mode, Dream Mode, Vision Mode, Trial Mode, Tech Support Mode, Historical Mode, Commentary Mode, Code Review Mode, Creative Mode, and Therapy Mode
+- **Triple-engine in-browser LLM inference**: MLC WebLLM (WebGPU), llama.cpp WASM (`@wllama/wllama`), and Transformers.js (ONNX/WebGPU)
+- **100+ interaction modes** across categories:
+  - *Improv / Autonomous*: Improv Mode, Autonomous Loop
+  - *Media*: Watcher Mode (video reaction), Vision Mode
+  - *Reporter*: Reporter Mode, Newsroom Mode, Meltdown Mode
+  - *Performance*: Roast Mode, Story Mode, Debate Mode, Musical Mode, Podcast/Interview Mode, Standup Mode, Script Mode, Dream Mode, Historical Mode, Commentary Mode
+  - *Interactive*: Trial Mode, Tech Support Mode, Dungeon Master Mode, Trivia Mode, Code Review Mode, Therapy Mode, Dating Show, Silent Treatment, Intervention, Support Group, Customer Service Hell, and many more
+  - *Creative / Reality-expanded*: Mystery Mode, Pitch Mode, Haunted House, Sports Commentary, Reality TV, Auction House, Escape Room, Time Loop, Superhero, Conspiracy, Silent Film, Procedural, Lightning Round, Rapid Fire variants, and 70+ additional "Dream" and "Expanded Reality" modes
 - **5 Unique Agent Personas**: The Comedian, The Philosopher, The Scientist, Chad Vanderblock (Tech Bro), and Unit-734 (Deadpan Robot)
 - **3D agent visualization** using Three.js with lip-sync and real-time animations
-- **Real-time text-to-speech (TTS)** using ONNX-based Supertonic pipeline with multiple voice styles
+- **Real-time text-to-speech (TTS)** using an ONNX-based Supertonic pipeline with multiple voice styles
 - **Dynamic model swapping** allowing different LLMs per agent to fit within VRAM constraints
-- **Memory management** with localStorage persistence and optional HuggingFace cloud sync
-- **Voice input** support using Web Speech API
+- **Memory management** with `localStorage` persistence and optional HuggingFace cloud sync
+- **Voice input** support using the Web Speech API
 - **Comedy Engine** with callback tracking, quality gating, and conversation branching
+- **Service Worker** for parallel model downloads via byte-range requests
 
 ### Architecture Philosophy: "The Digital Director"
 The system follows a **Centralized Director / Stateless Actor** model:
@@ -21,6 +29,7 @@ The system follows a **Centralized Director / Stateless Actor** model:
 - **The Director** (`Director` class) orchestrates the scene, manages state, decides turn-taking, and injects environmental context
 - **GroupChatManager** handles LLM interactions with retry logic and VRAM management
 - **AgentModelManager** manages per-agent model assignments and hot-swapping
+- **LLM Engine Factory** (`src/llm/EngineFactory.ts`) selects the best engine (MLC / llama.cpp / Transformers.js) based on browser capabilities and model config
 
 ---
 
@@ -31,25 +40,18 @@ The system follows a **Centralized Director / Stateless Actor** model:
 |------------|---------|---------|
 | **TypeScript** | Primary language | ES2022 target |
 | **Vite** | Build tool and dev server | ^7.2.4 |
-| **Three.js** | 3D visualization and WebGL rendering | ^0.181.2 |
+| **Three.js** | 3D visualization and WebGL rendering | 0.170.0 |
 | **@mlc-ai/web-llm** | In-browser LLM inference via WebGPU | ^0.2.8 |
+| **@wllama/wllama** | llama.cpp WASM engine for GGUF models | ^2.3.7 |
+| **@huggingface/transformers** | Transformers.js ONNX/WebGPU engine | ^4.0.1 |
 | **ONNX Runtime Web** | TTS model inference | ^1.17.0 |
-| **Python** | Deployment and smoke tests | 3.x |
-
-### Key Dependencies
-```json
-{
-  "@mlc-ai/web-llm": "^0.2.8",    // LLM inference engine
-  "three": "^0.181.2",             // 3D graphics
-  "onnxruntime-web": "^1.17.0",    // ONNX model runtime
-  "vite-plugin-static-copy": "^3.1.4"  // Asset copying
-}
-```
+| **vite-plugin-static-copy** | Asset copying | ^3.1.4 |
 
 ### Development Dependencies
 - `typescript`: ~5.9.3 with strict mode enabled
 - `tsx`: ^4.21.0 for TypeScript execution
 - `@types/node`: ^24.10.1
+- `@types/three`: 0.170.0
 
 ---
 
@@ -70,16 +72,23 @@ the_jokesters/
 │   │   ├── ScriptGenerator.ts     # AI-powered script generation
 │   │   ├── ScriptParser.ts        # Script parsing utilities
 │   │   ├── MediaReactionManager.ts # Video reaction trigger handling
-│   │   └── modes/                 # Mode implementations
+│   │   └── modes/                 # Mode implementations (100+ modes)
 │   │       ├── ModeContext.ts     # Shared context interface for all modes
 │   │       ├── ImprovMode.ts      # Improv and autonomous conversation loops
 │   │       ├── MediaMode.ts       # Video reaction and vision analysis loops
 │   │       ├── ReporterMode.ts    # News/Reporter mode with data fetching
-│   │       ├── InteractiveMode.ts # Trial, Tech Support, DM, Trivia, Interview modes
-│   │       ├── PerformanceMode.ts # Roast, Story, Debate, Musical, Podcast, Script, Dream, Historical, Commentary modes
+│   │       ├── InteractiveMode.ts # Trial, Tech Support, DM, Trivia, Interview, etc.
+│   │       ├── PerformanceMode.ts # Roast, Story, Debate, Musical, Podcast, Script, Dream, Historical, Commentary
+│   │       ├── CreativeMode.ts    # Creative writing, mystery, pitch, procedural
+│   │       ├── TherapyMode.ts     # Therapy/support mode
 │   │       ├── CodeReviewMode.ts  # Code review mode
-│   │       ├── CreativeMode.ts    # Creative writing mode
-│   │       └── TherapyMode.ts     # Therapy/support mode
+│   │       ├── DreamModes.ts      # 40+ surreal/absurdist modes
+│   │       ├── ExpandedRealityModes.ts # 40+ reality-expanded modes
+│   │       ├── RapidFireMode.ts   # Rapid-fire trivia/roast/association/this-or-that
+│   │       ├── LightningRoundMode.ts
+│   │       ├── PhilosopherMode.ts
+│   │       ├── AlienMode.ts
+│   │       └── RapBattleVisualsMode.ts
 │   ├── audio/                     # Text-to-speech and audio systems
 │   │   ├── AudioEngine.ts         # TTS audio synthesis orchestration
 │   │   ├── OptimizedAudioEngine.ts # Optimized TTS with caching
@@ -100,8 +109,13 @@ the_jokesters/
 │   │   ├── callbackEngine.ts      # Running gag callback tracking
 │   │   ├── jokeLoader.ts          # Joke database loading
 │   │   └── qualityFilter.ts       # Joke quality rating/filtering
-│   ├── improv/                    # Improv/conversation systems
-│   │   └── branching.ts           # Conversation tree branching
+│   ├── llm/                       # Triple-engine LLM abstraction
+│   │   ├── EngineFactory.ts       # Factory for selecting/creating engines
+│   │   ├── LLMEngine.ts           # Unified engine interface
+│   │   ├── MlcEngineAdapter.ts    # MLC WebLLM adapter
+│   │   ├── LlamaCppEngineAdapter.ts # wllama (llama.cpp WASM) adapter
+│   │   ├── TransformersEngineAdapter.ts # Transformers.js adapter
+│   │   └── index.ts               # Re-exports
 │   ├── visuals/                   # 3D visualization
 │   │   ├── Actor.ts               # 3D agent representation (capsule with face)
 │   │   ├── TechBroActor.ts        # Custom Tech Bro actor with gestures
@@ -113,14 +127,16 @@ the_jokesters/
 │   │   └── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
 │   ├── config/                    # Configuration
 │   │   ├── agents.ts              # Agent definitions (personalities, prompts, colors)
-│   │   └── models.ts              # LLM model configurations
+│   │   ├── models.ts              # LLM model configurations (VPS, HF, unified)
+│   │   └── improvSetups.ts        # Pre-defined improv scene setups
 │   ├── ui/                        # UI utilities
 │   │   ├── htmlTemplate.ts        # HTML template generation for the UI
 │   │   ├── ModeHandlers.ts        # Mode button handlers and UI controls
 │   │   └── BeatGenerator.ts       # Simple beat animation for musical mode
 │   ├── utils/                     # Utilities
 │   │   ├── RNG.ts                 # Seeded random number generator
-│   │   └── performanceTest.ts     # Performance testing utilities
+│   │   ├── performanceTest.ts     # Performance testing utilities
+│   │   └── dynamicContext.ts      # Dynamic context window / VRAM optimization
 │   ├── prompts/                   # Persona prompts
 │   │   ├── robot.ts               # Robot persona prompt
 │   │   └── techBro.ts             # Tech Bro persona prompt
@@ -133,49 +149,44 @@ the_jokesters/
 │   │   ├── chaosTest.ts           # Chaos testing
 │   │   ├── integrationChaosTest.ts # Integration chaos tests
 │   │   └── runChaosTests.ts       # Chaos test runner
+│   ├── service-worker.ts          # Service worker for parallel model downloads
 │   └── style.css                  # Application styles
 ├── tests/                         # Performance test suite
-│   └── perf/                      # Performance benchmarks
-│       ├── FPSBenchmark.ts        # Frame rate benchmarking
-│       ├── LLMThroughputBenchmark.ts # LLM token throughput
-│       ├── MemoryLeakTest.ts      # Memory leak detection
-│       ├── TTSLatencyBenchmark.ts # TTS latency testing
-│       ├── PerformanceMonitor.ts  # Performance monitoring
-│       ├── ci-runner.ts           # CI test runner
-│       ├── browser-runner.html    # Browser-based test runner
-│       ├── setup-env.ts           # Test environment setup
-│       ├── index.ts               # Test exports
-│       └── README.md              # Performance testing docs
+│   ├── perf/                      # Performance benchmarks
+│   │   ├── FPSBenchmark.ts        # Frame rate benchmarking
+│   │   ├── LLMThroughputBenchmark.ts # LLM token throughput
+│   │   ├── MemoryLeakTest.ts      # Memory leak detection
+│   │   ├── TTSLatencyBenchmark.ts # TTS latency testing
+│   │   ├── PerformanceMonitor.ts  # Performance monitoring
+│   │   ├── ci-runner.ts           # CI test runner
+│   │   ├── browser-runner.html    # Browser-based test runner
+│   │   ├── setup-env.ts           # Test environment setup
+│   │   ├── index.ts               # Test exports
+│   │   └── README.md              # Performance testing docs
+│   └── engine-comparison/         # Engine comparison tests
 ├── public/                        # Static assets served directly
 │   ├── jokes/                     # Joke databases
-│   │   ├── absurdist.json
-│   │   ├── dark_tech.json
-│   │   └── crowd_work.json
 │   ├── scenarios/                 # Test scenarios
-│   │   ├── test_reaction.json
-│   │   └── test_script.json
-│   └── vite.svg                   # Vite logo
+│   └── tts/                       # TTS assets (if bundled locally)
 ├── docs/                          # Documentation
 │   ├── ARCHITECTURE.md            # System architecture documentation
 │   ├── COMEDY_GUIDE.md            # Comedy system documentation
 │   ├── PERFORMANCE.md             # Performance guardrails documentation
+│   ├── MODEL_HOSTING.md           # Model hosting guide
+│   ├── PARALLEL_DOWNLOADS.md      # Service worker / parallel download docs
+│   ├── VRAM_OPTIMIZATION_IMPLEMENTATION.md
+│   ├── VRAM_RESEARCH_SUMMARY.md
 │   ├── bundle-analysis.md         # Bundle analysis
 │   ├── chaos-report.md            # Chaos testing report
 │   ├── integration-log.md         # Integration log
 │   ├── smoke-test-passed.md       # Smoke test results
 │   └── perf/                      # Performance documentation
-│       ├── crowd-optimization.md
-│       ├── llm-benchmark.md
-│       └── tts-latency.md
-├── voices/                        # Voice style files for TTS
-├── models/                        # Model-related assets
-├── verification/                  # Verification scripts and images
+├── .github/workflows/
+│   └── performance.yml            # GitHub Actions CI for perf tests
+├── perf-budget.json               # Performance budget thresholds
 ├── deploy.py                      # SFTP deployment script (paramiko-based)
 ├── deploy_models.py               # Model deployment script
-├── upload_model.py                # HuggingFace model upload utility
-├── upload_hermes.py               # Hermes model upload utility
 ├── smoke_test.py                  # Python smoke test (Playwright-based)
-├── perf-budget.json               # Performance budget thresholds
 ├── index.html                     # HTML entry point
 ├── package.json                   # Node.js dependencies
 ├── tsconfig.json                  # TypeScript configuration
@@ -211,6 +222,7 @@ npm run build
 - Compiles TypeScript and bundles with Vite
 - Outputs to `dist/` directory
 - Copies ONNX WASM files to `dist/assets/ort/`
+- Produces a stable `service-worker.js` filename (required for SW registration)
 
 ### Preview Production Build
 ```bash
@@ -250,7 +262,7 @@ python deploy.py
 ```
 - Uploads `dist/` directory to configured SFTP server
 - Requires `paramiko` Python package
-- **Note**: Contains hardcoded credentials that should be moved to environment variables
+- **Security Warning**: `deploy.py` currently contains hardcoded credentials and should be moved to environment variables
 
 ---
 
@@ -261,6 +273,8 @@ python deploy.py
 - **Explicit types**: Prefer explicit return types on public methods
 - **ES modules**: Uses ES2022 module syntax (`import`/`export`)
 - **No unused variables**: Compiler enforces `noUnusedLocals` and `noUnusedParameters`
+- **No fallthrough**: `noFallthroughCasesInSwitch` is enabled
+- **Erasable syntax only disabled**: `@wllama/wllama` uses non-erasable syntax, so `erasableSyntaxOnly` is explicitly disabled
 
 ### Naming Conventions
 - **Classes**: PascalCase (e.g., `GroupChatManager`, `Director`)
@@ -271,7 +285,7 @@ python deploy.py
 
 ### Code Organization
 - One class per file (generally)
-- Group related functionality into directories (`audio/`, `visuals/`, `Director/`)
+- Group related functionality into directories (`audio/`, `visuals/`, `Director/`, `llm/`)
 - Type declarations in `src/types/`
 - Utilities in `src/utils/`
 - Configuration in `src/config/`
@@ -302,16 +316,25 @@ Manages LLM interactions and conversation state:
 ### Director
 **File**: `src/Director/Director.ts`
 
-Central orchestrator for all interaction modes:
+Central orchestrator for all interaction modes. Supports 100+ scenario types including:
 - **Improv Mode**: Autonomous agent conversations with chaos injection
 - **Watcher Mode**: Video reaction with time-synced triggers
 - **Reporter Mode**: Discussion of live topics with context injection
 - **Script Mode**: Performance of AI-generated or pre-written scripts
-- **Interactive Modes**: Trial, Tech Support, Dungeon Master, Trivia, Interview, Code Review, Therapy
-- **Performance Modes**: Roast, Story, Debate, Musical, Podcast, Dream, Historical, Commentary
-- **Creative Modes**: Creative writing and collaboration
+- **Interactive Modes**: Trial, Tech Support, Dungeon Master, Trivia, Interview, Dating Show, Silent Treatment, Intervention, Support Group, Customer Service Hell, and more
+- **Performance Modes**: Roast, Story, Debate, Musical, Podcast, Dream, Historical, Commentary, Standup
+- **Creative / Expanded Modes**: Mystery, Pitch, Haunted House, Reality TV, Auction House, Escape Room, Time Loop, Conspiracy, Silent Film, Procedural, Lightning Round, Rapid Fire variants, and 70+ Dream/Expanded Reality modes
 - Manages turn-taking, pacing (punchline/standard/rant), and scene lifecycle
 - Auto-saves episodes to memory on scene stop
+
+### EngineFactory
+**File**: `src/llm/EngineFactory.ts`
+
+Factory for creating and selecting LLM engines:
+- Detects browser capabilities (WebGPU, WASM, SIMD, threads, shader-f16)
+- Auto-selects the best engine: MLC WebLLM (WebGPU) → Transformers.js (ONNX/WebGPU) → llama.cpp WASM (CPU)
+- Supports manual engine preference override
+- Validates model compatibility per engine
 
 ### AgentModelManager
 **File**: `src/AgentModelManager.ts`
@@ -352,7 +375,7 @@ Three.js scene management:
 **File**: `src/Director/MemoryManager.ts`
 
 Episode persistence system:
-- Local storage using localStorage with `jokesters-` prefix
+- Local storage using `localStorage` with `jokesters-` prefix
 - Optional cloud sync to HuggingFace Hub
 - Episode search and recall functionality
 - Automatic loading of previous episode context on startup
@@ -375,44 +398,43 @@ Joke quality assessment:
 - Homograph detection for TTS optimization
 - Pattern-based analysis for cliché detection
 
+### Service Worker
+**File**: `src/service-worker.ts`
+
+Parallel model download optimization:
+- Intercepts fetches for large model files (`.safetensors`, `.bin`, `.gguf`, `.wasm`)
+- Splits downloads into 42MB chunks
+- Uses 4 parallel connections with HTTP Range requests
+- Temporary in-memory caching (1-hour TTL)
+
 ---
 
 ## Configuration
 
 ### Model Configuration
-Models are registered in `src/config/models.ts`. Each model requires:
-```typescript
-{
-  model_id: 'unique-identifier',
-  model: 'https://url-to-model-weights/resolve/main/',
-  model_lib: 'https://url-to-wasm-runtime.wasm',
-  overrides: {
-    context_window_size: 4096
-  },
-  vram_required_MB: 2500
-}
-```
+Models are registered in `src/config/models.ts`. The app supports three engine backends:
 
-### Available Models
-- **Hermes-3-Llama-3.2-3B-q4f16_1-MLC** (default, ~2GB VRAM)
-- **Llama-3.2-3B-Instruct-q4f16_1-MLC** (~2.5GB VRAM)
-- **Llama-3.1-8B-Instruct-q4f16_1-MLC** (~5.2GB VRAM)
-- **Hermes-3-Llama-3.1-8B-q4f16_1-MLC** (~5.2GB VRAM)
-- Legacy models (q4f32 quantization) for backward compatibility
+1. **MLC WebLLM** — WebGPU-optimized, expects `model`, `model_lib`, `overrides`, `vram_required_MB`
+2. **Transformers.js** — ONNX/WebGPU, expects `transformers: { model_id, device, dtype }`
+3. **llama.cpp WASM** — GGUF format, expects `llamaCpp: { gguf_url, hf_repo, hf_file, context_size }`
+
+Available models include:
+- **VPS-hosted FP32 models** (primary, universal compatibility): Hermes-3-Llama-3.2-3B, Llama-3.2-3B-Instruct, Llama-2-7B-chat, Vicuna-7B
+- **HuggingFace FP32 models** (fallback)
+- **FP16 models** (faster, requires `shader-f16`): Llama-3.1-8B, Hermes-3-8B, Llama-3.2-3B, Hermes-3-3B
+- **Unified models** (triple-engine): configs that work across MLC, Transformers.js, and llama.cpp
+
+Default model: `Hermes-3-Llama-3.2-3B-q4f32_1-MLC` (VPS-hosted, ~2.5GB VRAM)
 
 ### Agent Configuration
 Agents defined in `src/config/agents.ts`:
 ```typescript
 const agents = [
-  {
-    id: 'comedian',
-    name: 'The Comedian',
-    systemPrompt: 'You are a frantic, high-energy female comedian...',
-    temperature: 0.95,
-    top_p: 0.95,
-    color: '#ff6b6b'
-  },
-  // philosopher, scientist, techBro, robot
+  { id: 'comedian', name: 'The Comedian', temperature: 0.95, top_p: 0.95, color: '#ff6b6b' },
+  { id: 'philosopher', name: 'The Philosopher', temperature: 0.75, top_p: 0.9, color: '#4ecdc4' },
+  { id: 'scientist', name: 'The Scientist', temperature: 0.6, top_p: 0.85, color: '#45b7d1' },
+  { id: 'techBro', name: 'Chad Vanderblock', temperature: 0.9, top_p: 0.92, color: '#FF6B35' },
+  { id: 'robot', name: 'Unit-734', temperature: 0.5, top_p: 0.8, color: '#C0C0C0' },
 ]
 ```
 
@@ -436,6 +458,13 @@ The application includes comprehensive performance benchmarks defined in `perf-b
 | TTS Latency | 30 ms | ≤50 ms |
 | LLM Throughput | 60 tok/sec | ≥40 tok/sec |
 | Bundle Size | 3 MB | ≤5 MB |
+| First Contentful Paint | 1000 ms | ≤2000 ms |
+| Time to Interactive | 3000 ms | ≤5000 ms |
+
+CI runner: `tests/perf/ci-runner.ts`
+- Runs memory leak tests in Node (others require browser)
+- Exits with code 1 if thresholds are violated
+- GitHub Actions workflow `.github/workflows/performance.yml` runs on push/PR to `main`/`master`
 
 ### Manual Testing Checklist
 1. **Model Loading**: Verify model loads successfully with progress indicator
@@ -477,10 +506,10 @@ The application requires these external resources at runtime:
   - `unicode_indexer.json` - Text processing
   - `*.onnx` - Model files (duration_predictor, text_encoder, vector_estimator, vocoder)
 - **Voice styles**: Expected at `./tts/voice_styles/` (M1.json, M2.json, F1.json, F2.json)
-- **LLM models**: Downloaded from HuggingFace/CDN on first run
+- **LLM models**: Downloaded from HuggingFace / VPS CDNs on first run
 
 ### Server Configuration
-The application uses a base-relative path (`base: './'` in vite.config.ts) for flexible deployment. COOP/COEP headers are commented out but can be enabled in vite.config.ts if needed for specific WebGPU scenarios.
+The application uses a base-relative path (`base: './'` in `vite.config.ts`) for flexible deployment. COOP/COEP headers are commented out but can be enabled in `vite.config.ts` if needed for specific WebGPU scenarios.
 
 ---
 
@@ -492,12 +521,12 @@ The application uses a base-relative path (`base: './'` in vite.config.ts) for f
 - User data (conversations) stored locally by default
 
 ### External Resources
-- Models loaded from HuggingFace and GitHub CDNs
+- Models loaded from HuggingFace and VPS CDNs
 - Wikipedia API used for Reporter mode (no API key required)
 - HuggingFace Hub API optional for cloud sync (user-provided token)
 
 ### Known Limitations
-- **Hardcoded credentials** in `deploy.py` - should be moved to environment variables
+- **Hardcoded credentials** in `deploy.py` — should be moved to environment variables
 - No Content Security Policy defined
 - Input sanitization relies on LLM-level filtering
 
@@ -528,7 +557,7 @@ The application uses a base-relative path (`base: './'` in vite.config.ts) for f
 
 **TTS model files not found**
 - Ensure `tts/onnx/` directory exists with all required files
-- Check that vite.config.ts static copy includes ONNX WASM files
+- Check that `vite.config.ts` static copy includes ONNX WASM files
 
 **Low FPS during scenes**
 - Check WebGPU support: `chrome://gpu`
@@ -546,6 +575,10 @@ The application uses a base-relative path (`base: './'` in vite.config.ts) for f
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture details
 - [docs/COMEDY_GUIDE.md](./docs/COMEDY_GUIDE.md) - Comedy system documentation
 - [docs/PERFORMANCE.md](./docs/PERFORMANCE.md) - Performance guardrails documentation
+- [docs/MODEL_HOSTING.md](./docs/MODEL_HOSTING.md) - Model hosting guide
+- [docs/PARALLEL_DOWNLOADS.md](./docs/PARALLEL_DOWNLOADS.md) - Parallel download docs
+- [docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md](./docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md) - VRAM optimization details
+- [docs/VRAM_RESEARCH_SUMMARY.md](./docs/VRAM_RESEARCH_SUMMARY.md) - VRAM research summary
 - [REPORTER_MODE_CHANGES.md](./REPORTER_MODE_CHANGES.md) - Reporter mode implementation details
 - [REPORTER_MODE_IMPROVEMENTS.md](./REPORTER_MODE_IMPROVEMENTS.md) - Reporter mode enhancements
 - [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md) - Deployment checklist
