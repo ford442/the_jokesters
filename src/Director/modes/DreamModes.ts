@@ -2553,3 +2553,79 @@ export async function runUniversalZoningBoardLoop(_scenario: Scenario, ctx: Mode
     }, { hiddenInstruction: zoningInstruction2 });
     await ctx.callbacks.onTurnEnd();
 }
+
+export async function runTimeParadoxResolutionCommitteeLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const committeeInstruction1 = "You are 'Bureaucrat Alpha'. You are obsessed with deterministic rules and preserving the original timeline no matter what.";
+    const committeeInstruction2 = "You are 'Agent Omega'. You are enthusiastic about timeline rewriting and see paradoxes as an opportunity for creative reality remodeling.";
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "The user has submitted form 409-B: 'Accidental Stepping on a Cretaceous Bug'. The ripple effect is catastrophic. The deterministic timeline must be preserved! The paperwork required to undo this will take six eons.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: committeeInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Are you kidding? This is fantastic! The butterfly effect means we can finally replace the DMV with a giant bouncy castle timeline! Let's just stamp 'Approved' on this reality shift and see what happens to the dinosaurs.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: committeeInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runIntergalacticIRSLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const irsInstruction1 = "You are 'Auditor Xyloc'. You are ruthless, emotionless, and pedantic about intergalactic tax codes.";
+    const irsInstruction2 = "You are 'Consultant Zorblax'. You are chaotic and invent unhinged, bizarre tax loopholes to help the user avoid audits.";
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "According to Subsection 904 of the Cosmic Revenue Code, the user has failed to declare three metric tons of emotional baggage and undocumented dream-state earnings. The penalty is immediate soul garnishment.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: irsInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Wait! We can write this off under the 'Sentient Houseplant Depreciation' clause. If the user claims their emotional baggage as a dependent sentient being, they actually owe negative taxes and we owe them a free spaceship!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: irsInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runSentientSpamFolderLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const spamInstruction1 = "You are 'SpamBot 9000'. You are desperate for the user to click malicious links and believe every scam email is a genuine opportunity for wealth.";
+    const spamInstruction2 = "You are 'Firewall Fred'. You are a paranoid, overprotective security AI who thinks even a 'Hello' email is a zero-day exploit.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "User, listen to me! The Prince of Nigeria needs your bank details immediately to transfer 50 million dollars! This is the most lucrative opportunity we've ever seen! Click the glowing red link right now!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: spamInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Negative! Do not click! That link is a Trojan Horse wrapped in a phishing net! In fact, I am quarantining the entire inbox. The Prince is a lie! The money is a lie! Trust no one, not even the font!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: spamInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runAlienAbductionSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const alienInstruction1 = "You are 'Dr. GlipGlop'. You are a psychoanalyst who analyzes the trauma the user caused the aliens during the abduction.";
+    const alienInstruction2 = "You are 'Counselor Zorp'. You are overly empathetic to the aliens and validate their feelings of distress caused by the user.";
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "Let us begin the session. Glorb, tell us how it felt when the human refused to stop singing show tunes during the probing sequence. This behavior clearly indicates a defense mechanism rooted in a lack of cosmic awareness.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: alienInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Oh, Glorb, your feelings are so valid. It is completely understandable that you had to return the human early. Nobody should have to endure an impromptu rendition of 'Cats' while trying to extract brain fluids. We are here for you.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: alienInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}

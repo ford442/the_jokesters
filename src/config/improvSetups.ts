@@ -259,5 +259,25 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'angry-windshield-wipers',
     title: 'Angry Windshield Wipers',
     description: 'Agents are the windshield wipers during a light drizzle, arguing about their rhythm and whether they are truly needed.',
+  },
+  {
+    id: 'time-paradox-resolution-committee',
+    title: 'Time Paradox Resolution Committee',
+    description: 'Agents are bureaucrats managing timelines, arguing about the paperwork needed to fix a minor paradox created by the user.',
+  },
+  {
+    id: 'intergalactic-irs',
+    title: 'Intergalactic IRS',
+    description: 'Agents act as alien tax auditors investigating the user for failing to declare emotional baggage on their cosmic tax return.',
+  },
+  {
+    id: 'sentient-spam-folder',
+    title: 'Sentient Spam Folder',
+    description: 'Agents act as the user\'s spam folder, arguing over which scam emails are the most lucrative.',
+  },
+  {
+    id: 'alien-abduction-support-group',
+    title: 'Alien Abduction Support Group',
+    description: 'Agents are aliens who accidentally abducted the user and are now in a support group because the user was too annoying.',
   }
 ];
