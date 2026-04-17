@@ -388,8 +388,9 @@ export async function loadModelWithDynamicContext(
   // ========================================================================
   // WEBGPU LIMITS FIX: Intercept requestAdapter to force maximum buffer sizes
   // ========================================================================
-  const originalRequestAdapter = navigator.gpu.requestAdapter.bind(navigator.gpu);
-  navigator.gpu.requestAdapter = async function (options) {
+  const nav = navigator as any;
+  const originalRequestAdapter = nav.gpu.requestAdapter.bind(nav.gpu);
+  nav.gpu.requestAdapter = async function (options?: any) {
     const adapter = await originalRequestAdapter(options);
     if (!adapter) return adapter;
     
@@ -420,13 +421,13 @@ export async function loadModelWithDynamicContext(
     );
     
     // Restore the original GPU adapter function after successful initialization
-    navigator.gpu.requestAdapter = originalRequestAdapter;
+    nav.gpu.requestAdapter = originalRequestAdapter;
     
     return engine;
 
   } catch (error: any) {
     // Make sure to restore on failure too
-    navigator.gpu.requestAdapter = originalRequestAdapter;
+    nav.gpu.requestAdapter = originalRequestAdapter;
     
     const errorMsg = error?.message || String(error);
 
