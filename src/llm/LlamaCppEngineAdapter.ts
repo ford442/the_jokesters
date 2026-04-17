@@ -69,31 +69,48 @@ export class LlamaCppEngineAdapter implements LLMEngine {
 
       const startTime = performance.now()
 
-      // Load the model from URL with progress tracking
-      if (llamaCppConfig.hf_repo) {
-        await this.wllama.loadModelFromHF(llamaCppConfig.hf_repo, llamaCppConfig.hf_file || ggufUrl, {
-          n_ctx: llamaCppConfig.context_size || 4096,
-          progressCallback: ({ loaded, total }: { loaded: number; total: number }) => {
-            const progress = total > 0 ? loaded / total : 0
-            onProgress?.({
-              progress: 0.1 + (progress * 0.9),
-              timeElapsed: performance.now() - startTime,
-              text: `Downloading model... ${(progress * 100).toFixed(1)}%`,
-            })
-          },
-        })
-      } else {
-        await this.wllama.loadModelFromUrl(ggufUrl, {
-          n_ctx: llamaCppConfig.context_size || 4096,
-          progressCallback: ({ loaded, total }: { loaded: number; total: number }) => {
-            const progress = total > 0 ? loaded / total : 0
-            onProgress?.({
-              progress: 0.1 + (progress * 0.9),
-              timeElapsed: performance.now() - startTime,
-              text: `Downloading model... ${(progress * 100).toFixed(1)}%`,
-            })
-          },
-        })
+      const loadConfig = {
+        n_ctx: llamaCppConfig.context_size || 4096,
+        progressCallback: ({ loaded, total }: { loaded: number; total: number }) => {
+          const progress = total > 0 ? loaded / total : 0
+          onProgress?.({
+            progress: 0.1 + (progress * 0.9),
+            timeElapsed: performance.now() - startTime,
+            text: `Downloading model... ${(progress * 100).toFixed(1)}%`,
+          })
+        },
+      }
+
+      try {
+        // Load the model from URL with progress tracking
+        if (llamaCppConfig.hf_repo) {
+          await this.wllama.loadModelFromHF(llamaCppConfig.hf_repo, llamaCppConfig.hf_file || ggufUrl, loadConfig)
+        } else {
+          await this.wllama.loadModelFromUrl(ggufUrl, loadConfig)
+        }
+      } catch (firstError) {
+        const errMsg = firstError instanceof Error ? firstError.message : String(firstError)
+        // wllama caches models in OPFS; a previous failed download may have stored
+        // a JSON error response, which later loads as a corrupted GGUF.
+        const isCacheCorrupted =
+          errMsg.includes('invalid magic') ||
+          errMsg.includes('Invalid typed array length') ||
+          errMsg.includes('failed to load model')
+
+        if (isCacheCorrupted && !llamaCppConfig.hf_repo) {
+          console.warn('[LlamaCppEngineAdapter] Corrupted model cache detected, re-downloading...')
+          onProgress?.({
+            progress: 0.05,
+            timeElapsed: 0,
+            text: 'Corrupted cache detected. Re-downloading...',
+          })
+          await this.wllama.loadModelFromUrl(ggufUrl, {
+            ...loadConfig,
+            useCache: false,
+          })
+        } else {
+          throw firstError
+        }
       }
 
       onProgress?.({
