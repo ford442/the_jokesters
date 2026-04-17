@@ -20,6 +20,7 @@ const MODEL_HOSTS = [
   'cdn-lfs.huggingface.co',
   'huggingface.co',
   'models.mlc.ai',
+  'storage.noahcohn.com',
 ];
 
 interface MemoryCacheEntry {

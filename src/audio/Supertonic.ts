@@ -167,18 +167,20 @@ export class SupertonicTTS {
 export async function loadSupertonic() {
     const opt: ort.InferenceSession.SessionOptions = { executionProviders: ['webgpu', 'wasm'] };
 
+    const TTS_BASE_URL = 'https://storage.noahcohn.com/models/tts/onnx';
+
     // Load Configs
     const [cfg, indexer] = await Promise.all([
-        fetch(`https://test.1ink.us/the-jokesters/tts/onnx/tts.json`).then(r => r.json()),
-        fetch(`https://test.1ink.us/the-jokesters/tts/onnx/unicode_indexer.json`).then(r => r.json())
+        fetch(`${TTS_BASE_URL}/tts.json`).then(r => r.json()),
+        fetch(`${TTS_BASE_URL}/unicode_indexer.json`).then(r => r.json())
     ]);
 
     // Load Models
     const [dp, enc, vec, voc] = await Promise.all([
-        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/duration_predictor.onnx`, opt),
-        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/text_encoder.onnx`, opt),
-        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/vector_estimator.onnx`, opt),
-        ort.InferenceSession.create(`https://test.1ink.us/the-jokesters/tts/onnx/vocoder.onnx`, opt)
+        ort.InferenceSession.create(`${TTS_BASE_URL}/duration_predictor.onnx`, opt),
+        ort.InferenceSession.create(`${TTS_BASE_URL}/text_encoder.onnx`, opt),
+        ort.InferenceSession.create(`${TTS_BASE_URL}/vector_estimator.onnx`, opt),
+        ort.InferenceSession.create(`${TTS_BASE_URL}/vocoder.onnx`, opt)
     ]);
 
     return new SupertonicTTS(cfg, new UnicodeProcessor(indexer), dp, enc, vec, voc);

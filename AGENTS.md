@@ -501,12 +501,17 @@ Runtime errors are surfaced directly in the page via error handlers in `index.ht
 
 ### External Dependencies (Runtime)
 The application requires these external resources at runtime:
-- **TTS models**: Expected at `./tts/onnx/` (host separately)
+- **LLM models**: All models are self-hosted on `storage.noahcohn.com` and downloaded on first run
+  - MLC WebLLM models (FP32 + FP16)
+  - GGUF models for llama.cpp WASM
+  - Transformers.js ONNX models
+  - WASM runtime binaries
+- **TTS models**: Self-hosted on `storage.noahcohn.com/models/tts/onnx/`
   - `tts.json` - Configuration
   - `unicode_indexer.json` - Text processing
   - `*.onnx` - Model files (duration_predictor, text_encoder, vector_estimator, vocoder)
-- **Voice styles**: Expected at `./tts/voice_styles/` (M1.json, M2.json, F1.json, F2.json)
-- **LLM models**: Downloaded from HuggingFace / VPS CDNs on first run
+- **Voice styles**: Self-hosted on `storage.noahcohn.com/models/tts/voice_styles/` (M1.json, M2.json, F1.json, F2.json)
+- See `docs/MODEL_HOSTING.md` for the full migration and hosting guide.
 
 ### Server Configuration
 The application uses a base-relative path (`base: './'` in `vite.config.ts`) for flexible deployment. COOP/COEP headers are commented out but can be enabled in `vite.config.ts` if needed for specific WebGPU scenarios.
@@ -521,9 +526,9 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 - User data (conversations) stored locally by default
 
 ### External Resources
-- Models loaded from HuggingFace and VPS CDNs
-- Wikipedia API used for Reporter mode (no API key required)
-- HuggingFace Hub API optional for cloud sync (user-provided token)
+- **Models**: All LLM and TTS models are now self-hosted on the VPS (`storage.noahcohn.com`)
+- **Wikipedia API**: Used for Reporter mode (no API key required)
+- **HuggingFace Hub API**: Optional for cloud sync (user-provided token)
 
 ### Known Limitations
 - **Hardcoded credentials** in `deploy.py` — should be moved to environment variables

@@ -31,7 +31,7 @@ export const VPS_FP32_MODELS = {
   VPS_LLAMA_2_7B_Q4F32: {
     model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -50,7 +50,7 @@ export const VPS_FP32_MODELS = {
   VPS_HERMES_3_3B_Q4F32: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -70,7 +70,7 @@ export const VPS_FP32_MODELS = {
   VPS_VICUNA_7B_Q4F32: {
     model_id: "vicuna-7b-q4f32-webllm-vps",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -91,7 +91,7 @@ export const VPS_FP32_MODELS = {
   VPS_LLAMA_3_2_3B_Q4F32: {
     model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f32_1-MLC/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -119,8 +119,8 @@ export const FP16_MODELS = {
    */
   LLAMA_3_1_8B_Q4F16: {
     model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Llama-3.1-8B-Instruct-q4f16_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -138,8 +138,8 @@ export const FP16_MODELS = {
    */
   LLAMA_3_1_8B_Q4F16_1K: {
     model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
-    model: "https://huggingface.co/mlc-ai/Llama-3.1-8B-Instruct-q4f16_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Llama-3.1-8B-Instruct-q4f16_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 1024,
       prefill_chunk_size: 1024,
@@ -157,8 +157,8 @@ export const FP16_MODELS = {
    */
   HERMES_3_8B_Q4F16: {
     model_id: "Hermes-3-Llama-3.1-8B-q4f16_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.1-8B-q4f16_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.1-8B-q4f16_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -176,8 +176,8 @@ export const FP16_MODELS = {
    */
   LLAMA_3_2_3B_Q4F16: {
     model_id: "Llama-3.2-3B-Instruct-q4f16_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f16_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f16_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -195,8 +195,8 @@ export const FP16_MODELS = {
    */
   HERMES_3_3B_Q4F16: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f16_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f16_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f16_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -219,8 +219,8 @@ export const HF_FP32_MODELS = {
    */
   HF_LLAMA_2_7B_Q4F32: {
     model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -236,8 +236,8 @@ export const HF_FP32_MODELS = {
    */
   HF_HERMES_3_3B_Q4F32: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -253,8 +253,8 @@ export const HF_FP32_MODELS = {
    */
   HF_LLAMA_3_2_3B_Q4F32: {
     model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-    model: "https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f32_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -269,8 +269,8 @@ export const HF_FP32_MODELS = {
    */
   HF_VICUNA_7B_Q4F32: {
     model_id: "ford442/vicuna-7b-q4f32-webllm",
-    model: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm/resolve/main/",
-    model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+    model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -286,7 +286,7 @@ export const HF_FP32_MODELS = {
  */
 export const hermesModelConfig = {
   model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-  model_lib: "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm",
+  model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
   overrides: {
     context_window_size: 4096,
   },
@@ -605,8 +605,8 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     vram_required_MB: 2500,
     context_window_size: 4096,
     mlc: {
-      model_url: 'https://storage.noahcohn.com/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/',
-      model_lib_url: 'https://storage.noahcohn.com/models/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+      model_url: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
+      model_lib_url: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
       overrides: {
         context_window_size: 4096,
         prefill_chunk_size: 1024,
@@ -624,9 +624,9 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     vram_required_MB: 5200,
     context_window_size: 4096,
     llamaCpp: {
-      gguf_url: 'https://huggingface.co/NousResearch/Hermes-3-Llama-3.1-8B-GGUF/resolve/main/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf',
-      hf_repo: 'NousResearch/Hermes-3-Llama-3.1-8B-GGUF',
-      hf_file: 'Hermes-3-Llama-3.1-8B.Q4_K_M.gguf',
+      gguf_url: `${VPS_STORAGE_URL}/gguf/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf`,
+      hf_repo: '',
+      hf_file: `${VPS_STORAGE_URL}/gguf/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf`,
       context_size: 4096,
     },
   },
@@ -636,9 +636,9 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     vram_required_MB: 4500,
     context_window_size: 4096,
     llamaCpp: {
-      gguf_url: 'https://huggingface.co/TheBloke/vicuna-7B-v1.5-GGUF/resolve/main/vicuna-7b-v1.5.Q4_K_M.gguf',
-      hf_repo: 'TheBloke/vicuna-7B-v1.5-GGUF',
-      hf_file: 'vicuna-7b-v1.5.Q4_K_M.gguf',
+      gguf_url: `${VPS_STORAGE_URL}/gguf/vicuna-7b-v1.5.Q4_K_M.gguf`,
+      hf_repo: '',
+      hf_file: `${VPS_STORAGE_URL}/gguf/vicuna-7b-v1.5.Q4_K_M.gguf`,
       context_size: 4096,
     },
   },
@@ -648,9 +648,9 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     vram_required_MB: 2500,
     context_window_size: 4096,
     llamaCpp: {
-      gguf_url: 'https://huggingface.co/NousResearch/Hermes-3-Llama-3.2-3B-GGUF/resolve/main/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf',
-      hf_repo: 'NousResearch/Hermes-3-Llama-3.2-3B-GGUF',
-      hf_file: 'Hermes-3-Llama-3.2-3B.Q4_K_M.gguf',
+      gguf_url: `${VPS_STORAGE_URL}/gguf/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf`,
+      hf_repo: '',
+      hf_file: `${VPS_STORAGE_URL}/gguf/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf`,
       context_size: 4096,
     },
   },

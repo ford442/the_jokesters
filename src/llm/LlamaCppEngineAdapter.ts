@@ -16,10 +16,10 @@ import type {
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
 
-// WASM binary URLs for wllama
-const WASM_FROM_CDN = {
-  'single-thread/wllama.wasm': 'https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm/single-thread/wllama.wasm',
-  'multi-thread/wllama.wasm': 'https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm/multi-thread/wllama.wasm',
+// WASM binary URLs for wllama — self-hosted on VPS
+const WASM_FROM_VPS = {
+  'single-thread/wllama.wasm': 'https://storage.noahcohn.com/models/wllama-wasm/single-thread.wasm',
+  'multi-thread/wllama.wasm': 'https://storage.noahcohn.com/models/wllama-wasm/multi-thread.wasm',
 }
 
 export class LlamaCppEngineAdapter implements LLMEngine {
@@ -45,8 +45,8 @@ export class LlamaCppEngineAdapter implements LLMEngine {
                        modelConfig.id.toLowerCase().includes('hermes') ? 'hermes' :
                        modelConfig.id.toLowerCase().includes('llama-3') ? 'llama3' : 'llama2'
 
-    // Create wllama instance with CDN WASM
-    this.wllama = new Wllama(WASM_FROM_CDN)
+    // Create wllama instance with VPS-hosted WASM
+    this.wllama = new Wllama(WASM_FROM_VPS)
     this.abortController = new AbortController()
 
     // Determine GGUF URL

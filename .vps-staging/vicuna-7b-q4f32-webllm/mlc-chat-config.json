@@ -1,0 +1,46 @@
+{
+  "model_type": "llama",
+  "quantization": "q4f32_1",
+  "model_config": {
+    "hidden_size": 4096,
+    "intermediate_size": 11008,
+    "num_attention_heads": 32,
+    "num_hidden_layers": 32,
+    "rms_norm_eps": 1e-05,
+    "vocab_size": 32000,
+    "position_embedding_base": 10000.0,
+    "context_window_size": 4096,
+    "prefill_chunk_size": 4096,
+    "tensor_parallel_shards": 1,
+    "head_dim": 128,
+    "dtype": "float32"
+  },
+  "vocab_size": 32000,
+  "context_window_size": 4096,
+  "sliding_window_size": -1,
+  "prefill_chunk_size": 4096,
+  "attention_sink_size": -1,
+  "tensor_parallel_shards": 1,
+  "conv_template": {
+    "name": "vicuna_v1.1",
+    "system_template": "{system_message}",
+    "system_message": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
+    "roles": {
+      "user": "USER",
+      "assistant": "ASSISTANT"
+    },
+    "role_msg_sep": " ",
+    "role_empty_sep": " ",
+    "seps": [
+      " ",
+      "</s>"
+    ],
+    "stop_str": [
+      "</s>"
+    ],
+    "stop_token_ids": [
+      2
+    ],
+    "add_bos": true
+  }
+}
