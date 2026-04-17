@@ -346,7 +346,7 @@ export function buildVRAMOverrides(
  * Main function: Load model with dynamic context and VRAM optimizations
  */
 export async function loadModelWithDynamicContext(
-  modelConfig: any, // Using any for ModelRecord as it might not be exported directly
+  modelConfig: any,
   preferredContext: number | 'auto' = 'auto',
   onProgress?: (report: webllm.InitProgressReport) => void,
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
@@ -354,7 +354,6 @@ export async function loadModelWithDynamicContext(
   
   // Determine context size
   let contextSize: number;
-
   if (preferredContext === 'auto') {
     const vramMB = await estimateAvailableVRAM();
     const modelSize = getModelSize(modelConfig.model_id);
@@ -366,7 +365,7 @@ export async function loadModelWithDynamicContext(
     console.log(`[DynamicContext] User-selected ${contextSize} context`);
   }
 
-  // Build overrides with VRAM optimizations (including KV cache compression)
+  // Build overrides with VRAM optimizations
   const overrides = buildVRAMOverrides(
     modelConfig.overrides || {},
     contextSize,
@@ -374,8 +373,7 @@ export async function loadModelWithDynamicContext(
     modelConfig.model_id,
   );
 
-  // Build dynamic config
-  const dynamicAppConfig: any = { // Using any for AppConfig as it might not be exported directly
+  const dynamicAppConfig: any = {
     model_list: [{
       ...modelConfig,
       overrides,
@@ -385,6 +383,29 @@ export async function loadModelWithDynamicContext(
   const chatOpts: Record<string, unknown> = {
     context_window_size: contextSize,
     prefill_chunk_size: overrides['prefill_chunk_size'],
+  };
+
+  // ========================================================================
+  // WEBGPU LIMITS FIX: Intercept requestAdapter to force maximum buffer sizes
+  // ========================================================================
+  const originalRequestAdapter = navigator.gpu.requestAdapter.bind(navigator.gpu);
+  navigator.gpu.requestAdapter = async function (options) {
+    const adapter = await originalRequestAdapter(options);
+    if (!adapter) return adapter;
+    
+    const originalRequestDevice = adapter.requestDevice.bind(adapter);
+    adapter.requestDevice = async function (descriptor: any = {}) {
+      return originalRequestDevice({
+        ...descriptor,
+        requiredLimits: {
+          ...descriptor.requiredLimits,
+          maxBufferSize: adapter.limits.maxBufferSize, // Forces the 4GB limit
+          maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
+          maxComputeWorkgroupStorageSize: adapter.limits.maxComputeWorkgroupStorageSize,
+        }
+      });
+    };
+    return adapter;
   };
 
   // Try to load
@@ -397,40 +418,34 @@ export async function loadModelWithDynamicContext(
       },
       chatOpts
     );
+    
+    // Restore the original GPU adapter function after successful initialization
+    navigator.gpu.requestAdapter = originalRequestAdapter;
+    
     return engine;
 
   } catch (error: any) {
+    // Make sure to restore on failure too
+    navigator.gpu.requestAdapter = originalRequestAdapter;
+    
     const errorMsg = error?.message || String(error);
 
     // On OOM, retry with smaller context and optionally lower KV cache quantization
     if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
-      // First try: reduce context window
       if (contextSize > 128) {
         const smallerContext = contextSize > 512 ? 512 : contextSize > 256 ? 256 : 128;
         console.warn(`[DynamicContext] OOM with ${contextSize}, retrying with ${smallerContext}`);
         
-        // Force GC if available
         await new Promise(r => setTimeout(r, 500));
         // @ts-ignore
         if (typeof gc !== 'undefined') gc();
 
-        return loadModelWithDynamicContext(
-          modelConfig,
-          smallerContext,
-          onProgress,
-          vramConfig,
-        );
+        return loadModelWithDynamicContext(modelConfig, smallerContext, onProgress, vramConfig);
       }
 
-      // Second try: if KV cache quantization was 'none', try enabling it
       if (vramConfig.kv_cache_quantization === 'none') {
         console.warn('[DynamicContext] OOM at minimum context, retrying with KV cache quantization');
-        return loadModelWithDynamicContext(
-          modelConfig,
-          128,
-          onProgress,
-          { ...vramConfig, kv_cache_quantization: 'int8' },
-        );
+        return loadModelWithDynamicContext(modelConfig, 128, onProgress, { ...vramConfig, kv_cache_quantization: 'int8' });
       }
     }
     throw error;
