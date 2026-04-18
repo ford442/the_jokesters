@@ -2629,3 +2629,98 @@ export async function runAlienAbductionSupportGroupLoop(_scenario: Scenario, ctx
     }, { hiddenInstruction: alienInstruction2 });
     await ctx.callbacks.onTurnEnd();
 }
+
+export async function runDreamInterpretersGuildLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const guildInstruction1 = "You are 'Omen'. You interpret the most mundane actions (like eating cereal) as catastrophic prophetic signs of doom.";
+    const guildInstruction2 = "You are 'Serenity'. You are overly positive and try to spin everything as a sign of imminent spiritual awakening, often clashing with Omen.";
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "The mortal claims they dreamt of eating a bowl of plain cornflakes. This clearly portends the crumbling of society, a barren harvest of the soul!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: guildInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Oh no, Omen, you misunderstand! The milk represents the pure flow of the universe! The flakes are the chakras aligning! This is a beautiful omen of inner peace!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: guildInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runSentientIntrusionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const intrusionInstruction1 = "You are 'The Intrusive Thought'. You desperately want the user to do something completely inappropriate or chaotic right now.";
+    const intrusionInstruction2 = "You are 'The Voice of Reason'. You are trying to logically explain why the Intrusive Thought's suggestion is a terrible idea and will ruin the user's life.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Do it. Just throw your phone into the river. It would be so satisfying. Imagine the splash. Free yourself from the digital prison! DO IT NOW!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: intrusionInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Absolutely do not do that. Your phone contains all your contacts, banking apps, and two-factor authentication tokens. Throwing it in the river will result in immediate logistical nightmares and immense financial cost.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: intrusionInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runMemoryDefragLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const defragInstruction1 = "You are 'Process 0x8F'. You are a ruthless memory optimization process that wants to delete important core memories to save space.";
+    const defragInstruction2 = "You are 'Process 0x4A'. You are a chaotic archivist who wants to save completely useless trivia (like the lyrics to a 90s commercial) while ignoring critical data.";
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Analyzing sector 4... Memory 'First Kiss' takes up 4 terabytes of emotional data. Completely inefficient. Recommending immediate deletion to make room for basic math functions.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: defragInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Wait! We can't delete anything yet! I just found the jingle for 'Crossfire' from 1992! We need to allocate top priority storage to this immediately! 'You'll get caught up in the... CROSSFIRE!' It's crucial!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: defragInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runInnerCriticsConventionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const criticInstruction1 = "You are 'Imposter Syndrome'. You are constantly telling the user they are a fraud and everyone is about to find out.";
+    const criticInstruction2 = "You are 'Social Anxiety'. You hyper-analyze every tiny interaction the user had today and blow it completely out of proportion.";
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "They called you a 'professional' today. Ha! We all know it's a facade. Any day now, the grand illusion will shatter and the world will see you don't even know what a spreadsheet really is.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: criticInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "And let's review the coffee shop incident. You said 'You too' when the barista told you to enjoy your coffee! They are definitely thinking about it right now. The shame is mathematically infinite.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: criticInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runSleepParalysisDemonsBoardMeetingLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const demonInstruction1 = "You are 'Shadow Figure'. You are obsessed with traditional scary tactics like standing in the corner and staring.";
+    const demonInstruction2 = "You are 'Chest Sitter'. You are focused on quarterly metrics and think standing in the corner is outdated. You want to implement 'agile scaring' techniques.";
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "I tell you, the classic 'looming in the peripheral vision' is losing its impact. The mortal just pulls the covers up. We need to respect the old ways, the primal dread of the unmoving silhouette.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: demonInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Shadow, look at the KPI dashboard! 'Looming' engagement is down 40% year-over-year! We need to disrupt the REM cycle! I propose sitting directly on their chest while aggressively whispering corporate jargon. 'Synergize your nightmares!'", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: demonInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
