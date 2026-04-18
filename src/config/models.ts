@@ -209,8 +209,12 @@ export const FP16_MODELS = {
 
 /**
  * Hugging Face Fallback FP32 Models
- * Used when VPS models are unavailable
+ * Used when VPS models are unavailable.
+ * URLs match the official mlc-ai prebuilt config so WebLLM's cleanModelUrl()
+ * appends /resolve/main/ correctly.
  */
+const MLC_MODEL_LIB_PREFIX = 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80';
+
 export const HF_FP32_MODELS = {
   /**
    * Llama-2-7B-chat with q4f32_1 quantization
@@ -219,8 +223,8 @@ export const HF_FP32_MODELS = {
    */
   HF_LLAMA_2_7B_Q4F32: {
     model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
-    model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model: `https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC`,
+    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -236,8 +240,8 @@ export const HF_FP32_MODELS = {
    */
   HF_HERMES_3_3B_Q4F32: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model: `https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC`,
+    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -253,8 +257,8 @@ export const HF_FP32_MODELS = {
    */
   HF_LLAMA_3_2_3B_Q4F32: {
     model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
-    model: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model: `https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC`,
+    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -269,8 +273,8 @@ export const HF_FP32_MODELS = {
    */
   HF_VICUNA_7B_Q4F32: {
     model_id: "ford442/vicuna-7b-q4f32-webllm",
-    model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model: `https://huggingface.co/ford442/vicuna-7b-q4f32-webllm`,
+    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -652,6 +656,22 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
       hf_repo: '',
       hf_file: `${VPS_STORAGE_URL}/gguf/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf`,
       context_size: 4096,
+    },
+  },
+  /**
+   * TinyLlama 1.1B Chat — ultra-small fallback for low-end hardware.
+   * Runs comfortably via llama.cpp WASM even on CPUs / GPUs with 256MB buffers.
+   */
+  {
+    id: 'TinyLlama-1.1B-Chat-GGUF',
+    name: 'TinyLlama 1.1B Chat (GGUF / CPU)',
+    vram_required_MB: 800,
+    context_window_size: 2048,
+    llamaCpp: {
+      gguf_url: 'https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf',
+      hf_repo: '',
+      hf_file: 'https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf',
+      context_size: 2048,
     },
   },
 ]

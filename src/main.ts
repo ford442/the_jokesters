@@ -1213,6 +1213,12 @@ async function initApp() {
     // Categorize the error for user-friendly messaging
     const errorCategory: ErrorCategory = GroupChatManager.getErrorCategory(error)
 
+    const rawError = error instanceof Error ? error.message : String(error)
+
+    // Detect very specific buffer-size failures for clearer guidance
+    const isBufferLimit = rawError.toLowerCase().includes('buffer size') &&
+                          rawError.toLowerCase().includes('exceeds')
+
     // Build error messages based on category
     const errorMessages: Record<ErrorCategory, { title: string; suggestion: string }> = {
       webgpu: {
@@ -1220,8 +1226,10 @@ async function initApp() {
         suggestion: 'Use Chrome 113+ or Edge 113+ with hardware acceleration enabled.'
       },
       oom: {
-        title: 'GPU Out of Memory',
-        suggestion: 'Close other GPU-heavy tabs and reload, or try a lower-VRAM model.'
+        title: isBufferLimit ? 'GPU Buffer Limit Too Small' : 'GPU Out of Memory',
+        suggestion: isBufferLimit
+          ? 'Your GPU only allows very small buffers (likely 256MB). Try enabling hardware acceleration, updating GPU drivers, or using a browser with better WebGPU support.'
+          : 'Close other GPU-heavy tabs and reload, or try a lower-VRAM model.'
       },
       network: {
         title: 'Network Error',
@@ -1234,7 +1242,6 @@ async function initApp() {
     }
 
     const { title, suggestion } = errorMessages[errorCategory]
-    const rawError = error instanceof Error ? error.message : String(error)
 
     // Render error panel inside #loading div
     const errorPanel = document.createElement('div')

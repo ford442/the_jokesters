@@ -110,7 +110,7 @@ async function downloadParallel(
     status: 200,
     headers: {
       'Content-Type': 'application/octet-stream',
-      'Content-Length': String(fileSize),
+      'Content-Length': String(totalSize),
     },
   });
 }
@@ -146,10 +146,17 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
         }
 
         // Get file size
-        const headResponse = await fetch(url, { method: 'HEAD' });
-        const fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
+        let headResponse: Response | null = null;
+        let fileSize = 0;
+        try {
+          headResponse = await fetch(url, { method: 'HEAD' });
+          fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
+        } catch (headError) {
+          console.warn('[ServiceWorker] HEAD request failed, falling back to regular fetch:', url);
+          return fetch(event.request);
+        }
 
-        if (fileSize === 0) {
+        if (fileSize === 0 || !headResponse.ok) {
           // Fallback to regular fetch
           return fetch(event.request);
         }

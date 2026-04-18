@@ -12,6 +12,7 @@ import {
   getModelFallbackChain,
   getModelInfo,
   getUnifiedModelById,
+  UNIFIED_MODELS,
 } from './config/models'
 import { parallelDownloadManager } from './services/ParallelDownloadManager'
 import type { LLMEngine, ChatMessage } from './llm/LLMEngine'
@@ -256,13 +257,47 @@ export class GroupChatManager {
 
     this.engineType = enginePreference
 
+    // Probe GPU limits early so we can avoid engines that will fail
+    const gpuLimits = await EngineFactory.detectWebGPULimits()
+    const lowBufferLimit = gpuLimits.maxBufferSize > 0 && gpuLimits.maxBufferSize < 512_000_000
+    if (lowBufferLimit) {
+      console.warn(`[ModelLoader] maxBufferSize (${gpuLimits.maxBufferSize}) is below 512MB. MLC WebLLM models are likely to fail.`)
+    }
+
     // Check if we're using legacy model IDs (MLC format) or unified model IDs
     const unifiedModel = preferredModelId ? getUnifiedModelById(preferredModelId) : null
 
     if (unifiedModel) {
+      // If buffer limit is low and this model would auto-select MLC, force a CPU-safe engine
+      if (lowBufferLimit) {
+        const support = EngineFactory.getModelEngineSupport(unifiedModel)
+        if (support.recommended === 'mlc' && (support.llamacpp || support.transformers)) {
+          const forcedEngine: EngineType = support.llamacpp ? 'llamacpp' : 'transformers'
+          console.warn(`[ModelLoader] Forcing ${forcedEngine} engine because maxBufferSize is too low for MLC`)
+          await this.initializeUnified(unifiedModel, onProgress, preferredContext, forcedEngine)
+          return
+        } else if (support.recommended === 'mlc') {
+          // MLC-only unified model — switch to tiny CPU fallback
+          const fallbackModel = UNIFIED_MODELS.find(m => m.id === 'TinyLlama-1.1B-Chat-GGUF')
+          if (fallbackModel) {
+            console.warn(`[ModelLoader] Model ${unifiedModel.id} requires MLC but maxBufferSize is too low. Switching to ${fallbackModel.id}`)
+            await this.initializeUnified(fallbackModel, onProgress, preferredContext, 'llamacpp')
+            return
+          }
+        }
+      }
       // Use the new dual-engine path
       await this.initializeUnified(unifiedModel, onProgress, preferredContext, enginePreference)
     } else {
+      // Legacy path — if buffer limit is too low, skip MLC entirely
+      if (lowBufferLimit) {
+        console.warn(`[ModelLoader] maxBufferSize (${gpuLimits.maxBufferSize}) is too low for MLC legacy models. Switching to unified CPU fallback.`)
+        const fallbackModel = UNIFIED_MODELS.find(m => m.id === 'TinyLlama-1.1B-Chat-GGUF')
+        if (fallbackModel) {
+          await this.initializeUnified(fallbackModel, onProgress, preferredContext, 'llamacpp')
+          return
+        }
+      }
       // Use the legacy MLC-only path for backward compatibility
       await this.initializeLegacy(onProgress, preferredModelId, preferredContext)
     }
@@ -343,7 +378,8 @@ export class GroupChatManager {
         })
 
     // If user explicitly chose a model, try it first, then fall back to chain
-    const modelFallbacks = preferredModelId
+    // CRITICAL FIX: only prepend preferredModelId if it passed the compatibility filter
+    const modelFallbacks = preferredModelId && compatibleFallbacks.includes(preferredModelId)
       ? [preferredModelId, ...compatibleFallbacks.filter(id => id !== preferredModelId)]
       : compatibleFallbacks
 
@@ -443,6 +479,25 @@ export class GroupChatManager {
     }
 
     // All fallbacks exhausted
+    // Final Hail Mary: if the failure was OOM/buffer-related, try a tiny CPU-safe unified model
+    const lastMsg = lastError instanceof Error ? lastError.message : String(lastError)
+    const isOOM = lastMsg.toLowerCase().includes('oom') ||
+                  lastMsg.toLowerCase().includes('memory') ||
+                  lastMsg.toLowerCase().includes('createbuffer') ||
+                  lastMsg.toLowerCase().includes('buffer size')
+    if (isOOM) {
+      console.warn('[ModelLoader] All MLC fallbacks failed with OOM/buffer errors. Attempting unified CPU fallback.')
+      const fallbackModel = UNIFIED_MODELS.find(m => m.id === 'TinyLlama-1.1B-Chat-GGUF')
+      if (fallbackModel) {
+        try {
+          await this.initializeUnified(fallbackModel, onProgress, preferredContext, 'llamacpp')
+          return
+        } catch (fallbackError) {
+          console.error('[ModelLoader] Unified CPU fallback also failed:', fallbackError)
+        }
+      }
+    }
+
     console.error('Failed to initialize GroupChatManager after all fallbacks:', lastError)
     throw lastError
   }

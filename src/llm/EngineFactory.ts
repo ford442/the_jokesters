@@ -91,6 +91,36 @@ export async function detectShaderF16Support(): Promise<boolean> {
 }
 
 /**
+ * Detect WebGPU hardware limits that affect model loading.
+ * Returns maxBufferSize (0 if WebGPU unavailable) and shader-f16 support.
+ */
+export interface WebGPULimits {
+  maxBufferSize: number
+  supportsF16: boolean
+}
+
+export async function detectWebGPULimits(): Promise<WebGPULimits> {
+  try {
+    const nav = navigator as any
+    if (!nav.gpu) {
+      return { maxBufferSize: 0, supportsF16: false }
+    }
+
+    const adapter = await nav.gpu.requestAdapter()
+    if (!adapter) {
+      return { maxBufferSize: 0, supportsF16: false }
+    }
+
+    const maxBufferSize = adapter.limits?.maxBufferSize ?? 0
+    const supportsF16 = adapter.features?.has('shader-f16') ?? false
+
+    return { maxBufferSize, supportsF16 }
+  } catch {
+    return { maxBufferSize: 0, supportsF16: false }
+  }
+}
+
+/**
  * Get the recommended engine type based on capabilities and model.
  */
 export async function getRecommendedEngineType(
@@ -249,6 +279,13 @@ export class EngineFactory {
    */
   static async detectShaderF16Support(): Promise<boolean> {
     return detectShaderF16Support()
+  }
+
+  /**
+   * Detect WebGPU hardware limits.
+   */
+  static async detectWebGPULimits(): Promise<WebGPULimits> {
+    return detectWebGPULimits()
   }
 
   /**
