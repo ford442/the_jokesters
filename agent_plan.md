@@ -1,7 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
+* **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 52. The execution was straightforward. Incrementing tasks_per_run to 6.
 * **status**: Successfully implemented Phase 51. The execution was straightforward and the tasks were completed easily. Incrementing `tasks_per_run` to 5.
 * **status**: Successfully implemented Phase 50 and kicked off Phase 51. The execution was straightforward, so tasks_per_run will remain at 4.
 * **status**: Successfully implemented Phase 49 (Escape the Zoo, Elevator Pitch from Hell, Alien Game Show). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 50 (The Historical Anachronisms).
@@ -599,28 +600,36 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **Alien Abduction Support Group**: Agents are aliens who accidentally abducted the user and are now in a support group because the user was too annoying. (Model Pairing: Phi-3 for psychoanalysis vs Llama-3 for empathy).
 
 ### Phase 52: The Subconscious Mind (Dreams)
-* [ ] **The Dream Interpreter's Guild**: Agents act as bizarre dream interpreters analyzing the user's completely mundane dreams (like eating cereal) as catastrophic omens.
-* [ ] **The Sentient Intrusion**: Agents act as rogue intrusive thoughts battling for control over the user's next action.
-* [ ] **Memory Defrag**: Agents are memory management processes trying to organize the user's chaotic memories, occasionally deleting important ones to make room for trivial facts.
-* [ ] **The Inner Critic's Convention**: Agents act as various personified insecurities of the user holding a convention on how to be more annoying.
-* [ ] **The Sleep Paralysis Demons Board Meeting**: Agents act as demons discussing quarterly metrics for scaring the user during sleep.
+* [x] **The Dream Interpreter's Guild**: Agents act as bizarre dream interpreters analyzing the user's completely mundane dreams (like eating cereal) as catastrophic omens.
+* [x] **The Sentient Intrusion**: Agents act as rogue intrusive thoughts battling for control over the user's next action.
+* [x] **Memory Defrag**: Agents are memory management processes trying to organize the user's chaotic memories, occasionally deleting important ones to make room for trivial facts.
+* [x] **The Inner Critic's Convention**: Agents act as various personified insecurities of the user holding a convention on how to be more annoying.
+* [x] **The Sleep Paralysis Demons Board Meeting**: Agents act as demons discussing quarterly metrics for scaring the user during sleep.
 
 ### Phase 50: The Historical Anachronisms (Dreams)
 * [x] **The Sentient Codebase**: Agents act as different parts of a legacy codebase (e.g., the chaotic front-end vs the strict database) arguing about a new feature the user wants to add.
 * [x] **Pirate Ship Board Meeting**: Agents are pirates holding a very formal corporate board meeting about quarterly plundering goals.
 * [x] **Galactic HR Department**: Agents are HR reps for a galactic empire, dealing with the user's bizarre interspecies workplace complaints.
 
+### Phase 53: Interdimensional Broadcasts (Dreams)
+* [ ] **Interdimensional Public Access TV**: Agents act as hosts of a bizarre, low-budget public access show broadcast across multiple dimensions, taking calls from the user. (Model Pairing: Hermes-3 for unhinged broadcasting vs Qwen2.5 for trying to maintain a rundown schedule).
+* [ ] **Galactic Home Shopping Network**: Agents are aggressive sales reps trying to sell the user completely incomprehensible alien gadgets (like a "quantum spork" or a "time-reversing toaster"). (Model Pairing: Llama-3 for enthusiastic pitching vs Phi-3 for inventing convoluted pseudo-science specs).
+* [ ] **Cosmic Radio Talk Show**: Agents act as conspiracy theorist radio hosts discussing the user's daily life as evidence of a massive multi-versal coverup. (Model Pairing: Hermes-3 for chaotic conspiracies vs Llama-3 for blindly validating them).
+* [ ] **The Sentient Infomercial**: The agents are the actors in a surreal 3 AM infomercial that starts out normal but devolves into existential dread. (Model Pairing: Llama-3 for fake smiling acting vs Phi-3 for breaking the fourth wall with dread).
+* [ ] **Space Station Morning Show**: The user is the guest on an overly chipper morning talk show broadcast from a space station currently undergoing catastrophic failure. (Model Pairing: Llama-3 for relentless morning-show positivity vs Qwen2.5 for calmly citing hull breach diagnostics).
+
 ### Cloud Persistence Strategy (Refined)
 1. **Authenticating with the HF API**:
    * Modify settings UI in `src/UI/SettingsModal.ts` to securely take an HF token and user ID, and check against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
-   * Add a validation state indicator (Green/Red checkmarks) alongside the token input.
+   * Add a real-time validation state indicator (Green/Red checkmarks, pulsing loading state) alongside the token input to provide immediate feedback during HTTP requests.
+   * Add logic to re-verify stored tokens every session, catching any tokens revoked directly on the Hugging Face platform.
 2. **Pushing Episode Scripts**:
    * Implement `jokesters-sync-queue` via IndexedDB to queue up episodes as soon as `Director.stopScene()` is called.
-   * Spawn a dedicated background `syncWorker.ts` Web Worker that polls this queue.
+   * Spawn a dedicated background `syncWorker.ts` Web Worker that polls this queue, completely isolated from the main thread to avoid stuttering audio/animations.
    * Have the worker execute batched POST requests (via Hugging Face Datasets API) to push the local JSON scripts into `user/jokesters-episodes` without blocking the UI.
-   * Use exponential backoff for rate limiting and 429 Too Many Requests errors.
-   * Implement token refresh worker logic to seamlessly refresh and invalidate stored tokens, ensuring background syncing remains uninterrupted.
+   * Use exponential backoff for rate limiting and 429 Too Many Requests errors, ensuring failed pushes are persisted to IndexedDB and retried.
+   * Implement token refresh worker logic to seamlessly refresh and invalidate stored tokens, pausing the queue when a 401 Unauthorized is caught.
 3. **Fetching Previous Episode Summaries at Boot**:
-   * On initial app load (inside `main.ts`), invoke `HFStorageManager` to asynchronously fetch the most recent `summary.json`.
-   * Inject extracted context snippets directly into the `GroupChatManager` system prompt, immediately grounding the agents.
+   * On initial app load (inside `main.ts`), invoke `HFStorageManager` to asynchronously fetch the most recent `summary.json` from Hugging Face.
+   * Inject extracted context snippets directly into the `GroupChatManager` system prompt, immediately grounding the agents and restoring continuity before user interaction begins.
    * Offload the background streaming of older episodic datasets into a local IndexedDB cache, providing fast local semantic search for subsequent RAG operations without stalling the UI.
