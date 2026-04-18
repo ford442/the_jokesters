@@ -1,12 +1,13 @@
 /**
  * Service Worker for Parallel Model Downloads
  *
- * Intercepts fetch requests for model files from HuggingFace CDN and handles them
- * using parallel connections with byte-range requests for faster downloads.
+ * Intercepts fetch requests for model files and uses parallel byte-range
+ * requests for large files (> CHUNK_SIZE). For smaller files it acts as a
+ * thin pass-through to avoid unnecessary memory buffering.
  *
  * Installation: Register in main.ts with:
  *   if ('serviceWorker' in navigator) {
- *     navigator.serviceWorker.register('./service-worker.ts')
+ *     navigator.serviceWorker.register('./service-worker.js')
  *   }
  */
 
@@ -24,15 +25,6 @@ const MODEL_HOSTS = [
 ];
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
-
-interface MemoryCacheEntry {
-  timestamp: number;
-  data: Uint8Array;
-}
-
-// Memory-only cache (temporary, cleared on service worker restart)
-const memoryCacheStore = new Map<string, MemoryCacheEntry>();
-const MEMORY_CACHE_TTL = 3600000; // 1 hour
 
 /**
  * Fetch with exponential backoff retry
@@ -75,72 +67,78 @@ async function fetchWithRetry(
  * Check if URL is for a model file
  */
 function isModelFile(url: string): boolean {
-  // Skip small files and non-model requests
   const isModelHost = MODEL_HOSTS.some(host => url.includes(host));
   if (!isModelHost) return false;
-
-  // Only parallelize large files (>10MB)
   return url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm');
 }
 
 /**
- * Download with parallel connections
+ * Download a large file with parallel connections.
+ * Streams chunks directly into a combined response to avoid keeping the
+ * entire file in service-worker RAM.
  */
 async function downloadParallel(
   url: string,
   fileSize: number
 ): Promise<Response> {
   const chunkCount = Math.ceil(fileSize / CHUNK_SIZE);
-  const chunks: (Uint8Array | null)[] = new Array(chunkCount).fill(null);
 
-  // Create queue of chunk indices
-  const queue = Array.from({ length: chunkCount }, (_, i) => i);
+  // Pre-compute range headers so workers can pull from a queue
+  const ranges: Array<{ start: number; end: number }> = [];
+  for (let i = 0; i < chunkCount; i++) {
+    const start = i * CHUNK_SIZE;
+    const end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+    ranges.push({ start, end });
+  }
+
+  const queue = [...ranges];
+  const completedChunks: Array<{ index: number; data: Uint8Array }> = [];
 
   const downloadWorker = async (): Promise<void> => {
-    while (queue.length > 0) {
-      const chunkIndex = queue.shift();
-      if (chunkIndex === undefined) break;
+    while (true) {
+      const range = queue.shift();
+      if (!range) break;
 
-      const start = chunkIndex * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+      const { start, end } = range;
+      const idx = ranges.indexOf(range);
 
       try {
         const response = await fetchWithRetry(url, {
-          headers: {
-            'Range': `bytes=${start}-${end}`,
-          },
+          headers: { 'Range': `bytes=${start}-${end}` },
         });
-
         const buffer = await response.arrayBuffer();
-        chunks[chunkIndex] = new Uint8Array(buffer);
+        completedChunks.push({ index: idx, data: new Uint8Array(buffer) });
       } catch (error) {
-        console.error(`[ServiceWorker] Chunk ${chunkIndex} failed after retries:`, error);
+        console.error(`[ServiceWorker] Chunk ${idx} failed after retries:`, error);
         throw error;
       }
     }
   };
 
-  // Start 4 parallel workers
-  const workers = Array.from({ length: Math.min(PARALLEL_CONNECTIONS, chunkCount) }, () =>
-    downloadWorker()
+  // Start parallel workers
+  const workers = Array.from(
+    { length: Math.min(PARALLEL_CONNECTIONS, chunkCount) },
+    () => downloadWorker()
   );
-
   await Promise.all(workers);
 
-  // Combine chunks
-  const totalSize = chunks.reduce((sum, chunk) => sum + (chunk?.length || 0), 0);
+  // Sort chunks back into order
+  completedChunks.sort((a, b) => a.index - b.index);
+
+  // Combine into single buffer
+  const totalSize = completedChunks.reduce((sum, c) => sum + c.data.length, 0);
   const combined = new Uint8Array(totalSize);
   let offset = 0;
-
-  for (const chunk of chunks) {
-    if (chunk) {
-      combined.set(chunk, offset);
-      offset += chunk.length;
-    }
+  for (const chunk of completedChunks) {
+    combined.set(chunk.data, offset);
+    offset += chunk.data.length;
   }
 
-  // Return as Response with Uint8Array body
-  const responseBody = combined.buffer.slice(combined.byteOffset, combined.byteOffset + combined.byteLength) as ArrayBuffer;
+  const responseBody = combined.buffer.slice(
+    combined.byteOffset,
+    combined.byteOffset + combined.byteLength
+  ) as ArrayBuffer;
+
   return new Response(responseBody, {
     status: 200,
     headers: {
@@ -166,69 +164,40 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
   event.respondWith(
     (async () => {
       try {
-        // Check memory cache (temporary, cleared on worker restart)
-        const cached = memoryCacheStore.get(url);
-        if (cached && Date.now() - cached.timestamp < MEMORY_CACHE_TTL) {
-          console.log('[ServiceWorker] Serving from memory cache:', url);
-          const cachedBody = cached.data.buffer.slice(cached.data.byteOffset, cached.data.byteOffset + cached.data.byteLength) as ArrayBuffer;
-          return new Response(cachedBody, {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'Content-Length': String(cached.data.length),
-            },
-          });
-        }
-
-        // Get file size
+        // Get file size via HEAD
         let headResponse: Response | null = null;
         let fileSize = 0;
         try {
           headResponse = await fetchWithRetry(url, { method: 'HEAD' }, 1);
           fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
         } catch (headError) {
-          console.warn('[ServiceWorker] HEAD request failed, falling back to regular fetch:', url);
+          console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', url);
           return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
 
         if (fileSize === 0 || !headResponse.ok) {
-          // Fallback to regular fetch
           return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
 
-        // Check if server supports ranges
-        const supportsRanges = headResponse.headers.has('accept-ranges') &&
-                              headResponse.headers.get('accept-ranges') !== 'none';
+        const supportsRanges =
+          headResponse.headers.has('accept-ranges') &&
+          headResponse.headers.get('accept-ranges') !== 'none';
 
-        let response: Response;
+        // CRITICAL: For files smaller than one chunk (all model shards are ~30 MB)
+        // skip parallel download entirely. Just pass through with retry logic.
+        // This avoids buffering the entire shard multiple times in SW memory,
+        // which was causing net::ERR_FAILED on memory-constrained systems.
         if (supportsRanges && fileSize > CHUNK_SIZE) {
           console.log('[ServiceWorker] Using parallel download for:', url);
-          response = await downloadParallel(url, fileSize);
-
-          // Cache in memory (temporary, not persistent)
-          const data = await response.clone().arrayBuffer();
-          memoryCacheStore.set(url, {
-            timestamp: Date.now(),
-            data: new Uint8Array(data),
-          });
-
-          // Return a fresh response from cached data
-          return new Response(data, {
-            status: 200,
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              'Content-Length': String(data.byteLength),
-            },
-          });
+          return await downloadParallel(url, fileSize);
         } else {
-          // Fallback to regular fetch
-          console.log('[ServiceWorker] Server does not support ranges, using regular fetch:', url);
+          console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', url);
           return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
-        // Fallback to regular fetch on error
-        return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
+        // Final fallback: let the browser handle it natively
+        return fetch(event.request);
       }
     })()
   );
@@ -242,7 +211,6 @@ self.addEventListener('message', (event: ExtendableMessageEvent & { data: { type
   if (event.data?.type === 'SKIP_WAITING') {
     (self as any).skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
-    memoryCacheStore.clear();
     console.log('[ServiceWorker] Memory cache cleared');
   }
 });

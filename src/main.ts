@@ -222,6 +222,8 @@ async function initApp() {
             </div>
           </details>
 
+          <div id="storage-info" style="color:#888;font-size:0.78em;margin-bottom:8px;min-height:1.5em;"></div>
+          <button id="clear-cache-btn" style="width:100%;padding:8px;background:#2a2a4e;color:#ff6b6b;font-size:0.85em;border:1px solid #444;border-radius:6px;cursor:pointer;margin-bottom:8px;display:none;">Clear Model Cache</button>
           <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
         </div>
         <!-- Progress bar (hidden until launch) -->
@@ -400,6 +402,69 @@ async function initApp() {
   })
   updateEngineInfo(engineSelectEl?.value || 'auto')
 
+  // --- Storage quota check & cache clear UI ---
+  const storageInfoEl = document.getElementById('storage-info')!
+  const clearCacheBtn = document.getElementById('clear-cache-btn') as HTMLButtonElement
+
+  async function checkStorage() {
+    try {
+      if (!navigator.storage?.estimate) {
+        storageInfoEl.textContent = 'Storage estimation not supported in this browser.'
+        return
+      }
+      const estimate = await navigator.storage.estimate()
+      const usedGB = ((estimate.usage ?? 0) / 1024 / 1024 / 1024).toFixed(2)
+      const totalGB = ((estimate.quota ?? 0) / 1024 / 1024 / 1024).toFixed(2)
+      const percent = estimate.quota ? Math.round((estimate.usage ?? 0) / estimate.quota * 100) : 0
+      storageInfoEl.textContent = `Browser storage: ${usedGB} GB used / ${totalGB} GB total (${percent}%)`
+      if (percent > 80) {
+        storageInfoEl.style.color = '#ff6b6b'
+        clearCacheBtn.style.display = 'block'
+      } else {
+        storageInfoEl.style.color = '#888'
+        clearCacheBtn.style.display = 'none'
+      }
+    } catch (e) {
+      console.warn('[Storage] Could not estimate storage:', e)
+    }
+  }
+
+  clearCacheBtn?.addEventListener('click', async () => {
+    clearCacheBtn.textContent = 'Clearing...'
+    try {
+      // Clear WebLLM's IndexedDB caches
+      const dbs = await (window as any).indexedDB?.databases?.() ?? []
+      for (const db of dbs) {
+        if (db.name && (db.name.includes('webllm') || db.name.includes('cache'))) {
+          (window as any).indexedDB.deleteDatabase(db.name)
+          console.log('[Storage] Deleted IndexedDB:', db.name)
+        }
+      }
+      // Clear Cache API entries for this origin
+      const cacheNames = await caches.keys()
+      for (const name of cacheNames) {
+        await caches.delete(name)
+        console.log('[Storage] Deleted Cache:', name)
+      }
+      // Unregister service worker to clear its memory cache
+      const regs = await navigator.serviceWorker?.getRegistrations() ?? []
+      for (const reg of regs) {
+        await reg.unregister()
+        console.log('[Storage] Unregistered SW')
+      }
+      clearCacheBtn.textContent = 'Cache Cleared ✓'
+      setTimeout(() => {
+        clearCacheBtn.textContent = 'Clear Model Cache'
+        checkStorage()
+      }, 2000)
+    } catch (e) {
+      console.error('[Storage] Failed to clear cache:', e)
+      clearCacheBtn.textContent = 'Clear Failed ✗'
+    }
+  })
+
+  checkStorage()
+
   // Wait for user to click Launch before starting initialization
   const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens, enginePreference } = await new Promise<{
     selectedModelId: string;
@@ -408,7 +473,7 @@ async function initApp() {
     chosenMaxTokens: number;
     enginePreference: EngineType;
   }>(resolve => {
-    document.getElementById('launch-btn')!.addEventListener('click', () => {
+    document.getElementById('launch-btn')!.addEventListener('click', async () => {
       const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement;
       const contextVal = contextSelect ? contextSelect.value : 'auto';
       const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10);
@@ -435,9 +500,34 @@ async function initApp() {
 
       const chosenMaxTokens = parseInt(maxTokensSliderEl?.value ?? '96', 10);
 
+      // Warn before loading large models if storage is tight
+      const selectedModel = modelSelectLaunch.value
+      const isLargeModel = selectedModel.includes('7b') || selectedModel.includes('8B') || selectedModel.includes('vicuna')
+      if (isLargeModel) {
+        try {
+          const estimate = await navigator.storage?.estimate?.()
+          const quota = estimate?.quota ?? 0
+          const usage = estimate?.usage ?? 0
+          const freeGB = ((quota - usage) / 1024 / 1024 / 1024)
+          if (freeGB < 4) {
+            const proceed = confirm(
+              `⚠️ Storage Warning\n\n` +
+              `This model needs ~4 GB of browser storage. ` +
+              `You only have ~${freeGB.toFixed(1)} GB free.\n\n` +
+              `The download may fail. Try clearing the cache first, ` +
+              `or choose a smaller 3B model.\n\n` +
+              `Proceed anyway?`
+            )
+            if (!proceed) return
+          }
+        } catch (e) {
+          // Ignore estimation errors, proceed with load
+        }
+      }
+
       document.getElementById('model-picker')!.style.display = 'none'
       document.getElementById('progress-section')!.style.display = 'block'
-      resolve({ selectedModelId: modelSelectLaunch.value, preferredContext, vramConfig, chosenMaxTokens, enginePreference })
+      resolve({ selectedModelId: selectedModel, preferredContext, vramConfig, chosenMaxTokens, enginePreference })
     })
   })
 
