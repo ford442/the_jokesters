@@ -660,6 +660,18 @@ export class GroupChatManager {
         response: fullResponse,
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error)
+
+      // WebLLM throws ModelNotLoadedError when the GPU device was lost after init
+      // appeared to succeed. Reset engine state so callers know re-init is required.
+      if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
+        this.isInitialized = false
+        this.engine = null
+        throw new Error(
+          'The AI model was unloaded unexpectedly (GPU device lost). Please reload the page.'
+        )
+      }
+
       // On OOM during generation, automatically reduce max tokens for future turns
       const category = GroupChatManager.getErrorCategory(error)
       if (category === 'oom' && this.maxTokensPerTurn > 32) {
