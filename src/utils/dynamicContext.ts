@@ -387,16 +387,24 @@ export async function loadModelWithDynamicContext(
 
   // ========================================================================
   // WEBGPU LIMITS FIX: Intercept requestAdapter to force maximum buffer sizes
+  // DEVICE-LOST DETECTION: Race CreateMLCEngine against GPU device loss so OOM
+  // during initialization is caught and the fallback chain can try the next model.
   // ========================================================================
   const nav = navigator as any;
   const originalRequestAdapter = nav.gpu.requestAdapter.bind(nav.gpu);
+
+  let deviceLostRejectFn: ((err: Error) => void) | null = null;
+  const deviceLostRace = new Promise<never>((_, reject) => {
+    deviceLostRejectFn = reject;
+  });
+
   nav.gpu.requestAdapter = async function (options?: any) {
     const adapter = await originalRequestAdapter(options);
     if (!adapter) return adapter;
-    
+
     const originalRequestDevice = adapter.requestDevice.bind(adapter);
     adapter.requestDevice = async function (descriptor: any = {}) {
-      return originalRequestDevice({
+      const device = await originalRequestDevice({
         ...descriptor,
         requiredLimits: {
           ...descriptor.requiredLimits,
@@ -405,29 +413,43 @@ export async function loadModelWithDynamicContext(
           maxComputeWorkgroupStorageSize: adapter.limits.maxComputeWorkgroupStorageSize,
         }
       });
+      // Monitor for async GPU device loss (OOM after device creation)
+      device.lost.then((info: any) => {
+        deviceLostRejectFn?.(
+          new Error(
+            `GPU device lost during model initialization: ${info.message ?? info.reason} — device is lost`
+          )
+        );
+      });
+      return device;
     };
     return adapter;
   };
 
-  // Try to load
-  try {
-    const engine = await webllm.CreateMLCEngine(
-      modelConfig.model_id,
-      {
-        initProgressCallback: onProgress,
-        appConfig: dynamicAppConfig,
-      },
-      chatOpts
-    );
-    
-    // Restore the original GPU adapter function after successful initialization
+  const cleanup = () => {
     nav.gpu.requestAdapter = originalRequestAdapter;
-    
+    deviceLostRejectFn = null; // Prevent late device-lost events from propagating
+  };
+
+  // Try to load, racing against GPU device loss
+  try {
+    const engine = await Promise.race([
+      webllm.CreateMLCEngine(
+        modelConfig.model_id,
+        {
+          initProgressCallback: onProgress,
+          appConfig: dynamicAppConfig,
+        },
+        chatOpts
+      ),
+      deviceLostRace,
+    ]);
+
+    cleanup();
     return engine;
 
   } catch (error: any) {
-    // Make sure to restore on failure too
-    nav.gpu.requestAdapter = originalRequestAdapter;
+    cleanup();
     
     const errorMsg = error?.message || String(error);
 
