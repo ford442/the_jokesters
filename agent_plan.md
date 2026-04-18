@@ -1,7 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 4
+* **tasks_per_run**: 5
+* **status**: Successfully implemented Phase 51. The execution was straightforward and the tasks were completed easily. Incrementing `tasks_per_run` to 5.
 * **status**: Successfully implemented Phase 50 and kicked off Phase 51. The execution was straightforward, so tasks_per_run will remain at 4.
 * **status**: Successfully implemented Phase 49 (Escape the Zoo, Elevator Pitch from Hell, Alien Game Show). Increased tasks_per_run to 4. Expanded the Dream Phase with Phase 50 (The Historical Anachronisms).
 
@@ -592,8 +593,17 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Phase 51: The Bureaucratic Nightmare (Dreams)
 * [x] **The Universal Zoning Board**: Agents act as members of the Universal Zoning Board. The user requests a permit to build a basic house on Earth, but agents treat it like a multi-dimensional mega-structure project, citing absurd zoning laws. (Model Pairing: Qwen2.5 for citing inter-dimensional safety vs Hermes-3 for pushing chaotic architectural guidelines).
-* [ ] **Time Paradox Resolution Committee**: Agents are bureaucrats managing timelines. The user has accidentally created a minor paradox (like stepping on a bug in the Cretaceous) and the agents argue about the paperwork needed to fix the entire space-time continuum. (Model Pairing: Phi-3 for deterministic rules vs Llama-3 for enthusiastic timeline rewriting).
-* [ ] **Intergalactic IRS**: Agents act as alien tax auditors investigating the user for failing to declare emotional baggage and dream-state earnings on their cosmic tax return. (Model Pairing: Qwen2.5 for ruthless auditing vs Hermes-3 for inventing new unhinged tax loopholes).
+* [x] **Time Paradox Resolution Committee**: Agents are bureaucrats managing timelines. The user has accidentally created a minor paradox (like stepping on a bug in the Cretaceous) and the agents argue about the paperwork needed to fix the entire space-time continuum. (Model Pairing: Phi-3 for deterministic rules vs Llama-3 for enthusiastic timeline rewriting).
+* [x] **Intergalactic IRS**: Agents act as alien tax auditors investigating the user for failing to declare emotional baggage and dream-state earnings on their cosmic tax return. (Model Pairing: Qwen2.5 for ruthless auditing vs Hermes-3 for inventing new unhinged tax loopholes).
+* [x] **Sentient Spam Folder**: Agents act as the user's spam folder, arguing over which scam emails are the most lucrative. (Model Pairing: Hermes-3 for clicking links vs Qwen2.5 for security).
+* [x] **Alien Abduction Support Group**: Agents are aliens who accidentally abducted the user and are now in a support group because the user was too annoying. (Model Pairing: Phi-3 for psychoanalysis vs Llama-3 for empathy).
+
+### Phase 52: The Subconscious Mind (Dreams)
+* [ ] **The Dream Interpreter's Guild**: Agents act as bizarre dream interpreters analyzing the user's completely mundane dreams (like eating cereal) as catastrophic omens.
+* [ ] **The Sentient Intrusion**: Agents act as rogue intrusive thoughts battling for control over the user's next action.
+* [ ] **Memory Defrag**: Agents are memory management processes trying to organize the user's chaotic memories, occasionally deleting important ones to make room for trivial facts.
+* [ ] **The Inner Critic's Convention**: Agents act as various personified insecurities of the user holding a convention on how to be more annoying.
+* [ ] **The Sleep Paralysis Demons Board Meeting**: Agents act as demons discussing quarterly metrics for scaring the user during sleep.
 
 ### Phase 50: The Historical Anachronisms (Dreams)
 * [x] **The Sentient Codebase**: Agents act as different parts of a legacy codebase (e.g., the chaotic front-end vs the strict database) arguing about a new feature the user wants to add.
@@ -609,6 +619,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Spawn a dedicated background `syncWorker.ts` Web Worker that polls this queue.
    * Have the worker execute batched POST requests (via Hugging Face Datasets API) to push the local JSON scripts into `user/jokesters-episodes` without blocking the UI.
    * Use exponential backoff for rate limiting and 429 Too Many Requests errors.
+   * Implement token refresh worker logic to seamlessly refresh and invalidate stored tokens, ensuring background syncing remains uninterrupted.
 3. **Fetching Previous Episode Summaries at Boot**:
    * On initial app load (inside `main.ts`), invoke `HFStorageManager` to asynchronously fetch the most recent `summary.json`.
    * Inject extracted context snippets directly into the `GroupChatManager` system prompt, immediately grounding the agents.
