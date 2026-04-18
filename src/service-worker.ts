@@ -22,6 +22,8 @@ const MODEL_HOSTS = [
   'models.mlc.ai',
   'storage.noahcohn.com',
 ];
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 500;
 
 interface MemoryCacheEntry {
   timestamp: number;
@@ -31,6 +33,43 @@ interface MemoryCacheEntry {
 // Memory-only cache (temporary, cleared on service worker restart)
 const memoryCacheStore = new Map<string, MemoryCacheEntry>();
 const MEMORY_CACHE_TTL = 3600000; // 1 hour
+
+/**
+ * Fetch with exponential backoff retry
+ */
+async function fetchWithRetry(
+  url: string,
+  options?: RequestInit,
+  maxRetries = MAX_RETRIES
+): Promise<Response> {
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok || response.status === 206) {
+        return response;
+      }
+      // Retry on server errors (5xx) and rate limits (429)
+      if (response.status >= 500 || response.status === 429) {
+        lastError = new Error(`HTTP ${response.status}`);
+        const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
+        console.warn(`[ServiceWorker] Retry ${attempt + 1}/${maxRetries} for ${url} after ${delay}ms (HTTP ${response.status})`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      // Don't retry client errors (4xx except 429)
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < maxRetries) {
+        const delay = RETRY_DELAY_MS * Math.pow(2, attempt);
+        console.warn(`[ServiceWorker] Retry ${attempt + 1}/${maxRetries} for ${url} after ${delay}ms (${lastError.message})`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastError || new Error(`fetch failed after ${maxRetries} retries`);
+}
 
 /**
  * Check if URL is for a model file
@@ -66,20 +105,16 @@ async function downloadParallel(
       const end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
 
       try {
-        const response = await fetch(url, {
+        const response = await fetchWithRetry(url, {
           headers: {
             'Range': `bytes=${start}-${end}`,
           },
         });
 
-        if (response.status === 206 || response.ok) {
-          const buffer = await response.arrayBuffer();
-          chunks[chunkIndex] = new Uint8Array(buffer);
-        } else {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        const buffer = await response.arrayBuffer();
+        chunks[chunkIndex] = new Uint8Array(buffer);
       } catch (error) {
-        console.error(`[ServiceWorker] Chunk ${chunkIndex} failed:`, error);
+        console.error(`[ServiceWorker] Chunk ${chunkIndex} failed after retries:`, error);
         throw error;
       }
     }
@@ -149,16 +184,16 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
         let headResponse: Response | null = null;
         let fileSize = 0;
         try {
-          headResponse = await fetch(url, { method: 'HEAD' });
+          headResponse = await fetchWithRetry(url, { method: 'HEAD' }, 1);
           fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
         } catch (headError) {
           console.warn('[ServiceWorker] HEAD request failed, falling back to regular fetch:', url);
-          return fetch(event.request);
+          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
 
         if (fileSize === 0 || !headResponse.ok) {
           // Fallback to regular fetch
-          return fetch(event.request);
+          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
 
         // Check if server supports ranges
@@ -188,12 +223,12 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
         } else {
           // Fallback to regular fetch
           console.log('[ServiceWorker] Server does not support ranges, using regular fetch:', url);
-          return fetch(event.request);
+          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
         }
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
         // Fallback to regular fetch on error
-        return fetch(event.request);
+        return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
       }
     })()
   );
