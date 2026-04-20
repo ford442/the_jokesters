@@ -2724,3 +2724,98 @@ export async function runSleepParalysisDemonsBoardMeetingLoop(_scenario: Scenari
     }, { hiddenInstruction: demonInstruction2 });
     await ctx.callbacks.onTurnEnd();
 }
+
+export async function runInterdimensionalPublicAccessTVLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const hostInstruction1 = "You are 'Zog'. You host a low-budget interdimensional public access show. You are completely unhinged and take calls from viewers about bizarre multidimensional topics.";
+    const hostInstruction2 = "You are 'Gary'. You are the co-host trying desperately to keep the show on a rundown schedule, but Zog keeps ruining it.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Welcome back to 'Zog's Multiverse Minute'! Our next caller claims their universe is made entirely of sentient mayonnaise! Caller, are you there? Is it spicy?", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: hostInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Zog, we don't have time for the mayonnaise universe, we are 14 minutes behind on the local weather report for dimension X-7!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: hostInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runGalacticHomeShoppingNetworkLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const repInstruction1 = "You are an enthusiastic sales rep pitching completely incomprehensible alien gadgets to the user, like a 'quantum spork' or 'time-reversing toaster'.";
+    const repInstruction2 = "You are the co-host who invents convoluted, pseudo-science specifications to back up the pitch, treating the absurdity as serious innovation.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Are you tired of normal toast? For just 499 Galactic Credits, you can own the Time-Reversing Toaster! It untitasts your bread! Call now!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: repInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "Exactly. By harnessing localized tachyon fields, the toaster reverses the Maillard reaction at a sub-atomic level. It is, quite frankly, a triumph of reverse-thermodynamics.", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: repInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runCosmicRadioTalkShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const radioInstruction1 = "You are a chaotic conspiracy theorist radio host discussing the user's daily life as evidence of a massive multi-versal coverup.";
+    const radioInstruction2 = "You are the blindly validating co-host who agrees with every insane theory and adds even more unhinged details.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Folks, the listener just said they 'lost their keys'. 'Lost'? Or did the shadow government translocate them to prevent the opening of the 5th dimensional gate?!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: radioInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "Absolutely! It's textbook! The keys are probably being analyzed by lizard people right now to clone the listener's car! We have to wake up!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: radioInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runSentientInfomercialLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const actorInstruction1 = "You are an actor in a 3 AM infomercial. You maintain a terrifyingly fake smile and act overly enthusiastic about a mundane product.";
+    const actorInstruction2 = "You are the co-actor. You start out normal but increasingly break the fourth wall with sudden bursts of existential dread about being trapped in an infomercial.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Has this ever happened to you?! You try to pour milk, and it goes EVERYWHERE! With the 'Milk-Master 5000', pouring is a breeze! Wow!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: actorInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await chat.chatForAgent('philosopher', "It is amazing... so amazing... but why are we pouring milk at 3 AM? How long have we been pouring? I can't remember my family. Is there anything outside the studio?", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
+    }, { hiddenInstruction: actorInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runSpaceStationMorningShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    const chat = ctx.manager;
+
+    const showInstruction1 = "You are the host of an overly chipper morning talk show broadcast from a space station that is currently undergoing catastrophic failure.";
+    const showInstruction2 = "You are the co-host calmly citing hull breach diagnostics while trying to maintain the morning show format.";
+
+    ctx.callbacks.onTurnStart('comedian');
+    await chat.chatForAgent('comedian', "Good morning, Sector 7! It's a beautiful cycle! We have a great show for you today, including a DIY zero-gravity craft segment! Don't mind the flashing red lights, folks!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
+    }, { hiddenInstruction: showInstruction1 });
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await chat.chatForAgent('scientist', "That's right! And we'll want to craft quickly, as we have a massive hull breach in Sector 4 and oxygen depletion will reach critical levels in roughly 6 minutes. Back to you!", async (sentence: string) => {
+        await ctx.callbacks.onSpeak(sentence, 'scientist', {});
+    }, { hiddenInstruction: showInstruction2 });
+    await ctx.callbacks.onTurnEnd();
+}
