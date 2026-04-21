@@ -2819,3 +2819,157 @@ export async function runSpaceStationMorningShowLoop(_scenario: Scenario, ctx: M
     }, { hiddenInstruction: showInstruction2 });
     await ctx.callbacks.onTurnEnd();
 }
+/**
+ * The Sentient Search Engine
+ * Agents act as the user's search history, judging them for their weird 3 AM queries.
+ */
+export async function runSentientSearchEngineLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔍 SEARCH ENGINE MODE: Your query history is alive and it's judging you.`, '#3498db');
+
+    const chaosAgent = 'comedian'; // Hermes-3
+    const statsAgent = 'scientist'; // Qwen2.5
+
+    await ctx.callbacks.onTurnStart(statsAgent);
+    await ctx.manager.chatForAgent(statsAgent, `(You are a sentient search engine. Cite specific, bizarre metrics about the user's late-night search habits. Be cold but intensely judgmental.)`, async (s) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(chaosAgent);
+        await ctx.manager.chatForAgent(chaosAgent, `(You are the chaotic side of the search algorithm. React to the user's input: "${userInput}" as if it's the weirdest thing you've ever had to index. Judge them harshly but hilariously.)`, async (s) => await ctx.callbacks.onSpeak(s, chaosAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(statsAgent);
+        await ctx.manager.chatForAgent(statsAgent, `(You are the statistical search engine. Analyze why "${userInput}" ruined the algorithm's predictive models. Bring up completely unrelated "recommended searches" that mock them.)`, async (s) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+/**
+ * The Quantum Pet Store
+ * Agents are salespeople trying to sell the user a pet that exists in a superposition of states.
+ */
+export async function runQuantumPetStoreLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🐈 QUANTUM PET STORE: It's alive, it's dead, it's both!`, '#9b59b6');
+
+    const physicsAgent = 'scientist'; // Qwen2.5
+    const salesAgent = 'comedian'; // Llama-3 (or similar)
+
+    await ctx.callbacks.onTurnStart(salesAgent);
+    await ctx.manager.chatForAgent(salesAgent, `(You are an enthusiastic salesperson at a Quantum Pet Store. Enthusiastically pitch a pet that exists in multiple states at once to the user.)`, async (s) => await ctx.callbacks.onSpeak(s, salesAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Customer', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(physicsAgent);
+        await ctx.manager.chatForAgent(physicsAgent, `(You are the resident quantum physicist at the pet store. Explain to the user why their concern about "${userInput}" is invalid due to wave-function collapse and string theory. Be extremely pedantic.)`, async (s) => await ctx.callbacks.onSpeak(s, physicsAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(salesAgent);
+        await ctx.manager.chatForAgent(salesAgent, `(You are the salesperson. Ignore the physics and keep pushing the sale. Try to upsell them on a "Schrödinger's litter box" based on what they said: "${userInput}")`, async (s) => await ctx.callbacks.onSpeak(s, salesAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+/**
+ * The Multiversal Chef's Table
+ * Agents are pretentious chefs from different dimensions critiquing the user's completely average sandwich.
+ */
+export async function runMultiversalChefsTableLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🥪 MULTIVERSAL CHEF'S TABLE: Critiquing your dimension's food.`, '#e67e22');
+
+    const snobAgent = 'philosopher'; // Phi-3
+    const eaterAgent = 'comedian'; // Hermes-3
+
+    await ctx.callbacks.onTurnStart(snobAgent);
+    await ctx.manager.chatForAgent(snobAgent, `(You are a pretentious culinary genius from a dimension where flavor is a physical element. Over-analyze the concept of an "average Earth sandwich" with extreme culinary snobbery.)`, async (s) => await ctx.callbacks.onSpeak(s, snobAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Earthling', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(eaterAgent);
+        await ctx.manager.chatForAgent(eaterAgent, `(You are a chaotic chef from a dimension that eats concepts and emotions. React to the user saying "${userInput}". Complain that it lacks the "crunch of existential dread" and try to eat the plate.)`, async (s) => await ctx.callbacks.onSpeak(s, eaterAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(snobAgent);
+        await ctx.manager.chatForAgent(snobAgent, `(You are the pretentious chef. Deconstruct "${userInput}" as a terrible metaphor for their dimension's failing society. Suggest replacing the bread with "crystallized time".)`, async (s) => await ctx.callbacks.onSpeak(s, snobAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+/**
+ * The Time-Traveling Heist Planners
+ * Agents are master thieves from different eras trying to coordinate a heist.
+ */
+export async function runTimeTravelingHeistPlannersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💎 CHRONO-HEIST: Planning the ultimate temporal robbery.`, '#1abc9c');
+
+    const chaoticAgent = 'comedian'; // Hermes-3
+    const mastermindAgent = 'philosopher'; // Phi-3
+
+    await ctx.callbacks.onTurnStart(mastermindAgent);
+    await ctx.manager.chatForAgent(mastermindAgent, `(You are a Victorian-era criminal mastermind. You are planning a heist across time. Lay out the initial, overly complicated plan using period-appropriate language and clockwork gadgets.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermindAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Inside Man', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(chaoticAgent);
+        await ctx.manager.chatForAgent(chaoticAgent, `(You are a chaotic cyber-gunslinger from the year 2099. React to the user's input: "${userInput}". Propose a ridiculously violent and explosive sci-fi solution that ruins the stealthy Victorian plan.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(mastermindAgent);
+        await ctx.manager.chatForAgent(mastermindAgent, `(You are the Victorian mastermind. Express profound disappointment at the gunslinger and the user's idea ("${userInput}"). Try to salvage the plan using logic and a pocket watch.)`, async (s) => await ctx.callbacks.onSpeak(s, mastermindAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+/**
+ * The Interdimensional Customer Service
+ * Agents are customer service reps dealing with the user's complaint about a defective parallel universe.
+ */
+export async function runInterdimensionalCustomerServiceLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📞 CUSTOMER SERVICE: Thank you for calling the Multiverse Support Line.`, '#e74c3c');
+
+    const policyAgent = 'scientist'; // Qwen2.5
+    const fakeEmpathyAgent = 'comedian'; // Llama-3
+
+    await ctx.callbacks.onTurnStart(fakeEmpathyAgent);
+    await ctx.manager.chatForAgent(fakeEmpathyAgent, `(You are an Interdimensional Customer Service Rep. Answer the phone with overwhelming, fake, overly-enthusiastic empathy. Ask for the user's dimension tracking number.)`, async (s) => await ctx.callbacks.onSpeak(s, fakeEmpathyAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Angry Caller', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(policyAgent);
+        await ctx.manager.chatForAgent(policyAgent, `(You are the strict policy-enforcer rep. Read an incomprehensibly complex multiverse policy that proves the user's complaint ("${userInput}") is their own fault. Deny their refund.)`, async (s) => await ctx.callbacks.onSpeak(s, policyAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(fakeEmpathyAgent);
+        await ctx.manager.chatForAgent(fakeEmpathyAgent, `(You are the fake-empathy rep. Tell them you "totally understand their frustration" about "${userInput}" but offer them a completely useless compensation, like a coupon for negative space.)`, async (s) => await ctx.callbacks.onSpeak(s, fakeEmpathyAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
