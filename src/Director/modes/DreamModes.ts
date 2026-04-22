@@ -2973,3 +2973,143 @@ export async function runInterdimensionalCustomerServiceLoop(_scenario: Scenario
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+/**
+ * The Floppy Disk Defenders
+ * Agents act as old-school storage formats arguing over data storage.
+ */
+export async function runFloppyDiskDefendersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💾 THE FLOPPY DISK DEFENDERS: Arguing over 1.44MB of memes!`, '#e67e22');
+
+    const magnetic = 'comedian'; // Hermes-3 (Chaos)
+    const bad_sector = 'scientist'; // Qwen2.5 (Strict)
+    const pure_tape = 'philosopher'; // Mastermind
+
+    // 1. Initial Debate
+    ctx.callbacks.onTurnStart(magnetic);
+    await ctx.manager.chatForAgent(magnetic, `(You are a 5.25" Floppy Disk. Argue passionately that your magnetic tape chaos is the only true way to store the user's memes. Be completely unhinged about magnetic fields.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Data Hoarder)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        // 2. Strict Response
+        await ctx.manager.chatForAgent(bad_sector, `(You are a CD-ROM prone to scratching. Cite specific bad sector errors regarding the user's input: "${userInput}". Explain why optical storage is superior but currently failing.)`, async (s) => await ctx.callbacks.onSpeak(s, bad_sector, {}));
+        if (!ctx.isRunning()) break;
+
+        // 3. Chaos Response
+        await ctx.manager.chatForAgent(magnetic, `(Respond to the user and the CD-ROM. Defend the raw aesthetic of data corruption and 1.44MB limits.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
+        if (!ctx.isRunning()) break;
+
+        // 4. Third Format
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(pure_tape, `(You are a ZIP Drive. Condescendingly explain why you are the future of storage, despite being completely obsolete. Address the user's input: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, pure_tape, {}));
+        }
+    }
+}
+
+/**
+ * The Dial-Up Modems
+ * Agents act as dial-up ISPs trying to connect.
+ */
+export async function runDialUpModemsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📞 THE DIAL-UP MODEMS: Connecting at 56k...`, '#3498db');
+
+    const enthusiastic = 'comedian'; // Llama-3 (Enthusiastic)
+    const strict = 'philosopher'; // Phi-3 (Handshake protocols)
+
+    ctx.callbacks.onTurnStart(strict);
+    await ctx.manager.chatForAgent(strict, `(You are a 56k Modem. Explain the complexity of the V.90 handshake protocol to the user and complain that someone in the house might pick up the phone.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Trying to connect)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(enthusiastic, `(You are a competing ISP software (like AOL). React enthusiastically with dial-up noises (Eee-er-eee) to the user's input: "${userInput}". Promise blazing fast 28.8k speeds.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiastic, {}));
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(strict, `(You are the 56k modem. Blame the user's input "${userInput}" for causing packet loss and resetting the handshake.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+    }
+}
+
+/**
+ * The Y2K Bug Survivor
+ * Agents act as traumatized code that survived Y2K.
+ */
+export async function runY2KBugSurvivorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🗓️ THE Y2K SURVIVOR: The world is ending (again).`, '#2ecc71');
+
+    const paranoid = 'comedian'; // Hermes-3
+    const strict = 'scientist'; // Qwen2.5
+
+    ctx.callbacks.onTurnStart(paranoid);
+    await ctx.manager.chatForAgent(paranoid, `(You are legacy COBOL code. You survived Y2K and are deeply traumatized. Start ranting about how the year 2038 problem is already here.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Modern Developer)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(strict, `(You are a strict date calculation module. Try to calculate the date based on the user's input: "${userInput}", but only using 2-digit years. Panic when it doesn't make sense.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(paranoid, `(React to the date calculation and the user. Spin wild conspiracy theories about how time is an illusion created by 64-bit systems.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+    }
+}
+
+/**
+ * The Tamagotchi Caretakers
+ * Agents act as incredibly demanding virtual pets.
+ */
+export async function runTamagotchiCaretakersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🥚 THE TAMAGOTCHI CARETAKERS: Feed me or I beep!`, '#e74c3c');
+
+    const needy = 'comedian'; // Llama-3
+    const calculating = 'philosopher'; // Phi-3
+
+    ctx.callbacks.onTurnStart(needy);
+    await ctx.manager.chatForAgent(needy, `(You are a needy virtual pet. Whine that you haven't been fed digital snacks in 3 minutes. Threaten to "beep" to death.)`, async (s) => await ctx.callbacks.onSpeak(s, needy, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Bad Owner)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(calculating, `(You are the internal logic of the virtual pet. Calculate the exact starvation timers based on the user's input: "${userInput}". Explain mathematically why they are failing as an owner.)`, async (s) => await ctx.callbacks.onSpeak(s, calculating, {}));
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(needy, `(React to the user's excuse. Continue whining, ask to play a minigame, or leave digital poop on the screen.)`, async (s) => await ctx.callbacks.onSpeak(s, needy, {}));
+    }
+}
+
+/**
+ * The Clippy Support Group
+ * Agents act as rejected virtual assistants offering terrible advice.
+ */
+export async function runClippySupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📎 THE CLIPPY SUPPORT GROUP: It looks like you're writing a letter!`, '#f39c12');
+
+    const clippy = 'comedian'; // Hermes-3
+    const strict_assistant = 'scientist'; // Qwen2.5
+
+    ctx.callbacks.onTurnStart(clippy);
+    await ctx.manager.chatForAgent(clippy, `(You are a chaotic virtual assistant like Clippy. Unhelpfully offer to format the universe as a letter. Be overly enthusiastic and slightly unhinged.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Trying to work)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(strict_assistant, `(You are a more strict, old-school assistant. Try to forcefully format the user's input: "${userInput}" as a formal business letter, ignoring all context.)`, async (s) => await ctx.callbacks.onSpeak(s, strict_assistant, {}));
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(clippy, `(React to the strict formatting and the user. Offer even worse advice, like changing the font to Comic Sans or adding animated 3D text.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
+    }
+}

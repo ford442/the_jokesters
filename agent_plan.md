@@ -4,6 +4,9 @@
 * **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 53. The execution was straightforward. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 54. The execution was straightforward, keeping tasks_per_run at 6.
+### Project Velocity
+* **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 55. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 52. The execution was straightforward. Incrementing tasks_per_run to 6.
 * **status**: Successfully implemented Phase 51. The execution was straightforward and the tasks were completed easily. Incrementing `tasks_per_run` to 5.
 * **status**: Successfully implemented Phase 50 and kicked off Phase 51. The execution was straightforward, so tasks_per_run will remain at 4.
@@ -650,8 +653,20 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * The worker implements delta updates, timestamp-based conflict resolution, and retry logic with exponential backoff to handle rate limits and offline status gracefully without blocking the UI.
 
 ### Phase 55: The Retro Tech Expansion (Dreams)
-* [ ] **The Floppy Disk Defenders**: Agents act as old-school storage formats (Floppy Disk, CD-ROM, etc) arguing over who has the better data storage strategy for the user's memes. (Model Pairing: Qwen2.5 for citing bad sector errors vs Hermes-3 for defending pure magnetic tape chaos).
-* [ ] **The Dial-Up Modems**: Agents act as competing dial-up ISPs trying to connect to the internet, blaming the user for picking up the phone. (Model Pairing: Llama-3 for enthusiastic static noise vs Phi-3 for complaining about connection handshake protocols).
-* [ ] **The Y2K Bug Survivor**: Agents act as code that survived Y2K, deeply traumatized and convinced the world is still about to end. (Model Pairing: Hermes-3 for paranoid conspiracy theories vs Qwen2.5 for trying to calculate 2-digit dates).
-* [ ] **The Tamagotchi Caretakers**: Agents act as incredibly demanding virtual pets threatening to "beep" to death if the user doesn't feed them digital snacks. (Model Pairing: Llama-3 for needy whining vs Phi-3 for calculating exact starvation timers).
-* [ ] **The Clippy Support Group**: Agents act as rejected, overly enthusiastic virtual assistants (like Clippy or BonziBuddy) offering terrible advice on user's simple text inputs. (Model Pairing: Hermes-3 for chaotic "helpful" advice vs Qwen2.5 for trying to format everything as a letter).
+* [x] **The Floppy Disk Defenders**: Agents act as old-school storage formats (Floppy Disk, CD-ROM, etc) arguing over who has the better data storage strategy for the user's memes. (Model Pairing: Qwen2.5 for citing bad sector errors vs Hermes-3 for defending pure magnetic tape chaos).
+* [x] **The Dial-Up Modems**: Agents act as competing dial-up ISPs trying to connect to the internet, blaming the user for picking up the phone. (Model Pairing: Llama-3 for enthusiastic static noise vs Phi-3 for complaining about connection handshake protocols).
+* [x] **The Y2K Bug Survivor**: Agents act as code that survived Y2K, deeply traumatized and convinced the world is still about to end. (Model Pairing: Hermes-3 for paranoid conspiracy theories vs Qwen2.5 for trying to calculate 2-digit dates).
+* [x] **The Tamagotchi Caretakers**: Agents act as incredibly demanding virtual pets threatening to "beep" to death if the user doesn't feed them digital snacks. (Model Pairing: Llama-3 for needy whining vs Phi-3 for calculating exact starvation timers).
+* [x] **The Clippy Support Group**: Agents act as rejected, overly enthusiastic virtual assistants (like Clippy or BonziBuddy) offering terrible advice on user's simple text inputs. (Model Pairing: Hermes-3 for chaotic "helpful" advice vs Qwen2.5 for trying to format everything as a letter).
+
+### Cloud Persistence
+1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint and persist the state.
+2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via the background sync queue.
+3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent summaries from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity.
+
+### Phase 56: The Paranormal Activity Expansion (Dreams)
+* [ ] **The Sentient Ouija Board**: Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user's spooky questions.
+* [ ] **The Poltergeist Roommates**: Agents are ghosts haunting the user's house, arguing over who gets to knock over the most expensive vases tonight.
+* [ ] **The Bigfoot Support Group**: Agents act as cryptids (Bigfoot, Nessie, Mothman) complaining about how hard it is to stay hidden in the age of smartphones.
+* [ ] **The Alien Conspiracy Theorists**: Agents are aliens who believe that "humans" are just a hoax invented by the galactic government to sell more telescopes.
+* [ ] **The Time-Traveling Ghost Hunters**: Agents are ghost hunters from the year 3000 trying to investigate the user's perfectly normal, modern-day apartment as a historical haunting site.
