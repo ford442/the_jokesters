@@ -279,5 +279,30 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'alien-abduction-support-group',
     title: 'Alien Abduction Support Group',
     description: 'Agents are aliens who accidentally abducted the user and are now in a support group because the user was too annoying.',
+  },
+  {
+    id: 'sentient-ouija-board',
+    title: 'The Sentient Ouija Board',
+    description: 'Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user\'s spooky questions.',
+  },
+  {
+    id: 'poltergeist-roommates',
+    title: 'Poltergeist Roommates',
+    description: 'Agents are ghosts haunting the user\'s house, arguing over who gets to knock over the most expensive vases tonight.',
+  },
+  {
+    id: 'bigfoot-support-group',
+    title: 'Bigfoot Support Group',
+    description: 'Agents act as cryptids complaining about how hard it is to stay hidden in the age of smartphones.',
+  },
+  {
+    id: 'alien-conspiracy-theorists',
+    title: 'Alien Conspiracy Theorists',
+    description: 'Agents are aliens who believe that "humans" are just a hoax invented by the galactic government to sell more telescopes.',
+  },
+  {
+    id: 'time-traveling-ghost-hunters',
+    title: 'Time-Traveling Ghost Hunters',
+    description: 'Agents are ghost hunters from the year 3000 trying to investigate the user\'s perfectly normal, modern-day apartment as a historical haunting site.',
   }
 ];
