@@ -142,10 +142,10 @@ export class LlamaCppEngineAdapter implements LLMEngine {
 
     const normalizedOpts = normalizeOptions(options)
     
-    // Convert to wllama message format
+    // Convert to wllama message format (wllama only supports string content)
     const wllamaMessages: WllamaChatMessage[] = messages.map(m => ({
       role: m.role,
-      content: m.content,
+      content: typeof m.content === 'string' ? m.content : m.content.filter(p => p.type === 'text').map(p => p.text).join('\n'),
     }))
 
     // Create abort controller for this generation
@@ -197,10 +197,10 @@ export class LlamaCppEngineAdapter implements LLMEngine {
 
     const normalizedOpts = normalizeOptions(options)
 
-    // Convert to wllama message format
+    // Convert to wllama message format (wllama only supports string content)
     const wllamaMessages: WllamaChatMessage[] = messages.map(m => ({
       role: m.role,
-      content: m.content,
+      content: typeof m.content === 'string' ? m.content : m.content.filter(p => p.type === 'text').map(p => p.text).join('\n'),
     }))
 
     // Build sampling config

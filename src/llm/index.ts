@@ -38,6 +38,7 @@ export type {
 export { MlcEngineAdapter } from './MlcEngineAdapter'
 export { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
 export { TransformersEngineAdapter } from './TransformersEngineAdapter'
+export { ApiEngineAdapter } from './ApiEngineAdapter'
 
 // Factory and utilities
 export {

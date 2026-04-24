@@ -257,17 +257,24 @@ export class GroupChatManager {
 
     this.engineType = enginePreference
 
-    // Probe GPU limits early so we can avoid engines that will fail
-    const gpuLimits = await EngineFactory.detectWebGPULimits()
-    const lowBufferLimit = gpuLimits.maxBufferSize > 0 && gpuLimits.maxBufferSize < 512_000_000
-    if (lowBufferLimit) {
-      console.warn(`[ModelLoader] maxBufferSize (${gpuLimits.maxBufferSize}) is below 512MB. MLC WebLLM models are likely to fail.`)
-    }
-
     // Check if we're using legacy model IDs (MLC format) or unified model IDs
     const unifiedModel = preferredModelId ? getUnifiedModelById(preferredModelId) : null
 
     if (unifiedModel) {
+      // API models bypass all WebGPU checks
+      if (unifiedModel.api) {
+        console.log(`[ModelLoader] Using API engine for ${unifiedModel.id} — skipping WebGPU checks`)
+        await this.initializeUnified(unifiedModel, onProgress, preferredContext, enginePreference)
+        return
+      }
+
+      // Probe GPU limits early so we can avoid engines that will fail
+      const gpuLimits = await EngineFactory.detectWebGPULimits()
+      const lowBufferLimit = gpuLimits.maxBufferSize > 0 && gpuLimits.maxBufferSize < 512_000_000
+      if (lowBufferLimit) {
+        console.warn(`[ModelLoader] maxBufferSize (${gpuLimits.maxBufferSize}) is below 512MB. MLC WebLLM models are likely to fail.`)
+      }
+
       // If buffer limit is low and this model would auto-select MLC, force a CPU-safe engine
       if (lowBufferLimit) {
         const support = EngineFactory.getModelEngineSupport(unifiedModel)
@@ -289,7 +296,9 @@ export class GroupChatManager {
       // Use the new dual-engine path
       await this.initializeUnified(unifiedModel, onProgress, preferredContext, enginePreference)
     } else {
-      // Legacy path — if buffer limit is too low, skip MLC entirely
+      // Legacy path — probe GPU limits
+      const gpuLimits = await EngineFactory.detectWebGPULimits()
+      const lowBufferLimit = gpuLimits.maxBufferSize > 0 && gpuLimits.maxBufferSize < 512_000_000
       if (lowBufferLimit) {
         console.warn(`[ModelLoader] maxBufferSize (${gpuLimits.maxBufferSize}) is too low for MLC legacy models. Switching to unified CPU fallback.`)
         const fallbackModel = UNIFIED_MODELS.find(m => m.id === 'TinyLlama-1.1B-Chat-GGUF')
@@ -523,7 +532,7 @@ export class GroupChatManager {
   }
 
   async chat(
-    userMessage: string,
+    userMessage: string | import('./llm/LLMEngine').ContentPart[],
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; enablePerfTracking?: boolean } = {}
   ): Promise<{ agentId: string; response: string }> {
@@ -531,10 +540,17 @@ export class GroupChatManager {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
     }
 
+    // Preserve original multimodal content for the engine
+    const originalContent = userMessage
+    // Convert to string for history storage (DynamicContextManager expects strings)
+    const historyContent = typeof userMessage === 'string'
+      ? userMessage
+      : userMessage.filter(p => p.type === 'text').map(p => p.text).join('\n')
+
     // Add user message to history
     this.conversationHistory.push({
       role: 'user',
-      content: userMessage,
+      content: historyContent,
     })
 
     // Get current agent
@@ -576,6 +592,24 @@ export class GroupChatManager {
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
       }))
+
+      // If the original user message was multimodal, inject it into the last user message
+      // so the engine receives the image_url content (needed for API/vision engines)
+      if (typeof originalContent !== 'string') {
+        let lastUserIdx = -1
+        for (let i = chatMessages.length - 1; i >= 0; i--) {
+          if (chatMessages[i].role === 'user') {
+            lastUserIdx = i
+            break
+          }
+        }
+        if (lastUserIdx >= 0) {
+          chatMessages[lastUserIdx] = {
+            role: 'user',
+            content: originalContent,
+          }
+        }
+      }
 
       const stream = await this.engine.chat(chatMessages, {
         max_tokens: effectiveMaxTokens,

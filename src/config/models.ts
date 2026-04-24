@@ -480,9 +480,12 @@ export function populateModelSelect(engine: typeof webllm) {
     const isVps = info?.source === 'vps';
     const isF32 = m.includes('q4f32');
     const vram = info?.vram_required_MB;
+    const isApi = info?.api !== undefined;
     
     let label = m;
-    if (isVps) {
+    if (isApi) {
+      label = `${m} (Server, no download)`;
+    } else if (isVps) {
       label = `${m} (VPS, ~${vram}MB VRAM)`;
     } else if (isF32) {
       label = `${m} (FP32, ~${vram}MB VRAM)`;
@@ -602,6 +605,18 @@ export const TRANSFORMERS_MODELS: UnifiedModelConfig[] = [
  * These models can be used with MLC WebLLM, llama.cpp WASM, or Transformers.js engines.
  */
 export const UNIFIED_MODELS: UnifiedModelConfig[] = [
+  // API Server Models (Server-side, no client VRAM)
+  {
+    id: 'Kimi-VL-A3B-Thinking-2506',
+    name: 'Kimi-VL A3B Thinking (Server API)',
+    vram_required_MB: 0,
+    context_window_size: 32768,
+    api: {
+      endpoint: 'https://storage.noahcohn.com/v1/chat/completions',
+      model_id: 'kimi-vl',
+    },
+  },
+
   // MLC WebLLM Models
   {
     id: 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
@@ -688,6 +703,6 @@ export function getUnifiedModelById(id: string): UnifiedModelConfig | undefined 
 /**
  * Get all models compatible with a specific engine type
  */
-export function getModelsForEngine(engineType: 'mlc' | 'llamaCpp'): UnifiedModelConfig[] {
+export function getModelsForEngine(engineType: 'mlc' | 'llamaCpp' | 'api'): UnifiedModelConfig[] {
   return UNIFIED_MODELS.filter(m => m[engineType] !== undefined)
 }

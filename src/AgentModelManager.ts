@@ -1,6 +1,7 @@
 import type { GroupChatManager } from './GroupChatManager'
 import * as webllm from '@mlc-ai/web-llm'
 import type { EngineType } from './llm/EngineFactory'
+import { getUnifiedModelById } from './config/models'
 
 export interface AgentModelMapping {
   agentId: string
@@ -64,6 +65,23 @@ export class AgentModelManager {
       return
     }
 
+    // Look up model config to determine engine type
+    const modelConfig = getUnifiedModelById(targetModel)
+    const enginePreference: EngineType = modelConfig?.engine ?? 'auto'
+
+    // Fast-path for API models: if current engine is also API and same endpoint, skip unload
+    const currentConfig = this.currentLoadedModel ? getUnifiedModelById(this.currentLoadedModel) : null
+    if (
+      currentConfig?.api &&
+      modelConfig?.api &&
+      currentConfig.api.endpoint === modelConfig.api.endpoint &&
+      currentConfig.api.model_id === modelConfig.api.model_id
+    ) {
+      console.log(`API model ${targetModel} shares endpoint with current model, skipping swap`)
+      this.currentLoadedModel = targetModel
+      return
+    }
+
     console.log(`🔄 Swapping model for ${agentId}: ${this.currentLoadedModel} → ${targetModel}`)
     const startTime = performance.now()
 
@@ -82,7 +100,10 @@ export class AgentModelManager {
           // Forward progress to UI with scaling (30% to 90% of total progress)
           const scaledProgress = 0.3 + (progress.progress * 0.6)
           this.reportProgress(progress.text, scaledProgress)
-        }
+        },
+        targetModel,
+        'auto',
+        enginePreference
       )
 
       this.currentLoadedModel = targetModel

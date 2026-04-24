@@ -5,11 +5,23 @@
  * between MLC WebLLM and llama.cpp WASM engines without breaking existing functionality.
  */
 
-export type EngineType = 'mlc' | 'llamacpp' | 'transformers' | 'auto'
+export type EngineType = 'mlc' | 'llamacpp' | 'transformers' | 'api' | 'auto'
+
+export interface ContentPartText {
+  type: 'text'
+  text: string
+}
+
+export interface ContentPartImage {
+  type: 'image_url'
+  image_url: { url: string }
+}
+
+export type ContentPart = ContentPartText | ContentPartImage
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
-  content: string
+  content: string | ContentPart[]
 }
 
 export interface GenerationOptions {
@@ -88,12 +100,21 @@ export interface TransformersEngineConfig {
   dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
 }
 
+export interface ApiEngineConfig {
+  /** URL to the OpenAI-compatible API endpoint */
+  endpoint: string
+  /** Model identifier to send in requests */
+  model_id: string
+  /** Optional API key for authenticated endpoints */
+  api_key?: string
+}
+
 export interface UnifiedModelConfig {
   id: string
   name: string
   /** Model source URL or path (optional fallback) */
   source?: string
-  /** VRAM required in MB */
+  /** VRAM required in MB (0 for server-side models) */
   vram_required_MB: number
   /** Context window size */
   context_window_size: number
@@ -107,6 +128,8 @@ export interface UnifiedModelConfig {
   llamaCpp?: LlamaCppEngineConfig
   /** Transformers.js-specific configuration */
   transformers?: TransformersEngineConfig
+  /** API server-specific configuration */
+  api?: ApiEngineConfig
 }
 
 /**

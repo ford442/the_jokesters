@@ -11,8 +11,9 @@ import type { LLMEngine, UnifiedModelConfig } from './LLMEngine'
 import { MlcEngineAdapter } from './MlcEngineAdapter'
 import { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
 import { TransformersEngineAdapter } from './TransformersEngineAdapter'
+import { ApiEngineAdapter } from './ApiEngineAdapter'
 
-export type EngineType = 'auto' | 'mlc' | 'llamacpp' | 'transformers'
+export type EngineType = 'auto' | 'mlc' | 'llamacpp' | 'transformers' | 'api'
 
 export interface EngineCapabilities {
   /** WebGPU support available */
@@ -143,8 +144,10 @@ export interface ModelEngineSupport {
   llamacpp: boolean
   /** Whether the model supports Transformers.js engine */
   transformers: boolean
+  /** Whether the model supports API engine */
+  api: boolean
   /** Recommended engine for this model */
-  recommended: 'mlc' | 'llamacpp' | 'transformers'
+  recommended: 'mlc' | 'llamacpp' | 'transformers' | 'api'
 }
 
 /**
@@ -160,10 +163,14 @@ export function getModelEngineSupport(
                       modelConfig.engineConfig?.ggufUrl !== undefined ||
                       modelConfig.engineConfig?.gguf_url !== undefined
   const hasTransformers = modelConfig.transformers !== undefined
+  const hasApi = modelConfig.api !== undefined
 
-  // Determine recommended engine: MLC → Transformers.js → llama.cpp
-  let recommended: 'mlc' | 'llamacpp' | 'transformers'
-  if (hasMlc && capabilities.webgpu) {
+  // Determine recommended engine: API → MLC → Transformers.js → llama.cpp
+  // API models are server-side and don't depend on browser capabilities
+  let recommended: 'mlc' | 'llamacpp' | 'transformers' | 'api'
+  if (hasApi) {
+    recommended = 'api'
+  } else if (hasMlc && capabilities.webgpu) {
     recommended = 'mlc'
   } else if (hasTransformers) {
     recommended = 'transformers'
@@ -179,6 +186,7 @@ export function getModelEngineSupport(
     mlc: hasMlc,
     llamacpp: hasLlamaCpp,
     transformers: hasTransformers,
+    api: hasApi,
     recommended
   }
 }
@@ -195,6 +203,16 @@ export async function selectEngine(
   const support = getModelEngineSupport(modelConfig, caps)
 
   // Respect user preference
+  if (preference === 'api') {
+    if (!support.api) {
+      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support API engine. Falling back to auto.`)
+      // Fall through to auto-selection
+    } else {
+      console.log('[EngineFactory] Using API Server (OpenAI-compatible)')
+      return new ApiEngineAdapter()
+    }
+  }
+
   if (preference === 'transformers') {
     if (!support.transformers) {
       console.warn(`[EngineFactory] Model ${modelConfig.id} does not support Transformers.js engine. Falling back to auto.`)
@@ -229,7 +247,12 @@ export async function selectEngine(
   }
 
   // Auto-select based on model support and capabilities
-  // Priority: MLC → Transformers.js → llama.cpp
+  // Priority: API → MLC → Transformers.js → llama.cpp
+  if (support.recommended === 'api') {
+    console.log('[EngineFactory] Auto-selected API Server (OpenAI-compatible)')
+    return new ApiEngineAdapter()
+  }
+
   if (support.recommended === 'mlc' && caps.webgpu) {
     console.log('[EngineFactory] Auto-selected MLC (WebGPU optimized)')
     return new MlcEngineAdapter()
@@ -256,6 +279,7 @@ export function getCompatibleEngines(
   const support = getModelEngineSupport(modelConfig, caps)
 
   const engines: string[] = []
+  if (support.api) engines.push('api')
   if (support.mlc) engines.push('mlc')
   if (support.transformers) engines.push('transformers')
   if (support.llamacpp) engines.push('llamacpp')
@@ -322,7 +346,7 @@ export class EngineFactory {
   /**
    * Create a specific engine by type.
    */
-  static createEngine(type: 'mlc' | 'llamacpp' | 'transformers'): LLMEngine {
+  static createEngine(type: 'mlc' | 'llamacpp' | 'transformers' | 'api'): LLMEngine {
     switch (type) {
       case 'mlc':
         return new MlcEngineAdapter()
@@ -330,6 +354,8 @@ export class EngineFactory {
         return new LlamaCppEngineAdapter()
       case 'transformers':
         return new TransformersEngineAdapter()
+      case 'api':
+        return new ApiEngineAdapter()
       default:
         throw new Error(`Unknown engine type: ${type}`)
     }

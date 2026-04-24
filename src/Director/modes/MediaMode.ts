@@ -66,7 +66,7 @@ export async function runVisionLoop(scenario: Scenario, ctx: ModeContext) {
 
     ctx.callbacks.onMessage('Director', `👁️ VISION MODE: Analyzing Image...`, '#4ecdc4');
 
-    const content = [
+    const content: import('../../llm/LLMEngine').ContentPart[] = [
         { type: "text", text: "(VISION ANALYSIS: Look at this image. Describe what you see in detail and make a funny observation about it.)" },
         { type: "image_url", image_url: { url: imageUrl } }
     ];
@@ -74,7 +74,7 @@ export async function runVisionLoop(scenario: Scenario, ctx: ModeContext) {
     if (ctx.isRunning()) {
         const currentAgent = ctx.manager.getCurrentAgent();
         await ctx.callbacks.onTurnStart(currentAgent.id);
-        await ctx.manager.chat(content as any, async (sentence) => {
+        await ctx.manager.chat(content, async (sentence) => {
             await ctx.callbacks.onSpeak(sentence, currentAgent.id, { steps: 20 });
         }, { maxTokens: 256 });
         await ctx.callbacks.onTurnEnd();
