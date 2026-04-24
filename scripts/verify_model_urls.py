@@ -9,7 +9,7 @@ import sys
 from urllib.parse import urljoin
 import aiohttp
 
-VPS_BASE = "https://storage.noahcohn.com/models"
+VPS_BASE = "https://storage.noahcohn.com/models/"
 
 # Models and representative files to check
 CHECKS = [
@@ -45,7 +45,8 @@ CHECKS = [
 
 
 async def check_url(session: aiohttp.ClientSession, name: str, path: str):
-    url = urljoin(VPS_BASE, path)
+    # Strip leading slash to ensure proper relative joining with VPS_BASE
+    url = VPS_BASE + path.lstrip('/')
     try:
         # HEAD request with Range header
         async with session.head(url, headers={"Range": "bytes=0-1023"}, timeout=aiohttp.ClientTimeout(total=30)) as resp:

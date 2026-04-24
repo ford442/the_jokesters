@@ -139,11 +139,16 @@ async function downloadParallel(
     combined.byteOffset + combined.byteLength
   ) as ArrayBuffer;
 
+  // CRITICAL: Include CORS headers so cross-origin Cache.add() in Web Workers succeeds
   return new Response(responseBody, {
     status: 200,
     headers: {
       'Content-Type': 'application/octet-stream',
       'Content-Length': String(totalSize),
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Range, Origin, Accept, Content-Type',
+      'Accept-Ranges': 'bytes',
     },
   });
 }
@@ -172,11 +177,27 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
           fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
         } catch (headError) {
           console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', url);
-          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
+          return fetchWithRetry(event.request.url, {
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+            redirect: event.request.redirect,
+            referrer: event.request.referrer,
+            referrerPolicy: event.request.referrerPolicy,
+            integrity: event.request.integrity,
+          }, MAX_RETRIES);
         }
 
         if (fileSize === 0 || !headResponse.ok) {
-          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
+          return fetchWithRetry(event.request.url, {
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+            redirect: event.request.redirect,
+            referrer: event.request.referrer,
+            referrerPolicy: event.request.referrerPolicy,
+            integrity: event.request.integrity,
+          }, MAX_RETRIES);
         }
 
         const supportsRanges =
@@ -192,7 +213,16 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
           return await downloadParallel(url, fileSize);
         } else {
           console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', url);
-          return fetchWithRetry(event.request.url, undefined, MAX_RETRIES);
+          // Preserve original request properties (mode, credentials, headers) for CORS
+          return fetchWithRetry(event.request.url, {
+            mode: event.request.mode,
+            credentials: event.request.credentials,
+            cache: event.request.cache,
+            redirect: event.request.redirect,
+            referrer: event.request.referrer,
+            referrerPolicy: event.request.referrerPolicy,
+            integrity: event.request.integrity,
+          }, MAX_RETRIES);
         }
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
