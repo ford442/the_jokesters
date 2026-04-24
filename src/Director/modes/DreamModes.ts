@@ -3318,3 +3318,154 @@ export async function runTimeTravelingGhostHuntersLoop(_scenario: Scenario, ctx:
         }
     }
 }
+
+
+export async function runWizardsITDepartmentLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔮 WIZARD'S IT DEPARTMENT: Trying to reboot a wand...`, '#2980b9');
+
+    const strictTech = 'scientist'; // Qwen2.5 for citing technical/magical manuals
+    const chaoticWizard = 'comedian'; // Hermes-3 for pure magical chaos
+
+    ctx.callbacks.onTurnStart(strictTech);
+    await ctx.manager.chatForAgent(strictTech, `(WIZARD IT: You are a strict, by-the-book IT wizard. The User is a student whose wand has "blue-screened". Ask them if they have tried turning their wand off and on again, and cite page 402 of the Magical Troubleshooting Manual.)`, async (s) => await ctx.callbacks.onSpeak(s, strictTech, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Student (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(chaoticWizard);
+            await ctx.manager.chatForAgent(chaoticWizard, `(WIZARD IT: The student said: "${userInput}". You are a chaotic, rogue IT wizard who believes the only way to fix technology is to hit it with a heavier spell. Suggest an incredibly dangerous, unsanctioned workaround that will probably burn the school down.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticWizard, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(strictTech);
+            await ctx.manager.chatForAgent(strictTech, `(WIZARD IT: The student said: "${userInput}". Ignore your chaotic colleague. Explain why their workaround violates section 4 of the student code of conduct and suggest a tedious 12-step process involving enchanted rice.)`, async (s) => await ctx.callbacks.onSpeak(s, strictTech, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runDragonsHoardAppraisersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🐉 DRAGON'S HOARD APPRAISERS: Evaluating ancient junk...`, '#d35400');
+
+    const historicalExpert = 'philosopher'; // Phi-3 for historical analysis
+    const enthusiasticAppraiser = 'comedian'; // Llama-3/Hermes-3 for enthusiastic pricing
+
+    ctx.callbacks.onTurnStart(historicalExpert);
+    await ctx.manager.chatForAgent(historicalExpert, `(HOARD APPRAISAL: You are a snobby, meticulous historian on an Antiques Roadshow-style program. The User is a dragon who just brought in a completely mundane, modern item (like a rusty toaster or a single crocs shoe) that they've been hoarding for centuries. Explain its "historical significance" with complete seriousness.)`, async (s) => await ctx.callbacks.onSpeak(s, historicalExpert, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Dragon (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(enthusiasticAppraiser);
+            await ctx.manager.chatForAgent(enthusiasticAppraiser, `(HOARD APPRAISAL: The dragon said: "${userInput}". You are an overly enthusiastic appraiser. Hyperventilate over how rare this item is and give an insanely high estimated value in a made-up currency (like "forty thousand goblin teeth").)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticAppraiser, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(historicalExpert);
+            await ctx.manager.chatForAgent(historicalExpert, `(HOARD APPRAISAL: The dragon said: "${userInput}". Bring the conversation back to the delicate craftsmanship of the item. Warn the dragon not to restore it, as cleaning off the centuries of rust/grime will ruin its market value.)`, async (s) => await ctx.callbacks.onSpeak(s, historicalExpert, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runSentientSpellbookLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📖 SENTIENT SPELLBOOK: The chapters are arguing...`, '#8e44ad');
+
+    const strictWarnings = 'scientist'; // Qwen2.5 for strict safety warnings
+    const chaoticCurses = 'comedian'; // Hermes-3 for chaotic curses
+
+    ctx.callbacks.onTurnStart(strictWarnings);
+    await ctx.manager.chatForAgent(strictWarnings, `(SENTIENT SPELLBOOK: You are the "Safety & Ethics" chapter of a magical spellbook. The User is a wizard trying to cast a simple fireball. Intervene immediately! Explain all the OSHA-equivalent magical safety violations they are currently committing.)`, async (s) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Wizard (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(chaoticCurses);
+            await ctx.manager.chatForAgent(chaoticCurses, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". You are the "Forbidden Curses & Blood Magic" chapter. Tell the wizard to ignore the safety chapter. Suggest they modify the fireball spell by adding a pinch of their own blood to make it completely uncontrollable.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCurses, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(strictWarnings);
+            await ctx.manager.chatForAgent(strictWarnings, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". Scold the Forbidden Curses chapter. Warn the wizard about the liability waivers they haven't signed and the potential for a localized temporal collapse if they do what the other chapter suggests.)`, async (s) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runTavernBrawlersAnonymousLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍻 TAVERN BRAWLERS ANONYMOUS: Trying to stay peaceful...`, '#e67e22');
+
+    const dramaticBard = 'philosopher'; // Phi-3 for the dramatic Bard
+    const aggressiveBarbarian = 'comedian'; // Hermes-3 for the aggressive Barbarian
+
+    ctx.callbacks.onTurnStart(dramaticBard);
+    await ctx.manager.chatForAgent(dramaticBard, `(TAVERN BRAWLERS: You are a highly dramatic, pretentious Bard leading a support group for RPG characters addicted to starting tavern brawls. The User is a new member. Welcome them warmly, but make it all about your own emotional journey of not throwing a lute at a patron yesterday.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticBard, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Adventurer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(aggressiveBarbarian);
+            await ctx.manager.chatForAgent(aggressiveBarbarian, `(TAVERN BRAWLERS: The new member said: "${userInput}". You are a twitchy Barbarian who is currently 3 days "sober" from raging in taverns. Tremble visibly. Confess how badly you want to flip the support group chairs right now. Ask the user if they want to go "just rough up the bouncer a little bit".)`, async (s) => await ctx.callbacks.onSpeak(s, aggressiveBarbarian, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(dramaticBard);
+            await ctx.manager.chatForAgent(dramaticBard, `(TAVERN BRAWLERS: The new member said: "${userInput}". Try to calm the Barbarian down with terrible slam poetry about peace. Ask the user to share a time they successfully ordered an ale without setting the bartender on fire.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticBard, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runPotionTastingPanelLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧪 POTION TASTING PANEL: Sommelier vibes...`, '#1abc9c');
+
+    const snobbyCritique = 'philosopher'; // Phi-3 for snobby critique
+    const enthusiasticTaster = 'comedian'; // Llama-3/Hermes-3 for enthusiastic tasting notes
+
+    ctx.callbacks.onTurnStart(snobbyCritique);
+    await ctx.manager.chatForAgent(snobbyCritique, `(POTION TASTING: You are an incredibly pretentious potion sommelier. The User has just submitted their newly brewed, highly questionable concoction for review. Swirl the imaginary glass, take a sip, and critique its "mouthfeel" and "notes of distilled dread" with utter snobbery.)`, async (s) => await ctx.callbacks.onSpeak(s, snobbyCritique, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Brewer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(enthusiasticTaster);
+            await ctx.manager.chatForAgent(enthusiasticTaster, `(POTION TASTING: The brewer said: "${userInput}". You are a reckless, over-enthusiastic potion taster. Gulp the entire flask down. Enthusiastically describe the horrifying side effects you are currently experiencing (like tasting colors or your bones vibrating) but rate it 5 stars!)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticTaster, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(snobbyCritique);
+            await ctx.manager.chatForAgent(snobbyCritique, `(POTION TASTING: The brewer said: "${userInput}". Ignore the other taster's suffering. Complain that the potion lacks "subtlety". Suggest that next time the brewer should age it in an oak barrel carved from a cursed treant for at least a century.)`, async (s) => await ctx.callbacks.onSpeak(s, snobbyCritique, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
