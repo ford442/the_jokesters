@@ -309,7 +309,7 @@ export class GroupChatManager {
   private async initializeUnified(
     modelConfig: import('./llm/LLMEngine').UnifiedModelConfig,
     onProgress?: (progress: webllm.InitProgressReport) => void,
-    _preferredContext?: number | 'auto',
+    preferredContext?: number | 'auto',
     enginePreference: EngineType = 'auto'
   ): Promise<void> {
     // Select and create the appropriate engine
@@ -330,8 +330,15 @@ export class GroupChatManager {
       this.isInitialized = true
       this.loadedModelId = modelConfig.id
 
-      // Set context window size
-      const contextSize = modelConfig.context_window_size || 4096
+      // Set context window size, respecting user preference
+      let contextSize: number
+      if (preferredContext && preferredContext !== 'auto') {
+        contextSize = preferredContext
+        console.log(`[ModelLoader] Using user-selected context window: ${contextSize} tokens`)
+      } else {
+        contextSize = modelConfig.context_window_size || 4096
+        console.log(`[ModelLoader] Using model default context window: ${contextSize} tokens`)
+      }
       this.contextManager.setMaxContextTokens(contextSize)
 
       console.log(`GroupChatManager initialized successfully with unified model: ${modelConfig.id} (${this.engineType})`)
