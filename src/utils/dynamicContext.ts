@@ -355,11 +355,17 @@ export async function loadModelWithDynamicContext(
   // Determine context size
   let contextSize: number;
   if (preferredContext === 'auto') {
-    const vramMB = await estimateAvailableVRAM();
-    const modelSize = getModelSize(modelConfig.model_id);
-    const ctxConfig = getContextConfigForVRAM(vramMB, modelSize);
-    contextSize = ctxConfig.context_window_size;
-    console.log(`[DynamicContext] Auto-selected ${contextSize} context for ${modelConfig.model_id}`);
+    // First, check if the model has an explicit context_window_size in overrides
+    if (modelConfig.overrides?.context_window_size) {
+      contextSize = modelConfig.overrides.context_window_size as number;
+      console.log(`[DynamicContext] Using explicit model config context_window_size: ${contextSize}`);
+    } else {
+      const vramMB = await estimateAvailableVRAM();
+      const modelSize = getModelSize(modelConfig.model_id);
+      const ctxConfig = getContextConfigForVRAM(vramMB, modelSize);
+      contextSize = ctxConfig.context_window_size;
+      console.log(`[DynamicContext] Auto-selected ${contextSize} context for ${modelConfig.model_id}`);
+    }
   } else {
     contextSize = preferredContext as number;
     console.log(`[DynamicContext] User-selected ${contextSize} context`);
@@ -455,8 +461,12 @@ export async function loadModelWithDynamicContext(
 
     // On OOM, retry with smaller context and optionally lower KV cache quantization
     if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
-      if (contextSize > 128) {
-        const smallerContext = contextSize > 512 ? 512 : contextSize > 256 ? 256 : 128;
+      // For 7B models (like Vicuna), don't go below 512; for 3B models, 256 is minimum
+      const isSmallModel = modelConfig.model_id.toLowerCase().includes('3b');
+      const minContext = isSmallModel ? 256 : 512;
+      
+      if (contextSize > minContext) {
+        const smallerContext = contextSize > 2048 ? 1024 : contextSize > 512 ? minContext : minContext;
         console.warn(`[DynamicContext] OOM with ${contextSize}, retrying with ${smallerContext}`);
         
         await new Promise(r => setTimeout(r, 500));
@@ -468,7 +478,7 @@ export async function loadModelWithDynamicContext(
 
       if (vramConfig.kv_cache_quantization === 'none') {
         console.warn('[DynamicContext] OOM at minimum context, retrying with KV cache quantization');
-        return loadModelWithDynamicContext(modelConfig, 128, onProgress, { ...vramConfig, kv_cache_quantization: 'int8' });
+        return loadModelWithDynamicContext(modelConfig, minContext, onProgress, { ...vramConfig, kv_cache_quantization: 'int8' });
       }
     }
     throw error;
