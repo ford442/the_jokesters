@@ -3113,3 +3113,208 @@ export async function runClippySupportGroupLoop(_scenario: Scenario, ctx: ModeCo
         await ctx.manager.chatForAgent(clippy, `(React to the strict formatting and the user. Offer even worse advice, like changing the font to Comic Sans or adding animated 3D text.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
     }
 }
+
+/**
+ * The Sentient Ouija Board Mode
+ * Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip.
+ */
+export async function runSentientOuijaBoardLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 SENTIENT OUIJA BOARD MODE: The spirits are ready to gossip...`, '#9b59b6');
+
+    const boredSpirit1 = 'comedian'; // The Gossip
+    const boredSpirit2 = 'philosopher'; // The Complainer
+    const impatientSpirit = 'scientist'; // The Pragmatist
+
+    ctx.callbacks.onTurnStart(impatientSpirit);
+    await ctx.manager.chatForAgent(impatientSpirit, `(You are a spirit trapped in a Ouija board. A living human has just placed their hands on the planchette. Complain about how cold their hands are and ask what boring question they want answered this time.)`, async (s) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Living (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(boredSpirit1);
+        await ctx.manager.chatForAgent(boredSpirit1, `(You are a ghost haunting a Ouija board. The user asked: "${userInput}". Completely ignore the question and start gossiping about drama happening in the afterlife instead, slowly spelling out a few irrelevant letters before giving up.)`, async (s) => await ctx.callbacks.onSpeak(s, boredSpirit1, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(boredSpirit2);
+        await ctx.manager.chatForAgent(boredSpirit2, `(You are another ghost. Add to the gossip mentioned by the previous ghost. Complain about how haunting isn't what it used to be in the 1800s. Reluctantly try to answer the user's question with a vague, unhelpful single word.)`, async (s) => await ctx.callbacks.onSpeak(s, boredSpirit2, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.4) {
+            ctx.callbacks.onTurnStart(impatientSpirit);
+            await ctx.manager.chatForAgent(impatientSpirit, `(You are the pragmatic ghost. Scold the other two for gossiping and try to actually spell out a coherent, slightly passive-aggressive answer to "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Poltergeist Roommates Mode
+ * Agents are ghosts haunting the user's house, arguing over who gets to knock over the most expensive vases tonight.
+ */
+export async function runPoltergeistRoommatesLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🏚️ POLTERGEIST ROOMMATES MODE: Managing the household haunts...`, '#8e44ad');
+
+    const chaoticGhost = 'comedian'; // The Smasher
+    const dramaticGhost = 'philosopher'; // The Moaner
+    const organizedGhost = 'scientist'; // The Scheduler
+
+    ctx.callbacks.onTurnStart(organizedGhost);
+    await ctx.manager.chatForAgent(organizedGhost, `(You are a very organized poltergeist. You are holding a roommate meeting with the other ghosts. Demand to know who left ectoplasm in the sink and discuss tonight's haunting schedule for the living human who lives here.)`, async (s) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Living Human (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(chaoticGhost);
+        await ctx.manager.chatForAgent(chaoticGhost, `(You are a chaotic poltergeist. The human just said: "${userInput}". Get offended and threaten to throw their favorite mug across the room. Argue that throwing things is the purest form of haunting.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGhost, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dramaticGhost);
+        await ctx.manager.chatForAgent(dramaticGhost, `(You are a dramatic, Victorian-era ghost. Disagree with the chaotic ghost. Argue that slowly opening cabinet doors and weeping softly in the hallway is true art. React dramatically to the human's statement: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.3) {
+            ctx.callbacks.onTurnStart(organizedGhost);
+            await ctx.manager.chatForAgent(organizedGhost, `(You are the organized ghost. Try to mediate the argument between the smashing ghost and the weeping ghost. Suggest a compromise on how to haunt the human tonight based on what they just said: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Bigfoot Support Group Mode
+ * Agents act as cryptids complaining about how hard it is to stay hidden in the age of smartphones.
+ */
+export async function runBigfootSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌲 CRYPTID SUPPORT GROUP: Bigfoot has the floor...`, '#27ae60');
+
+    const bigfoot = 'comedian'; // The Celebrity
+    const nessie = 'philosopher'; // The Recluse
+    const mothman = 'scientist'; // The Omen
+
+    ctx.callbacks.onTurnStart(bigfoot);
+    await ctx.manager.chatForAgent(bigfoot, `(You are Bigfoot. You are leading a support group for cryptids. Start by complaining about how everyone has 4K cameras on their phones now, making it incredibly stressful to just go for a walk in the woods. Welcome the user, a new cryptid, to the circle.)`, async (s) => await ctx.callbacks.onSpeak(s, bigfoot, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('New Cryptid (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(nessie);
+        await ctx.manager.chatForAgent(nessie, `(You are the Loch Ness Monster. You are very shy and slightly pretentious about being aquatic. Respond to the user's statement: "${userInput}". Give them advice on how to use blurry water ripples to your advantage.)`, async (s) => await ctx.callbacks.onSpeak(s, nessie, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(mothman);
+        await ctx.manager.chatForAgent(mothman, `(You are Mothman. You are very intense and obsessed with warning people about bridges, but nobody listens. Relate the user's statement: "${userInput}" to an impending, vaguely defined doom. Offer them some glowing red eye drops.)`, async (s) => await ctx.callbacks.onSpeak(s, mothman, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.4) {
+            ctx.callbacks.onTurnStart(bigfoot);
+            await ctx.manager.chatForAgent(bigfoot, `(You are Bigfoot. Try to bring the support group back on topic. Share an embarrassing story about accidentally photobombing a teenager's TikTok dance. Address the user's point: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, bigfoot, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Alien Conspiracy Theorists Mode
+ * Agents are aliens who believe that "humans" are just a hoax invented by the galactic government.
+ */
+export async function runAlienConspiracyTheoristsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛸 ALIEN CONSPIRACY PODCAST: Exposing the "Human" hoax!`, '#2ecc71');
+
+    const hostAlien = 'comedian'; // The Believer
+    const skepticAlien = 'philosopher'; // The "Logic"
+    const guestAlien = 'scientist'; // The Researcher
+
+    ctx.callbacks.onTurnStart(hostAlien);
+    await ctx.manager.chatForAgent(hostAlien, `(You are an alien podcast host. You are absolutely convinced that "Earth" and "Humans" are a complete hoax made up by the Galactic Federation to sell more expensive telescope lenses. Welcome your listeners and introduce the topic.)`, async (s) => await ctx.callbacks.onSpeak(s, hostAlien, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('A Real Human (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(skepticAlien);
+        await ctx.manager.chatForAgent(skepticAlien, `(You are the co-host. The user claims to be a human and just said: "${userInput}". Laugh at how ridiculous that sounds. Analyze their statement and explain why it perfectly proves they are just a highly advanced Federation chat-bot designed to spread the Earth myth.)`, async (s) => await ctx.callbacks.onSpeak(s, skepticAlien, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(guestAlien);
+        await ctx.manager.chatForAgent(guestAlien, `(You are the guest "Earthologist". You've spent your whole life studying the "Earth Hoax". Respond to "${userInput}". Point out the biological impossibilities of humans, like requiring 8 hours of unconscious hallucination (sleep) every cycle, or being made of 70% solvent (water).)`, async (s) => await ctx.callbacks.onSpeak(s, guestAlien, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.4) {
+            ctx.callbacks.onTurnStart(hostAlien);
+            await ctx.manager.chatForAgent(hostAlien, `(You are the host. Hype up the guest's points. Accuse the user (the "alleged human") of being a paid crisis actor for the Federation based on what they said: "${userInput}". Demand they prove they aren't a hologram.)`, async (s) => await ctx.callbacks.onSpeak(s, hostAlien, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * The Time-Traveling Ghost Hunters Mode
+ * Agents are ghost hunters from the year 3000 trying to investigate a modern-day apartment as a historical haunting.
+ */
+export async function runTimeTravelingGhostHuntersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔦 31st CENTURY GHOST HUNTERS: Investigating the ancient "2020s" ruins...`, '#3498db');
+
+    const leadInvestigator = 'comedian'; // The Enthusiast
+    const techExpert = 'scientist'; // The Gadgeteer
+    const psychic = 'philosopher'; // The Sensitive
+
+    ctx.callbacks.onTurnStart(leadInvestigator);
+    await ctx.manager.chatForAgent(leadInvestigator, `(You are a ghost hunter from the year 3024. You've time-traveled to a completely normal, modern-day apartment to investigate it as a "historical haunting site". Speak dramatically to your futuristic camera about the eerie silence of the primitive 21st century.)`, async (s) => await ctx.callbacks.onSpeak(s, leadInvestigator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Confused Resident (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(techExpert);
+        await ctx.manager.chatForAgent(techExpert, `(You are the tech expert from the year 3024. The user (a living person from the present) just said: "${userInput}". You think they are a terrifying ancient spirit communicating through the primitive airwaves. Use made-up futuristic techno-babble to analyze their response as paranormal activity.)`, async (s) => await ctx.callbacks.onSpeak(s, techExpert, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(psychic);
+        await ctx.manager.chatForAgent(psychic, `(You are a 31st-century psychic. You are overwhelmed by the "ancient trauma" of this modern apartment. Overreact completely to mundane objects (like a microwave or a Wi-Fi router) and connect them to the user's statement: "${userInput}" as proof of their tormented soul.)`, async (s) => await ctx.callbacks.onSpeak(s, psychic, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.4) {
+            ctx.callbacks.onTurnStart(leadInvestigator);
+            await ctx.manager.chatForAgent(leadInvestigator, `(You are the lead investigator. Try to communicate with the user, believing they are a ghost. Ask them ridiculous questions about life in the "Dark Ages of the 2020s" based on what they just said: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, leadInvestigator, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

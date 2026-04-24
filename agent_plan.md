@@ -2,6 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 56. The execution was straightforward. There were only 5 tasks left, so I implemented all 5. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 53. The execution was straightforward. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 54. The execution was straightforward, keeping tasks_per_run at 6.
 ### Project Velocity
@@ -632,25 +633,22 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Cloud Persistence Strategy (Refined)
 1. **Authenticating with the HF API**:
-   * Modify settings UI in `src/UI/SettingsModal.ts` to securely take an HF token and user ID, and check against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
-   * Add a real-time validation state indicator (Green/Red checkmarks, pulsing loading state) alongside the token input to provide immediate feedback during HTTP requests.
-   * Add logic to re-verify stored tokens every session, catching any tokens revoked directly on the Hugging Face platform.
+   * Modify settings UI in `src/UI/SettingsModal.ts` to securely take an HF token and user ID, checking against `https://huggingface.co/api/whoami-v2` via `HFStorageManager`.
+   * Add a real-time validation state indicator (Green/Red checkmarks, pulsing loading state) alongside the token input to provide immediate feedback.
+   * Store token entirely within IndexedDB instead of localStorage to improve security and decouple from synchronous thread limits.
+   * Add background validation to re-verify tokens at boot, prompting re-authentication seamlessly if the token was revoked externally.
 2. **Pushing Episode Scripts**:
-   * Implement `jokesters-sync-queue` via IndexedDB to queue up episodes as soon as `Director.stopScene()` is called.
-   * Spawn a dedicated background `syncWorker.ts` Web Worker that polls this queue, completely isolated from the main thread to avoid stuttering audio/animations.
-   * Have the worker execute batched POST requests (via Hugging Face Datasets API) to push the local JSON scripts into `user/jokesters-episodes` without blocking the UI.
-   * Use exponential backoff for rate limiting and 429 Too Many Requests errors, ensuring failed pushes are persisted to IndexedDB and retried.
-   * Implement token refresh worker logic to seamlessly refresh and invalidate stored tokens, pausing the queue when a 401 Unauthorized is caught.
+   * Implement `jokesters-sync-queue` using Dexie.js for IndexedDB to queue episodes the moment `Director.stopScene()` completes.
+   * Create a dedicated `syncWorker.ts` Web Worker that polls the IndexedDB queue, pushing chunks to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`).
+   * Implement strict exponential backoff within the worker to handle Hugging Face API rate limits (HTTP 429), caching failed pushes safely in IndexedDB for automatic retries.
 3. **Fetching Previous Episode Summaries at Boot**:
-   * On initial app load (inside `main.ts`), invoke `HFStorageManager` to asynchronously fetch the most recent `summary.json` from Hugging Face.
-   * Inject extracted context snippets directly into the `GroupChatManager` system prompt, immediately grounding the agents and restoring continuity before user interaction begins.
-   * Offload the background streaming of older episodic datasets into a local IndexedDB cache, providing fast local semantic search for subsequent RAG operations without stalling the UI.
-5. **Cross-Device Context Sharing**:
-   * Use Hugging Face Datasets to sync `agent_personas.json` and customized `system_prompts` so personality evolutions persist seamlessly across all user devices.
-   * On boot, verify if the remote `agent_personas.json` has a newer timestamp than the local version, and prompt the user to merge or overwrite to avoid overwriting divergent personalities.
-4. **Delta Updates and Vector Synchronization**:
-   * Utilize a Web Worker to manage syncing local memory vectors with the HF dataset.
-   * The worker implements delta updates, timestamp-based conflict resolution, and retry logic with exponential backoff to handle rate limits and offline status gracefully without blocking the UI.
+   * On initial load (`main.ts`), call `HFStorageManager` to asynchronously fetch the overarching `summary.json` from Hugging Face to prime the `GroupChatManager` immediately.
+   * Stream the heavier episodic JSON files directly into the local IndexedDB cache using the background worker to avoid blocking the UI thread.
+4. **Cross-Device Context Sharing & State Resolution**:
+   * Use Hugging Face Datasets to sync `agent_personas.json` and customized `system_prompts`.
+   * On boot, verify remote dataset timestamps against local IndexedDB timestamps. If the cloud is newer, prompt the user with a specific "Merge or Overwrite" dialogue to protect tailored personalities.
+5. **Vector RAG Offloading**:
+   * Embed lightweight vector search logic (e.g. `voy`) directly into the background sync worker. When the Director requests context, it queries the worker rather than the main thread, allowing the app to scale infinitely without lagging LLM generation.
 
 ### Phase 55: The Retro Tech Expansion (Dreams)
 * [x] **The Floppy Disk Defenders**: Agents act as old-school storage formats (Floppy Disk, CD-ROM, etc) arguing over who has the better data storage strategy for the user's memes. (Model Pairing: Qwen2.5 for citing bad sector errors vs Hermes-3 for defending pure magnetic tape chaos).
@@ -665,8 +663,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent summaries from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity.
 
 ### Phase 56: The Paranormal Activity Expansion (Dreams)
-* [ ] **The Sentient Ouija Board**: Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user's spooky questions.
-* [ ] **The Poltergeist Roommates**: Agents are ghosts haunting the user's house, arguing over who gets to knock over the most expensive vases tonight.
-* [ ] **The Bigfoot Support Group**: Agents act as cryptids (Bigfoot, Nessie, Mothman) complaining about how hard it is to stay hidden in the age of smartphones.
-* [ ] **The Alien Conspiracy Theorists**: Agents are aliens who believe that "humans" are just a hoax invented by the galactic government to sell more telescopes.
-* [ ] **The Time-Traveling Ghost Hunters**: Agents are ghost hunters from the year 3000 trying to investigate the user's perfectly normal, modern-day apartment as a historical haunting site.
+* [x] **The Sentient Ouija Board**: Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user's spooky questions. (Model Pairing: Comedian for gossip, Philosopher for complaining, Scientist for impatience).
+* [x] **The Poltergeist Roommates**: Agents are ghosts haunting the user's house, arguing over who gets to knock over the most expensive vases tonight. (Model Pairing: Comedian for smashing, Philosopher for drama, Scientist for scheduling).
+* [x] **The Bigfoot Support Group**: Agents act as cryptids (Bigfoot, Nessie, Mothman) complaining about how hard it is to stay hidden in the age of smartphones. (Model Pairing: Comedian for Bigfoot, Philosopher for Nessie, Scientist for Mothman).
+* [x] **The Alien Conspiracy Theorists**: Agents are aliens who believe that "humans" are just a hoax invented by the galactic government to sell more telescopes. (Model Pairing: Comedian for believer, Philosopher for skeptic, Scientist for researcher).
+* [x] **The Time-Traveling Ghost Hunters**: Agents are ghost hunters from the year 3000 trying to investigate the user's perfectly normal, modern-day apartment as a historical haunting site. (Model Pairing: Comedian for enthusiast, Scientist for tech expert, Philosopher for psychic).
+
+### Phase 57: The Magical Fantasy Expansion (Dreams)
+* [ ] **The Wizard's IT Department**: Agents act as IT support for a wizarding school, complaining about students trying to use magic to fix network connectivity issues. (Model Pairing: Qwen2.5 for citing technical/magical manuals vs Hermes-3 for pure magical chaos).
+* [ ] **The Dragon's Hoard Appraisers**: Agents are appraisers appearing on an "Antiques Roadshow"-style program, evaluating the random junk a dragon has hoarded over centuries. (Model Pairing: Phi-3 for historical analysis vs Llama-3 for enthusiastic pricing).
+* [ ] **The Sentient Spellbook**: Agents act as different chapters of a chaotic, sentient spellbook that disagree on how to cast a simple fireball, making it increasingly dangerous. (Model Pairing: Hermes-3 for the chaotic curses chapter vs Qwen2.5 for the strict safety warnings chapter).
+* [ ] **The Tavern Brawlers Anonymous**: Agents are classic RPG characters (a Barbarian, a Rogue, a Bard) in a support group trying to stop starting tavern brawls. (Model Pairing: Hermes-3 for the aggressive Barbarian vs Phi-3 for the dramatic Bard).
+* [ ] **The Potion Tasting Panel**: Agents act as pretentious sommeliers but for magical potions with bizarre side effects, reviewing the user's newly brewed concoction. (Model Pairing: Llama-3 for enthusiastic tasting notes vs Phi-3 for snobby critique).
+* [ ] **The Quest Board Rejects**: Agents are NPCs whose quests are so boring or ridiculous (e.g., "Find my lost sock") that no adventurer ever takes them, complaining to the user. (Model Pairing: Qwen2.5 for the mundane quest giver vs Hermes-3 for the desperate, over-the-top plea).

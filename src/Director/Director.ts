@@ -1,4 +1,4 @@
-import { runSentientSearchEngineLoop, runQuantumPetStoreLoop, runMultiversalChefsTableLoop, runTimeTravelingHeistPlannersLoop, runInterdimensionalCustomerServiceLoop } from "./modes/DreamModes";
+import { runSentientSearchEngineLoop, runQuantumPetStoreLoop, runMultiversalChefsTableLoop, runTimeTravelingHeistPlannersLoop, runInterdimensionalCustomerServiceLoop, runSentientOuijaBoardLoop, runPoltergeistRoommatesLoop, runBigfootSupportGroupLoop, runAlienConspiracyTheoristsLoop, runTimeTravelingGhostHuntersLoop } from "./modes/DreamModes";
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
 import { MemoryManager } from './MemoryManager';
@@ -343,6 +343,11 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     multiversal_chefs_table: runMultiversalChefsTableLoop,
     time_traveling_heist_planners: runTimeTravelingHeistPlannersLoop,
     interdimensional_customer_service: runInterdimensionalCustomerServiceLoop,
+    sentient_ouija_board: runSentientOuijaBoardLoop,
+    poltergeist_roommates: runPoltergeistRoommatesLoop,
+    bigfoot_support_group: runBigfootSupportGroupLoop,
+    alien_conspiracy_theorists: runAlienConspiracyTheoristsLoop,
+    time_traveling_ghost_hunters: runTimeTravelingGhostHuntersLoop,
     floppy_disk_defenders: runFloppyDiskDefendersLoop,
     dial_up_modems: runDialUpModemsLoop,
     y2k_bug_survivor: runY2KBugSurvivorLoop,
