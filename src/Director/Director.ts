@@ -582,7 +582,7 @@ export class Director {
                 type: 'punchline',
                 maxTokens: 60,
                 ttsSteps: 25,
-                promptSuffix: ' (Reply with a single, joking sentence. Be very brief.)'
+                promptSuffix: ' (Reply with a single, joking sentence. Be very brief. No emojis.)'
             };
         } else if (roll > 0.2) {
             return {

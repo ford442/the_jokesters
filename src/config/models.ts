@@ -72,7 +72,7 @@ export const VPS_FP32_MODELS = {
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
     model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
-      context_window_size: 4096,
+      context_window_size: 2048,
       prefill_chunk_size: 1024,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
