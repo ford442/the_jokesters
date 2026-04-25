@@ -11,6 +11,32 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'wizards_it_department',
+    title: "The Wizard's IT Department",
+    description: 'Agents act as IT support for a wizarding school, complaining about students trying to use magic to fix network connectivity issues.'
+  },
+  {
+    id: 'dragons_hoard_appraisers',
+    title: "The Dragon's Hoard Appraisers",
+    description: 'Agents are appraisers appearing on an "Antiques Roadshow"-style program, evaluating the random junk a dragon has hoarded over centuries.'
+  },
+  {
+    id: 'sentient_spellbook',
+    title: "The Sentient Spellbook",
+    description: 'Agents act as different chapters of a chaotic, sentient spellbook that disagree on how to cast a simple fireball, making it increasingly dangerous.'
+  },
+  {
+    id: 'tavern_brawlers_anonymous',
+    title: "Tavern Brawlers Anonymous",
+    description: 'Agents are classic RPG characters in a support group trying to stop starting tavern brawls.'
+  },
+  {
+    id: 'potion_tasting_panel',
+    title: "The Potion Tasting Panel",
+    description: 'Agents act as pretentious sommeliers but for magical potions with bizarre side effects, reviewing the user\'s newly brewed concoction.'
+  },
+
+  {
     id: 'worst-job-interview',
     title: 'The Worst Job Interview Ever',
     description: 'A highly nervous candidate interviews with a completely unhinged boss for a seemingly normal office position that quickly reveals itself to be insane. The job description keeps changing, and the interview room has bizarre decorations.',

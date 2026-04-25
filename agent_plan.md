@@ -1,8 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 6
-* **status**: Successfully implemented Phase 56. The execution was straightforward. There were only 5 tasks left, so I implemented all 5. Keeping tasks_per_run at 6.
+* **tasks_per_run**: 5
+* **status**: Successfully implemented the remaining 5 tasks of Phase 57. The execution was straightforward. Decreased tasks_per_run to 5 based on the remaining task load.
 * **status**: Successfully implemented Phase 53. The execution was straightforward. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 54. The execution was straightforward, keeping tasks_per_run at 6.
 ### Project Velocity
@@ -658,9 +658,9 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Clippy Support Group**: Agents act as rejected, overly enthusiastic virtual assistants (like Clippy or BonziBuddy) offering terrible advice on user's simple text inputs. (Model Pairing: Hermes-3 for chaotic "helpful" advice vs Qwen2.5 for trying to format everything as a letter).
 
 ### Cloud Persistence
-1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint and persist the state.
-2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via the background sync queue.
-3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent summaries from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity.
+1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint and persist the state. Use IndexedDB for storage to handle larger sync states securely.
+2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via a dedicated background sync queue (e.g. `syncWorker.ts`). Implement strict exponential backoff to avoid 429 Too Many Requests errors.
+3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent overarching `summary.json` from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity, downloading heavier episodic files async without blocking the UI.
 
 ### Phase 56: The Paranormal Activity Expansion (Dreams)
 * [x] **The Sentient Ouija Board**: Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user's spooky questions. (Model Pairing: Comedian for gossip, Philosopher for complaining, Scientist for impatience).
@@ -670,9 +670,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Time-Traveling Ghost Hunters**: Agents are ghost hunters from the year 3000 trying to investigate the user's perfectly normal, modern-day apartment as a historical haunting site. (Model Pairing: Comedian for enthusiast, Scientist for tech expert, Philosopher for psychic).
 
 ### Phase 57: The Magical Fantasy Expansion (Dreams)
-* [ ] **The Wizard's IT Department**: Agents act as IT support for a wizarding school, complaining about students trying to use magic to fix network connectivity issues. (Model Pairing: Qwen2.5 for citing technical/magical manuals vs Hermes-3 for pure magical chaos).
-* [ ] **The Dragon's Hoard Appraisers**: Agents are appraisers appearing on an "Antiques Roadshow"-style program, evaluating the random junk a dragon has hoarded over centuries. (Model Pairing: Phi-3 for historical analysis vs Llama-3 for enthusiastic pricing).
-* [ ] **The Sentient Spellbook**: Agents act as different chapters of a chaotic, sentient spellbook that disagree on how to cast a simple fireball, making it increasingly dangerous. (Model Pairing: Hermes-3 for the chaotic curses chapter vs Qwen2.5 for the strict safety warnings chapter).
-* [ ] **The Tavern Brawlers Anonymous**: Agents are classic RPG characters (a Barbarian, a Rogue, a Bard) in a support group trying to stop starting tavern brawls. (Model Pairing: Hermes-3 for the aggressive Barbarian vs Phi-3 for the dramatic Bard).
-* [ ] **The Potion Tasting Panel**: Agents act as pretentious sommeliers but for magical potions with bizarre side effects, reviewing the user's newly brewed concoction. (Model Pairing: Llama-3 for enthusiastic tasting notes vs Phi-3 for snobby critique).
+* [x] **The Wizard's IT Department**: Agents act as IT support for a wizarding school, complaining about students trying to use magic to fix network connectivity issues. (Model Pairing: Qwen2.5 for citing technical/magical manuals vs Hermes-3 for pure magical chaos).
+* [x] **The Dragon's Hoard Appraisers**: Agents are appraisers appearing on an "Antiques Roadshow"-style program, evaluating the random junk a dragon has hoarded over centuries. (Model Pairing: Phi-3 for historical analysis vs Llama-3 for enthusiastic pricing).
+* [x] **The Sentient Spellbook**: Agents act as different chapters of a chaotic, sentient spellbook that disagree on how to cast a simple fireball, making it increasingly dangerous. (Model Pairing: Hermes-3 for the chaotic curses chapter vs Qwen2.5 for the strict safety warnings chapter).
+* [x] **The Tavern Brawlers Anonymous**: Agents are classic RPG characters (a Barbarian, a Rogue, a Bard) in a support group trying to stop starting tavern brawls. (Model Pairing: Hermes-3 for the aggressive Barbarian vs Phi-3 for the dramatic Bard).
+* [x] **The Potion Tasting Panel**: Agents act as pretentious sommeliers but for magical potions with bizarre side effects, reviewing the user's newly brewed concoction. (Model Pairing: Llama-3 for enthusiastic tasting notes vs Phi-3 for snobby critique).
 * [ ] **The Quest Board Rejects**: Agents are NPCs whose quests are so boring or ridiculous (e.g., "Find my lost sock") that no adventurer ever takes them, complaining to the user. (Model Pairing: Qwen2.5 for the mundane quest giver vs Hermes-3 for the desperate, over-the-top plea).
+
+### Phase 58: The Corporate Dystopia Expansion (Dreams)
+* [ ] **The Sentient Water Cooler**: Agents act as office appliances gossiping about the terrible habits of the human employees. (Model Pairing: Comedian for gossip, Philosopher for existential dread, Scientist for calculating water pressure).
+* [ ] **The Interdimensional Board Meeting**: Agents are board members of a mega-corp that operates across dimensions, arguing over whether to lay off the void-beings in sector 7G. (Model Pairing: Comedian for chaotic proposals, Philosopher for ethical concerns, Scientist for reading interdimensional bylaws).
+* [ ] **The AI HR Department**: Agents act as AI HR representatives conducting an exit interview for a human who was fired for being "too human". (Model Pairing: Comedian for passive-aggressive remarks, Philosopher for analyzing human flaws, Scientist for strictly following protocols).
+* [ ] **The Infinite Spreadsheet**: Agents are cells within an infinitely large Excel spreadsheet, arguing over a circular reference that threatens to destroy their reality. (Model Pairing: Comedian for panic, Philosopher for accepting their fate, Scientist for trying to debug the formula).
+* [ ] **The Corporate Synergy Cult**: Agents are enthusiastic employees trying to recruit the user into their bizarre, corporate jargon-filled cult disguised as a "team-building exercise". (Model Pairing: Comedian for wild enthusiasm, Philosopher for breaking down the jargon, Scientist for tracking synergy metrics).
