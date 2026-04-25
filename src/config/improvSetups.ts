@@ -11,6 +11,31 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'sentient_water_cooler',
+    title: "The Sentient Water Cooler",
+    description: 'Agents act as office appliances gossiping about the terrible habits of the human employees.'
+  },
+  {
+    id: 'interdimensional_board_meeting',
+    title: "Interdimensional Board Meeting",
+    description: 'Agents are board members of a mega-corp arguing over interdimensional layoffs.'
+  },
+  {
+    id: 'ai_hr_department',
+    title: "The AI HR Department",
+    description: 'Agents act as AI HR representatives conducting an exit interview for a human.'
+  },
+  {
+    id: 'infinite_spreadsheet',
+    title: "The Infinite Spreadsheet",
+    description: 'Agents are cells within an infinitely large Excel spreadsheet arguing over a circular reference.'
+  },
+  {
+    id: 'corporate_synergy_cult',
+    title: "Corporate Synergy Cult",
+    description: 'Agents are enthusiastic employees trying to recruit the user into their corporate jargon-filled cult.'
+  },
+  {
     id: 'wizards_it_department',
     title: "The Wizard's IT Department",
     description: 'Agents act as IT support for a wizarding school, complaining about students trying to use magic to fix network connectivity issues.'
