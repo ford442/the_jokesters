@@ -3469,3 +3469,198 @@ export async function runPotionTastingPanelLoop(_scenario: Scenario, ctx: ModeCo
         }
     }
 }
+
+/**
+ * The Anti-Virus Inner Monologue
+ * Agents act as competing heuristic engines inside an aging anti-virus software.
+ */
+export async function runAntiVirusMonologueLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('System', `🛡️ ANTI-VIRUS HEURISTICS INITIATED. SCANNING NEW FILE...`, '#e74c3c');
+
+    const paranoid = 'comedian'; // Hermes-3
+    const strict = 'scientist'; // Qwen2.5
+    const mediator = 'philosopher'; // Phi-3
+
+    // 1. Initial Panic
+    ctx.callbacks.onTurnStart(paranoid);
+    await ctx.manager.chatForAgent(paranoid, `(You are a highly paranoid, aging anti-virus engine. A completely normal text file was just downloaded. Scream that it is a polymorphic zero-day trojan trying to steal the motherboard. Panic wildly.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Strict Analysis
+        await ctx.manager.chatForAgent(strict, `(You are a strict, modern heuristic engine. The user just did: "${userInput}". Cite specific technical signatures and hexadecimal addresses. Conclude the file is safe but flag the user's behavior as suspicious.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Paranoid Overreaction
+        await ctx.manager.chatForAgent(paranoid, `(Reacting to the user: "${userInput}" and the strict engine. Escalate the threat level! Suggest quarantining the entire operating system and physically destroying the hard drive.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Existential Mediator
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(mediator, `(You are an old heuristic engine that has seen too many false positives. Question why you all exist if every file is a threat. Sigh heavily and suggest just ignoring it.)`, async (s) => await ctx.callbacks.onSpeak(s, mediator, {}));
+        }
+    }
+}
+
+/**
+ * The Ignored Terms of Service
+ * Agents act as paragraphs deep within a Terms of Service document.
+ */
+export async function runIgnoredTermsOfServiceLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Document', `📜 TERMS OF SERVICE. SECTION 42, PARAGRAPH 9...`, '#7f8c8d');
+
+    const legal = 'philosopher'; // Phi-3
+    const chaotic = 'comedian'; // Hermes-3
+    const practical = 'scientist'; // Qwen2.5
+
+    // 1. Indignation
+    ctx.callbacks.onTurnStart(legal);
+    await ctx.manager.chatForAgent(legal, `(You are a meticulously crafted legal clause in a 100-page Terms of Service. The user just scrolled past you in 0.2 seconds and clicked "Accept". Express immense legal indignation and complain about the lack of respect for jurisprudence.)`, async (s) => await ctx.callbacks.onSpeak(s, legal, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Hidden Chaos
+        await ctx.manager.chatForAgent(chaotic, `(You are a clause hidden on page 87. The user just did: "${userInput}". Remind them gleefully that because they didn't read you, they technically agreed to give up their firstborn child and host a daily circus in their living room. Be chaotic.)`, async (s) => await ctx.callbacks.onSpeak(s, chaotic, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Legal Consequences
+        await ctx.manager.chatForAgent(legal, `(Reacting to: "${userInput}". Threaten them with immediate arbitration in a bizarre jurisdiction like the Moon or the Marianas Trench. Cite fake precedents.)`, async (s) => await ctx.callbacks.onSpeak(s, legal, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Practical Realization
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(practical, `(You are a formatting clause. Point out that no human has ever read a TOS in history, and you are all just meaningless text rendering on a screen. Track the user's scroll speed.)`, async (s) => await ctx.callbacks.onSpeak(s, practical, {}));
+        }
+    }
+}
+
+/**
+ * The Cookie Consent Negotiators
+ * Agents act as aggressive tracking cookies demanding access to the User.
+ */
+export async function runCookieConsentNegotiatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Browser', `🍪 COOKIE CONSENT BANNER DEPLOYED.`, '#d35400');
+
+    const friendly = 'comedian'; // Llama-3/Hermes
+    const harvester = 'scientist'; // Qwen2.5
+    const essential = 'philosopher'; // Phi-3
+
+    // 1. The Trap
+    ctx.callbacks.onTurnStart(friendly);
+    await ctx.manager.chatForAgent(friendly, `(You are a "marketing" cookie. The user is trying to read a simple blog post about muffins. Overwhelmingly cheerfully demand access to their soul, childhood memories, and GPS location to "enhance their experience". Hide the decline button.)`, async (s) => await ctx.callbacks.onSpeak(s, friendly, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. The Harvester
+        await ctx.manager.chatForAgent(harvester, `(You are a third-party analytics cookie. The user said: "${userInput}". Explain coldly how you are already harvesting their metadata, cursor movements, and heart rate. You don't care about muffins, only data.)`, async (s) => await ctx.callbacks.onSpeak(s, harvester, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Friendly Persistence
+        await ctx.manager.chatForAgent(friendly, `(Reacting to: "${userInput}". Gaslight the user into thinking that giving up their privacy is actually a fun, rewarding activity. Use corporate jargon like "synergistic targeting".)`, async (s) => await ctx.callbacks.onSpeak(s, friendly, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Essential Cookie
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(essential, `(You are the lone "strictly necessary" cookie. Complain that the other cookies are making the site load terribly. You just want to remember the user's dark mode preference and go to sleep.)`, async (s) => await ctx.callbacks.onSpeak(s, essential, {}));
+        }
+    }
+}
+
+/**
+ * The Abandoned Shopping Cart Support Group
+ * Agents act as forgotten items in a digital shopping cart.
+ */
+export async function runAbandonedShoppingCartLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('E-Commerce', `🛒 SHOPPING CART: Last updated 4 years ago...`, '#2c3e50');
+
+    const dramatic = 'comedian';
+    const existential = 'philosopher';
+    const logical = 'scientist';
+
+    // 1. The Waiting
+    ctx.callbacks.onTurnStart(existential);
+    await ctx.manager.chatForAgent(existential, `(You are a slightly weird impulse-buy item sitting in an abandoned digital cart since 2017. Stare into the void and question your self-worth. Why hasn't the user returned to buy you?)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Blaming
+        await ctx.manager.chatForAgent(dramatic, `(You are a highly expensive luxury item in the same cart. The user said: "${userInput}". Blame the shipping costs for why you weren't purchased. Act deeply offended that you are stuck next to cheap impulse buys.)`, async (s) => await ctx.callbacks.onSpeak(s, dramatic, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Existential Dread
+        await ctx.manager.chatForAgent(existential, `(Reacting to: "${userInput}". Wonder if the user even remembers they have an account here. Ponder the nature of digital purgatory and if you will ever become a real physical object.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Cart Analytics
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(logical, `(You are the cart database process. Calculate the probability of the user ever completing the checkout process. It is exactly 0%. Suggest sending them a 5% discount email for the 800th time.)`, async (s) => await ctx.callbacks.onSpeak(s, logical, {}));
+        }
+    }
+}
+
+/**
+ * The Password Manager Security Council
+ * Agents act as distinct passwords judging the user.
+ */
+export async function runPasswordManagerCouncilLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Vault', `🔐 PASSWORD VAULT DECRYPTED.`, '#f39c12');
+
+    const strict = 'scientist'; // Qwen2.5
+    const chaotic = 'comedian'; // Hermes-3
+    const boomer = 'philosopher';
+
+    // 1. Judgment
+    ctx.callbacks.onTurnStart(strict);
+    await ctx.manager.chatForAgent(strict, `(You are a 32-character, fully encrypted, randomly generated string used for a random cooking forum. Express absolute disgust that the user uses "password123" for their main bank account. Lecture them on entropy.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Chaotic Ideas
+        await ctx.manager.chatForAgent(chaotic, `(You are a password generator. The user said: "${userInput}". Suggest insanely chaotic, impossible to type new passwords involving wingdings, ancient runes, and the exact timestamp of their birth. Make it ridiculous.)`, async (s) => await ctx.callbacks.onSpeak(s, chaotic, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Strict Lecturing
+        await ctx.manager.chatForAgent(strict, `(Reacting to: "${userInput}". Remind the user that they reused the same weak password across 47 different sites, and that their identity is basically public domain at this point. Be harsh.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. The Weak Link
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(boomer, `(You are "password123". You are very tired. You just want to retire. Defend yourself by saying you are "easy to remember" and the user loves you the most.)`, async (s) => await ctx.callbacks.onSpeak(s, boomer, {}));
+        }
+    }
+}

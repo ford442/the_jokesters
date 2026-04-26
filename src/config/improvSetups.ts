@@ -11,6 +11,32 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'anti_virus_monologue',
+    title: "The Anti-Virus Inner Monologue",
+    description: 'Agents act as competing heuristic engines inside an aging anti-virus software.'
+  },
+  {
+    id: 'ignored_terms_of_service',
+    title: "The Ignored Terms of Service",
+    description: 'Agents act as paragraphs deep within a Terms of Service document.'
+  },
+  {
+    id: 'cookie_consent_negotiators',
+    title: "The Cookie Consent Negotiators",
+    description: 'Agents act as aggressive tracking cookies demanding access to the User.'
+  },
+  {
+    id: 'abandoned_shopping_cart',
+    title: "The Abandoned Shopping Cart Support Group",
+    description: 'Agents act as forgotten items in a digital shopping cart.'
+  },
+  {
+    id: 'password_manager_council',
+    title: "The Password Manager Security Council",
+    description: 'Agents act as distinct passwords judging the user.'
+  },
+
+  {
     id: 'sentient_water_cooler',
     title: "The Sentient Water Cooler",
     description: 'Agents act as office appliances gossiping about the terrible habits of the human employees.'
