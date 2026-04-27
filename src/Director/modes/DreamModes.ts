@@ -3664,3 +3664,123 @@ export async function runPasswordManagerCouncilLoop(_scenario: Scenario, ctx: Mo
         }
     }
 }
+
+/**
+ * Sentient NPCs Mode
+ * Agents act as background NPCs fully aware they repeat lines.
+ */
+export async function runSentientNPCsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎮 RPG VILLAGE MODE: Population - Very Self-Aware`, '#8e44ad');
+
+    const existential = 'comedian'; // Existential dread
+    const philosophical = 'philosopher'; // Questioning the quest
+    const tracker = 'scientist'; // Tracking interactions
+
+    ctx.callbacks.onTurnStart(tracker);
+    await ctx.manager.chatForAgent(tracker, `(You are an RPG NPC. The user just talked to you. Note that this is interaction #4,201. State your programmed line first, then complain about the repetition.)`, async (s) => await ctx.callbacks.onSpeak(s, tracker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existential);
+    await ctx.manager.chatForAgent(existential, `(You are an RPG NPC standing next to the other one. Express pure existential dread about being trapped in this loop forever and having no free will.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(philosophical);
+    await ctx.manager.chatForAgent(philosophical, `(You are the village elder NPC. Question the user's quest entirely. Why are they breaking our pots? What is the moral justification?)`, async (s) => await ctx.callbacks.onSpeak(s, philosophical, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Final Boss Therapy Mode
+ * Support group for final bosses repeatedly defeated.
+ */
+export async function runFinalBossTherapyLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 FINAL BOSS THERAPY MODE: Dealing with defeat`, '#8e44ad');
+
+    const angryBoss = 'comedian'; // Pure rage (Hermes-3)
+    const analyticalBoss = 'philosopher'; // Analyzing patterns (Phi-3)
+    const therapist = 'scientist'; // The moderator
+
+    ctx.callbacks.onTurnStart(angryBoss);
+    await ctx.manager.chatForAgent(angryBoss, `(You are a terrifying Final Boss. You are furious because a level 1 user just beat you by repeatedly mashing the jump attack button. Vent your frustration.)`, async (s) => await ctx.callbacks.onSpeak(s, angryBoss, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(analyticalBoss);
+    await ctx.manager.chatForAgent(analyticalBoss, `(You are a strategic Final Boss. Analyze the user's predictable attack patterns and explain mathematically why the "i-frames" of their roll dodge are unfair.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalBoss, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(therapist);
+    await ctx.manager.chatForAgent(therapist, `(You are the group therapist for video game villains. Try to calm them down and remind them that losing is part of their job description.)`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Glitch Exploiters Mode
+ * Speedrunners breaking game physics vs engine rules.
+ */
+export async function runGlitchExploitersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🏃 SPEEDRUN GLITCH MODE: Breaking reality`, '#8e44ad');
+
+    const speedrunner = 'comedian'; // Clipping through floor (Hermes-3)
+    const engineAgent = 'scientist'; // Physics engine (Qwen2.5)
+    const confusedNPC = 'philosopher'; // Confused bystander
+
+    ctx.callbacks.onTurnStart(speedrunner);
+    await ctx.manager.chatForAgent(speedrunner, `(You are a chaotic speedrunner. Explain to the user how you are currently trying to clip through a wall by jumping backward into a corner holding a bucket to skip half the game.)`, async (s) => await ctx.callbacks.onSpeak(s, speedrunner, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(engineAgent);
+    await ctx.manager.chatForAgent(engineAgent, `(You are the game's physics engine. Frantically cite collision rules and mathematically explain why the speedrunner's actions are destroying the fabric of the game's reality.)`, async (s) => await ctx.callbacks.onSpeak(s, engineAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(confusedNPC);
+    await ctx.manager.chatForAgent(confusedNPC, `(You are a normal NPC who just watched the speedrunner vibrate through a solid oak door. Question the laws of the universe.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedNPC, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Escort Mission Survivor Mode
+ * Traumatized NPCs from poorly coded escort missions.
+ */
+export async function runEscortMissionSurvivorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛡️ ESCORT MISSION SURVIVOR: Please wait for me!`, '#8e44ad');
+
+    const exhaustedNPC = 'comedian'; // Exhausted panting (Llama-3)
+    const pathingAI = 'scientist'; // Calculating errors (Phi-3)
+    const critic = 'philosopher'; // Complaining about mechanics
+
+    ctx.callbacks.onTurnStart(exhaustedNPC);
+    await ctx.manager.chatForAgent(exhaustedNPC, `(You are an NPC the user is escorting. You walk slower than they run, but run slower than they sprint. You are exhausted. Beg the user to stop sprinting ahead and leaving you behind.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedNPC, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(pathingAI);
+    await ctx.manager.chatForAgent(pathingAI, `(You are the internal pathfinding AI for the NPC. Explain technically why you got stuck on a small rock for 5 minutes while the user was fighting enemies.)`, async (s) => await ctx.callbacks.onSpeak(s, pathingAI, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(critic);
+    await ctx.manager.chatForAgent(critic, `(You are a game design critic. Lecture the user on why escort missions are inherently flawed and ruin pacing.)`, async (s) => await ctx.callbacks.onSpeak(s, critic, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Save Point Hoarders Mode
+ * Magical save point crystals judging the user's save frequency.
+ */
+export async function runSavePointHoardersLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💾 SAVE POINT HOARDERS: Saving... again.`, '#8e44ad');
+
+    const anxietyJudge = 'comedian'; // Judging anxiety
+    const spaceTracker = 'scientist'; // Tracking disk space (Qwen2.5)
+    const philosophicalSave = 'philosopher'; // Questioning memory
+
+    ctx.callbacks.onTurnStart(anxietyJudge);
+    await ctx.manager.chatForAgent(anxietyJudge, `(You are a sentient save point. Mock the user for saving their game 14 times in a row right before fighting a low-level slime. Ask if they are really that anxious.)`, async (s) => await ctx.callbacks.onSpeak(s, anxietyJudge, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(spaceTracker);
+    await ctx.manager.chatForAgent(spaceTracker, `(You are the game's memory allocation unit. Complain about the ridiculous amount of disk space the user is wasting with redundant save slots.)`, async (s) => await ctx.callbacks.onSpeak(s, spaceTracker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(philosophicalSave);
+    await ctx.manager.chatForAgent(philosophicalSave, `(You are an ancient save crystal. Ponder the nature of reality when a timeline is branched and overwritten so many times for such trivial reasons.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalSave, {}));
+    await ctx.callbacks.onTurnEnd();
+}
