@@ -2,6 +2,8 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
+* **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 59. The execution was straightforward and verified thoroughly. Incrementing `tasks_per_run` to 6. Added Phase 60 (The Retro Arcade Expansion).
 * **status**: Successfully implemented the remaining 5 tasks of Phase 57. The execution was straightforward. Decreased tasks_per_run to 5 based on the remaining task load.
 * **status**: Successfully implemented Phase 53. The execution was straightforward. Keeping tasks_per_run at 6.
@@ -660,7 +662,7 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 ### Cloud Persistence
 1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint and persist the state. Use Dexie.js with IndexedDB for storage to queue episodes instantly (`jokesters-sync-queue`) and prevent synchronous UI blocks.
-2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via a dedicated background Web Worker (`syncWorker.ts`) polling the Dexie queue to decouple I/O from LLM generation. Implement strict exponential backoff to avoid 429 Too Many Requests errors.
+2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via a dedicated Web Worker polling the Dexie queue to decouple I/O from LLM generation. Implement strict exponential backoff to avoid 429 Too Many Requests errors.
 3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent overarching `summary.json` from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity, downloading heavier episodic files async without blocking the UI.
 
 ### Phase 56: The Paranormal Activity Expansion (Dreams)
@@ -694,8 +696,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 
 
 ### Phase 60: The Retro Arcade Expansion (Dreams)
-* [ ] **The Sentient NPCs**: Agents act as background NPCs in a classic RPG who are fully aware they repeat the exact same line of dialogue every time the user interacts with them, driving them insane. (Model Pairing: Comedian for existential dread, Philosopher for questioning the user's quest, Scientist for tracking interaction counts).
-* [ ] **The Final Boss Therapy**: Agents are a support group for final bosses who keep getting defeated by a random user mashing buttons. (Model Pairing: Hermes-3 for pure rage vs Phi-3 for analyzing the user's predictable attack patterns).
-* [ ] **The Glitch Exploiters**: Agents act as speedrunners deliberately trying to break the physics of the game world to skip a massive door, confusing the physical engine agent. (Model Pairing: Qwen2.5 for citing engine collision rules vs Hermes-3 for clipping through the floor).
-* [ ] **The Escort Mission Survivor**: Agents act as heavily traumatized NPCs who have to follow the user during a poorly coded "escort mission" where the user runs faster than the NPC walks, but slower than the NPC runs. (Model Pairing: Llama-3 for exhausted panting vs Phi-3 for calculating pathing errors).
-* [ ] **The Save Point Hoarders**: Agents act as magical save point crystals arguing with the user for saving their game 14 times in a row before a very easy boss. (Model Pairing: Qwen2.5 for tracking disk space vs Comedian for judging the user's anxiety).
+* [x] **The Sentient NPCs**: Agents act as background NPCs in a classic RPG who are fully aware they repeat the exact same line of dialogue every time the user interacts with them, driving them insane. (Model Pairing: Comedian for existential dread, Philosopher for questioning the user's quest, Scientist for tracking interaction counts).
+* [x] **The Final Boss Therapy**: Agents are a support group for final bosses who keep getting defeated by a random user mashing buttons. (Model Pairing: Hermes-3 for pure rage vs Phi-3 for analyzing the user's predictable attack patterns).
+* [x] **The Glitch Exploiters**: Agents act as speedrunners deliberately trying to break the physics of the game world to skip a massive door, confusing the physical engine agent. (Model Pairing: Qwen2.5 for citing engine collision rules vs Hermes-3 for clipping through the floor).
+* [x] **The Escort Mission Survivor**: Agents act as heavily traumatized NPCs who have to follow the user during a poorly coded "escort mission" where the user runs faster than the NPC walks, but slower than the NPC runs. (Model Pairing: Llama-3 for exhausted panting vs Phi-3 for calculating pathing errors).
+* [x] **The Save Point Hoarders**: Agents act as magical save point crystals arguing with the user for saving their game 14 times in a row before a very easy boss. (Model Pairing: Qwen2.5 for tracking disk space vs Comedian for judging the user's anxiety).
+
+### Phase 61: The Suburbia Sandbox Expansion (Dreams)
+* [ ] **The Aggressive Lawn Gnomes**: Agents act as sentient lawn ornaments arguing over property lines and defending the yard from the user. (Model Pairing: Hermes-3 for violent defense vs Qwen2.5 for strict HOA compliance).
+* [ ] **The Neighborhood Watch Overlords**: Agents are overly suspicious neighborhood watch members interrogating the user about a suspiciously parked car. (Model Pairing: Phi-3 for deductive reasoning vs Llama-3 for pure paranoia).
+* [ ] **The HOA Board Meeting**: Agents act as an HOA board deciding whether to fine the user for having a slightly off-color mailbox. (Model Pairing: Comedian for petty complaints vs Scientist for color hex-code analysis).
+* [ ] **The Garage Sale Negotiators**: Agents are hardcore bargain hunters trying to buy the user's priceless heirlooms for 50 cents. (Model Pairing: Hermes-3 for aggressive haggling vs Llama-3 for emotional manipulation).
+* [ ] **The Lost Delivery Drivers**: Agents act as delivery drivers from different companies completely lost in a cul-de-sac and blaming the user's house number. (Model Pairing: Qwen2.5 for citing incorrect GPS data vs Comedian for existential dread).
