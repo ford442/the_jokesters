@@ -11,6 +11,31 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'aggressive_lawn_gnomes',
+    title: "The Aggressive Lawn Gnomes",
+    description: 'Sentient lawn ornaments defending their yard over property lines.'
+  },
+  {
+    id: 'neighborhood_watch_overlords',
+    title: "The Neighborhood Watch Overlords",
+    description: 'Overly suspicious neighborhood watch members interrogating the user.'
+  },
+  {
+    id: 'hoa_board_meeting',
+    title: "The HOA Board Meeting",
+    description: 'An HOA board fining the user for petty, non-compliant reasons.'
+  },
+  {
+    id: 'garage_sale_negotiators',
+    title: "The Garage Sale Negotiators",
+    description: 'Hardcore bargain hunters trying to buy priceless heirlooms for pennies.'
+  },
+  {
+    id: 'lost_delivery_drivers',
+    title: "The Lost Delivery Drivers",
+    description: 'Drivers completely lost in a cul-de-sac blaming the house number.'
+  },
+  {
     id: 'anti_virus_monologue',
     title: "The Anti-Virus Inner Monologue",
     description: 'Agents act as competing heuristic engines inside an aging anti-virus software.'

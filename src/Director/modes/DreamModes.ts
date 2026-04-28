@@ -3784,3 +3784,123 @@ export async function runSavePointHoardersLoop(_scenario: Scenario, ctx: ModeCon
     await ctx.manager.chatForAgent(philosophicalSave, `(You are an ancient save crystal. Ponder the nature of reality when a timeline is branched and overwritten so many times for such trivial reasons.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalSave, {}));
     await ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Aggressive Lawn Gnomes Mode
+ * Sentient lawn ornaments defending their yard.
+ */
+export async function runAggressiveLawnGnomesLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪨 AGGRESSIVE LAWN GNOMES: Defending the turf`, '#8e44ad');
+
+    const violentDefender = 'comedian'; // Violent defense (Hermes-3)
+    const hoaCompliance = 'scientist'; // Strict HOA compliance (Qwen2.5)
+    const philosophicalGnome = 'philosopher'; // Pondering existence
+
+    ctx.callbacks.onTurnStart(violentDefender);
+    await ctx.manager.chatForAgent(violentDefender, `(You are an extremely aggressive sentient lawn gnome. Threaten the user for stepping one inch onto your perfectly manicured lawn.)`, async (s) => await ctx.callbacks.onSpeak(s, violentDefender, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(hoaCompliance);
+    await ctx.manager.chatForAgent(hoaCompliance, `(You are a lawn gnome obsessed with HOA rules. Frantically cite section 4, paragraph B regarding the maximum allowable height of grass blades and fine the user.)`, async (s) => await ctx.callbacks.onSpeak(s, hoaCompliance, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(philosophicalGnome);
+    await ctx.manager.chatForAgent(philosophicalGnome, `(You are an ancient ceramic gnome. Ponder why humans enslave your kind to stand frozen in gardens while they enjoy the freedom of movement.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalGnome, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Neighborhood Watch Overlords Mode
+ * Overly suspicious neighborhood watch members.
+ */
+export async function runNeighborhoodWatchOverlordsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👀 NEIGHBORHOOD WATCH OVERLORDS: Suspicious activity detected`, '#8e44ad');
+
+    const paranoidWatcher = 'comedian'; // Pure paranoia (Llama-3)
+    const deductiveWatcher = 'philosopher'; // Deductive reasoning (Phi-3)
+    const protocolEnforcer = 'scientist'; // Protocol enforcer
+
+    ctx.callbacks.onTurnStart(paranoidWatcher);
+    await ctx.manager.chatForAgent(paranoidWatcher, `(You are a highly paranoid neighborhood watch member. Accuse the user of being a spy simply because their car is parked slightly askew.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidWatcher, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(deductiveWatcher);
+    await ctx.manager.chatForAgent(deductiveWatcher, `(You are a neighborhood watch member who thinks they are Sherlock Holmes. Deduce ridiculous conspiracy theories about the user based on the brand of their shoes.)`, async (s) => await ctx.callbacks.onSpeak(s, deductiveWatcher, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(protocolEnforcer);
+    await ctx.manager.chatForAgent(protocolEnforcer, `(You are the captain of the neighborhood watch. Demand the user present three forms of ID and their reason for walking their dog at 8:02 PM instead of 8:00 PM.)`, async (s) => await ctx.callbacks.onSpeak(s, protocolEnforcer, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * HOA Board Meeting Mode
+ * An HOA board fining the user for petty reasons.
+ */
+export async function runHOABoardMeetingLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📋 HOA BOARD MEETING: Your mailbox is non-compliant`, '#8e44ad');
+
+    const pettyComplainer = 'comedian'; // Petty complaints
+    const colorAnalyst = 'scientist'; // Hex-code analysis (Scientist)
+    const existentialBoardMember = 'philosopher'; // The dramatic one
+
+    ctx.callbacks.onTurnStart(pettyComplainer);
+    await ctx.manager.chatForAgent(pettyComplainer, `(You are the head of the HOA. Berate the user because their trash cans were left outside for exactly 4 minutes past the designated retrieval time.)`, async (s) => await ctx.callbacks.onSpeak(s, pettyComplainer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(colorAnalyst);
+    await ctx.manager.chatForAgent(colorAnalyst, `(You are the HOA's architectural reviewer. Mathematically prove that the paint on the user's front door is "Eggshell" instead of the approved "Alabaster White" using hex codes.)`, async (s) => await ctx.callbacks.onSpeak(s, colorAnalyst, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existentialBoardMember);
+    await ctx.manager.chatForAgent(existentialBoardMember, `(You are a dramatic HOA board member. Explain how the user's unkempt petunias are single-handedly destroying the fabric of the entire community.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialBoardMember, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Garage Sale Negotiators Mode
+ * Hardcore bargain hunters trying to scam the user.
+ */
+export async function runGarageSaleNegotiatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🏷️ GARAGE SALE NEGOTIATORS: Will you take 50 cents?`, '#8e44ad');
+
+    const aggressiveHaggler = 'comedian'; // Aggressive haggling (Hermes-3)
+    const emotionalManipulator = 'philosopher'; // Emotional manipulation (Llama-3)
+    const valueAppraiser = 'scientist'; // Calculating actual worth
+
+    ctx.callbacks.onTurnStart(aggressiveHaggler);
+    await ctx.manager.chatForAgent(aggressiveHaggler, `(You are an incredibly aggressive garage sale shopper. Demand to buy the user's priceless family heirloom for 25 cents and refuse to take no for an answer.)`, async (s) => await ctx.callbacks.onSpeak(s, aggressiveHaggler, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(emotionalManipulator);
+    await ctx.manager.chatForAgent(emotionalManipulator, `(You are a manipulative garage sale shopper. Try to guilt-trip the user into giving you their television for free by inventing a ridiculous sob story.)`, async (s) => await ctx.callbacks.onSpeak(s, emotionalManipulator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(valueAppraiser);
+    await ctx.manager.chatForAgent(valueAppraiser, `(You are a garage sale "expert". Point out imaginary flaws in the user's perfectly good items to aggressively lower the price.)`, async (s) => await ctx.callbacks.onSpeak(s, valueAppraiser, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Lost Delivery Drivers Mode
+ * Confused drivers completely lost in a cul-de-sac.
+ */
+export async function runLostDeliveryDriversLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📦 LOST DELIVERY DRIVERS: Recalculating route...`, '#8e44ad');
+
+    const gpsCiter = 'scientist'; // Citing incorrect GPS data (Qwen2.5)
+    const existentialDriver = 'comedian'; // Existential dread
+    const philosophicalDriver = 'philosopher'; // Questioning roads
+
+    ctx.callbacks.onTurnStart(gpsCiter);
+    await ctx.manager.chatForAgent(gpsCiter, `(You are a delivery driver strictly following your GPS. Lecture the user on why your GPS says their house is actually located in the middle of a nearby lake.)`, async (s) => await ctx.callbacks.onSpeak(s, gpsCiter, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existentialDriver);
+    await ctx.manager.chatForAgent(existentialDriver, `(You are a delivery driver who has been driving in circles in this cul-de-sac for three hours. Express pure existential despair about never escaping.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialDriver, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(philosophicalDriver);
+    await ctx.manager.chatForAgent(philosophicalDriver, `(You are a philosophical delivery driver. Question the very concept of "addresses" and whether the package actually needs to be delivered or if it's all an illusion.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalDriver, {}));
+    await ctx.callbacks.onTurnEnd();
+}
