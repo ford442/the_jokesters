@@ -1,6 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
+* **tasks_per_run**: 5
+* **status**: Successfully implemented Phase 61. Completed 5 tasks smoothly, added Phase 62 to the Dream Phase. Setting tasks_per_run to 5 for the next phase.
 * **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
 * **tasks_per_run**: 6
@@ -661,9 +663,10 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Clippy Support Group**: Agents act as rejected, overly enthusiastic virtual assistants (like Clippy or BonziBuddy) offering terrible advice on user's simple text inputs. (Model Pairing: Hermes-3 for chaotic "helpful" advice vs Qwen2.5 for trying to format everything as a letter).
 
 ### Cloud Persistence
-1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint and persist the state. Use Dexie.js with IndexedDB for storage to queue episodes instantly (`jokesters-sync-queue`) and prevent synchronous UI blocks.
-2.  **Pushing Episode Scripts:** After a scene concludes, push the generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`) via a dedicated Web Worker polling the Dexie queue to decouple I/O from LLM generation. Implement strict exponential backoff to avoid 429 Too Many Requests errors.
-3.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent overarching `summary.json` from the HF Dataset to seamlessly prime the `GroupChatManager` context window for continuity, downloading heavier episodic files async without blocking the UI.
+1.  **Authenticating with the HF API:** Implement secure login using an HF token in `HFStorageManager.ts`. Validate the token directly against the Hugging Face `whoami` API endpoint via REST (bypassing the SDK) and persist the state.
+2.  **Background Sync Queue:** Use Dexie.js with IndexedDB for reliable local storage to queue episodes instantly (`jokesters-sync-queue`). A dedicated Web Worker will poll this IndexedDB queue to push generated `summary.json` and episodic dialogue to a private Hugging Face dataset (e.g., `user/jokesters-episodes`). This decouples I/O from LLM generation and prevents synchronous UI blocks.
+3.  **Handling API Limits:** Implement strict exponential backoff in the Web Worker sync queue to avoid 429 Too Many Requests errors when pushing to HF Datasets.
+4.  **Fetching Previous Episode Summaries:** On application boot, fetch the most recent overarching `summary.json` from the HF Dataset. Pre-cache this in `localStorage` to instantly prime the `GroupChatManager` context window for continuity on next boot, downloading heavier episodic files async without blocking the UI.
 
 ### Phase 56: The Paranormal Activity Expansion (Dreams)
 * [x] **The Sentient Ouija Board**: Agents act as spirits haunting a Ouija board, but they are incredibly bored and just want to gossip instead of answering the user's spooky questions. (Model Pairing: Comedian for gossip, Philosopher for complaining, Scientist for impatience).
@@ -703,8 +706,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Save Point Hoarders**: Agents act as magical save point crystals arguing with the user for saving their game 14 times in a row before a very easy boss. (Model Pairing: Qwen2.5 for tracking disk space vs Comedian for judging the user's anxiety).
 
 ### Phase 61: The Suburbia Sandbox Expansion (Dreams)
-* [ ] **The Aggressive Lawn Gnomes**: Agents act as sentient lawn ornaments arguing over property lines and defending the yard from the user. (Model Pairing: Hermes-3 for violent defense vs Qwen2.5 for strict HOA compliance).
-* [ ] **The Neighborhood Watch Overlords**: Agents are overly suspicious neighborhood watch members interrogating the user about a suspiciously parked car. (Model Pairing: Phi-3 for deductive reasoning vs Llama-3 for pure paranoia).
-* [ ] **The HOA Board Meeting**: Agents act as an HOA board deciding whether to fine the user for having a slightly off-color mailbox. (Model Pairing: Comedian for petty complaints vs Scientist for color hex-code analysis).
-* [ ] **The Garage Sale Negotiators**: Agents are hardcore bargain hunters trying to buy the user's priceless heirlooms for 50 cents. (Model Pairing: Hermes-3 for aggressive haggling vs Llama-3 for emotional manipulation).
-* [ ] **The Lost Delivery Drivers**: Agents act as delivery drivers from different companies completely lost in a cul-de-sac and blaming the user's house number. (Model Pairing: Qwen2.5 for citing incorrect GPS data vs Comedian for existential dread).
+* [x] **The Aggressive Lawn Gnomes**: Agents act as sentient lawn ornaments arguing over property lines and defending the yard from the user. (Model Pairing: Hermes-3 for violent defense vs Qwen2.5 for strict HOA compliance).
+* [x] **The Neighborhood Watch Overlords**: Agents are overly suspicious neighborhood watch members interrogating the user about a suspiciously parked car. (Model Pairing: Phi-3 for deductive reasoning vs Llama-3 for pure paranoia).
+* [x] **The HOA Board Meeting**: Agents act as an HOA board deciding whether to fine the user for having a slightly off-color mailbox. (Model Pairing: Comedian for petty complaints vs Scientist for color hex-code analysis).
+* [x] **The Garage Sale Negotiators**: Agents are hardcore bargain hunters trying to buy the user's priceless heirlooms for 50 cents. (Model Pairing: Hermes-3 for aggressive haggling vs Llama-3 for emotional manipulation).
+* [x] **The Lost Delivery Drivers**: Agents act as delivery drivers from different companies completely lost in a cul-de-sac and blaming the user's house number. (Model Pairing: Qwen2.5 for citing incorrect GPS data vs Comedian for existential dread).
+
+### Phase 62: The Culinary Catastrophe Expansion (Dreams)
+* [ ] **The Sentient Sourdough Starter**: Agents act as a massive, overflowing sourdough starter demanding to be fed and plotting to take over the kitchen. (Model Pairing: Hermes-3 for hungry rage vs Phi-3 for existential yeast pondering).
+* [ ] **The Pretentious Food Critics**: Agents act as snobby food critics reviewing the user's simple midnight snack (e.g., string cheese) as if it were a Michelin-starred meal. (Model Pairing: Llama-3 for enthusiastic praise vs Qwen2.5 for citing culinary techniques).
+* [ ] **The Kitchen Nightmares Reality Show**: Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken. (Model Pairing: Hermes-3 for pure rage vs Comedian for terrified weeping).
+* [ ] **The Sentient Leftovers**: Agents act as 3-week-old leftovers in the back of the fridge arguing about who goes bad first and judging the user's diet. (Model Pairing: Philosopher for accepting decay vs Scientist for calculating bacteria growth).
+* [ ] **The Drive-Thru Window Miscommunications**: Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user's simple order. (Model Pairing: Comedian for chaotic static translation vs Qwen2.5 for strictly enforcing the menu).
