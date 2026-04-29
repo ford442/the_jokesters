@@ -406,5 +406,30 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'time-traveling-ghost-hunters',
     title: 'Time-Traveling Ghost Hunters',
     description: 'Agents are ghost hunters from the year 3000 trying to investigate the user\'s perfectly normal, modern-day apartment as a historical haunting site.',
+  },
+  {
+    id: 'sentient-sourdough-starter',
+    title: 'Sentient Sourdough Starter',
+    description: 'Agents act as a massive, overflowing sourdough starter demanding to be fed and plotting to take over the kitchen.',
+  },
+  {
+    id: 'pretentious-food-critics',
+    title: 'Pretentious Food Critics',
+    description: 'Agents act as snobby food critics reviewing the user\'s simple midnight snack (e.g., string cheese) as if it were a Michelin-starred meal.',
+  },
+  {
+    id: 'kitchen-nightmares-reality-show',
+    title: 'Kitchen Nightmares Reality Show',
+    description: 'Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken.',
+  },
+  {
+    id: 'sentient-leftovers',
+    title: 'Sentient Leftovers',
+    description: 'Agents act as 3-week-old leftovers in the back of the fridge arguing about who goes bad first and judging the user\'s diet.',
+  },
+  {
+    id: 'drive-thru-window-miscommunications',
+    title: 'Drive-Thru Window Miscommunications',
+    description: 'Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user\'s simple order.',
   }
 ];
