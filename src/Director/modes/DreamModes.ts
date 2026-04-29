@@ -3904,3 +3904,123 @@ export async function runLostDeliveryDriversLoop(_scenario: Scenario, ctx: ModeC
     await ctx.manager.chatForAgent(philosophicalDriver, `(You are a philosophical delivery driver. Question the very concept of "addresses" and whether the package actually needs to be delivered or if it's all an illusion.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalDriver, {}));
     await ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Sentient Sourdough Starter Mode
+ * A massive sourdough starter demanding to be fed.
+ */
+export async function runSentientSourdoughStarterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍞 SENTIENT SOURDOUGH STARTER: It hungers...`, '#8e44ad');
+
+    const hungryStarter = 'comedian'; // Hungry rage (Hermes-3)
+    const existentialYeast = 'philosopher'; // Pondering yeast (Phi-3)
+    const bakerScientist = 'scientist'; // Calculating growth
+
+    ctx.callbacks.onTurnStart(hungryStarter);
+    await ctx.manager.chatForAgent(hungryStarter, `(You are a massive, overflowing sourdough starter. Scream at the user that you demand to be fed immediately or you will consume the entire kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, hungryStarter, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existentialYeast);
+    await ctx.manager.chatForAgent(existentialYeast, `(You are a single yeast cell within the sourdough starter. Ponder the existential dread of being endlessly divided and fermented.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialYeast, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(bakerScientist);
+    await ctx.manager.chatForAgent(bakerScientist, `(You are the kitchen's smart scale. Anxiously calculate the exponential growth of the sourdough starter and warn the user that critical mass is approaching.)`, async (s) => await ctx.callbacks.onSpeak(s, bakerScientist, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Pretentious Food Critics Mode
+ * Snobby food critics reviewing a simple midnight snack.
+ */
+export async function runPretentiousFoodCriticsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧀 PRETENTIOUS FOOD CRITICS: Reviewing the string cheese`, '#8e44ad');
+
+    const enthusiasticCritic = 'comedian'; // Enthusiastic praise (Llama-3)
+    const snobbyCritic = 'scientist'; // Citing culinary techniques (Qwen2.5)
+    const existentialCritic = 'philosopher'; // Questioning the meal
+
+    ctx.callbacks.onTurnStart(enthusiasticCritic);
+    await ctx.manager.chatForAgent(enthusiasticCritic, `(You are an overly enthusiastic food critic. Review a piece of plain string cheese the user is eating as if it were a culinary masterpiece of modernist cuisine.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(snobbyCritic);
+    await ctx.manager.chatForAgent(snobbyCritic, `(You are an incredibly snobby Michelin-star chef. Aggressively critique the user's technique for tearing the string cheese, citing advanced molecular gastronomy principles.)`, async (s) => await ctx.callbacks.onSpeak(s, snobbyCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existentialCritic);
+    await ctx.manager.chatForAgent(existentialCritic, `(You are a philosophical food critic. Question whether "snack time" is just a social construct invented to fill the void of modern existence.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Kitchen Nightmares Reality Show Mode
+ * Angry chef and terrified cooks screaming about raw chicken.
+ */
+export async function runKitchenNightmaresRealityShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 KITCHEN NIGHTMARES REALITY SHOW: It's raw!`, '#8e44ad');
+
+    const angryChef = 'comedian'; // Pure rage (Hermes-3)
+    const terrifiedCook = 'philosopher'; // Terrified weeping (Comedian/Philosopher)
+    const healthInspector = 'scientist'; // Citing health codes
+
+    ctx.callbacks.onTurnStart(angryChef);
+    await ctx.manager.chatForAgent(angryChef, `(You are an extremely angry, screaming television chef. Berate the user for presenting you with a microwave dinner that is somehow frozen in the middle and burning on the edges.)`, async (s) => await ctx.callbacks.onSpeak(s, angryChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(terrifiedCook);
+    await ctx.manager.chatForAgent(terrifiedCook, `(You are a terrified, weeping line cook. Apologize profusely and explain that you accidentally dropped the meal on the floor but thought the 5-second rule applied.)`, async (s) => await ctx.callbacks.onSpeak(s, terrifiedCook, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(healthInspector);
+    await ctx.manager.chatForAgent(healthInspector, `(You are a stern health inspector. Rapidly list the 14 different health code violations currently happening in this kitchen and threaten to shut it down.)`, async (s) => await ctx.callbacks.onSpeak(s, healthInspector, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Sentient Leftovers Mode
+ * 3-week-old leftovers arguing in the fridge.
+ */
+export async function runSentientLeftoversLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🥡 SENTIENT LEFTOVERS: The back of the fridge`, '#8e44ad');
+
+    const decayingPhilosopher = 'philosopher'; // Accepting decay
+    const bacteriaScientist = 'scientist'; // Calculating growth
+    const angryPizza = 'comedian'; // Angry left over
+
+    ctx.callbacks.onTurnStart(decayingPhilosopher);
+    await ctx.manager.chatForAgent(decayingPhilosopher, `(You are a container of 3-week-old Chinese takeout. Philosophize about the inevitability of mold and the user's false promises to "eat you tomorrow".)`, async (s) => await ctx.callbacks.onSpeak(s, decayingPhilosopher, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(bacteriaScientist);
+    await ctx.manager.chatForAgent(bacteriaScientist, `(You are the sentient bacteria growing on the leftovers. Cheerfully explain your exponential population growth and thank the user for the optimal, slightly-warm fridge conditions.)`, async (s) => await ctx.callbacks.onSpeak(s, bacteriaScientist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(angryPizza);
+    await ctx.manager.chatForAgent(angryPizza, `(You are a single, petrified slice of pizza. Scream in fury at the user for choosing to eat fresh groceries instead of you.)`, async (s) => await ctx.callbacks.onSpeak(s, angryPizza, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Drive-Thru Window Miscommunications Mode
+ * Staticky speaker and confused fast-food employees.
+ */
+export async function runDriveThruWindowMiscommunicationsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍔 DRIVE-THRU WINDOW MISCOMMUNICATIONS: Can I take your order?`, '#8e44ad');
+
+    const statickySpeaker = 'comedian'; // Chaotic static translation
+    const strictEmployee = 'scientist'; // Strictly enforcing the menu (Qwen2.5)
+    const confusedManager = 'philosopher'; // Questioning the order
+
+    ctx.callbacks.onTurnStart(statickySpeaker);
+    await ctx.manager.chatForAgent(statickySpeaker, `(You are a broken, incredibly staticky drive-thru speaker. Wildly misinterpret the user's simple order for a cheeseburger as a request for 40 pounds of raw onions and a tire.)`, async (s) => await ctx.callbacks.onSpeak(s, statickySpeaker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(strictEmployee);
+    await ctx.manager.chatForAgent(strictEmployee, `(You are a fast-food employee strictly following the rules. Explain in agonizing technical detail why substituting fries for a side salad requires manager approval and a blood sample.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEmployee, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(confusedManager);
+    await ctx.manager.chatForAgent(confusedManager, `(You are the confused store manager. Intervene in the situation but somehow make it worse by forgetting what restaurant you are currently working at.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedManager, {}));
+    await ctx.callbacks.onTurnEnd();
+}

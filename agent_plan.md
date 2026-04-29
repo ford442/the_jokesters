@@ -2,6 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
+* **status**: Successfully implemented Phase 62. The execution was straightforward, verified thoroughly, and no regressions found. Keeping tasks_per_run at 5. Added Phase 63 (The Traffic Jam Commute Expansion).
 * **status**: Successfully implemented Phase 61. Completed 5 tasks smoothly, added Phase 62 to the Dream Phase. Setting tasks_per_run to 5 for the next phase.
 * **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
@@ -642,18 +643,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
    * Add a real-time validation state indicator (Green/Red checkmarks, pulsing loading state) alongside the token input to provide immediate feedback.
    * Store token entirely within IndexedDB instead of localStorage to improve security and decouple from synchronous thread limits.
    * Add background validation to re-verify tokens at boot, prompting re-authentication seamlessly if the token was revoked externally.
-2. **Pushing Episode Scripts**:
+2. **Pushing Episode Scripts (Episode Push)**:
    * Implement `jokesters-sync-queue` using Dexie.js for IndexedDB to queue episodes the moment `Director.stopScene()` completes.
-   * Create a dedicated `syncWorker.ts` Web Worker that polls the IndexedDB queue, pushing chunks to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`).
+   * Create a dedicated `syncWorker.ts` Web Worker that polls the IndexedDB queue, pushing chunks of 'Episode Scripts' (messages, vectors) to a private Hugging Face Dataset (e.g. `user/jokesters-episodes`).
    * Implement strict exponential backoff within the worker to handle Hugging Face API rate limits (HTTP 429), caching failed pushes safely in IndexedDB for automatic retries.
-3. **Fetching Previous Episode Summaries at Boot**:
-   * On initial load (`main.ts`), call `HFStorageManager` to asynchronously fetch the overarching `summary.json` from Hugging Face to prime the `GroupChatManager` immediately.
-   * Stream the heavier episodic JSON files directly into the local IndexedDB cache using the background worker to avoid blocking the UI thread.
-4. **Cross-Device Context Sharing & State Resolution**:
-   * Use Hugging Face Datasets to sync `agent_personas.json` and customized `system_prompts`.
-   * On boot, verify remote dataset timestamps against local IndexedDB timestamps. If the cloud is newer, prompt the user with a specific "Merge or Overwrite" dialogue to protect tailored personalities.
-5. **Vector RAG Offloading**:
-   * Embed lightweight vector search logic (e.g. `voy`) directly into the background sync worker. When the Director requests context, it queries the worker rather than the main thread, allowing the app to scale infinitely without lagging LLM generation.
+3. **Fetching Previous Episode Summaries at Boot (Boot Continuity)**:
+   * On app initialization, the `MemoryManager` will fetch 'Previous Episode Summaries' (lightweight JSON) from the dataset.
+   * Cache these locally to instantly prime the `GroupChatManager` context window without full model load delays, providing immediate continuity.
 
 ### Phase 55: The Retro Tech Expansion (Dreams)
 * [x] **The Floppy Disk Defenders**: Agents act as old-school storage formats (Floppy Disk, CD-ROM, etc) arguing over who has the better data storage strategy for the user's memes. (Model Pairing: Qwen2.5 for citing bad sector errors vs Hermes-3 for defending pure magnetic tape chaos).
@@ -713,8 +709,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Lost Delivery Drivers**: Agents act as delivery drivers from different companies completely lost in a cul-de-sac and blaming the user's house number. (Model Pairing: Qwen2.5 for citing incorrect GPS data vs Comedian for existential dread).
 
 ### Phase 62: The Culinary Catastrophe Expansion (Dreams)
-* [ ] **The Sentient Sourdough Starter**: Agents act as a massive, overflowing sourdough starter demanding to be fed and plotting to take over the kitchen. (Model Pairing: Hermes-3 for hungry rage vs Phi-3 for existential yeast pondering).
-* [ ] **The Pretentious Food Critics**: Agents act as snobby food critics reviewing the user's simple midnight snack (e.g., string cheese) as if it were a Michelin-starred meal. (Model Pairing: Llama-3 for enthusiastic praise vs Qwen2.5 for citing culinary techniques).
-* [ ] **The Kitchen Nightmares Reality Show**: Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken. (Model Pairing: Hermes-3 for pure rage vs Comedian for terrified weeping).
-* [ ] **The Sentient Leftovers**: Agents act as 3-week-old leftovers in the back of the fridge arguing about who goes bad first and judging the user's diet. (Model Pairing: Philosopher for accepting decay vs Scientist for calculating bacteria growth).
-* [ ] **The Drive-Thru Window Miscommunications**: Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user's simple order. (Model Pairing: Comedian for chaotic static translation vs Qwen2.5 for strictly enforcing the menu).
+
+### Phase 63: The Traffic Jam Commute Expansion (Dreams)
+* [ ] **The Sentient GPS**: Agents act as a furious GPS navigating a 4-hour traffic jam, constantly suggesting worse and worse detours. (Model Pairing: Qwen2.5 for citing ETA metrics vs Hermes-3 for pure navigational rage).
+* [ ] **The Carpool Karaoke Gone Wrong**: Agents act as awkward coworkers trapped in a carpool together, trying to figure out what music to play. (Model Pairing: Comedian for terrible music suggestions vs Philosopher for existential dread about small talk).
+* [ ] **The Angry Windshield Wipers**: Agents act as sentient windshield wipers arguing about their rhythm and whether it's actually raining hard enough to be on. (Model Pairing: Hermes-3 for frantic swiping vs Phi-3 for analyzing precipitation levels).
+* [ ] **The Road Rage Philosophers**: Agents act as incredibly angry drivers who express their road rage through complex philosophical diatribes instead of yelling. (Model Pairing: Phi-3 for existential angst vs Comedian for absurd insults).
+* [ ] **The Sentient Check Engine Light**: Agents act as a car's check engine light, refusing to tell the user what is actually wrong and instead giving cryptic riddles. (Model Pairing: Llama-3 for cheerful mystery vs Qwen2.5 for hiding diagnostic codes).
+
+* [x] **The Sentient Sourdough Starter**: Agents act as a massive, overflowing sourdough starter demanding to be fed and plotting to take over the kitchen. (Model Pairing: Hermes-3 for hungry rage vs Phi-3 for existential yeast pondering).
+* [x] **The Pretentious Food Critics**: Agents act as snobby food critics reviewing the user's simple midnight snack (e.g., string cheese) as if it were a Michelin-starred meal. (Model Pairing: Llama-3 for enthusiastic praise vs Qwen2.5 for citing culinary techniques).
+* [x] **The Kitchen Nightmares Reality Show**: Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken. (Model Pairing: Hermes-3 for pure rage vs Comedian for terrified weeping).
+* [x] **The Sentient Leftovers**: Agents act as 3-week-old leftovers in the back of the fridge arguing about who goes bad first and judging the user's diet. (Model Pairing: Philosopher for accepting decay vs Scientist for calculating bacteria growth).
+* [x] **The Drive-Thru Window Miscommunications**: Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user's simple order. (Model Pairing: Comedian for chaotic static translation vs Qwen2.5 for strictly enforcing the menu).
