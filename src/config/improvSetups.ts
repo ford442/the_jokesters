@@ -431,5 +431,30 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'drive-thru-window-miscommunications',
     title: 'Drive-Thru Window Miscommunications',
     description: 'Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user\'s simple order.',
-  }
+  },
+  {
+    id: 'sentient_gps',
+    title: "The Sentient GPS",
+    description: 'A furious GPS navigating a 4-hour traffic jam, constantly suggesting worse detours.'
+  },
+  {
+    id: 'carpool_karaoke',
+    title: "The Carpool Karaoke Gone Wrong",
+    description: 'Awkward coworkers trapped in a carpool, trying to figure out what music to play.'
+  },
+  {
+    id: 'angry_windshield_wipers',
+    title: "The Angry Windshield Wipers",
+    description: 'Sentient windshield wipers arguing about their rhythm and the rain.'
+  },
+  {
+    id: 'road_rage_philosophers',
+    title: "The Road Rage Philosophers",
+    description: 'Angry drivers expressing road rage through complex philosophical diatribes.'
+  },
+  {
+    id: 'sentient_check_engine_light',
+    title: "The Sentient Check Engine Light",
+    description: 'A check engine light refusing to tell the user what is actually wrong.'
+  },
 ];

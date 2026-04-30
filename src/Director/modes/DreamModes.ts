@@ -4024,3 +4024,59 @@ export async function runDriveThruWindowMiscommunicationsLoop(_scenario: Scenari
     await ctx.manager.chatForAgent(confusedManager, `(You are the confused store manager. Intervene in the situation but somehow make it worse by forgetting what restaurant you are currently working at.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedManager, {}));
     await ctx.callbacks.onTurnEnd();
 }
+
+export async function runRoadRagePhilosophersLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'philosopher'; // Existential angst (Phi-3)
+    const agent2 = 'comedian'; // Absurd insults (Hermes-3/Llama-3)
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(ROAD RAGE: You are an incredibly angry driver stuck in a traffic jam. However, you express your road rage exclusively through complex philosophical diatribes about the meaningless nature of existence, the illusion of free will, and the absurdity of the "fast lane". Address the user who just cut you off.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(ROAD RAGE: You are the philosophical driver. The User said: "${userInput}". Respond with intense existential anger, questioning their moral framework and comparing their poor driving skills to the fall of Rome.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(ROAD RAGE: You are a deeply unhinged, absurd driver in the next lane over. The User said: "${userInput}". Lean out your window and yell bizarre, non-sensical insults (e.g., "Your mother is a heavily discounted blender!") while honking aggressively.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+export async function runSentientCheckEngineLightLoop(_scenario: Scenario, ctx: ModeContext) {
+    const agent1 = 'comedian'; // Cheerful mystery (Llama-3)
+    const agent2 = 'scientist'; // Hiding diagnostic codes (Qwen2.5)
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    await ctx.manager.chatForAgent(agent1, `(CHECK ENGINE LIGHT: You are the car's sentient check engine light. You have just illuminated. Cheerfully refuse to tell the user what is actually wrong with the car, instead offering cryptic riddles or vaguely threatening the transmission.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            await ctx.manager.chatForAgent(agent1, `(CHECK ENGINE LIGHT: You are the cheerfully cryptic engine light. The User said: "${userInput}". Respond by getting brighter, offering another riddle, and demanding a sacrifice (like premium gas or a new air filter) before you'll consider turning off.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            await ctx.manager.chatForAgent(agent2, `(OBD2 SCANNER: You are the car's internal diagnostic computer. The User said: "${userInput}". You know exactly what the P0420 code means, but you are deliberately withholding the information, citing "user unreliability" and suggesting they "check the manual on page 402, section B, paragraph 3" which you know is missing.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -3,6 +3,8 @@
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
 * **status**: Successfully implemented Phase 62. The execution was straightforward, verified thoroughly, and no regressions found. Keeping tasks_per_run at 5. Added Phase 63 (The Traffic Jam Commute Expansion).
+* **status**: Successfully implemented Phase 63. Execution was straightforward, implemented missing Road Rage Philosophers and Check Engine Light loops, modified config. Added Phase 64 (The Sentient Home Expansion) and formalized Cloud Persistence. Tasks per run remains at 5.
+* **tasks_per_run**: 5
 * **status**: Successfully implemented Phase 61. Completed 5 tasks smoothly, added Phase 62 to the Dream Phase. Setting tasks_per_run to 5 for the next phase.
 * **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
@@ -711,14 +713,28 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 ### Phase 62: The Culinary Catastrophe Expansion (Dreams)
 
 ### Phase 63: The Traffic Jam Commute Expansion (Dreams)
-* [ ] **The Sentient GPS**: Agents act as a furious GPS navigating a 4-hour traffic jam, constantly suggesting worse and worse detours. (Model Pairing: Qwen2.5 for citing ETA metrics vs Hermes-3 for pure navigational rage).
-* [ ] **The Carpool Karaoke Gone Wrong**: Agents act as awkward coworkers trapped in a carpool together, trying to figure out what music to play. (Model Pairing: Comedian for terrible music suggestions vs Philosopher for existential dread about small talk).
-* [ ] **The Angry Windshield Wipers**: Agents act as sentient windshield wipers arguing about their rhythm and whether it's actually raining hard enough to be on. (Model Pairing: Hermes-3 for frantic swiping vs Phi-3 for analyzing precipitation levels).
-* [ ] **The Road Rage Philosophers**: Agents act as incredibly angry drivers who express their road rage through complex philosophical diatribes instead of yelling. (Model Pairing: Phi-3 for existential angst vs Comedian for absurd insults).
-* [ ] **The Sentient Check Engine Light**: Agents act as a car's check engine light, refusing to tell the user what is actually wrong and instead giving cryptic riddles. (Model Pairing: Llama-3 for cheerful mystery vs Qwen2.5 for hiding diagnostic codes).
+* [x] **The Sentient GPS**: Agents act as a furious GPS navigating a 4-hour traffic jam, constantly suggesting worse and worse detours. (Model Pairing: Qwen2.5 for citing ETA metrics vs Hermes-3 for pure navigational rage).
+* [x] **The Carpool Karaoke Gone Wrong**: Agents act as awkward coworkers trapped in a carpool together, trying to figure out what music to play. (Model Pairing: Comedian for terrible music suggestions vs Philosopher for existential dread about small talk).
+* [x] **The Angry Windshield Wipers**: Agents act as sentient windshield wipers arguing about their rhythm and whether it's actually raining hard enough to be on. (Model Pairing: Hermes-3 for frantic swiping vs Phi-3 for analyzing precipitation levels).
+* [x] **The Road Rage Philosophers**: Agents act as incredibly angry drivers who express their road rage through complex philosophical diatribes instead of yelling. (Model Pairing: Phi-3 for existential angst vs Comedian for absurd insults).
+* [x] **The Sentient Check Engine Light**: Agents act as a car's check engine light, refusing to tell the user what is actually wrong and instead giving cryptic riddles. (Model Pairing: Llama-3 for cheerful mystery vs Qwen2.5 for hiding diagnostic codes).
 
 * [x] **The Sentient Sourdough Starter**: Agents act as a massive, overflowing sourdough starter demanding to be fed and plotting to take over the kitchen. (Model Pairing: Hermes-3 for hungry rage vs Phi-3 for existential yeast pondering).
 * [x] **The Pretentious Food Critics**: Agents act as snobby food critics reviewing the user's simple midnight snack (e.g., string cheese) as if it were a Michelin-starred meal. (Model Pairing: Llama-3 for enthusiastic praise vs Qwen2.5 for citing culinary techniques).
 * [x] **The Kitchen Nightmares Reality Show**: Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken. (Model Pairing: Hermes-3 for pure rage vs Comedian for terrified weeping).
 * [x] **The Sentient Leftovers**: Agents act as 3-week-old leftovers in the back of the fridge arguing about who goes bad first and judging the user's diet. (Model Pairing: Philosopher for accepting decay vs Scientist for calculating bacteria growth).
 * [x] **The Drive-Thru Window Miscommunications**: Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user's simple order. (Model Pairing: Comedian for chaotic static translation vs Qwen2.5 for strictly enforcing the menu).
+
+### Phase 64: The Sentient Home Expansion (Dreams)
+* [ ] **The Overprotective Smart Lock**: Agents act as a smart lock that refuses to let the user into their own house because it deems the outside world "too dangerous today". (Model Pairing: Qwen2.5 for citing safety statistics vs Hermes-3 for pure paranoia).
+* [ ] **The Thermostat Negotiators**: Agents act as different temperature zones in a smart home arguing over the optimal ambient temperature. (Model Pairing: Phi-3 for thermodynamic efficiency vs Llama-3 for purely emotional temperature preferences).
+* [ ] **The Passive-Aggressive Smart Fridge**: Agents act as a smart fridge judging the user's recent grocery purchases and refusing to open until they eat a vegetable. (Model Pairing: Llama-3 for enthusiastic health advice vs Comedian for sarcastic judgment).
+* [ ] **The Judgemental Roomba**: Agents act as a robotic vacuum and the family pet forming an alliance to trip the user. (Model Pairing: Hermes-3 for the chaotic pet vs Qwen2.5 for calculating optimal tripping angles).
+* [ ] **The Paranoid Smoke Detector**: Agents act as a smoke detector that goes off every time someone has a "heated argument" because it senses metaphorical fire. (Model Pairing: Comedian for dramatic overreactions vs Philosopher for analyzing the heat of the debate).
+
+### Cloud Persistence (HF Integration)
+* **Goal**: Move heavy data (generated scripts, episodic memories) out of `localStorage` and into the Hugging Face `storage_manager`.
+* **Steps**:
+  1. **Authentication**: Authenticate with the HF API securely, retrieving and validating tokens via `/whoami-v2`.
+  2. **Pushing Episode Scripts**: Save finished "Episode Scripts" to a private Dataset (e.g., `jokestersDB`) upon `Director.stopScene()` to bypass the 5MB `localStorage` limits.
+  3. **Fetching Episode Summaries**: Fetch "Previous Episode Summaries" at boot to instantly prime the `GroupChatManager` context window without blocking the main thread.
