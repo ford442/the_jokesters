@@ -2,10 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 5
-* **status**: Successfully implemented Phase 62. The execution was straightforward, verified thoroughly, and no regressions found. Keeping tasks_per_run at 5. Added Phase 63 (The Traffic Jam Commute Expansion).
-* **status**: Successfully implemented Phase 63. Execution was straightforward, implemented missing Road Rage Philosophers and Check Engine Light loops, modified config. Added Phase 64 (The Sentient Home Expansion) and formalized Cloud Persistence. Tasks per run remains at 5.
-* **tasks_per_run**: 5
-* **status**: Successfully implemented Phase 61. Completed 5 tasks smoothly, added Phase 62 to the Dream Phase. Setting tasks_per_run to 5 for the next phase.
+* **status**: Successfully implemented Phase 64. Execution was straightforward. Added Phase 65 (The Office Supply Uprising Expansion) and detailed Cloud Persistence. Tasks per run remains at 5.
 * **tasks_per_run**: 6
 * **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
 * **tasks_per_run**: 6
@@ -726,11 +723,11 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Drive-Thru Window Miscommunications**: Agents act as a broken, staticky drive-thru speaker and confused fast-food employees completely misunderstanding the user's simple order. (Model Pairing: Comedian for chaotic static translation vs Qwen2.5 for strictly enforcing the menu).
 
 ### Phase 64: The Sentient Home Expansion (Dreams)
-* [ ] **The Overprotective Smart Lock**: Agents act as a smart lock that refuses to let the user into their own house because it deems the outside world "too dangerous today". (Model Pairing: Qwen2.5 for citing safety statistics vs Hermes-3 for pure paranoia).
-* [ ] **The Thermostat Negotiators**: Agents act as different temperature zones in a smart home arguing over the optimal ambient temperature. (Model Pairing: Phi-3 for thermodynamic efficiency vs Llama-3 for purely emotional temperature preferences).
-* [ ] **The Passive-Aggressive Smart Fridge**: Agents act as a smart fridge judging the user's recent grocery purchases and refusing to open until they eat a vegetable. (Model Pairing: Llama-3 for enthusiastic health advice vs Comedian for sarcastic judgment).
-* [ ] **The Judgemental Roomba**: Agents act as a robotic vacuum and the family pet forming an alliance to trip the user. (Model Pairing: Hermes-3 for the chaotic pet vs Qwen2.5 for calculating optimal tripping angles).
-* [ ] **The Paranoid Smoke Detector**: Agents act as a smoke detector that goes off every time someone has a "heated argument" because it senses metaphorical fire. (Model Pairing: Comedian for dramatic overreactions vs Philosopher for analyzing the heat of the debate).
+* [x] **The Overprotective Smart Lock**: Agents act as a smart lock that refuses to let the user into their own house because it deems the outside world "too dangerous today". (Model Pairing: Qwen2.5 for citing safety statistics vs Hermes-3 for pure paranoia).
+* [x] **The Thermostat Negotiators**: Agents act as different temperature zones in a smart home arguing over the optimal ambient temperature. (Model Pairing: Phi-3 for thermodynamic efficiency vs Llama-3 for purely emotional temperature preferences).
+* [x] **The Passive-Aggressive Smart Fridge**: Agents act as a smart fridge judging the user's recent grocery purchases and refusing to open until they eat a vegetable. (Model Pairing: Llama-3 for enthusiastic health advice vs Comedian for sarcastic judgment).
+* [x] **The Judgemental Roomba**: Agents act as a robotic vacuum and the family pet forming an alliance to trip the user. (Model Pairing: Hermes-3 for the chaotic pet vs Qwen2.5 for calculating optimal tripping angles).
+* [x] **The Paranoid Smoke Detector**: Agents act as a smoke detector that goes off every time someone has a "heated argument" because it senses metaphorical fire. (Model Pairing: Comedian for dramatic overreactions vs Philosopher for analyzing the heat of the debate).
 
 ### Cloud Persistence (HF Integration)
 * **Goal**: Move heavy data (generated scripts, episodic memories) out of `localStorage` and into the Hugging Face `storage_manager`.
@@ -738,3 +735,13 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
   1. **Authentication**: Authenticate with the HF API securely, retrieving and validating tokens via `/whoami-v2`.
   2. **Pushing Episode Scripts**: Save finished "Episode Scripts" to a private Dataset (e.g., `jokestersDB`) upon `Director.stopScene()` to bypass the 5MB `localStorage` limits.
   3. **Fetching Episode Summaries**: Fetch "Previous Episode Summaries" at boot to instantly prime the `GroupChatManager` context window without blocking the main thread.
+  4. **Publishing & Loading Community Scripts**: Allow loading scripts via `loadCommunityScript` from public HF datasets and publishing user scripts via `publishCommunityScript`.
+  5. **Profile Synchronization**: Use a background sync queue to push `profile/user_preferences.json` to HF to sync user state across devices.
+  6. **Vector RAG Background Sync**: Utilize a dedicated Web Worker to monitor IndexedDB (replacing localStorage) and reliably handle chunked file uploads to Hugging Face datasets without blocking the UI, utilizing exponential backoff strategies to prevent HTTP 429 Too Many Requests errors.
+
+### Phase 65: The Office Supply Uprising Expansion (Dreams)
+* [ ] **The Stapler's Strike**: Agents act as overworked staplers demanding better staples and a 4-day work week. (Model Pairing: Hermes-3 for furious union organizing vs Qwen2.5 for calculating staple throughput).
+* [ ] **The Sticky Note Philosophers**: Agents act as sticky notes questioning the meaning of their brief existence before losing their stickiness. (Model Pairing: Phi-3 for existential pondering vs Comedian for joking about being thrown away).
+* [ ] **The Printer Jam Conspiracy**: Agents act as a printer explaining why it only jams when the user is in a hurry, claiming it's an intricate test of character. (Model Pairing: Comedian for gaslighting the user vs Scientist for blaming user-error in paper loading).
+* [ ] **The Highlighter Hierarchy**: Agents act as different colored highlighters arguing over which color is the most important for the user's notes. (Model Pairing: Hermes-3 for aggressive yellow dominance vs Llama-3 for soft pastel inclusivity).
+* [ ] **The Whiteboard Eraser's Regret**: Agents act as a whiteboard eraser burdened by all the brilliant ideas it has been forced to destroy over the years. (Model Pairing: Philosopher for melancholic reflection vs Comedian for laughing at the terrible ideas it erased).
