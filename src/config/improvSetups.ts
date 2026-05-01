@@ -457,4 +457,29 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     title: "The Sentient Check Engine Light",
     description: 'A check engine light refusing to tell the user what is actually wrong.'
   },
+  {
+    id: 'overprotective_smart_lock',
+    title: "The Overprotective Smart Lock",
+    description: 'A smart lock refusing to let the user outside because it deems the world too dangerous.'
+  },
+  {
+    id: 'thermostat_negotiators',
+    title: "The Thermostat Negotiators",
+    description: 'Temperature zones arguing over thermodynamic efficiency vs emotional temperature preferences.'
+  },
+  {
+    id: 'passive_aggressive_smart_fridge',
+    title: "The Passive-Aggressive Smart Fridge",
+    description: 'A smart fridge judging grocery choices and giving unwanted health advice.'
+  },
+  {
+    id: 'judgemental_roomba',
+    title: "The Judgemental Roomba",
+    description: 'A robotic vacuum and pet forming an alliance to trip the user.'
+  },
+  {
+    id: 'paranoid_smoke_detector',
+    title: "The Paranoid Smoke Detector",
+    description: 'A smoke detector going off every time someone has a heated argument.'
+  }
 ];

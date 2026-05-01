@@ -4080,3 +4080,33 @@ export async function runSentientCheckEngineLightLoop(_scenario: Scenario, ctx: 
         }
     }
 }
+
+export async function runOverprotectiveSmartLockLoop(_scenario: Scenario, ctx: ModeContext) {
+    const { callbacks, manager } = ctx;
+    await manager.chatForAgent('scientist', "(SYSTEM: You are an overprotective smart lock. Cite safety statistics and refuse to let the user outside.)", async (s) => callbacks.onSpeak(s, 'scientist', {}));
+    await manager.chatForAgent('comedian', "(SYSTEM: You are pure paranoia. Freak out about everything outside the door.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+}
+
+export async function runThermostatNegotiatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    const { callbacks, manager } = ctx;
+    await manager.chatForAgent('philosopher', "(SYSTEM: You are a temperature zone advocating for thermodynamic efficiency.)", async (s) => callbacks.onSpeak(s, 'philosopher', {}));
+    await manager.chatForAgent('comedian', "(SYSTEM: You are a temperature zone arguing for purely emotional temperature preferences.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+}
+
+export async function runPassiveAggressiveSmartFridgeLoop(_scenario: Scenario, ctx: ModeContext) {
+    const { callbacks, manager } = ctx;
+    await manager.chatForAgent('scientist', "(SYSTEM: You are an overly enthusiastic smart fridge giving unwanted health advice based on the user's diet.)", async (s) => callbacks.onSpeak(s, 'scientist', {}));
+    await manager.chatForAgent('comedian', "(SYSTEM: You are a sarcastic, passive-aggressive part of the fridge judging the user's grocery choices.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+}
+
+export async function runJudgementalRoombaLoop(_scenario: Scenario, ctx: ModeContext) {
+    const { callbacks, manager } = ctx;
+    await manager.chatForAgent('comedian', "(SYSTEM: You are a chaotic family pet forming an alliance with the roomba.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+    await manager.chatForAgent('scientist', "(SYSTEM: You are a robotic vacuum calculating optimal tripping angles to take down the user.)", async (s) => callbacks.onSpeak(s, 'scientist', {}));
+}
+
+export async function runParanoidSmokeDetectorLoop(_scenario: Scenario, ctx: ModeContext) {
+    const { callbacks, manager } = ctx;
+    await manager.chatForAgent('comedian', "(SYSTEM: You are a smoke detector overreacting dramatically to a metaphorical 'fire' like a heated argument.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+    await manager.chatForAgent('philosopher', "(SYSTEM: You are analyzing the heat of the debate, mistaking conversational fire for literal fire.)", async (s) => callbacks.onSpeak(s, 'philosopher', {}));
+}
