@@ -373,6 +373,7 @@ function buildModelList(): any[] {
 export const appConfig = {
   model_list: buildModelList(),
   useIndexedDBCache: true,
+  cacheBackend: "cross-origin" as const,
 };
 
 /**

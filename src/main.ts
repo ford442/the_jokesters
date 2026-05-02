@@ -137,24 +137,30 @@ async function initApp() {
           <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
 
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <!-- MLC WebLLM Models -->
+            <!-- Recommended — fastest default for modern GPUs -->
             <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC/WebGPU · ~2 GB VRAM ★ Recommended</option>
-            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · MLC/WebGPU · ~2.5 GB VRAM</option>
+
+            <!-- Best quality (f16-capable GPUs) -->
+            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
+            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
+
+            <!-- Best quality (no f16 required) -->
+            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (no f16 needed)</option>
+            <option value="vicuna-7b-q4f32-webllm-vps">Vicuna 7B · self-hosted · MLC/WebGPU · ~4 GB VRAM (reliable, no f16)</option>
+
+            <!-- Compatibility / smaller (universal) -->
             <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · MLC/WebGPU · ~2 GB VRAM (no f16 needed)</option>
             <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · MLC/WebGPU · ~2.5 GB VRAM (no f16 needed)</option>
-            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (no f16 needed)</option>
-            <option value="vicuna-7b-q4f32-webllm-vps">Vicuna 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (Llama-2 / Vicuna tuned)</option>
-            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · MLC/WebGPU · ~5.2 GB VRAM (needs f16 GPU)</option>
-            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · MLC/WebGPU · ~5.2 GB VRAM (needs f16 GPU)</option>
-            
+            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · MLC/WebGPU · ~2.5 GB VRAM</option>
+
             <!-- Transformers.js Models -->
             <option value="Qwen2.5-0.5B-Instruct-ONNX">Qwen 2.5 0.5B · Transformers.js/WebGPU · ~1.5 GB VRAM</option>
             <option value="Qwen2.5-1.5B-Instruct-ONNX">Qwen 2.5 1.5B · Transformers.js/WebGPU · ~2.5 GB VRAM</option>
             <option value="Phi-3-mini-4k-instruct-ONNX">Phi-3 Mini · Transformers.js/WebGPU · ~3.5 GB VRAM</option>
             <option value="Llama-3.2-1B-Instruct-ONNX">Llama 3.2 1B · Transformers.js/WebGPU · ~1.8 GB VRAM</option>
-            
-            <!-- GGUF Models (llama.cpp) -->
-            <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B · llama.cpp/WASM · ~4 GB RAM</option>
+
+            <!-- GGUF Models (llama.cpp / CPU fallback) -->
+            <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B · WASM/CPU fallback · ~4 GB RAM (slow, no WebGPU needed)</option>
           </select>
           <select id="context-size-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
             <option value="auto">Auto (detect VRAM)</option>
@@ -338,7 +344,7 @@ async function initApp() {
     'Hermes-3-Llama-3.2-3B-q4f32_1-MLC':  'Same Hermes-3 3B in universal f32 mode — works on GPUs without f16 shader support.',
     'Llama-3.2-3B-Instruct-q4f32_1-MLC':  'Standard 3B in f32 mode. Compatible with older or integrated GPUs.',
     'Llama-2-7b-chat-hf-q4f32_1-MLC':     'Llama-2 7B Chat (Meta). Mid-size model, richer responses than 3B. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
-    'vicuna-7b-q4f32-webllm-vps':          'Vicuna 7B (Llama-2 fine-tune). Instruction-following specialist. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
+    'vicuna-7b-q4f32-webllm-vps':          'Vicuna 7B · self-hosted mirror. Reliable, no HF dependency. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
     'Hermes-3-Llama-3.1-8B-q4f16_1-MLC':  'Best quality available. Requires RTX 30xx / RX 6000 / M1 Pro or better with f16 shader support.',
     'Llama-3.1-8B-Instruct-q4f16_1-MLC':  'Meta 8B flagship. Excellent reasoning. Requires f16-capable GPU with 5+ GB VRAM.',
   }
@@ -605,10 +611,23 @@ async function initApp() {
     // Stage 3: Initialize WebLLM with progress (55% of total progress)
     currentInitState = 'MODEL'
     setProgress("Initializing LLM Engine...", 35)
+    let progressStartTime = 0
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
       // Map WebLLM progress (0-1) to 35-90% of total progress
       const percentage = 35 + Math.round(progress.progress * 55)
-      setProgress(progress.text, percentage)
+      let status = progress.text
+      // Show ETA once we're past 2% and not yet at 99%
+      if (progress.progress > 0.02 && progress.progress < 0.99) {
+        if (progressStartTime === 0) progressStartTime = performance.now()
+        const elapsedMs = performance.now() - progressStartTime
+        const totalEstimatedMs = elapsedMs / progress.progress
+        const remainingMs = totalEstimatedMs - elapsedMs
+        const remainingSec = Math.max(0, Math.round(remainingMs / 1000))
+        const mm = Math.floor(remainingSec / 60).toString().padStart(2, '0')
+        const ss = (remainingSec % 60).toString().padStart(2, '0')
+        status = `${progress.text} · ~${mm}:${ss} remaining`
+      }
+      setProgress(status, percentage)
     }, selectedModelId, preferredContext, enginePreference)
 
     // Stage 4: Final setup and UI binding (90%)
