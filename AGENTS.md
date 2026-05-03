@@ -1,12 +1,11 @@
-<!-- From: /root/the_jokesters/AGENTS.md -->
 # The Jokesters - Agent Guide
 
 ## Project Overview
 
-**The Jokesters** is a multi-agent comedy chat application that runs entirely in the browser using WebGPU (and WASM fallback) acceleration. It features five AI agents with distinct personalities that engage in improvised comedy conversations powered by in-browser Large Language Models (LLM).
+**The Jokesters** is a multi-agent comedy chat application that runs entirely in the browser using WebGPU (and WASM fallback) acceleration. It features five AI agents with distinct personalities that engage in improvised comedy conversations powered by in-browser Large Language Models (LLM), real-time text-to-speech (TTS) with lip-sync, and Three.js 3D avatar visualization.
 
 ### Key Features
-- **Triple-engine in-browser LLM inference**: MLC WebLLM (WebGPU), llama.cpp WASM (`@wllama/wllama`), and Transformers.js (ONNX/WebGPU)
+- **Triple-engine in-browser LLM inference**: MLC WebLLM (WebGPU), llama.cpp WASM (`@wllama/wllama`), Transformers.js (ONNX/WebGPU), and an optional API fallback
 - **100+ interaction modes** across categories:
   - *Improv / Autonomous*: Improv Mode, Autonomous Loop
   - *Media*: Watcher Mode (video reaction), Vision Mode
@@ -15,13 +14,14 @@
   - *Interactive*: Trial Mode, Tech Support Mode, Dungeon Master Mode, Trivia Mode, Code Review Mode, Therapy Mode, Dating Show, Silent Treatment, Intervention, Support Group, Customer Service Hell, and many more
   - *Creative / Reality-expanded*: Mystery Mode, Pitch Mode, Haunted House, Sports Commentary, Reality TV, Auction House, Escape Room, Time Loop, Superhero, Conspiracy, Silent Film, Procedural, Lightning Round, Rapid Fire variants, and 70+ additional "Dream" and "Expanded Reality" modes
 - **5 Unique Agent Personas**: The Comedian, The Philosopher, The Scientist, Chad Vanderblock (Tech Bro), and Unit-734 (Deadpan Robot)
-- **3D agent visualization** using Three.js with lip-sync and real-time animations
-- **Real-time text-to-speech (TTS)** using an ONNX-based Supertonic pipeline with multiple voice styles
+- **3D agent visualization** using Three.js with lip-sync, blinking, volume-reactive squash/stretch, and spotlight highlighting
+- **Real-time text-to-speech (TTS)** using an ONNX-based Supertonic pipeline with 4 voice styles (M1, M2, F1, F2)
 - **Dynamic model swapping** allowing different LLMs per agent to fit within VRAM constraints
-- **Memory management** with `localStorage` persistence and optional HuggingFace cloud sync
+- **Memory management** with IndexedDB/`localStorage` persistence and optional HuggingFace cloud sync
 - **Voice input** support using the Web Speech API
-- **Comedy Engine** with callback tracking, quality gating, and conversation branching
-- **Service Worker** for parallel model downloads via byte-range requests
+- **Comedy Engine** with callback tracking (bell curve decay), quality gating, and conversation branching
+- **Service Worker** for parallel model downloads via byte-range requests (42MB chunks, 4 connections)
+- **Backend proxy** (`backend/llama_proxy.py`) — FastAPI OpenAI-compatible proxy for local llama-server
 
 ### Architecture Philosophy: "The Digital Director"
 The system follows a **Centralized Director / Stateless Actor** model:
@@ -29,7 +29,7 @@ The system follows a **Centralized Director / Stateless Actor** model:
 - **The Director** (`Director` class) orchestrates the scene, manages state, decides turn-taking, and injects environmental context
 - **GroupChatManager** handles LLM interactions with retry logic and VRAM management
 - **AgentModelManager** manages per-agent model assignments and hot-swapping
-- **LLM Engine Factory** (`src/llm/EngineFactory.ts`) selects the best engine (MLC / llama.cpp / Transformers.js) based on browser capabilities and model config
+- **LLM Engine Factory** (`src/llm/EngineFactory.ts`) selects the best engine (MLC / llama.cpp / Transformers.js / API) based on browser capabilities and model config
 
 ---
 
@@ -38,13 +38,13 @@ The system follows a **Centralized Director / Stateless Actor** model:
 ### Core Technologies
 | Technology | Purpose | Version |
 |------------|---------|---------|
-| **TypeScript** | Primary language | ES2022 target |
+| **TypeScript** | Primary language | ~5.9.3, ES2022 target |
 | **Vite** | Build tool and dev server | ^7.2.4 |
 | **Three.js** | 3D visualization and WebGL rendering | 0.170.0 |
 | **@mlc-ai/web-llm** | In-browser LLM inference via WebGPU | ^0.2.8 |
 | **@wllama/wllama** | llama.cpp WASM engine for GGUF models | ^2.3.7 |
 | **@huggingface/transformers** | Transformers.js ONNX/WebGPU engine | ^4.0.1 |
-| **ONNX Runtime Web** | TTS model inference | ^1.17.0 |
+| **onnxruntime-web** | TTS model inference | ^1.17.0 |
 | **vite-plugin-static-copy** | Asset copying | ^3.1.4 |
 
 ### Development Dependencies
@@ -53,6 +53,11 @@ The system follows a **Centralized Director / Stateless Actor** model:
 - `@types/node`: ^24.10.1
 - `@types/three`: 0.170.0
 
+### Runtime Requirements
+- Modern browser with **WebGPU** support (Chrome 113+, Edge 113+, Opera 99+)
+- Recommended **4GB+ VRAM**
+- All LLM inference runs client-side; no server required for basic operation
+
 ---
 
 ## Project Structure
@@ -60,14 +65,14 @@ The system follows a **Centralized Director / Stateless Actor** model:
 ```
 the_jokesters/
 ├── src/
-│   ├── main.ts                    # Application entry point, UI setup, event handlers
-│   ├── GroupChatManager.ts        # LLM chat management, conversation history, agent rotation
+│   ├── main.ts                    # Application entry point, UI setup, event handlers, service worker registration
+│   ├── GroupChatManager.ts        # LLM chat management, conversation history, agent rotation, retry logic
 │   ├── AgentModelManager.ts       # Per-agent model assignment and hot-swapping
 │   ├── ImprovSceneManager.ts      # [Legacy] Improv scene orchestration
 │   ├── SceneManager.ts            # [Legacy] 3D scene management
 │   ├── Director/                  # Scene orchestration and mode implementations
-│   │   ├── Director.ts            # Main orchestration class (game loop), Scenario execution
-│   │   ├── MemoryManager.ts       # Episode persistence (local + HuggingFace cloud)
+│   │   ├── Director.ts            # Main orchestration class (game loop), Scenario execution, 100+ mode dispatch
+│   │   ├── MemoryManager.ts       # Episode persistence (IndexedDB + localStorage + HuggingFace cloud)
 │   │   ├── HFStorageManager.ts    # HuggingFace Hub API integration
 │   │   ├── ScriptGenerator.ts     # AI-powered script generation
 │   │   ├── ScriptParser.ts        # Script parsing utilities
@@ -91,12 +96,12 @@ the_jokesters/
 │   │       └── RapBattleVisualsMode.ts
 │   ├── audio/                     # Text-to-speech and audio systems
 │   │   ├── AudioEngine.ts         # TTS audio synthesis orchestration
-│   │   ├── OptimizedAudioEngine.ts # Optimized TTS with caching
+│   │   ├── OptimizedAudioEngine.ts # Optimized TTS with Web Workers, phoneme cache, viseme lookahead
 │   │   ├── MusicEngine.ts         # Beat generation for musical mode
 │   │   ├── SpeechQueue.ts         # Speech playback queue management
 │   │   ├── OptimizedSpeechQueue.ts # Optimized speech queue
 │   │   ├── Supertonic.ts          # Core TTS ONNX inference (legacy)
-│   │   ├── SupertonicPipeline.ts  # TTS pipeline stages (current)
+│   │   ├── SupertonicPipeline.ts  # TTS pipeline stages (current): text encoder, duration predictor, vector estimator, vocoder
 │   │   ├── VoiceInputManager.ts   # Web Speech API voice input
 │   │   ├── VisemePredictor.ts     # Lip-sync viseme prediction
 │   │   ├── PhonemeCache.ts        # Phoneme caching for TTS
@@ -104,30 +109,36 @@ the_jokesters/
 │   │   ├── TTSBenchmark.ts        # TTS benchmarking utilities
 │   │   └── worker/                # Web Workers
 │   │       ├── audio.worker.ts    # Web Worker for audio processing
-│   │       └── tts.worker.ts      # Web Worker for TTS
+│   │       └── tts.worker.ts      # Web Worker for TTS synthesis
 │   ├── comedy/                    # Comedy engine components
-│   │   ├── callbackEngine.ts      # Running gag callback tracking
+│   │   ├── callbackEngine.ts      # Running gag callback tracking with bell curve decay
 │   │   ├── jokeLoader.ts          # Joke database loading
-│   │   └── qualityFilter.ts       # Joke quality rating/filtering
-│   ├── llm/                       # Triple-engine LLM abstraction
+│   │   ├── qualityFilter.ts       # Joke quality rating/filtering, homograph detection for TTS
+│   │   └── bits/                  # Pre-written comedy bits (JSON)
+│   │       ├── absurdist.json
+│   │       ├── crowd_work.json
+│   │       └── dark_tech.json
+│   ├── llm/                       # Triple-engine LLM abstraction + API fallback
 │   │   ├── EngineFactory.ts       # Factory for selecting/creating engines
 │   │   ├── LLMEngine.ts           # Unified engine interface
 │   │   ├── MlcEngineAdapter.ts    # MLC WebLLM adapter
 │   │   ├── LlamaCppEngineAdapter.ts # wllama (llama.cpp WASM) adapter
 │   │   ├── TransformersEngineAdapter.ts # Transformers.js adapter
+│   │   ├── ApiEngineAdapter.ts    # OpenAI-compatible API adapter
 │   │   └── index.ts               # Re-exports
 │   ├── visuals/                   # 3D visualization
-│   │   ├── Actor.ts               # 3D agent representation (capsule with face)
-│   │   ├── TechBroActor.ts        # Custom Tech Bro actor with gestures
+│   │   ├── Actor.ts               # 3D agent representation (capsule with face, eyes, mouth)
+│   │   ├── TechBroActor.ts        # Custom Tech Bro actor with gesture animations
 │   │   ├── DeadpanRobotActor.ts   # Custom Robot actor with mechanical animations
-│   │   ├── Stage.ts               # Three.js scene management, lighting, rendering
+│   │   ├── Stage.ts               # Three.js scene management, lighting, rendering, audience InstancedMesh
 │   │   ├── LipSync.ts             # Lip synchronization with audio volume
 │   │   └── CallbackVisualizer.ts  # Visual feedback for callbacks
 │   ├── services/                  # External services
-│   │   └── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
+│   │   ├── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
+│   │   └── ParallelDownloadManager.ts # Parallel download orchestration
 │   ├── config/                    # Configuration
 │   │   ├── agents.ts              # Agent definitions (personalities, prompts, colors)
-│   │   ├── models.ts              # LLM model configurations (VPS, HF, unified)
+│   │   ├── models.ts              # LLM model configurations (VPS, HF, unified, triple-engine)
 │   │   └── improvSetups.ts        # Pre-defined improv scene setups
 │   ├── ui/                        # UI utilities
 │   │   ├── htmlTemplate.ts        # HTML template generation for the UI
@@ -137,19 +148,24 @@ the_jokesters/
 │   │   ├── RNG.ts                 # Seeded random number generator
 │   │   ├── performanceTest.ts     # Performance testing utilities
 │   │   └── dynamicContext.ts      # Dynamic context window / VRAM optimization
-│   ├── prompts/                   # Persona prompts
+│   ├── prompts/                   # Persona prompts (loaded as text)
 │   │   ├── robot.ts               # Robot persona prompt
 │   │   └── techBro.ts             # Tech Bro persona prompt
 │   ├── types/                     # TypeScript type declarations
 │   │   ├── webllm.d.ts
 │   │   ├── three.d.ts
 │   │   ├── onnxruntime-web.d.ts
-│   │   └── vite-plugin-static-copy.d.ts
+│   │   ├── vite-plugin-static-copy.d.ts
+│   │   ├── vite.d.ts
+│   │   └── style.d.ts
 │   ├── test/                      # Test utilities
 │   │   ├── chaosTest.ts           # Chaos testing
+│   │   ├── chaosTestRunner.cjs    # Chaos test runner (CommonJS)
 │   │   ├── integrationChaosTest.ts # Integration chaos tests
 │   │   └── runChaosTests.ts       # Chaos test runner
 │   ├── service-worker.ts          # Service worker for parallel model downloads
+│   ├── improv/                    # Conversation branching utilities
+│   │   └── branching.ts
 │   └── style.css                  # Application styles
 ├── tests/                         # Performance test suite
 │   ├── perf/                      # Performance benchmarks
@@ -158,12 +174,16 @@ the_jokesters/
 │   │   ├── MemoryLeakTest.ts      # Memory leak detection
 │   │   ├── TTSLatencyBenchmark.ts # TTS latency testing
 │   │   ├── PerformanceMonitor.ts  # Performance monitoring
-│   │   ├── ci-runner.ts           # CI test runner
+│   │   ├── ci-runner.ts           # CI test runner (Node-compatible via mocks)
 │   │   ├── browser-runner.html    # Browser-based test runner
-│   │   ├── setup-env.ts           # Test environment setup
+│   │   ├── setup-env.ts           # Mock browser environment for Node.js
 │   │   ├── index.ts               # Test exports
 │   │   └── README.md              # Performance testing docs
 │   └── engine-comparison/         # Engine comparison tests
+│       ├── index.html
+│       └── test-runner.ts
+├── backend/                       # Optional backend proxy
+│   └── llama_proxy.py             # FastAPI OpenAI-compatible proxy for llama-server
 ├── public/                        # Static assets served directly
 │   ├── jokes/                     # Joke databases
 │   ├── scenarios/                 # Test scenarios
@@ -179,18 +199,33 @@ the_jokesters/
 │   ├── bundle-analysis.md         # Bundle analysis
 │   ├── chaos-report.md            # Chaos testing report
 │   ├── integration-log.md         # Integration log
-│   ├── smoke-test-passed.md       # Smoke test results
-│   └── perf/                      # Performance documentation
+│   └── smoke-test-passed.md       # Smoke test results
 ├── .github/workflows/
-│   └── performance.yml            # GitHub Actions CI for perf tests
+│   └── performance.yml            # GitHub Actions CI for perf tests + bundle size check
+├── scripts/                       # Utility scripts
+│   ├── download_models_on_vps.py
+│   ├── migrate_all_models.py
+│   ├── test_model_loading.py
+│   ├── upload_staged_to_vps.py
+│   ├── verify_model_urls.py
+│   └── verify_vps_headers.py
+├── dist/                          # Production build output
+├── models/                        # Local model artifacts (tokenizer, config)
+│   ├── onnx/
+│   ├── config.json
+│   ├── tokenizer.json
+│   └── tokenizer_config.json
+├── .vps-staging/                  # Staged model files for VPS deployment
+├── verification/                  # Screenshot verification assets
+├── index.html                     # HTML entry point (WebGPU detection, runtime error surfacing)
+├── package.json                   # Node.js dependencies and scripts
+├── tsconfig.json                  # TypeScript configuration
+├── vite.config.ts                 # Vite build configuration
 ├── perf-budget.json               # Performance budget thresholds
 ├── deploy.py                      # SFTP deployment script (paramiko-based)
 ├── deploy_models.py               # Model deployment script
 ├── smoke_test.py                  # Python smoke test (Playwright-based)
-├── index.html                     # HTML entry point
-├── package.json                   # Node.js dependencies
-├── tsconfig.json                  # TypeScript configuration
-└── vite.config.ts                 # Vite build configuration
+└── upload_hermes.py               # Hermes model upload utility
 ```
 
 ---
@@ -275,6 +310,8 @@ python deploy.py
 - **No unused variables**: Compiler enforces `noUnusedLocals` and `noUnusedParameters`
 - **No fallthrough**: `noFallthroughCasesInSwitch` is enabled
 - **Erasable syntax only disabled**: `@wllama/wllama` uses non-erasable syntax, so `erasableSyntaxOnly` is explicitly disabled
+- **Verbatim module syntax**: `verbatimModuleSyntax: true` enforces `type` imports for types
+- **No unchecked side effect imports**: `noUncheckedSideEffectImports: true`
 
 ### Naming Conventions
 - **Classes**: PascalCase (e.g., `GroupChatManager`, `Director`)
@@ -312,6 +349,7 @@ Manages LLM interactions and conversation state:
 - Implements retry logic with exponential backoff for model loading
 - Cache clearing on network errors
 - Interrupt handling for stopping generation
+- Token-level dynamic context window management via `DynamicContextManager`
 
 ### Director
 **File**: `src/Director/Director.ts`
@@ -332,7 +370,7 @@ Central orchestrator for all interaction modes. Supports 100+ scenario types inc
 
 Factory for creating and selecting LLM engines:
 - Detects browser capabilities (WebGPU, WASM, SIMD, threads, shader-f16)
-- Auto-selects the best engine: MLC WebLLM (WebGPU) → Transformers.js (ONNX/WebGPU) → llama.cpp WASM (CPU)
+- Auto-selects the best engine: MLC WebLLM (WebGPU) → Transformers.js (ONNX/WebGPU) → llama.cpp WASM (CPU) → API fallback
 - Supports manual engine preference override
 - Validates model compatibility per engine
 
@@ -345,13 +383,16 @@ Handles per-agent LLM model assignment:
 - Only one model loaded at a time
 - Reports progress during model swaps with scaled percentages
 
-### AudioEngine
-**File**: `src/audio/AudioEngine.ts`
+### AudioEngine / OptimizedAudioEngine
+**Files**: `src/audio/AudioEngine.ts`, `src/audio/OptimizedAudioEngine.ts`
 
 Text-to-speech orchestration:
 - Maps agent IDs to voice styles (M1, M2, F1, F2)
 - Configurable speed (0.5-2.0) and quality (diffusion steps 1-50)
 - Loads voice styles from `./tts/voice_styles/`
+- Optimized version uses Web Workers for off-main-thread synthesis
+- Viseme prediction lookahead (predict next 3 phonemes while speaking current)
+- Phoneme pre-cache for common sounds
 - Agent-to-voice mapping:
   - Comedian → F1 (Female voice, fast)
   - Philosopher → M2 (Deep/slow male voice)
@@ -363,29 +404,29 @@ Text-to-speech orchestration:
 **File**: `src/visuals/Stage.ts`
 
 Three.js scene management:
-- Creates and manages 3D actors (capsules with face indicators)
+- Creates and manages 3D actors (capsules with animated eyes, mouth, accessories)
 - Custom actors: TechBroActor with gesture animations, DeadpanRobotActor with mechanical timing
 - Handles window resize
 - Integrates lip-sync with audio volume for real-time mouth animation
 - Spotlight highlighting for active speaker
-- InstancedMesh for 150 audience members (single draw call)
-- LOD system with frustum culling
+- InstancedMesh for audience members (single draw call)
+- Professional stage lighting: three colored directional lights + rim light + ambient
 
 ### MemoryManager
 **File**: `src/Director/MemoryManager.ts`
 
 Episode persistence system:
-- Local storage using `localStorage` with `jokesters-` prefix
-- Optional cloud sync to HuggingFace Hub
+- Local storage using IndexedDB with `jokesters-` prefix
+- Optional cloud sync to HuggingFace Hub via `HFStorageManager`
 - Episode search and recall functionality
-- Automatic loading of previous episode context on startup
+- Profile-based namespacing
 
 ### CallbackEngine
 **File**: `src/comedy/callbackEngine.ts`
 
 Running gag tracking system:
 - Registers jokes with themes and context
-- Tracks callback usage with bell curve decay (peak at 3rd use)
+- Tracks callback usage with bell curve decay (peak at 3rd use, 1.5x value; dead by 6th+)
 - Status calculation: fresh → building → peak → declining → dead
 - Theme-based joke retrieval for contextual callbacks
 
@@ -395,7 +436,7 @@ Running gag tracking system:
 Joke quality assessment:
 - Rates jokes on surprise metrics (1-10 scale)
 - Criteria: Subversion (35%), Wordplay (25%), Timing (20%), Originality (20%)
-- Homograph detection for TTS optimization
+- Homograph detection for TTS optimization (e.g., "read" → "reed"/"red")
 - Pattern-based analysis for cliché detection
 
 ### Service Worker
@@ -405,18 +446,20 @@ Parallel model download optimization:
 - Intercepts fetches for large model files (`.safetensors`, `.bin`, `.gguf`, `.wasm`)
 - Splits downloads into 42MB chunks
 - Uses 4 parallel connections with HTTP Range requests
-- Temporary in-memory caching (1-hour TTL)
+- Exponential backoff retry (max 3 retries, 500ms base delay)
+- Temporary in-memory caching
 
 ---
 
 ## Configuration
 
 ### Model Configuration
-Models are registered in `src/config/models.ts`. The app supports three engine backends:
+Models are registered in `src/config/models.ts`. The app supports four engine backends:
 
 1. **MLC WebLLM** — WebGPU-optimized, expects `model`, `model_lib`, `overrides`, `vram_required_MB`
 2. **Transformers.js** — ONNX/WebGPU, expects `transformers: { model_id, device, dtype }`
 3. **llama.cpp WASM** — GGUF format, expects `llamaCpp: { gguf_url, hf_repo, hf_file, context_size }`
+4. **API Fallback** — OpenAI-compatible endpoint, expects `api: { endpoint, model_id, apiKey }`
 
 Available models include:
 - **VPS-hosted FP32 models** (primary, universal compatibility): Hermes-3-Llama-3.2-3B, Llama-3.2-3B-Instruct, Llama-2-7B-chat, Vicuna-7B
@@ -425,6 +468,7 @@ Available models include:
 - **Unified models** (triple-engine): configs that work across MLC, Transformers.js, and llama.cpp
 
 Default model: `Hermes-3-Llama-3.2-3B-q4f32_1-MLC` (VPS-hosted, ~2.5GB VRAM)
+Models are self-hosted on `storage.noahcohn.com`.
 
 ### Agent Configuration
 Agents defined in `src/config/agents.ts`:
@@ -463,8 +507,25 @@ The application includes comprehensive performance benchmarks defined in `perf-b
 
 CI runner: `tests/perf/ci-runner.ts`
 - Runs memory leak tests in Node (others require browser)
+- Uses `tests/perf/setup-env.ts` to mock browser globals (window, document, localStorage, Worker, URL, Blob)
 - Exits with code 1 if thresholds are violated
 - GitHub Actions workflow `.github/workflows/performance.yml` runs on push/PR to `main`/`master`
+- Bundle size check enforces <7.5MB total JS
+
+### Engine Comparison Tests
+`tests/engine-comparison/` contains browser-based tests for comparing LLM engine performance.
+
+### Smoke Testing
+`smoke_test.py` validates:
+1. Project builds successfully
+2. Page loads without console errors
+3. All 5 personas initialize correctly
+4. CallbackEngine tracks references across turns
+5. QualityFilter rejects low-rated jokes
+6. TTS system is configured
+
+### Chaos Testing
+`src/test/chaosTest.ts` and `src/test/integrationChaosTest.ts` provide randomized stress testing for the conversation and mode systems.
 
 ### Manual Testing Checklist
 1. **Model Loading**: Verify model loads successfully with progress indicator
@@ -526,7 +587,7 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 - User data (conversations) stored locally by default
 
 ### External Resources
-- **Models**: All LLM and TTS models are now self-hosted on the VPS (`storage.noahcohn.com`)
+- **Models**: All LLM and TTS models are self-hosted on the VPS (`storage.noahcohn.com`)
 - **Wikipedia API**: Used for Reporter mode (no API key required)
 - **HuggingFace Hub API**: Optional for cloud sync (user-provided token)
 
@@ -573,10 +634,6 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 
 ## Documentation References
 
-- [model-plan.md](./model-plan.md) - Detailed WebLLM model setup and loading guide
-- [plan.md](./plan.md) - Avatar interaction system expansion plan
-- [agent_plan.md](./agent_plan.md) - Implementation roadmap and feature plans
-- [README.md](./README.md) - User-facing documentation
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - System architecture details
 - [docs/COMEDY_GUIDE.md](./docs/COMEDY_GUIDE.md) - Comedy system documentation
 - [docs/PERFORMANCE.md](./docs/PERFORMANCE.md) - Performance guardrails documentation
@@ -587,6 +644,7 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 - [REPORTER_MODE_CHANGES.md](./REPORTER_MODE_CHANGES.md) - Reporter mode implementation details
 - [REPORTER_MODE_IMPROVEMENTS.md](./REPORTER_MODE_IMPROVEMENTS.md) - Reporter mode enhancements
 - [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md) - Deployment checklist
+- [README.md](./README.md) - User-facing documentation
 
 ---
 
