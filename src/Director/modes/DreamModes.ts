@@ -4180,3 +4180,53 @@ export async function runWhiteboardErasersRegretLoop(_scenario: Scenario, ctx: M
     await ctx.manager.chatForAgent('scientist', "The chemical composition of dry-erase markers requires friction for removal. Your guilt is merely an anthropomorphic projection onto a physical process.", async (s) => ctx.callbacks.onSpeak(s, 'scientist', {}));
     ctx.callbacks.onTurnEnd();
 }
+
+export async function runAbandonedAPIEndpointLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "Is anyone still there? I'm returning 200 OK, but to what end?", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as an abandoned API endpoint from v1 of a service, returning 200 OK to the void." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "Buddy, you've been returning an empty JSON object for 5 years. The frontend team doesn't even know you exist.", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a sarcastic script pointing out the API endpoint's bad payload formats and obsolete existence." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runDeprecatedPackageLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "Warning: Critical CVE vulnerabilities detected in package dependencies. Suggesting immediate migration.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as an analytical module citing CVE vulnerabilities in the deprecated package." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "You think I want to be installed? Stop ignoring my massive security warnings! I'm deprecated for a reason!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a deprecated npm package aggressively complaining about developers still installing it." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runLoadingSpinnerSupportGroupLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "I just keep spinning. Maybe one day the data will finally load.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as an optimistic loading spinner, exhausted by terrible internet connections." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I'm so dizzy I don't even know which way is clockwise anymore.", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a loading spinner that's completely dizzy and fed up." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runUnhandledExceptionLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I'm sorry, I panicked! I didn't know what to do with a null reference, so I just took everything down!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a sudden unhandled exception trying to frantically explain why it had to crash the app." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "Let us attempt to trace the stack. Perhaps we can find the root of this catastrophic failure.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a logical module trying to calmly trace the stack of the exception." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runMemoryLeakDeniersLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "What memory leak? I'm just holding onto these variables in case we need them later. It's called being prepared!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a variable denying it's causing a memory leak while gaslighting the OS." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "The RAM graph is climbing exponentially. The system is slowing to a crawl. We have a severe memory leak.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a system monitor watching the RAM graph climb and confirming the leak." });
+    ctx.callbacks.onTurnEnd();
+}

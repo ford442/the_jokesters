@@ -1,7 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 5
+* **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 66. Execution was straightforward. Added Phase 67 (The Obsolete Hardware Expansion). Increased tasks_per_run to 6.
 * **status**: Successfully implemented Phase 65. Execution was straightforward. Added Phase 66 (The Sentient Software Expansion). Tasks per run remains at 5.
 * **status**: Successfully implemented Phase 64. Execution was straightforward. Added Phase 65 (The Office Supply Uprising Expansion) and detailed Cloud Persistence. Tasks per run remains at 5.
 * **status**: Successfully implemented Phase 60. Execution was straightforward, keeping tasks_per_run at 6.
@@ -747,8 +748,15 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Whiteboard Eraser's Regret**: Agents act as a whiteboard eraser burdened by all the brilliant ideas it has been forced to destroy over the years. (Model Pairing: Philosopher for melancholic reflection vs Comedian for laughing at the terrible ideas it erased).
 
 ### Phase 66: The Sentient Software Expansion (Dreams)
-* [ ] **The Abandoned API Endpoint**: Agents act as forgotten API endpoints from v1 of a service, still returning 200 OK to the void. (Model Pairing: Philosopher for questioning their legacy vs Comedian for joking about bad payload formats).
-* [ ] **The Deprecated Package**: Agents act as a deprecated npm package complaining about developers still installing them despite massive security warnings. (Model Pairing: Qwen2.5 for citing CVE vulnerabilities vs Hermes-3 for pure defensive rage).
-* [ ] **The Loading Spinner Support Group**: Agents act as various loading spinners exhausted by the user's terrible internet connection. (Model Pairing: Llama-3 for optimistic spinning vs Comedian for dizziness).
-* [ ] **The Unhandled Exception**: Agents act as a sudden unhandled exception trying to explain to the terrified system why it had to crash the app. (Model Pairing: Hermes-3 for chaotic panic vs Phi-3 for trying to trace the stack).
-* [ ] **The Memory Leak Deniers**: Agents act as variables in a memory leak denying they are taking up too much space while the system slows to a crawl. (Model Pairing: Comedian for gaslighting the OS vs Scientist for watching the RAM graph climb).
+* [x] **The Abandoned API Endpoint**: Agents act as forgotten API endpoints from v1 of a service, still returning 200 OK to the void. (Model Pairing: Philosopher for questioning their legacy vs Comedian for joking about bad payload formats).
+* [x] **The Deprecated Package**: Agents act as a deprecated npm package complaining about developers still installing them despite massive security warnings. (Model Pairing: Qwen2.5 for citing CVE vulnerabilities vs Hermes-3 for pure defensive rage).
+* [x] **The Loading Spinner Support Group**: Agents act as various loading spinners exhausted by the user's terrible internet connection. (Model Pairing: Llama-3 for optimistic spinning vs Comedian for dizziness).
+* [x] **The Unhandled Exception**: Agents act as a sudden unhandled exception trying to explain to the terrified system why it had to crash the app. (Model Pairing: Hermes-3 for chaotic panic vs Phi-3 for trying to trace the stack).
+* [x] **The Memory Leak Deniers**: Agents act as variables in a memory leak denying they are taking up too much space while the system slows to a crawl. (Model Pairing: Comedian for gaslighting the OS vs Scientist for watching the RAM graph climb).
+
+### Phase 67: The Obsolete Hardware Expansion (Dreams)
+* [ ] **The Floppy Disk Regret**: Agents act as 1.44MB floppy disks realizing their entire storage capacity can't even hold a modern photo. (Model Pairing: Philosopher for feeling obsolete vs Comedian for joking about bad sectors).
+* [ ] **The Tangled Headphone Wires**: Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket. (Model Pairing: Hermes-3 for chaotic tangling vs Qwen2.5 for calculating topological knots).
+* [ ] **The VHS Tracking Errors**: Agents act as VHS tapes demanding the user adjust the tracking because the screen is static. (Model Pairing: Llama-3 for enthusiastic static vs Comedian for complaining about needing to be rewound).
+* [ ] **The Scratched CD Skips**: Agents act as a music CD that constantly skips on the user's favorite track because of a tiny scratch. (Model Pairing: Comedian for repeating the same joke vs Scientist for analyzing the laser reflection angle).
+* [ ] **The Overheated CRT Monitor**: Agents act as a massive, heavy CRT monitor warning the user it's about to degauss. (Model Pairing: Hermes-3 for aggressive heat vs Phi-3 for pondering its weight and existence).
