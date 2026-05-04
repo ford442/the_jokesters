@@ -2,6 +2,7 @@
 
 ## Project Velocity (Checkout/Checkin Phase)
 * **tasks_per_run**: 6
+* **status**: Successfully implemented Phase 67. Execution was straightforward. Added Phase 68 (The Retro Tech Support Expansion). Kept tasks_per_run at 6.
 * **status**: Successfully implemented Phase 66. Execution was straightforward. Added Phase 67 (The Obsolete Hardware Expansion). Increased tasks_per_run to 6.
 * **status**: Successfully implemented Phase 65. Execution was straightforward. Added Phase 66 (The Sentient Software Expansion). Tasks per run remains at 5.
 * **status**: Successfully implemented Phase 64. Execution was straightforward. Added Phase 65 (The Office Supply Uprising Expansion) and detailed Cloud Persistence. Tasks per run remains at 5.
@@ -730,7 +731,18 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Judgemental Roomba**: Agents act as a robotic vacuum and the family pet forming an alliance to trip the user. (Model Pairing: Hermes-3 for the chaotic pet vs Qwen2.5 for calculating optimal tripping angles).
 * [x] **The Paranoid Smoke Detector**: Agents act as a smoke detector that goes off every time someone has a "heated argument" because it senses metaphorical fire. (Model Pairing: Comedian for dramatic overreactions vs Philosopher for analyzing the heat of the debate).
 
-### Cloud Persistence (HF Integration)
+
+### Cloud Persistence (HF Integration) Roadmap Updates
+* **Goal**: Expand on moving heavy data (generated scripts, episodic memories) out of `localStorage` and into the Hugging Face `storage_manager`.
+* **Actionable Steps**:
+  1. **Authentication**: Authenticate with the HF API securely, retrieving and validating tokens via `/whoami-v2`. Ensure the token validation happens silently in the background worker.
+  2. **Pushing Episode Scripts**: Save finished "Episode Scripts" to a private Dataset (e.g., `jokestersDB`) upon `Director.stopScene()` to bypass the 5MB `localStorage` limits. Implement a background Web Worker to handle chunked uploads.
+  3. **Fetching Episode Summaries**: Fetch "Previous Episode Summaries" at boot, storing a lightweight `summary.json` in `localStorage` for immediate context priming for the `GroupChatManager` window without blocking the main thread.
+  4. **Publishing & Loading Community Scripts**: Continue improving loading scripts via `loadCommunityScript` from public HF datasets and publishing user scripts via `publishCommunityScript`. Add UI feedback during this process.
+  5. **Profile Synchronization**: Use a background sync queue to push `profile/user_preferences.json` to HF to sync user state across devices.
+  6. **Vector RAG Background Sync**: Utilize a dedicated Web Worker to monitor IndexedDB (replacing localStorage) and reliably handle chunked file uploads to Hugging Face datasets without blocking the UI, utilizing exponential backoff strategies to prevent HTTP 429 Too Many Requests errors. Ensure the semantic search (`searchFetchedSummaries`) seamlessly accesses both local IndexedDB and fetched summaries.
+
+### Legacy Cloud Persistence
 * **Goal**: Move heavy data (generated scripts, episodic memories) out of `localStorage` and into the Hugging Face `storage_manager`.
 * **Steps**:
   1. **Authentication**: Authenticate with the HF API securely, retrieving and validating tokens via `/whoami-v2`.
@@ -755,8 +767,16 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Memory Leak Deniers**: Agents act as variables in a memory leak denying they are taking up too much space while the system slows to a crawl. (Model Pairing: Comedian for gaslighting the OS vs Scientist for watching the RAM graph climb).
 
 ### Phase 67: The Obsolete Hardware Expansion (Dreams)
-* [ ] **The Floppy Disk Regret**: Agents act as 1.44MB floppy disks realizing their entire storage capacity can't even hold a modern photo. (Model Pairing: Philosopher for feeling obsolete vs Comedian for joking about bad sectors).
-* [ ] **The Tangled Headphone Wires**: Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket. (Model Pairing: Hermes-3 for chaotic tangling vs Qwen2.5 for calculating topological knots).
-* [ ] **The VHS Tracking Errors**: Agents act as VHS tapes demanding the user adjust the tracking because the screen is static. (Model Pairing: Llama-3 for enthusiastic static vs Comedian for complaining about needing to be rewound).
-* [ ] **The Scratched CD Skips**: Agents act as a music CD that constantly skips on the user's favorite track because of a tiny scratch. (Model Pairing: Comedian for repeating the same joke vs Scientist for analyzing the laser reflection angle).
-* [ ] **The Overheated CRT Monitor**: Agents act as a massive, heavy CRT monitor warning the user it's about to degauss. (Model Pairing: Hermes-3 for aggressive heat vs Phi-3 for pondering its weight and existence).
+* [x] **The Floppy Disk Regret**: Agents act as 1.44MB floppy disks realizing their entire storage capacity can't even hold a modern photo. (Model Pairing: Philosopher for feeling obsolete vs Comedian for joking about bad sectors).
+* [x] **The Tangled Headphone Wires**: Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket. (Model Pairing: Hermes-3 for chaotic tangling vs Qwen2.5 for calculating topological knots).
+* [x] **The VHS Tracking Errors**: Agents act as VHS tapes demanding the user adjust the tracking because the screen is static. (Model Pairing: Llama-3 for enthusiastic static vs Comedian for complaining about needing to be rewound).
+* [x] **The Scratched CD Skips**: Agents act as a music CD that constantly skips on the user's favorite track because of a tiny scratch. (Model Pairing: Comedian for repeating the same joke vs Scientist for analyzing the laser reflection angle).
+* [x] **The Overheated CRT Monitor**: Agents act as a massive, heavy CRT monitor warning the user it's about to degauss. (Model Pairing: Hermes-3 for aggressive heat vs Phi-3 for pondering its weight and existence).
+
+### Phase 68: The Retro Tech Support Expansion (Dreams)
+* [ ] **The Dial-Up Tech Support**: Agents act as incredibly slow 1990s tech support operators trying to explain to the user how to reset their 56k modem over a staticky phone line. (Model Pairing: Qwen2.5 for citing useless manual steps vs Comedian for making modem noises).
+* [ ] **The Y2K Bug Panic Room**: Agents act as terrified IT staff from 1999 convinced the user's modern smartphone will end the world. (Model Pairing: Hermes-3 for apocalyptic panic vs Llama-3 for suggesting burying canned goods).
+* [ ] **The Windows 95 Installation Wizard**: Agents act as a sentient installation wizard requiring the user to insert "Disk 34 of 40" before proceeding. (Model Pairing: Philosopher for questioning the nature of the installation vs Comedian for gaslighting the user about missing disks).
+* [ ] **The AOL Chatroom Moderators**: Agents act as strict moderators of a 1998 AOL chatroom banning the user for using "modern slang". (Model Pairing: Qwen2.5 for enforcing the TOS vs Phi-3 for analyzing the semantic drift of internet language).
+* [ ] **The Blockbuster Late Fee Collectors**: Agents act as aggressive debt collectors trying to get $4.50 from the user for an un-rewound VHS tape from 2004. (Model Pairing: Hermes-3 for aggressive collection tactics vs Comedian for being wildly out of touch with inflation).
+* [ ] **The Tamagotchi Neglect Tribunal**: Agents act as a court judging the user for letting their virtual pet die 25 years ago. (Model Pairing: Philosopher for questioning the morality of virtual life vs Llama-3 for emotional guilt trips).
