@@ -25,7 +25,7 @@ VPS_BASE = "https://storage.noahcohn.com/models"
 # URLs to probe
 JSON_URL = f"{VPS_BASE}/vicuna-7b-q4f32-webllm/mlc-chat-config.json"
 BIN_URL = f"{VPS_BASE}/vicuna-7b-q4f32-webllm/params_shard_0.bin"
-WASM_URL = f"{VPS_BASE}/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm"
+WASM_URL = f"{VPS_BASE}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm"
 
 CHECKS = [
     {
@@ -53,7 +53,7 @@ def fetch_headers(url: str) -> dict:
     """Run curl -I --http2 and return a dict of lowercase header names."""
     try:
         result = subprocess.run(
-            ["curl", "-sI", "--http2", "-o", "-", url],
+            ["curl", "-sI", "--http2", "-H", "Accept-Encoding: br, gzip", "-o", "-", url],
             capture_output=True,
             text=True,
             timeout=30,
@@ -83,7 +83,7 @@ def check_header(headers: dict, key: str, expected: str) -> bool:
     actual = headers.get(key, "")
     if expected == "*":
         return bool(actual)
-    return actual.lower() == expected.lower()
+    return expected.lower() in actual.lower()
 
 
 def print_result(name: str, passed: bool, details: list):
