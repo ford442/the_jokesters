@@ -4230,3 +4230,53 @@ export async function runMemoryLeakDeniersLoop(_scenario: Scenario, ctx: ModeCon
     await ctx.manager.chatForAgent('scientist', "The RAM graph is climbing exponentially. The system is slowing to a crawl. We have a severe memory leak.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a system monitor watching the RAM graph climb and confirming the leak." });
     ctx.callbacks.onTurnEnd();
 }
+
+export async function runFloppyDiskRegretLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "1.44 megabytes. An entire universe of text, now unable to hold a single modern photograph. Oh, the crushing weight of obsolescence.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a melancholic 1.44MB floppy disk feeling obsolete and questioning its purpose in the modern world." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "Look on the bright side, at least we make terrible coaster noises! Besides, half my sectors are bad anyway, so it's more like 0.7 megabytes of pure fun!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a cheerful but broken floppy disk joking about bad sectors and its own uselessness." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runTangledHeadphoneWiresLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "WHEEEE! Look at me! I was in the pocket for three seconds and now I'm a figure-eight knot woven through a pretzel! Chaos reigns!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as wired earbuds aggressively and joyfully tangling themselves the moment they are put in a pocket." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "The topological complexity of this knot requires spontaneous entropy in a confined space. It defies classical physics but confirms string theory... quite literally.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a logical module calculating the complex topological knots of tangled headphone wires." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runVHSTrackingErrorsLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "Hey! Hey! Adjust the tracking! I'm nothing but static lines! And whoever returned me didn't rewind! BE KIND, REWIND, PEOPLE!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a VHS tape enthusiastically complaining about static, tracking errors, and not being rewound." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "The static is just the universe trying to communicate. We are all just distorted tracking lines on the great VHS tape of time.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a philosophical VHS tape seeing meaning in the static lines." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runScratchedCDSkipsLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "And I will always love... love... love... love... love... love... love... love... hey, this is my favorite part! love... love... love...", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a scratched music CD repeating the same snippet over and over like a broken record, thinking it's a joke." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "A micro-abrasion of 0.05 millimeters is refracting the laser at a 45-degree angle, causing an infinite read loop. The data is compromised.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a diagnostic tool analyzing the laser reflection angle caused by the CD scratch." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runOverheatedCRTMonitorLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I'M MELTING! I WEIGH SEVENTY POUNDS AND I'M RADIATING ENOUGH HEAT TO COOK A TURKEY! STAND BACK, I'M GONNA DEGAUSS!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a massive CRT monitor aggressively warning the user about its extreme heat and impending degaussing." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "I am heavy, therefore I am. I anchor this desk to the earth. My heat is simply the passion of a million electrons striking phosphor.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a heavy CRT monitor pondering its immense weight and existence." });
+    ctx.callbacks.onTurnEnd();
+}

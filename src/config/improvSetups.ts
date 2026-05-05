@@ -481,5 +481,30 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'paranoid_smoke_detector',
     title: "The Paranoid Smoke Detector",
     description: 'A smoke detector going off every time someone has a heated argument.'
+  },
+  {
+    id: 'floppy_disk_regret',
+    title: "The Floppy Disk Regret",
+    description: 'Agents act as 1.44MB floppy disks realizing their entire storage capacity cannot even hold a modern photo.'
+  },
+  {
+    id: 'tangled_headphone_wires',
+    title: "The Tangled Headphone Wires",
+    description: 'Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket.'
+  },
+  {
+    id: 'vhs_tracking_errors',
+    title: "The VHS Tracking Errors",
+    description: 'Agents act as VHS tapes demanding the user adjust the tracking because the screen is static.'
+  },
+  {
+    id: 'scratched_cd_skips',
+    title: "The Scratched CD Skips",
+    description: 'Agents act as a music CD that constantly skips on the user\'s favorite track because of a tiny scratch.'
+  },
+  {
+    id: 'overheated_crt_monitor',
+    title: "The Overheated CRT Monitor",
+    description: 'Agents act as a massive, heavy CRT monitor warning the user it is about to degauss.'
   }
 ];
