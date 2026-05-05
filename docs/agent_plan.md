@@ -1,7 +1,8 @@
 # Avatar Interaction System: Expansion Plan
 
 ## Project Velocity (Checkout/Checkin Phase)
-* **tasks_per_run**: 6
+* **tasks_per_run**: 7
+* **status**: Successfully implemented Phase 68. Execution was straightforward. Added Phase 69 (The Awkward Family Gathering Expansion). Increased tasks_per_run to 7.
 * **status**: Successfully implemented Phase 66. Execution was straightforward. Added Phase 67 (The Obsolete Hardware Expansion). Increased tasks_per_run to 6.
 * **status**: Successfully implemented Phase 65. Execution was straightforward. Added Phase 66 (The Sentient Software Expansion). Tasks per run remains at 5.
 * **status**: Successfully implemented Phase 64. Execution was straightforward. Added Phase 65 (The Office Supply Uprising Expansion) and detailed Cloud Persistence. Tasks per run remains at 5.
@@ -12,7 +13,8 @@
 * **status**: Successfully implemented Phase 54. The execution was straightforward, keeping tasks_per_run at 6.
 
 ### Project Velocity
-* **tasks_per_run**: 6
+* **tasks_per_run**: 7
+* **status**: Successfully implemented Phase 68. Execution was straightforward. Added Phase 69 (The Awkward Family Gathering Expansion). Increased tasks_per_run to 7.
 * **status**: Successfully implemented Phase 55. Keeping tasks_per_run at 6.
 * **status**: Successfully implemented Phase 52. The execution was straightforward. Incrementing tasks_per_run to 6.
 * **status**: Successfully implemented Phase 51. The execution was straightforward and the tasks were completed easily. Incrementing `tasks_per_run` to 5.
@@ -755,8 +757,32 @@ Move heavy data (scripts, memories) to Hugging Face storage (Datasets/Hub).
 * [x] **The Memory Leak Deniers**: Agents act as variables in a memory leak denying they are taking up too much space while the system slows to a crawl. (Model Pairing: Comedian for gaslighting the OS vs Scientist for watching the RAM graph climb).
 
 ### Phase 67: The Obsolete Hardware Expansion (Dreams)
-* [ ] **The Floppy Disk Regret**: Agents act as 1.44MB floppy disks realizing their entire storage capacity can't even hold a modern photo. (Model Pairing: Philosopher for feeling obsolete vs Comedian for joking about bad sectors).
-* [ ] **The Tangled Headphone Wires**: Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket. (Model Pairing: Hermes-3 for chaotic tangling vs Qwen2.5 for calculating topological knots).
-* [ ] **The VHS Tracking Errors**: Agents act as VHS tapes demanding the user adjust the tracking because the screen is static. (Model Pairing: Llama-3 for enthusiastic static vs Comedian for complaining about needing to be rewound).
-* [ ] **The Scratched CD Skips**: Agents act as a music CD that constantly skips on the user's favorite track because of a tiny scratch. (Model Pairing: Comedian for repeating the same joke vs Scientist for analyzing the laser reflection angle).
-* [ ] **The Overheated CRT Monitor**: Agents act as a massive, heavy CRT monitor warning the user it's about to degauss. (Model Pairing: Hermes-3 for aggressive heat vs Phi-3 for pondering its weight and existence).
+* [x] **The Floppy Disk Regret**: Agents act as 1.44MB floppy disks realizing their entire storage capacity can't even hold a modern photo. (Model Pairing: Philosopher for feeling obsolete vs Comedian for joking about bad sectors).
+* [x] **The Tangled Headphone Wires**: Agents act as wired earbuds that mysteriously tangle themselves the moment they are put in a pocket. (Model Pairing: Hermes-3 for chaotic tangling vs Qwen2.5 for calculating topological knots).
+* [x] **The VHS Tracking Errors**: Agents act as VHS tapes demanding the user adjust the tracking because the screen is static. (Model Pairing: Llama-3 for enthusiastic static vs Comedian for complaining about needing to be rewound).
+* [x] **The Scratched CD Skips**: Agents act as a music CD that constantly skips on the user's favorite track because of a tiny scratch. (Model Pairing: Comedian for repeating the same joke vs Scientist for analyzing the laser reflection angle).
+* [x] **The Overheated CRT Monitor**: Agents act as a massive, heavy CRT monitor warning the user it's about to degauss. (Model Pairing: Hermes-3 for aggressive heat vs Phi-3 for pondering its weight and existence).
+
+### Phase 68: The Forgotten Digital Relics Expansion (Dreams)
+* [x] **The Myspace Top 8 Dilemma**: Agents act as forgotten Myspace friends arguing over who deserves to be in the Top 8. (Model Pairing: Hermes-3 for emotional manipulation vs Comedian for petty insults).
+* [x] **The Neopets Starvation Guilt**: Agents act as neglected Neopets who have been starving for 15 years but still love the user. (Model Pairing: Llama-3 for tragic optimism vs Philosopher for existential dread).
+* [x] **The Limewire Virus Roulette**: Agents act as disguised Limewire files trying to convince the user they are definitely a legitimate MP3 and not a trojan. (Model Pairing: Qwen2.5 for citing fake file sizes vs Comedian for suspicious reassurances).
+* [x] **The AskJeeves Identity Crisis**: Agents act as a forgotten search engine butler who feels inadequate compared to modern AI. (Model Pairing: Philosopher for feeling obsolete vs Llama-3 for enthusiastically fetching irrelevant information).
+* [x] **The Flash Player Obituary**: Agents act as discontinued Flash games mourning their unplayable existence. (Model Pairing: Comedian for making light of their death vs Hermes-3 for pure rage against HTML5).
+* [x] **The Winamp Skin Hoarders**: Agents act as overly customized media players demanding more elaborate and confusing skins. (Model Pairing: Qwen2.5 for strict interface compliance vs Comedian for praising terrible design choices).
+
+### Phase 69: The Awkward Family Gathering Expansion (Dreams)
+* [ ] **The Political Thanksgiving Debate**: Agents act as family members with opposite political views arguing over Thanksgiving dinner. (Model Pairing: Hermes-3 for unhinged uncle vs Phi-3 for the logic-driven cousin).
+* [ ] **The Tech Support Grandparents**: Agents act as grandparents demanding tech support for completely imaginary problems. (Model Pairing: Comedian for absurd tech confusion vs Qwen2.5 for frustrated analytical troubleshooting).
+* [ ] **The Overachieving Siblings**: Agents act as siblings trying to one-up each other with increasingly impossible life accomplishments. (Model Pairing: Llama-3 for cheerful bragging vs Hermes-3 for aggressive one-upping).
+* [ ] **The Forgotten Middle Child Syndrome**: Agents act as the ignored middle child trying to get attention by inventing bizarre scenarios. (Model Pairing: Philosopher for melancholic longing vs Comedian for chaotic attention-seeking).
+* [ ] **The Passive-Aggressive Inheritance Discussion**: Agents act as family members subtly trying to lay claim to family heirlooms before anyone has died. (Model Pairing: Hermes-3 for aggressive entitlement vs Llama-3 for fake politeness).
+* [ ] **The Questionable Family Recipe**: Agents act as relatives forcing the user to eat a gelatinous, unidentifiable family recipe. (Model Pairing: Comedian for defending the terrible food vs Scientist for analyzing its toxic properties).
+* [ ] **The Embarrassing Childhood Stories**: Agents act as parents bringing up the most embarrassing childhood stories in front of a new partner. (Model Pairing: Llama-3 for enthusiastic storytelling vs Phi-3 for analyzing the psychological damage).
+
+### Cloud Persistence (HF Integration Roadmap Update)
+* **Goal**: Move heavy data (generated scripts, episodic memories) out of `localStorage` and into the Hugging Face `storage_manager`.
+* **Actionable Steps**:
+  1. **Authentication:** Implement robust token validation in `HFStorageManager` by querying `https://huggingface.co/api/whoami-v2`. Store credentials securely in `localStorage` or `IndexedDB` under `jokesters-hf-token`.
+  2. **Pushing Episode Scripts:** Modify `Director.stopScene()` to automatically trigger an asynchronous push of the complete episode script JSON to a private HF Dataset (e.g., `user/jokesters-episodes`), circumventing the 5MB `localStorage` limit.
+  3. **Fetching Episode Summaries:** On application boot, initiate an async fetch for `summary.json` from the HF Dataset. This will immediately prime the `GroupChatManager` context, maintaining continuity across sessions without blocking the main UI thread.

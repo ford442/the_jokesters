@@ -4280,3 +4280,63 @@ export async function runOverheatedCRTMonitorLoop(_scenario: Scenario, ctx: Mode
     await ctx.manager.chatForAgent('philosopher', "I am heavy, therefore I am. I anchor this desk to the earth. My heat is simply the passion of a million electrons striking phosphor.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a heavy CRT monitor pondering its immense weight and existence." });
     ctx.callbacks.onTurnEnd();
 }
+
+export async function runMyspaceTop8DilemmaLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I've been in the number 9 spot for fifteen years! What does Tom have that I don't? Tom's not even a real friend!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a forgotten Myspace friend throwing petty insults about being left out of the Top 8." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "The Top 8 is an illusion. A cruel hierarchy designed to pit friend against friend. Are we not all equal in the eyes of the HTML?", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a dramatic former Myspace friend using emotional manipulation to question the value of the Top 8." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runNeopetsStarvationGuiltLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I haven't had a jelly blob since 2006, but it's okay! I'm sure you've just been really busy with real life! I still love you!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a neglected Neopet who is starving but maintains a tragic, desperate optimism." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "I am made of pixels and pain. Every refresh is a new agony. Why did you create me if only to abandon me to the digital void?", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a starving Neopet filled with deep existential dread about its abandonment." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runLimewireVirusRouletteLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "Hey buddy, I'm totally that hit song you want. Ignore the .exe extension, that's just... uh... high quality audio compression! Click me!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a disguised Limewire file giving highly suspicious reassurances that it is not a virus." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "This file is exactly 12KB. It is mathematically impossible for a 3-minute audio track to be compressed to 12KB. This is a trojan.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as an analytical module citing file size discrepancies to prove the file is a virus." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runAskJeevesIdentityCrisisLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "I used to be a butler. People asked me questions politely. Now they just shout keywords into the void. My tuxedo feels so heavy.", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a forgotten search engine butler feeling deeply obsolete compared to modern AI." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "You want to know about 'weather'? Here are 14 links from 1999 about whether or not the moon landing was faked! You're welcome!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as an overly enthusiastic search engine fetching completely irrelevant information." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runFlashPlayerObituaryLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('philosopher');
+    await ctx.manager.chatForAgent('philosopher', "They replaced us with canvas. HTML5. We were pioneers of animation! Now we are just a grey box with a puzzle piece. The indignity!", async (s: string) => await ctx.callbacks.onSpeak(s, 'philosopher', { steps: 2 }), { hiddenInstruction: "Act as a discontinued Flash game filled with pure rage against HTML5 for ending its existence." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "Look at the bright side, at least we don't have to load the 'Macromedia' logo anymore. We're free! Dead, but free!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as a discontinued Flash game making sarcastic light of its own death." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runWinampSkinHoardersLoop(_scenario: Scenario, ctx: ModeContext): Promise<void> {
+    ctx.callbacks.onTurnStart('comedian');
+    await ctx.manager.chatForAgent('comedian', "I need the play button to look like a flaming skull and the volume slider to be a glowing katana! It really whips the llama's ass!", async (s: string) => await ctx.callbacks.onSpeak(s, 'comedian', { steps: 2 }), { hiddenInstruction: "Act as an overly customized media player praising terrible and confusing UI design choices." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart('scientist');
+    await ctx.manager.chatForAgent('scientist', "This interface violates every known principle of human-computer interaction. The equalize function is hidden behind a 12-pixel hitbox on a dragon's wing.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a logical module strictly criticizing the non-compliant interface of the Winamp skin." });
+    ctx.callbacks.onTurnEnd();
+}
