@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-04-20T12:47:02.954581
+**Test Date:** 2026-05-05T12:15:16.441853
 
 ## Test Summary
 
@@ -17,11 +17,11 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 13.0s |
-| Load Time | 1.9s |
+| Build Time | 14.9s |
+| Load Time | 1.8s |
 | JS Heap Memory | 48.1 MB |
 | Console Errors | 2 |
-| Console Warnings | 2 |
+| Console Warnings | 3 |
 
 ## Agents Tested
 
@@ -58,9 +58,10 @@ The following 5 personas are configured:
 - WebGPU adapter not available...
 - The script has an unsupported MIME type ('text/html')....
 
-**Warnings (2):**
+**Warnings (3):**
 - No available adapters....
 - [ServiceWorker] Registration failed (non-critical): SecurityError: Failed to register a ServiceWorke...
+- The resource https://storage.noahcohn.com/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-...
 
 ## Notes
 

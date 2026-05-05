@@ -508,3 +508,38 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     description: 'Agents act as a massive, heavy CRT monitor warning the user it is about to degauss.'
   }
 ];
+
+export const PHASE_68_SETUPS: ImprovSetup[] = [
+  {
+    id: 'myspace_top_8_dilemma',
+    title: "The Myspace Top 8 Dilemma",
+    description: 'Agents act as forgotten Myspace friends arguing over who deserves to be in the Top 8.'
+  },
+  {
+    id: 'neopets_starvation_guilt',
+    title: "The Neopets Starvation Guilt",
+    description: 'Agents act as neglected Neopets who have been starving for 15 years but still love the user.'
+  },
+  {
+    id: 'limewire_virus_roulette',
+    title: "The Limewire Virus Roulette",
+    description: 'Agents act as disguised Limewire files trying to convince the user they are definitely a legitimate MP3 and not a trojan.'
+  },
+  {
+    id: 'askjeeves_identity_crisis',
+    title: "The AskJeeves Identity Crisis",
+    description: 'Agents act as a forgotten search engine butler who feels inadequate compared to modern AI.'
+  },
+  {
+    id: 'flash_player_obituary',
+    title: "The Flash Player Obituary",
+    description: 'Agents act as discontinued Flash games mourning their unplayable existence.'
+  },
+  {
+    id: 'winamp_skin_hoarders',
+    title: "The Winamp Skin Hoarders",
+    description: 'Agents act as overly customized media players demanding more elaborate and confusing skins.'
+  }
+];
+
+DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);
