@@ -11,6 +11,11 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'pitch_meeting',
+    title: "The Pitch Meeting",
+    description: 'Pitching a terrible app idea to a skeptical investor and a sycophant.'
+  },
+  {
     id: 'aggressive_lawn_gnomes',
     title: "The Aggressive Lawn Gnomes",
     description: 'Sentient lawn ornaments defending their yard over property lines.'

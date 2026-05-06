@@ -256,3 +256,32 @@ export async function runElevatorPitchLoop(scenario: Scenario, ctx: ModeContext)
         }
     }
 }
+
+export async function runPitchMeetingLoop(scenario: Scenario, ctx: ModeContext) {
+    const product = scenario.config?.pitchGenre || 'A terrible app idea';
+    ctx.callbacks.onMessage('Director', `💡 PITCH MEETING MODE: Pitching ${product}`, '#f39c12');
+
+    const founder = 'comedian'; // Energetic and delusional
+    const investor = 'scientist'; // Logical and skeptical
+    const sycophant = 'philosopher'; // Agrees with everything in a deep way
+
+    ctx.callbacks.onTurnStart(founder);
+    await ctx.manager.chatForAgent(founder, `(You are pitching a ridiculous product: "${product}". Be extremely confident and use buzzwords.)`, async (s) => await ctx.callbacks.onSpeak(s, founder, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Investor (You)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(investor, `(You are the lead investor. The user just asked/said: "${userInput}". Be highly skeptical and ask probing financial/logistical questions about "${product}".)`, async (s) => await ctx.callbacks.onSpeak(s, investor, {}));
+        if (!ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(founder, `(Defend your product "${product}" against the investor's criticism and the user's input: "${userInput}". Double down on the absurdity.)`, async (s) => await ctx.callbacks.onSpeak(s, founder, {}));
+        if (!ctx.isRunning()) break;
+
+        if (Math.random() > 0.5) {
+            await ctx.manager.chatForAgent(sycophant, `(You are the founder's yes-man. Make a profound philosophical statement defending the product.)`, async (s) => await ctx.callbacks.onSpeak(s, sycophant, {}));
+        }
+    }
+}
