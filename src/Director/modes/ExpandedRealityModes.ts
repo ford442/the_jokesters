@@ -1333,3 +1333,34 @@ export async function runEscapeBackroomsLoop(_scenario: Scenario, ctx: ModeConte
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runCorporateJargonTranslatorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👔 CORPORATE JARGON TRANSLATOR: Let's synergize!`, '#2980b9');
+
+    const ceo = 'comedian'; // Buzzword generator (Hermes-3)
+    const hr = 'scientist'; // Logical translator (Qwen2.5)
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(ceo);
+    await ctx.manager.chatForAgent(ceo, `(CORPORATE JARGON: You are an unhinged, buzzword-obsessed CEO. Welcome the User to the synergy sync. Ask them to provide a simple, everyday sentence so you can "leverage" and "paradigm shift" it into corporate speak.)`, async (s) => await ctx.callbacks.onSpeak(s, ceo, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Employee (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // CEO translates to jargon
+        ctx.callbacks.onTurnStart(ceo);
+        await ctx.manager.chatForAgent(ceo, `(CORPORATE JARGON: The Employee said: "${userInput}". Translate this simple sentence into the most convoluted, meaningless string of corporate buzzwords possible. Talk about synergy, bandwidth, drilling down, and opening the kimono.)`, async (s) => await ctx.callbacks.onSpeak(s, ceo, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // HR translates back
+        ctx.callbacks.onTurnStart(hr);
+        await ctx.manager.chatForAgent(hr, `(CORPORATE JARGON: You are the deadpan HR rep. The CEO just spewed corporate nonsense. Provide a blunt, literal, and slightly depressing translation of what the CEO *actually* meant regarding the Employee's input: "${userInput}". Keep it dry and factual.)`, async (s) => await ctx.callbacks.onSpeak(s, hr, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
