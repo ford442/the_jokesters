@@ -102,6 +102,36 @@ export async function runInterdimensionalCustomsLoop(_scenario: Scenario, ctx: M
     }
 }
 
+export async function runBrowserHistoryInterrogationLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.browserHistoryTopic || 'A bizarre 3AM Wikipedia deep dive into obscure medieval cheese-making';
+    ctx.callbacks.onMessage('Director', `🕵️ BROWSER HISTORY INTERROGATION: ${topic}`, '#e74c3c');
+
+    const logicalCop = 'scientist'; // Logical deduction
+    const wildCop = 'comedian'; // Wild leaps of judgment
+
+    // 1. Logical Cop Intro
+    ctx.callbacks.onTurnStart(logicalCop);
+    await ctx.manager.chatForAgent(logicalCop, `(You are an interrogator analyzing the suspect's browser history. The suspect (User) is in the interrogation room for: "${topic}". Ask a pointed, logical question about why they were searching for this. State the facts of the timestamp and search query.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCop, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Suspect (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Wild Cop
+            await ctx.manager.chatForAgent(wildCop, `(INTERROGATION: The suspect said: "${userInput}". You are the wild, unhinged interrogator. Jump to a completely irrational conclusion based on their answer and accuse them of something absurd related to "${topic}".)`, async (s) => await ctx.callbacks.onSpeak(s, wildCop, {}));
+        } else {
+            // Logical Cop
+            await ctx.manager.chatForAgent(logicalCop, `(INTERROGATION: The suspect said: "${userInput}". You are the logical interrogator. Point out the flaws or inconsistencies in their story using cold, hard "data" and demand a better explanation for "${topic}".)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCop, {}));
+        }
+    }
+}
+
 export async function runInterrogationLoop(scenario: Scenario, ctx: ModeContext) {
     const crime = scenario.config?.interrogationCrime || 'Stealing the cookies';
     ctx.callbacks.onMessage('Director', `🚨 INTERROGATION ROOM: ${crime}`, '#e74c3c');
