@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import compression from 'vite-plugin-compression2';
 
 export default defineConfig({
   base: './',
@@ -85,6 +86,20 @@ export default defineConfig({
         // Note: Voice style JSON files (F1.json, F2.json, M1.json, M2.json) are expected
         // to be hosted at ./tts/voice_styles/ on the deployment server
       ]
+    }),
+    compression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 512,
+      deleteOriginalAssets: false,
+      verbose: true
+    }),
+    compression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 512,
+      deleteOriginalAssets: false,
+      verbose: true
     })
   ],
   optimizeDeps: {

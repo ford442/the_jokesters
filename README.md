@@ -2,6 +2,35 @@
 
 A multi-agent chat application powered by Llama-3 and WebGPU, featuring 3D animated agent visualizations built with Three.js.
 
+## Brotli + Gzip Compression (NEW)
+
+This project now automatically generates **Brotli-compressed** (`.br`) and **Gzip-compressed** (`.gz`) versions of all static assets during the build process. This significantly reduces download sizes for large model files and web assets.
+
+**How it works:**
+- Run `npm run build` to generate compressed `.br` and `.gz` files alongside original assets
+- Deploy both the original and compressed files to your server
+- Configure your web server (nginx, Apache, etc.) to:
+  - Serve `.br` files to browsers that support Brotli (via `Accept-Encoding: br`)
+  - Serve `.gz` files as fallback for older browsers
+  - Serve original files if compression is not supported
+- The browser automatically requests the best format based on `Accept-Encoding` headers
+
+**Server configuration example (nginx):**
+```nginx
+location ~* \.(js|css|json|wasm)$ {
+  gzip on;
+  gzip_types text/plain text/css application/javascript application/json application/wasm;
+  brotli on;
+  brotli_types text/plain text/css application/javascript application/json application/wasm;
+  brotli_static on;
+  gzip_static on;
+}
+```
+
+For detailed deployment instructions, see the [Brotli + Gzip Compression Guide](#).
+
+---
+
 ![The Jokesters App](https://github.com/user-attachments/assets/c0474e26-df60-464a-b936-46688ab6b143)
 
 ## Features
