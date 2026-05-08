@@ -544,6 +544,11 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'winamp_skin_hoarders',
     title: "The Winamp Skin Hoarders",
     description: 'Agents act as overly customized media players demanding more elaborate and confusing skins.'
+  },
+  {
+    id: 'browser_history_interrogation',
+    title: "Browser History Interrogation",
+    description: 'A chaotic mode where agents interrogate the user about their bizarre internet history.'
   }
 ];
 
