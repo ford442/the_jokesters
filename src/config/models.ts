@@ -11,6 +11,10 @@ import * as webllm from '@mlc-ai/web-llm'
  * 
  * WebLLM Note: q4f16_1 requires 'shader-f16' GPU feature which is not
  * universally supported. q4f32_1 works on all WebGPU implementations.
+ * 
+ * VRAM Optimization Plan: docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md
+ *   - Ultra-low presets use aggressive context reduction + sliding-window
+ *     attention to fit 7B models into <4GB VRAM.
  */
 
 // VPS Storage Configuration
@@ -80,6 +84,33 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "custom", "vicuna", "fp32"],
     source: "vps",
     notes: "Custom ford442 Vicuna build",
+  },
+
+  /**
+   * ford442's Custom Vicuna-7B — ULTRA-LOW VRAM preset
+   * - Same weights as VPS_VICUNA_7B_Q4F32, but aggressive context reduction
+   * - context_window_size: 512  (cuts KV cache to ~1/8 of 4K default)
+   * - sliding_window_size: 256  (Mistral-style rolling attention)
+   * - attention_sink_size: 4    (keep first 4 tokens as anchors)
+   * - VRAM: ~3.5GB (down from ~4GB)
+   * - Ideal for GPUs with 4GB or less VRAM
+   * - See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.1
+   */
+  VPS_VICUNA_7B_ULTRA_LOW: {
+    model_id: "vicuna-7b-q4f32-webllm-ultra-low",
+    model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    overrides: {
+      context_window_size: 512,
+      prefill_chunk_size: 512,
+      sliding_window_size: 256,
+      attention_sink_size: 4,
+      tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
+    },
+    vram_required_MB: 3500,
+    recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
+    source: "vps",
+    notes: "Ultra-low VRAM preset — see docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.1",
   },
 
   /**
@@ -427,15 +458,28 @@ export async function getRecommendedModel(): Promise<string> {
     // No WebGPU support, return smallest model
     return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
   }
-  
+
+  // Probe adapter for buffer-size heuristic (ultra-low VRAM detection)
+  try {
+    const adapter = await gpu.requestAdapter();
+    const maxBufferSize = (adapter as any)?.limits?.maxBufferSize ?? 0;
+    if (maxBufferSize > 0 && maxBufferSize < 268_435_456) {
+      // <256MB maxBufferSize strongly suggests a low-VRAM GPU
+      console.log('[ModelConfig] Low buffer-size detected — recommending ultra-low VRAM preset');
+      return VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id;
+    }
+  } catch {
+    // Adapter probing failed; fall through to normal logic
+  }
+
   // Check for f16 support
   const supportsF16 = await checkF16Support();
-  
+
   if (!supportsF16) {
     console.log('[ModelConfig] GPU does not support shader-f16, using FP32 models');
     return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
   }
-  
+
   // Default to VPS-hosted FP32 model for reliability
   return defaultModelId;
 }

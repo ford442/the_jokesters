@@ -31,6 +31,14 @@ For detailed deployment instructions, see the [Brotli + Gzip Compression Guide](
 
 ---
 
+## Ultra-Low VRAM Mode (NEW)
+
+Users with GPUs that have 4GB or less VRAM can now select **"vicuna-7b-q4f32-webllm-ultra-low"** from the model selector.
+
+This preset uses aggressive context reduction (512-token window) and sliding-window attention (256-token sliding window + 4 attention sinks) to squeeze Vicuna-7B into <4GB of VRAM without switching to a smaller model. See `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` for the technical details.
+
+---
+
 ![The Jokesters App](https://github.com/user-attachments/assets/c0474e26-df60-464a-b936-46688ab6b143)
 
 ## Features

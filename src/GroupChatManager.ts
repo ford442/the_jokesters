@@ -350,6 +350,15 @@ export class GroupChatManager {
       }
       this.contextManager.setMaxContextTokens(contextSize)
 
+      // Log when ultra-low VRAM preset is active
+      const overrides = (modelConfig as any).overrides || (modelConfig as any).mlc?.overrides || {};
+      if (contextSize <= 512 && overrides.sliding_window_size) {
+        console.log(
+          `[VRAM] Ultra-low mode active: ${modelConfig.id} ` +
+          `(ctx=${contextSize}, sliding=${overrides.sliding_window_size}, sink=${overrides.attention_sink_size ?? 0})`
+        );
+      }
+
       console.log(`GroupChatManager initialized successfully with unified model: ${modelConfig.id} (${this.engineType})`)
     } catch (error) {
       this.engine = null
@@ -458,6 +467,16 @@ export class GroupChatManager {
         if (typeof actualContext === 'number') {
           this.contextManager.setMaxContextTokens(actualContext);
         }
+
+        // Log when ultra-low VRAM preset is active
+        const loadedOverrides = (mlcEngine as any).chatOpts || {};
+        if (actualContext <= 512 && loadedOverrides.sliding_window_size) {
+          console.log(
+            `[VRAM] Ultra-low mode active: ${modelId} ` +
+            `(ctx=${actualContext}, sliding=${loadedOverrides.sliding_window_size}, sink=${loadedOverrides.attention_sink_size ?? 0})`
+          );
+        }
+
         console.log(`GroupChatManager initialized successfully with model: ${modelId} and context: ${actualContext}`)
         return
 
