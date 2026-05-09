@@ -11,6 +11,11 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'corporate_mascot_crisis',
+    title: "The Corporate Mascot Crisis",
+    description: 'A chaotic PR mode where a disgraced corporate mascot tries to justify their actions alongside the CEO and PR manager.'
+  },
+  {
     id: 'pitch_meeting',
     title: "The Pitch Meeting",
     description: 'Pitching a terrible app idea to a skeptical investor and a sycophant.'
