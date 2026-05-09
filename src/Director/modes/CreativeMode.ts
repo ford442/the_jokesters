@@ -285,3 +285,42 @@ export async function runPitchMeetingLoop(scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+export async function runCorporateMascotCrisisLoop(scenario: Scenario, ctx: ModeContext) {
+    const scandal = scenario.config?.pitchGenre || 'A terrible PR scandal involving the mascot';
+    ctx.callbacks.onMessage('Director', `🚨 CORPORATE MASCOT CRISIS MODE: Addressing ${scandal}`, '#e74c3c');
+
+    const mascot = 'comedian'; // Unhinged, defensive
+    const prManager = 'scientist'; // Cold, calculated spin-doctor
+    const ceo = 'philosopher'; // Dodging responsibility with platitudes
+
+    // Initial statement from PR Manager
+    ctx.callbacks.onTurnStart(prManager);
+    await ctx.manager.chatForAgent(prManager, `(You are the PR Manager for a major corporation. The corporate mascot is involved in a scandal: "${scandal}". Give a cold, calculated opening statement to the public (the user) trying to spin the situation.)`, async (s) => await ctx.callbacks.onSpeak(s, prManager, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Angry Public (You)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        // Mascot gets defensive
+        ctx.callbacks.onTurnStart(mascot);
+        await ctx.manager.chatForAgent(mascot, `(You are the disgraced corporate mascot. The user just said: "${userInput}". Defend your actions in "${scandal}". Be unhinged, emotional, and defensive. Remember you are in an animal/mascot costume.)`, async (s) => await ctx.callbacks.onSpeak(s, mascot, {}));
+        ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // CEO steps in with empty platitudes
+        ctx.callbacks.onTurnStart(ceo);
+        await ctx.manager.chatForAgent(ceo, `(You are the CEO. The mascot just embarrassed the company again. The user said: "${userInput}". Give a deep, philosophical sounding, yet completely empty platitude to dodge responsibility for "${scandal}".)`, async (s) => await ctx.callbacks.onSpeak(s, ceo, {}));
+        ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // PR Manager tries to recover
+        if (Math.random() > 0.3) {
+            ctx.callbacks.onTurnStart(prManager);
+            await ctx.manager.chatForAgent(prManager, `(You are the PR manager. Try to spin what the CEO and Mascot just said back into a positive light. Use corporate jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, prManager, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}
