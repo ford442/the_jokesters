@@ -1,9 +1,12 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Phase 1: Configuration & Execution
+- [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
+- [x] 15. Register time_traveling_hoa in Director.ts
+- [x] 16. Add Time-Traveling HOA Mode to UI presets
 - [x] 11. Implement Corporate Mascot Crisis Mode
 - [x] 12. Add Corporate Mascot Crisis Mode to UI presets
 - [x] 1. Create agent_plan.md to track execution
@@ -19,7 +22,16 @@ tasks_per_run: 3
     - Added "Pitch Meeting Mode" - Agents play Founder, Investor, and Sycophant to pitch terrible product ideas.
     - Added "Browser History Interrogation Mode" - A chaotic mode where agents interrogate the user about their bizarre internet history.
     - **NEW:** Added "Corporate Mascot Crisis Mode" - A chaotic PR mode where a disgraced corporate mascot tries to justify their actions alongside the CEO and PR manager.
+    - **NEW:** Added "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user.
+    - **NEW:** Added "Collaborative Storytelling" - A cooperative mode where agents and the user build a narrative one sentence at a time.
+    - **NEW:** Added "Heckler Interaction" - A chaotic mode where a standup comedian agent must deal with heckles from the user and a heckler agent.
 - [x] 4. Define specific LLM pairings for new modes
+    - **NEW:** Roaster 1: Comedian (Unfiltered roasting, Hermes-3)
+    - **NEW:** Roaster 2: Philosopher (Deep, existential insults, Phi-3)
+    - **NEW:** Storyteller: Scientist (Logical narrative progression, Qwen2.5)
+    - **NEW:** Story Expander: Philosopher (Adds deep thematic elements, Phi-3)
+    - **NEW:** Standup Comedian: Comedian (Trying to perform a set, Hermes-3)
+    - **NEW:** Heckler: Scientist (Pedantic fact-checking heckler, Qwen2.5)
     - **NEW:** Time-Traveling HOA President: Scientist (Rule-bound and literal, Qwen2.5)
     - **NEW:** Chaotic HOA Resident: Comedian (Defiant historical figure, Hermes-3)
     - **NEW:** Time Traveler: Philosopher (Trying to logically explain modern concepts, Phi-3)
@@ -31,13 +43,14 @@ tasks_per_run: 3
     - **NEW:** Mascot: Comedian (Unhinged, defensive, Hermes-3)
     - **NEW:** CEO: Philosopher (Dodging responsibility with deep, empty platitudes, Phi-3)
     - **NEW:** PR Manager: Scientist (Cold, calculated spin-doctor, Qwen2.5)
+## Cloud Persistence (Hugging Face Integration)
+- [ ] Move heavy data out of localStorage to HF storage_manager.
+- [ ] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
+- [ ] Push Episode Scripts: Implement Web Worker to push generated "Episode Scripts" as JSON objects to a private Hugging Face Dataset from IndexedDB, avoiding main UI thread blocking.
+- [ ] Fetch Previous Episode Summaries: On boot, fetch `latest.json` episode summaries from HF to prime the `GroupChatManager` context window for continuity, falling back to local storage if offline.
+- [ ] Cloud Storage Sync Queue Management: Build a queue management system for chunked file uploads/retries via background workers with exponential backoff for HTTP 429 errors.
+
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
-    - **Authentication:** Validate tokens via `/whoami-v2` and store in `localStorage`.
-    - **Episode Pushing:** Implement a Web Worker to manage syncing local IndexedDB to private Hugging Face Datasets via background upload (JSON format) of generated scripts, avoiding blocking the main UI thread.
-    - **Summary Fetching:** At boot, fetch previous `latest.json` episode summaries to prime the `GroupChatManager` context window for continuity. Save it to IndexedDB to allow offline reads.
-    - **Sync Queue Management:** Implement a queue to manage chunked file uploads and retries using exponential backoff to handle HTTP 429 errors. Web Worker polls the queue.
-    - **Community Scripts Hub:** Enable sharing and importing community presets via public HF Datasets.
-    - **IndexedDB Caching for Offline Play:** Use `jokestersDB` IndexedDB layer to cache downloaded episodes, `summary.json`, and assets for robust offline support when HF API is unreachable.
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
