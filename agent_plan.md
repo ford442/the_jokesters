@@ -1,9 +1,12 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Phase 1: Configuration & Execution
+- [x] 14. Implement Time-Traveling HOA Mode
+- [x] 15. Register Time-Traveling HOA Mode
+- [x] 16. Add Time-Traveling HOA Mode to UI presets
 - [x] 11. Implement Corporate Mascot Crisis Mode
 - [x] 12. Add Corporate Mascot Crisis Mode to UI presets
 - [x] 1. Create agent_plan.md to track execution
@@ -15,11 +18,15 @@ tasks_per_run: 3
 
 ## Phase 2: Architectural Expansion (The "Dream" Phase)
 - [x] 3. Brainstorm new Director Modes or humor capabilities
+    - **NEW:** Added "Sentient Codebase Mode" - Agents play different parts of a chaotic codebase reacting to a user's pull request.
     - **NEW:** Added "Time-Traveling HOA Mode" - Agents play historical figures trying to enforce modern HOA rules on a time traveler.
     - Added "Pitch Meeting Mode" - Agents play Founder, Investor, and Sycophant to pitch terrible product ideas.
     - Added "Browser History Interrogation Mode" - A chaotic mode where agents interrogate the user about their bizarre internet history.
     - **NEW:** Added "Corporate Mascot Crisis Mode" - A chaotic PR mode where a disgraced corporate mascot tries to justify their actions alongside the CEO and PR manager.
 - [x] 4. Define specific LLM pairings for new modes
+    - **NEW:** Frontend component: Comedian (Overly dramatic about state changes, Hermes-3)
+    - **NEW:** Backend API: Scientist (Strict, complaining about payload formats, Qwen2.5)
+    - **NEW:** Legacy Database: Philosopher (Recalling ancient data schemas, Phi-3)
     - **NEW:** Time-Traveling HOA President: Scientist (Rule-bound and literal, Qwen2.5)
     - **NEW:** Chaotic HOA Resident: Comedian (Defiant historical figure, Hermes-3)
     - **NEW:** Time Traveler: Philosopher (Trying to logically explain modern concepts, Phi-3)
@@ -41,3 +48,8 @@ tasks_per_run: 3
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
+
+### Cloud Persistence (Hugging Face Integration)
+- [ ] Implement Hugging Face API authentication mechanism via `/whoami-v2`.
+- [ ] Develop background script/worker for pushing generated "Episode Scripts" (JSON) to a private Hugging Face Dataset.
+- [ ] Add boot-time sequence to fetch "Previous Episode Summaries" (latest.json) to seed `GroupChatManager` continuity.

@@ -4340,3 +4340,46 @@ export async function runWinampSkinHoardersLoop(_scenario: Scenario, ctx: ModeCo
     await ctx.manager.chatForAgent('scientist', "This interface violates every known principle of human-computer interaction. The equalize function is hidden behind a 12-pixel hitbox on a dragon's wing.", async (s: string) => await ctx.callbacks.onSpeak(s, 'scientist', { steps: 2 }), { hiddenInstruction: "Act as a logical module strictly criticizing the non-compliant interface of the Winamp skin." });
     ctx.callbacks.onTurnEnd();
 }
+
+export async function runTimeTravelingHOALoop(scenario: Scenario, ctx: ModeContext) {
+    const era = scenario.config?.era || 'the year 3024';
+    ctx.callbacks.onMessage('Director', `⏳ TIME-TRAVELING HOA MODE: Trying to enforce modern rules in ${era}`, '#8e44ad');
+
+    const president = 'scientist';
+    const resident = 'comedian';
+    const timeTraveler = 'philosopher';
+
+    // 1. President Intro
+    ctx.callbacks.onTurnStart(president);
+    await ctx.manager.chatForAgent(president, `(You are the literal, rule-bound president of an HOA. You are currently speaking to a time traveler from ${era}. You are obsessed with minor infractions like grass height and paint colors, completely ignoring the fact they are from another time. Introduce yourself and cite a ridiculous HOA violation related to their time machine or era.)`, async (s) => await ctx.callbacks.onSpeak(s, president, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    // 2. Chaotic Resident Intro
+    ctx.callbacks.onTurnStart(resident);
+    await ctx.manager.chatForAgent(resident, `(You are a defiant historical figure or chaotic resident who hates the HOA. You have allied yourself with the time traveler. Defend the time traveler and mock the HOA president's rules.)`, async (s) => await ctx.callbacks.onSpeak(s, resident, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Time Traveler (You)', userInput, '#ffffff');
+
+        // President Reaction
+        ctx.callbacks.onTurnStart(president);
+        await ctx.manager.chatForAgent(president, `(The time traveler just said: "${userInput}"). Respond by trying to force their statement or actions to fit within section 4, paragraph B of the HOA bylaws. Threaten to fine them.)`, async (s) => await ctx.callbacks.onSpeak(s, president, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Resident Reaction
+        ctx.callbacks.onTurnStart(resident);
+        await ctx.manager.chatForAgent(resident, `(The time traveler just said: "${userInput}"). Respond by cheering them on, offering a historically inaccurate or absurd suggestion to defeat the HOA.)`, async (s) => await ctx.callbacks.onSpeak(s, resident, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Time Traveler (Philosopher) Reaction
+        ctx.callbacks.onTurnStart(timeTraveler);
+        await ctx.manager.chatForAgent(timeTraveler, `(The user is the main time traveler, but you are their logical, philosophical AI companion. You try to bridge the gap between their future/past technology and the absurdly mundane HOA rules. Overcomplicate a simple HOA concept using temporal mechanics.)`, async (s) => await ctx.callbacks.onSpeak(s, timeTraveler, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
