@@ -556,6 +556,11 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     description: 'Agents act as overly customized media players demanding more elaborate and confusing skins.'
   },
   {
+    id: 'time_traveling_hoa',
+    title: "Time-Traveling HOA",
+    description: "Agents play historical figures trying to enforce modern HOA rules on a time traveler."
+  },
+  {
     id: 'browser_history_interrogation',
     title: "Browser History Interrogation",
     description: 'A chaotic mode where agents interrogate the user about their bizarre internet history.'
