@@ -348,7 +348,6 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     commentary: runCommentaryLoop,
     mystery: runMysteryLoop,
     pitch_meeting: runPitchMeetingLoop,
-    time_traveling_hoa: runTimeTravelingHOALoop,
     corporate_mascot_crisis: runCorporateMascotCrisisLoop,
     pitch: runPitchLoop,
     code_review: runCodeReviewLoop,

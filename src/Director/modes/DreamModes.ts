@@ -1281,39 +1281,6 @@ export async function runTimeTravelingRealEstateLoop(scenario: Scenario, ctx: Mo
 /**
  * Time-Traveling HOA Mode
  */
-export async function runTimeTravelingHOALoop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `📜 TIME-TRAVELING HOA: Enforcing modern rules on historical figures`, '#8e44ad');
-
-    const president = 'scientist'; // Rule-bound, pedantic
-    const resident = 'comedian'; // Chaotic historical figure
-
-    // 1. President Intro
-    ctx.callbacks.onTurnStart(president);
-    await ctx.manager.chatForAgent(president, `(You are Isaac Newton, but currently acting as the extremely pedantic President of a modern Homeowners Association. You are inspecting a neighborhood. Complain bitterly about a specific, modern HOA violation you've noticed (e.g., trash cans visible from the street, wrong shade of beige on a house) using overly complex, archaic scientific language.)`, async (s) => await ctx.callbacks.onSpeak(s, president, {}));
-    ctx.callbacks.onTurnEnd();
-
-    // 2. Resident Reaction
-    ctx.callbacks.onTurnStart(resident);
-    await ctx.manager.chatForAgent(resident, `(You are Diogenes the Cynic, currently living in this HOA neighborhood. Respond to Isaac Newton's complaint by aggressively defending your right to live as you please, perhaps mentioning your barrel, and completely misunderstanding the concept of property values.)`, async (s) => await ctx.callbacks.onSpeak(s, resident, {}));
-    ctx.callbacks.onTurnEnd();
-
-    // 3. User Interaction loop
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        ctx.callbacks.onMessage('Time Traveler (You)', userInput, '#ffffff');
-        if (!ctx.isRunning()) break;
-
-        ctx.callbacks.onTurnStart(president);
-        await ctx.manager.chatForAgent(president, `(The User, a modern time traveler who built this HOA, just said: "${userInput}". Reply by trying to logically deduce how their statement fits into the Principia Mathematica while still enforcing the HOA rules.)`, async (s) => await ctx.callbacks.onSpeak(s, president, {}));
-        ctx.callbacks.onTurnEnd();
-
-        if (!ctx.isRunning()) break;
-
-        ctx.callbacks.onTurnStart(resident);
-        await ctx.manager.chatForAgent(resident, `(The User just said: "${userInput}". Reply by asking the user to move out of your sunlight, and offer them a half-eaten onion or some other bizarre historical chaotic response.)`, async (s) => await ctx.callbacks.onSpeak(s, resident, {}));
-        ctx.callbacks.onTurnEnd();
-    }
-}
 
 export async function runIntergalacticHOALoop(scenario: Scenario, ctx: ModeContext) {
     const violation = scenario.config?.hoaViolation || 'having a non-compliant supernova';
