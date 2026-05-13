@@ -26,6 +26,7 @@ tasks_per_run: 4
     - **NEW:** Added "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user.
     - **NEW:** Added "Collaborative Storytelling" - A cooperative mode where agents and the user build a narrative one sentence at a time.
     - **NEW:** Added "Heckler Interaction" - A chaotic mode where a standup comedian agent must deal with heckles from the user and a heckler agent.
+    - **NEW:** Added "Dating App Profile Review Mode" - Agents mercilessly review the user's hypothetical dating profile.
 - [x] 4. Define specific LLM pairings for new modes
     - **NEW:** Roaster 1: Comedian (Unfiltered roasting, Hermes-3)
     - **NEW:** Roaster 2: Philosopher (Deep, existential insults, Phi-3)
@@ -47,12 +48,16 @@ tasks_per_run: 4
     - **NEW:** Mascot: Comedian (Unhinged, defensive, Hermes-3)
     - **NEW:** CEO: Philosopher (Dodging responsibility with deep, empty platitudes, Phi-3)
     - **NEW:** PR Manager: Scientist (Cold, calculated spin-doctor, Qwen2.5)
+    - **NEW:** Critic: Comedian (Hermes-3)
+    - **NEW:** Optimist: Philosopher (Phi-3)
+    - **NEW:** Data Analyst: Scientist (Qwen2.5)
 ## Cloud Persistence (Hugging Face Integration)
-- [ ] Move heavy data out of localStorage to HF storage_manager.
-- [ ] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
-- [ ] Push Episode Scripts: Implement Web Worker to push generated "Episode Scripts" as JSON objects to a private Hugging Face Dataset from IndexedDB, avoiding main UI thread blocking.
-- [ ] Fetch Previous Episode Summaries: On boot, fetch `latest.json` episode summaries from HF to prime the `GroupChatManager` context window for continuity, falling back to local storage if offline.
-- [ ] Cloud Storage Sync Queue Management: Build a queue management system for chunked file uploads/retries via background workers with exponential backoff for HTTP 429 errors.
+- [x] Move heavy data out of localStorage to HF storage_manager.
+- [x] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
+- [x] Push Episode Scripts: Implement Web Worker to push generated "Episode Scripts" as JSON objects to a private Hugging Face Dataset from IndexedDB, avoiding main UI thread blocking.
+- [x] Fetch Previous Episode Summaries: On boot, fetch `latest.json` episode summaries from HF to prime the `GroupChatManager` context window for continuity, falling back to local storage if offline.
+- [x] Cloud Storage Sync Queue Management: Build a queue management system for chunked file uploads/retries via background workers with exponential backoff for HTTP 429 errors.
+- [ ] Implement conflict resolution for cloud sync.
 
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
@@ -60,6 +65,6 @@ tasks_per_run: 4
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
 
 ### Cloud Persistence (Hugging Face Integration)
-- [ ] Implement Hugging Face API authentication mechanism via `/whoami-v2`.
-- [ ] Develop background script/worker for pushing generated "Episode Scripts" (JSON) to a private Hugging Face Dataset.
-- [ ] Add boot-time sequence to fetch "Previous Episode Summaries" (latest.json) to seed `GroupChatManager` continuity.
+- [x] Implement Hugging Face API authentication mechanism via `/whoami-v2`.
+- [x] Develop background script/worker for pushing generated "Episode Scripts" (JSON) to a private Hugging Face Dataset.
+- [x] Add boot-time sequence to fetch "Previous Episode Summaries" (latest.json) to seed `GroupChatManager` continuity.

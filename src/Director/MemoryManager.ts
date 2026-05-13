@@ -5,6 +5,7 @@ export class MemoryManager {
     private hfStorage: HFStorageManager;
     private hfToken: string | null = null;
     private hfRepoId: string | null = null;
+    private syncWorker: Worker | null = null;
     private isSyncing: boolean = false;
     private currentProfile: string = 'default';
 
@@ -79,8 +80,27 @@ export class MemoryManager {
     constructor() {
         this.hfStorage = new HFStorageManager();
         this.loadProfileFromStorage();
+        if (typeof Worker !== 'undefined') {
+            this.syncWorker = new Worker(new URL('../workers/hfSync.worker.ts', import.meta.url), { type: 'module' });
+            this.syncWorker.onmessage = (e) => {
+                const data = e.data;
+                if (data.type === 'sync_success') {
+                    const queueRaw = localStorage.getItem(data.queueKey);
+                    if (queueRaw) {
+                        let queue: any[] = JSON.parse(queueRaw);
+                        queue = queue.filter(q => q.id !== data.itemId);
+                        localStorage.setItem(data.queueKey, JSON.stringify(queue));
+                    }
+                } else if (data.type === 'sync_complete') {
+                    this.isSyncing = false;
+                } else if (data.type === 'sync_error') {
+                    console.error('Sync error from worker:', data.error);
+                }
+            };
+        }
         this.loadCloudCredentials();
         this.processSyncQueue();
+        this.ensureCloudSummaryCache();
     }
 
     private loadProfileFromStorage(): void {
@@ -216,7 +236,7 @@ export class MemoryManager {
     }
 
     private async processSyncQueue(): Promise<void> {
-        if (this.isSyncing || !this.hfToken) return;
+        if (this.isSyncing || !this.hfToken || !this.syncWorker) return;
 
         const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
         const queueRaw = localStorage.getItem(queueKey);
@@ -227,36 +247,13 @@ export class MemoryManager {
 
         this.isSyncing = true;
 
-        try {
-            while (true) {
-                const currentQueueRaw = localStorage.getItem(queueKey);
-                if (!currentQueueRaw) break;
-
-                let currentQueue: { id: string, repoId?: string, filename: string, content: string }[] = JSON.parse(currentQueueRaw);
-                if (currentQueue.length === 0) break;
-
-                const item = currentQueue[0];
-                try {
-                    const targetRepo = item.repoId || this.hfRepoId;
-                    if (!targetRepo) throw new Error("No repository ID found for upload.");
-
-                    await this.hfStorage.saveFile(this.hfToken, targetRepo, item.filename, item.content);
-                    // Remove item on success, re-read queue to avoid race conditions
-                    const freshQueueRaw = localStorage.getItem(queueKey);
-                    if (freshQueueRaw) {
-                        let freshQueue: { id: string, repoId?: string, filename: string, content: string }[] = JSON.parse(freshQueueRaw);
-                        freshQueue = freshQueue.filter(q => q.id !== item.id);
-                        localStorage.setItem(queueKey, JSON.stringify(freshQueue));
-                    }
-                    console.log(`Successfully synced ${item.filename} to cloud.`);
-                } catch (error) {
-                    console.error(`Failed to sync ${item.filename} to cloud. Will retry later.`, error);
-                    break; // Stop processing on error, try again later
-                }
-            }
-        } finally {
-            this.isSyncing = false;
-        }
+        this.syncWorker.postMessage({
+            type: 'sync',
+            queueKey,
+            token: this.hfToken,
+            repoId: this.hfRepoId,
+            items: queue
+        });
     }
 
     public async loadEpisode(episodeId: string): Promise<any | null> {
@@ -447,6 +444,11 @@ export class MemoryManager {
     }
 
     private cloudSummaryCache: any = null;
+
+    public getCloudSummary(): any {
+        return this.cloudSummaryCache;
+    }
+
 
     private async ensureCloudSummaryCache(): Promise<void> {
         if (this.cloudSummaryCache) return;
