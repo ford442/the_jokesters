@@ -300,6 +300,21 @@ export class MemoryManager {
                                 this.save(`episode-${episodeId}`, cloudData);
                                 await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
+                        } else {
+                            // Conflict resolution: compare length of history array to see which is more up-to-date
+                            const cloudData = await this.loadEpisodeFromCloud(episodeId);
+                            if (cloudData && cloudData.history && localData.history) {
+                                if (cloudData.history.length > localData.history.length) {
+                                    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
+                                    this.save(`episode-${episodeId}`, cloudData);
+                                    await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
+                                } else if (localData.history.length > cloudData.history.length) {
+                                    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
+                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+                                } else {
+                                    console.log(`${filename} is up to date.`);
+                                }
+                            }
                         }
                     }
                 }

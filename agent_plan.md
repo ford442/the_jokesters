@@ -27,6 +27,7 @@ tasks_per_run: 4
     - **NEW:** Added "Collaborative Storytelling" - A cooperative mode where agents and the user build a narrative one sentence at a time.
     - **NEW:** Added "Heckler Interaction" - A chaotic mode where a standup comedian agent must deal with heckles from the user and a heckler agent.
     - **NEW:** Added "Dating App Profile Review Mode" - Agents mercilessly review the user's hypothetical dating profile.
+    - **NEW:** Added "Over-Invested Sports Commentator Mode" - Comedian and Scientist give highly technical and overly emotional play-by-play commentary on mundane tasks (like making a sandwich).
 - [x] 4. Define specific LLM pairings for new modes
     - **NEW:** Roaster 1: Comedian (Unfiltered roasting, Hermes-3)
     - **NEW:** Roaster 2: Philosopher (Deep, existential insults, Phi-3)
@@ -51,15 +52,24 @@ tasks_per_run: 4
     - **NEW:** Critic: Comedian (Hermes-3)
     - **NEW:** Optimist: Philosopher (Phi-3)
     - **NEW:** Data Analyst: Scientist (Qwen2.5)
+    - **NEW:** Play-by-Play Commentator: Comedian (Hermes-3)
+    - **NEW:** Color Commentator / Analyst: Scientist (Qwen2.5)
 ## Cloud Persistence (Hugging Face Integration)
 - [x] Move heavy data out of localStorage to HF storage_manager.
 - [x] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
 - [x] Push Episode Scripts: Implement Web Worker to push generated "Episode Scripts" as JSON objects to a private Hugging Face Dataset from IndexedDB, avoiding main UI thread blocking.
 - [x] Fetch Previous Episode Summaries: On boot, fetch `latest.json` episode summaries from HF to prime the `GroupChatManager` context window for continuity, falling back to local storage if offline.
 - [x] Cloud Storage Sync Queue Management: Build a queue management system for chunked file uploads/retries via background workers with exponential backoff for HTTP 429 errors.
-- [ ] Implement conflict resolution for cloud sync.
+- [x] Implement conflict resolution for cloud sync.
+- **NEW IDEA:** Delta Synchronization. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
 
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
+
+## Pending Tasks (Next cycle)
+- [ ] Implement "Over-Invested Sports Commentator Mode" in `PerformanceMode.ts` or `CreativeMode.ts`
+- [ ] Add "Over-Invested Sports Commentator Mode" to UI presets
+- [ ] Implement "Dating App Profile Review Mode" in `InteractiveMode.ts`
+- [ ] Add "Dating App Profile Review Mode" to UI presets
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
