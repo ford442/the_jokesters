@@ -564,6 +564,16 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'browser_history_interrogation',
     title: "Browser History Interrogation",
     description: 'A chaotic mode where agents interrogate the user about their bizarre internet history.'
+  },
+  {
+    id: 'sports_commentator',
+    title: "Over-Invested Sports Commentator Mode",
+    description: 'Comedian and Scientist give highly technical and overly emotional play-by-play commentary on mundane tasks.'
+  },
+  {
+    id: 'dating_profile_review',
+    title: "Dating App Profile Review Mode",
+    description: 'Agents mercilessly review the user\'s hypothetical dating profile.'
   }
 ];
 

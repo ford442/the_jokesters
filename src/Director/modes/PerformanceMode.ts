@@ -495,3 +495,40 @@ export async function runHistoricalLoop(scenario: Scenario, ctx: ModeContext) {
         await new Promise(r => setTimeout(r, 1000));
     }
 }
+
+export async function runSportsCommentatorLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.reporterTopic || 'making a sandwich';
+    ctx.callbacks.onMessage('Director', `🏟️ OVER-INVESTED SPORTS COMMENTARY: ${topic}`, '#e67e22');
+
+    const playByPlay = 'comedian'; // Hermes-3
+    const colorCommentator = 'scientist'; // Qwen2.5
+
+    ctx.callbacks.onTurnStart(playByPlay);
+    await ctx.manager.chatForAgent(playByPlay, `(SPORTS COMMENTARY: You are an overly enthusiastic play-by-play sports commentator. The user is about to attempt an incredibly mundane task: "${topic}". Introduce the broadcast, set the stakes extremely high, and throw it to your color commentator for their analysis.)`, async (s) => await ctx.callbacks.onSpeak(s, playByPlay, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(colorCommentator);
+    await ctx.manager.chatForAgent(colorCommentator, `(SPORTS COMMENTARY: You are the highly technical and analytical color commentator. Analyze the user's history with "${topic}" and provide over-analyzed, overly complex statistics on their expected performance.)`, async (s) => await ctx.callbacks.onSpeak(s, colorCommentator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Play-by-play reacts
+            ctx.callbacks.onTurnStart(playByPlay);
+            await ctx.manager.chatForAgent(playByPlay, `(SPORTS COMMENTARY: The user just took an action: "${userInput}". Give an incredibly hyped, loud, and dramatic play-by-play reaction as if it were a game-winning touchdown or a shocking fumble!)`, async (s) => await ctx.callbacks.onSpeak(s, playByPlay, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            // Color commentator analyzes
+            ctx.callbacks.onTurnStart(colorCommentator);
+            await ctx.manager.chatForAgent(colorCommentator, `(SPORTS COMMENTARY: The user just took an action: "${userInput}". Give a deep, technical breakdown of their form, strategy, and what this means for their overall legacy in the sport of "${topic}".)`, async (s) => await ctx.callbacks.onSpeak(s, colorCommentator, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}
