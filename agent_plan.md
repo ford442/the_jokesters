@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 5
 
 ## Phase 1: Configuration & Execution
 - [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
@@ -54,6 +54,7 @@ tasks_per_run: 4
     - **NEW:** Data Analyst: Scientist (Qwen2.5)
     - **NEW:** Play-by-Play Commentator: Comedian (Hermes-3)
     - **NEW:** Color Commentator / Analyst: Scientist (Qwen2.5)
+    - **NEW:** Added "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
 ## Cloud Persistence (Hugging Face Integration)
 - [x] Move heavy data out of localStorage to HF storage_manager.
 - [x] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
@@ -66,10 +67,10 @@ tasks_per_run: 4
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Pending Tasks (Next cycle)
-- [ ] Implement "Over-Invested Sports Commentator Mode" in `PerformanceMode.ts` or `CreativeMode.ts`
-- [ ] Add "Over-Invested Sports Commentator Mode" to UI presets
-- [ ] Implement "Dating App Profile Review Mode" in `InteractiveMode.ts`
-- [ ] Add "Dating App Profile Review Mode" to UI presets
+- [x] Implement "Over-Invested Sports Commentator Mode" in `PerformanceMode.ts` or `CreativeMode.ts`
+- [x] Add "Over-Invested Sports Commentator Mode" to UI presets
+- [x] Implement "Dating App Profile Review Mode" in `InteractiveMode.ts`
+- [x] Add "Dating App Profile Review Mode" to UI presets
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.

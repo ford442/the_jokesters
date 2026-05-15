@@ -574,3 +574,42 @@ export async function runCustomerServiceHellLoop(scenario: Scenario, ctx: ModeCo
         }
     }
 }
+
+export async function runDatingAppProfileReviewLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '🔥 DATING APP PROFILE REVIEW: Prepare to be humbled!', '#ff69b4');
+
+    const cynic = 'comedian'; // Hermes-3
+    const analyst = 'scientist'; // Qwen2.5
+    const romantist = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(analyst);
+    await ctx.manager.chatForAgent(analyst, `(DATING APP REVIEW: You are an overly analytical dating coach. Welcome the user to their profile review session. Ask them to share their primary profile picture description or bio to begin.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Cynic
+            ctx.callbacks.onTurnStart(cynic);
+            await ctx.manager.chatForAgent(cynic, `(DATING APP REVIEW: The user shared this about their profile: "${userInput}". Be brutally honest and sarcastic. Roast their bio, picture, or prompt choice. Explain why it's a huge red flag.)`, async (s) => await ctx.callbacks.onSpeak(s, cynic, {}));
+            ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Analyst
+            ctx.callbacks.onTurnStart(analyst);
+            await ctx.manager.chatForAgent(analyst, `(DATING APP REVIEW: The user shared this about their profile: "${userInput}". Break down their choices using completely made-up statistics and "algorithm optimization" jargon. Suggest a cold, calculated alternative.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            // Romantist
+            ctx.callbacks.onTurnStart(romantist);
+            await ctx.manager.chatForAgent(romantist, `(DATING APP REVIEW: The user shared this about their profile: "${userInput}". You are a hopeless romantic but deeply pretentious. Explain how their profile fails to capture the true essence of love and existential yearning. Suggest they add poetry.)`, async (s) => await ctx.callbacks.onSpeak(s, romantist, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}
