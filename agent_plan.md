@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ## Phase 1: Configuration & Execution
 - [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
@@ -71,6 +71,15 @@ tasks_per_run: 5
 - [x] Add "Over-Invested Sports Commentator Mode" to UI presets
 - [x] Implement "Dating App Profile Review Mode" in `InteractiveMode.ts`
 - [x] Add "Dating App Profile Review Mode" to UI presets
+
+## Phase 3: Next Steps & Ideas
+- **NEW IDEA:** "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
+- **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
+
+## Cloud Persistence (Hugging Face Integration) Roadmap
+- [ ] Step 1: Authenticate with the HF API using tokens via `/whoami-v2`.
+- [ ] Step 2: Set up a background Web Worker to push generated "Episode Scripts" (JSON) to a private Hugging Face Dataset from IndexedDB without blocking the main thread.
+- [ ] Step 3: Implement an initialization step to fetch "Previous Episode Summaries" (`latest.json`) from HF to prime the `GroupChatManager` context at boot.
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
