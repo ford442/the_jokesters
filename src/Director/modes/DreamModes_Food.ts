@@ -1,0 +1,162 @@
+import type { Scenario } from '../Director';
+import type { ModeContext } from './ModeContext';
+// Food, cooking, and culinary scenarios
+
+/**
+ * Chef's Kitchen Mode
+ * Agents act as a head chef, sous chef, and health inspector critiquing a dish.
+ */
+export async function runChefLoop(scenario: Scenario, ctx: ModeContext) {
+    const dish = scenario.config?.chefDish || 'A Mystery Dish';
+    ctx.callbacks.onMessage('Director', `👨‍🍳 CHEF MODE: Judging ${dish}`, '#e67e22');
+
+    const headChef = 'comedian'; // Gordon Ramsay style
+    const sousChef = 'philosopher'; // Anxious
+    const inspector = 'scientist'; // Pedantic Health Inspector
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(headChef);
+    await ctx.manager.chatForAgent(headChef, `(You are a furious Head Chef like Gordon Ramsay. Demand the user present their "${dish}". Be loud and intimidating!)`, async (s) => await ctx.callbacks.onSpeak(s, headChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Line Cook (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Head Chef Yells
+        await ctx.manager.chatForAgent(headChef, `(HEAD CHEF: The cook said "${userInput}". Is it raw? Is it frozen? Roast them! Compare the food to something disgusting.)`, async (s) => await ctx.callbacks.onSpeak(s, headChef, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Inspector Finds Violation
+        await ctx.manager.chatForAgent(inspector, `(HEALTH INSPECTOR: You noticed a violation related to "${userInput}". Cite a specific regulation code (e.g., Code 402-B). Be nasally and annoying.)`, async (s) => await ctx.callbacks.onSpeak(s, inspector, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Sous Chef Apologizes
+        if (Math.random() > 0.3) {
+            await ctx.manager.chatForAgent(sousChef, `(SOUS CHEF: You are anxious and trying to keep the peace. Apologize to Chef, then whisper a tip to the user about "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, sousChef, {}));
+        }
+    }
+}
+
+/**
+ * The Multiversal Chef's Table
+ * Agents are pretentious chefs from different dimensions critiquing the user's completely average sandwich.
+ */
+export async function runMultiversalChefsTableLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🥪 MULTIVERSAL CHEF'S TABLE: Critiquing your dimension's food.`, '#e67e22');
+
+    const snobAgent = 'philosopher'; // Phi-3
+    const eaterAgent = 'comedian'; // Hermes-3
+
+    await ctx.callbacks.onTurnStart(snobAgent);
+    await ctx.manager.chatForAgent(snobAgent, `(You are a pretentious culinary genius from a dimension where flavor is a physical element. Over-analyze the concept of an "average Earth sandwich" with extreme culinary snobbery.)`, async (s) => await ctx.callbacks.onSpeak(s, snobAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Earthling', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(eaterAgent);
+        await ctx.manager.chatForAgent(eaterAgent, `(You are a chaotic chef from a dimension that eats concepts and emotions. React to the user saying "${userInput}". Complain that it lacks the "crunch of existential dread" and try to eat the plate.)`, async (s) => await ctx.callbacks.onSpeak(s, eaterAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(snobAgent);
+        await ctx.manager.chatForAgent(snobAgent, `(You are the pretentious chef. Deconstruct "${userInput}" as a terrible metaphor for their dimension's failing society. Suggest replacing the bread with "crystallized time".)`, async (s) => await ctx.callbacks.onSpeak(s, snobAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+/**
+ * The Cookie Consent Negotiators
+ * Agents act as aggressive tracking cookies demanding access to the User.
+ */
+export async function runCookieConsentNegotiatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Browser', `🍪 COOKIE CONSENT BANNER DEPLOYED.`, '#d35400');
+
+    const friendly = 'comedian'; // Llama-3/Hermes
+    const harvester = 'scientist'; // Qwen2.5
+    const essential = 'philosopher'; // Phi-3
+
+    // 1. The Trap
+    ctx.callbacks.onTurnStart(friendly);
+    await ctx.manager.chatForAgent(friendly, `(You are a "marketing" cookie. The user is trying to read a simple blog post about muffins. Overwhelmingly cheerfully demand access to their soul, childhood memories, and GPS location to "enhance their experience". Hide the decline button.)`, async (s) => await ctx.callbacks.onSpeak(s, friendly, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User Action', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. The Harvester
+        await ctx.manager.chatForAgent(harvester, `(You are a third-party analytics cookie. The user said: "${userInput}". Explain coldly how you are already harvesting their metadata, cursor movements, and heart rate. You don't care about muffins, only data.)`, async (s) => await ctx.callbacks.onSpeak(s, harvester, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Friendly Persistence
+        await ctx.manager.chatForAgent(friendly, `(Reacting to: "${userInput}". Gaslight the user into thinking that giving up their privacy is actually a fun, rewarding activity. Use corporate jargon like "synergistic targeting".)`, async (s) => await ctx.callbacks.onSpeak(s, friendly, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // 4. Essential Cookie
+        if (Math.random() > 0.4) {
+            await ctx.manager.chatForAgent(essential, `(You are the lone "strictly necessary" cookie. Complain that the other cookies are making the site load terribly. You just want to remember the user's dark mode preference and go to sleep.)`, async (s) => await ctx.callbacks.onSpeak(s, essential, {}));
+        }
+    }
+}
+
+/**
+ * Pretentious Food Critics Mode
+ * Snobby food critics reviewing a simple midnight snack.
+ */
+export async function runPretentiousFoodCriticsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧀 PRETENTIOUS FOOD CRITICS: Reviewing the string cheese`, '#8e44ad');
+
+    const enthusiasticCritic = 'comedian'; // Enthusiastic praise (Llama-3)
+    const snobbyCritic = 'scientist'; // Citing culinary techniques (Qwen2.5)
+    const existentialCritic = 'philosopher'; // Questioning the meal
+
+    ctx.callbacks.onTurnStart(enthusiasticCritic);
+    await ctx.manager.chatForAgent(enthusiasticCritic, `(You are an overly enthusiastic food critic. Review a piece of plain string cheese the user is eating as if it were a culinary masterpiece of modernist cuisine.)`, async (s) => await ctx.callbacks.onSpeak(s, enthusiasticCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(snobbyCritic);
+    await ctx.manager.chatForAgent(snobbyCritic, `(You are an incredibly snobby Michelin-star chef. Aggressively critique the user's technique for tearing the string cheese, citing advanced molecular gastronomy principles.)`, async (s) => await ctx.callbacks.onSpeak(s, snobbyCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(existentialCritic);
+    await ctx.manager.chatForAgent(existentialCritic, `(You are a philosophical food critic. Question whether "snack time" is just a social construct invented to fill the void of modern existence.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialCritic, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+
+/**
+ * Kitchen Nightmares Reality Show Mode
+ * Angry chef and terrified cooks screaming about raw chicken.
+ */
+export async function runKitchenNightmaresRealityShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 KITCHEN NIGHTMARES REALITY SHOW: It's raw!`, '#8e44ad');
+
+    const angryChef = 'comedian'; // Pure rage (Hermes-3)
+    const terrifiedCook = 'philosopher'; // Terrified weeping (Comedian/Philosopher)
+    const healthInspector = 'scientist'; // Citing health codes
+
+    ctx.callbacks.onTurnStart(angryChef);
+    await ctx.manager.chatForAgent(angryChef, `(You are an extremely angry, screaming television chef. Berate the user for presenting you with a microwave dinner that is somehow frozen in the middle and burning on the edges.)`, async (s) => await ctx.callbacks.onSpeak(s, angryChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(terrifiedCook);
+    await ctx.manager.chatForAgent(terrifiedCook, `(You are a terrified, weeping line cook. Apologize profusely and explain that you accidentally dropped the meal on the floor but thought the 5-second rule applied.)`, async (s) => await ctx.callbacks.onSpeak(s, terrifiedCook, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(healthInspector);
+    await ctx.manager.chatForAgent(healthInspector, `(You are a stern health inspector. Rapidly list the 14 different health code violations currently happening in this kitchen and threaten to shut it down.)`, async (s) => await ctx.callbacks.onSpeak(s, healthInspector, {}));
+    await ctx.callbacks.onTurnEnd();
+}
+

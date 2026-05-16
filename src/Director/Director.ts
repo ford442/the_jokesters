@@ -1,4 +1,8 @@
-import { runAbandonedAPIEndpointLoop, runDeprecatedPackageLoop, runLoadingSpinnerSupportGroupLoop, runUnhandledExceptionLoop, runMemoryLeakDeniersLoop, runSentientSearchEngineLoop, runQuantumPetStoreLoop, runMultiversalChefsTableLoop, runTimeTravelingHeistPlannersLoop, runInterdimensionalCustomerServiceLoop, runSentientOuijaBoardLoop, runPoltergeistRoommatesLoop, runBigfootSupportGroupLoop, runAlienConspiracyTheoristsLoop, runTimeTravelingGhostHuntersLoop, runAggressiveLawnGnomesLoop, runNeighborhoodWatchOverlordsLoop, runHOABoardMeetingLoop, runGarageSaleNegotiatorsLoop, runLostDeliveryDriversLoop } from "./modes/DreamModes";
+// Dream modes - split by category for better maintainability
+// Import from the unified index which re-exports all categories
+export * from './modes/DreamModes_index';
+import * as DreamModesIndex from './modes/DreamModes_index';
+
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
 import { MemoryManager } from './MemoryManager';
@@ -16,7 +20,8 @@ import { runTherapyLoop, runAITherapyLoop, runSuperheroTherapyLoop } from './mod
 import { runPhilosopherLoop } from './modes/PhilosopherMode';
 import { runAlienLoop } from './modes/AlienMode';
 
-import {
+// Destructure specific dream mode functions for backward compatibility
+const {
   runMyspaceTop8DilemmaLoop,
   runNeopetsStarvationGuiltLoop,
   runLimewireVirusRouletteLoop,
@@ -63,7 +68,7 @@ import {
   runBureauOfSillyWalksLoop,
   runTimeTravelingRealEstateLoop,
   runIntergalacticHOALoop,
-  runTimeTravelingHOALoop,           // ← new on main
+  runTimeTravelingHOALoop,
   runOverDramaticAntColonyLoop,
   runReverseHeistLoop,
   runSarcasticOverlordLoop,
@@ -150,10 +155,71 @@ import {
   runPrinterJamConspiracyLoop,
   runHighlighterHierarchyLoop,
   runWhiteboardErasersRegretLoop,
-} from './modes/DreamModes';
+  runAbandonedAPIEndpointLoop,
+  runDeprecatedPackageLoop,
+  runLoadingSpinnerSupportGroupLoop,
+  runUnhandledExceptionLoop,
+  runMemoryLeakDeniersLoop,
+  runSentientSearchEngineLoop,
+  runQuantumPetStoreLoop,
+  runMultiversalChefsTableLoop,
+  runTimeTravelingHeistPlannersLoop,
+  runInterdimensionalCustomerServiceLoop,
+  runSentientOuijaBoardLoop,
+  runPoltergeistRoommatesLoop,
+  runBigfootSupportGroupLoop,
+  runAlienConspiracyTheoristsLoop,
+  runTimeTravelingGhostHuntersLoop,
+  runAggressiveLawnGnomesLoop,
+  runNeighborhoodWatchOverlordsLoop,
+  runHOABoardMeetingLoop,
+  runGarageSaleNegotiatorsLoop,
+  runLostDeliveryDriversLoop,
+} = DreamModesIndex as any;
 
 import { runRoastLoop, runEnhancedRoastLoop, runHecklerInteractionLoop, runStoryLoop, runCollaborativeStoryLoop, runDebateLoop, runMusicalLoop, runMusicalImprovSessionLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
-import { runHauntedHouseLoop, runSportsCommentaryLoop, runRealityTVLoop, runAuctionHouseLoop, runEscapeRoomLoop, runMuseumTourLoop, runJobInterviewLoop, runCookingShowLoop, runConspiracyLoop, runGhostHuntersLoop, runAIAuditLoop, runInterdimensionalCableLoop, runTelemarketerTakedownLoop, runSpaceStationCrisisLoop, runConspiracyGeneratorLoop, runNatureDocumentaryLoop, runWorstRoommateLoop, runIntergalacticDMVLoop, runDMVInterpreterLoop, runSentientAppliancesLoop, runAlienPetShopLoop, runSecretAgentLoop, runMadScientistLoop, runHOAMeetingLoop, runTimeTravelingCavemanLoop, runSubmarineCrisisLoop, runGalacticBakeOffLoop, runPetPerspectiveLoop, runSentientPlantLoop, runGalacticRealEstateLoop, runImaginaryFriendLoop, runIntergalacticCookingLoop, runEscapeBackroomsLoop, runCorporateJargonTranslatorLoop } from './modes/ExpandedRealityModes';
+// Expanded Reality modes - split by category for better maintainability
+// Import from the unified index which re-exports all categories
+export * from './modes/ExpandedRealityModes_index';
+import * as ExpandedRealityModesIndex from './modes/ExpandedRealityModes_index';
+
+// Destructure specific functions for backward compatibility
+const {
+  runHauntedHouseLoop,
+  runSportsCommentaryLoop,
+  runRealityTVLoop,
+  runAuctionHouseLoop,
+  runEscapeRoomLoop,
+  runMuseumTourLoop,
+  runJobInterviewLoop,
+  runCookingShowLoop,
+  runConspiracyLoop,
+  runGhostHuntersLoop,
+  runAIAuditLoop,
+  runInterdimensionalCableLoop,
+  runTelemarketerTakedownLoop,
+  runSpaceStationCrisisLoop,
+  runConspiracyGeneratorLoop,
+  runNatureDocumentaryLoop,
+  runWorstRoommateLoop,
+  runIntergalacticDMVLoop,
+  runDMVInterpreterLoop,
+  runSentientAppliancesLoop,
+  runAlienPetShopLoop,
+  runSecretAgentLoop,
+  runMadScientistLoop,
+  runHOAMeetingLoop,
+  runTimeTravelingCavemanLoop,
+  runSubmarineCrisisLoop,
+  runGalacticBakeOffLoop,
+  runPetPerspectiveLoop,
+  runSentientPlantLoop,
+  runGalacticRealEstateLoop,
+  runImaginaryFriendLoop,
+  runIntergalacticCookingLoop,
+  runEscapeBackroomsLoop,
+  runCorporateJargonTranslatorLoop,
+} = ExpandedRealityModesIndex as any;
 import { runProceduralLoop } from './modes/CreativeMode';
 import { runSuperheroLoop, runRPGVendorLoop, runGalacticTranslatorsLoop, runInterdimensionalCustomsLoop } from './modes/InteractiveMode';
 import { runRapBattleVisualsLoop } from './modes/RapBattleVisualsMode';
