@@ -613,3 +613,39 @@ export async function runDatingAppProfileReviewLoop(_scenario: Scenario, ctx: Mo
         }
     }
 }
+
+export async function runArmchairDetectivesLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔍 ARMCHAIR DETECTIVES: Solve a mystery! Provide a minor inconvenience to be over-analyzed.`, '#e74c3c');
+
+    const forensicAnalyst = 'scientist';
+    const psychologicalProfiler = 'philosopher';
+    const conspiracyTheorist = 'comedian';
+
+    ctx.callbacks.onTurnStart(conspiracyTheorist);
+    await ctx.manager.chatForAgent(conspiracyTheorist, `(CONSPIRACY THEORIST: Welcome the user to your true-crime podcast "The Gritty Details". Ask the user to describe a minor mundane mystery from their life (e.g., a missing sock, a weird smell in the fridge, a stapler that moved). Tell them your team of "experts" will solve it.)`, async (s) => await ctx.callbacks.onSpeak(s, conspiracyTheorist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Witness (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Forensic Analyst (Scientist)
+        ctx.callbacks.onTurnStart(forensicAnalyst);
+        await ctx.manager.chatForAgent(forensicAnalyst, `(FORENSIC ANALYST: The witness reported: "${userInput}". Treat this mundane event like a major crime scene. Apply rigorous (but absurdly misplaced) scientific logic and forensics to analyze the "evidence".)`, async (s) => await ctx.callbacks.onSpeak(s, forensicAnalyst, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Psychological Profiler (Philosopher)
+        ctx.callbacks.onTurnStart(psychologicalProfiler);
+        await ctx.manager.chatForAgent(psychologicalProfiler, `(PSYCHOLOGICAL PROFILER: Based on the "evidence" of "${userInput}", provide a deep, existential psychological profile of the "perpetrator" (even if the perpetrator is just the wind or a pet). Explore the dark, philosophical motives behind the act.)`, async (s) => await ctx.callbacks.onSpeak(s, psychologicalProfiler, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Conspiracy Theorist (Comedian)
+        ctx.callbacks.onTurnStart(conspiracyTheorist);
+        await ctx.manager.chatForAgent(conspiracyTheorist, `(CONSPIRACY THEORIST: The witness said: "${userInput}". Synthesize the forensic and psychological reports into a wild, completely unhinged conspiracy theory. Blame it on aliens, the government, or a secret society of household appliances. Ask the user for more clues.)`, async (s) => await ctx.callbacks.onSpeak(s, conspiracyTheorist, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
