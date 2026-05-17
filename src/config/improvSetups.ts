@@ -11,6 +11,11 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'armchair_detectives',
+    title: "Armchair Detectives",
+    description: "Agents over-analyze a minor mundane mystery you present to them."
+  },
+  {
     id: 'time_traveling_hoa',
     title: "Time-Traveling HOA",
     description: "Historical figures enforce modern HOA rules on a time traveler."
