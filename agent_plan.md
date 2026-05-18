@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 8
+tasks_per_run: 3
 
 ## Phase 1: Configuration & Execution
 - [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
@@ -76,6 +76,7 @@ tasks_per_run: 8
 - [x] Add "Dating App Profile Review Mode" to UI presets
 
 ## Phase 3: Next Steps & Ideas
+- **NEW IDEA:** "Tech Debt Confessional Mode" - Agents act as different layers of a legacy system confessing their sins (Pairings: Scientist as DB Admin, Philosopher as Original Architect, Comedian as New Intern).
 - **NEW IDEA:** "RPG Tavern Brawl Mode" - Agents act as fantasy characters in a tavern that is erupting into a brawl. Pairings: Comedian (Drunk Dwarf), Scientist (Rules-Lawyer Wizard), Philosopher (Brooding Rogue).
 - **NEW IDEA:** "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
@@ -83,10 +84,10 @@ tasks_per_run: 8
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
-- [ ] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
-- [ ] Step 1: Authenticate with the HF API using tokens via `/whoami-v2`.
-- [ ] Step 2: Set up a background Web Worker to push generated "Episode Scripts" (JSON) to a private Hugging Face Dataset from IndexedDB without blocking the main thread.
-- [ ] Step 3: Implement an initialization step to fetch "Previous Episode Summaries" (`latest.json`) from HF to prime the `GroupChatManager` context at boot.
+- [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
+- [x] Step 1: Authenticate with the HF API using tokens via `/whoami-v2`.
+- [x] Step 2: Set up a background Web Worker to push generated "Episode Scripts" (JSON) to a private Hugging Face Dataset from IndexedDB without blocking the main thread.
+- [x] Step 3: Implement an initialization step to fetch "Previous Episode Summaries" (`latest.json`) from HF to prime the `GroupChatManager` context at boot.
 
 ## Output Requirements
 - [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.

@@ -101,6 +101,7 @@ export class MemoryManager {
         this.loadCloudCredentials();
         this.processSyncQueue();
         this.ensureCloudSummaryCache();
+        this.startDeltaConsolidationTask();
     }
 
     private loadProfileFromStorage(): void {
@@ -241,9 +242,8 @@ export class MemoryManager {
 
     public async saveEpisodeToCloud(episodeId: string, data: any): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
-        const filename = `episodes/episode-${episodeId}.json`;
+        const filename = `episodes/${episodeId}/episode.json`;
         const content = JSON.stringify(data, null, 2);
-
         // Push to local sync queue
         const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
         const queueRaw = localStorage.getItem(queueKey);
@@ -290,9 +290,75 @@ export class MemoryManager {
         return this.load(`episode-${episodeId}`);
     }
 
+    public async consolidateEpisodeDeltas(episodeId: string): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
+        try {
+            const treeResponse = await fetch(`https://huggingface.co/api/datasets/${this.hfRepoId}/tree/main/episodes/${episodeId}`, {
+                headers: { 'Authorization': `Bearer ${this.hfToken}` }
+            });
+            if (!treeResponse.ok) return;
+            const files = await treeResponse.json();
+            const deltaFiles = files.filter((f: any) => f.type === 'file' && f.path.includes("delta-"));
+            if (deltaFiles.length === 0) return;
+
+            // Download main episode
+            const episodeFilename = `episodes/${episodeId}/episode.json`;
+            const episodeContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, episodeFilename);
+            let mainEpisode = episodeContent ? JSON.parse(episodeContent) : { history: [] };
+
+            // Download and merge all deltas
+            for (const deltaFile of deltaFiles) {
+                const deltaContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, deltaFile.path);
+                if (deltaContent) {
+                    const deltaMessage = JSON.parse(deltaContent);
+                    mainEpisode.history.push(deltaMessage);
+                }
+            }
+
+            // Now we have the merged episode, let's commit it and delete the deltas
+            const operations: any[] = [{
+                operation: "createOrUpdateFile",
+                pathOrUrl: episodeFilename,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(mainEpisode, null, 2))))
+            }];
+
+            for (const deltaFile of deltaFiles) {
+                operations.push({
+                    operation: "deleteFile",
+                    pathOrUrl: deltaFile.path
+                });
+            }
+
+            // Queue the operation to the worker using the custom operations array
+            const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
+            const queueRaw = localStorage.getItem(queueKey);
+            let queue: any[] = queueRaw ? JSON.parse(queueRaw) : [];
+            const jobId = Math.random().toString(36).substring(2, 15);
+            queue.push({ id: jobId, filename: episodeFilename, operations });
+            localStorage.setItem(queueKey, JSON.stringify(queue));
+            this.processSyncQueue();
+        } catch (e) {
+            console.error("Failed to consolidate deltas for episode", episodeId, e);
+        }
+    }
+
+    public startDeltaConsolidationTask(): void {
+        // Periodically run consolidation
+        setInterval(async () => {
+            try {
+                const episodes = await this.listEpisodes();
+                for (const episode of episodes) {
+                    await this.consolidateEpisodeDeltas(episode);
+                }
+            } catch (e) {
+                console.error("Error running consolidation task:", e);
+            }
+        }, 60 * 60 * 1000); // Run every hour
+    }
+
     public async loadEpisodeFromCloud(episodeId: string): Promise<any | null> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
-        const filename = `episodes/episode-${episodeId}.json`;
+        const filename = `episodes/${episodeId}/episode.json`;
         const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, filename);
         if (!content) return null;
         return JSON.parse(content);
@@ -316,7 +382,17 @@ export class MemoryManager {
                 for (const file of files) {
                     if (file.type === 'file' && file.path.endsWith('.json')) {
                         const filename = file.path;
-                        const episodeId = filename.replace('episodes/episode-', '').replace('.json', '');
+                        // Extract episode ID from either format: episodes/episode-X.json or episodes/X/episode.json
+                        let episodeId = "";
+                        if (filename.includes("/")) {
+                            const parts = filename.split("/");
+                            if (parts.length === 3 && parts[2] === "episode.json") {
+                                episodeId = parts[1];
+                            } else if (parts.length === 2 && parts[1].startsWith("episode-")) {
+                                episodeId = parts[1].replace("episode-", "").replace(".json", "");
+                            }
+                        }
+                        if (!episodeId) continue;
                         // Check if we already have it locally
                         const localData = await this.loadEpisode(episodeId);
                         if (!localData) {
