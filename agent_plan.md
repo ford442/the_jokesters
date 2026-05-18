@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 7
+tasks_per_run: 8
 
 ## Phase 1: Configuration & Execution
 - [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
@@ -79,9 +79,11 @@ tasks_per_run: 7
 - **NEW IDEA:** "RPG Tavern Brawl Mode" - Agents act as fantasy characters in a tavern that is erupting into a brawl. Pairings: Comedian (Drunk Dwarf), Scientist (Rules-Lawyer Wizard), Philosopher (Brooding Rogue).
 - **NEW IDEA:** "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
+- **NEW IDEA:** "Escape Room Game Master Mode" - Agents try to guide the user out of a bizarre escape room. Pairings: Comedian (Unhelpful hints, Hermes-3), Scientist (Overly complex puzzles, Qwen2.5), Philosopher (Existential dread about the room, Phi-3).
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
-- [ ] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
+- [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
+- [ ] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
 - [ ] Step 1: Authenticate with the HF API using tokens via `/whoami-v2`.
 - [ ] Step 2: Set up a background Web Worker to push generated "Episode Scripts" (JSON) to a private Hugging Face Dataset from IndexedDB without blocking the main thread.
 - [ ] Step 3: Implement an initialization step to fetch "Previous Episode Summaries" (`latest.json`) from HF to prime the `GroupChatManager` context at boot.

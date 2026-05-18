@@ -177,9 +177,15 @@ export class MemoryManager {
 
         // Background cloud sync
         if (this.hfToken && this.hfRepoId) {
-             this.saveEpisodeToCloud(episodeId, data)
-                 .then(() => console.log(`Episode ${episodeId} synced to cloud.`))
-                 .catch(err => console.error(`Failed to sync episode ${episodeId} to cloud:`, err));
+             if (data.history && data.history.length > 0) {
+                 this.saveEpisodeDeltaToCloud(episodeId, data.history[data.history.length - 1])
+                     .then(() => console.log(`Episode delta ${episodeId} synced to cloud.`))
+                     .catch(err => console.error(`Failed to sync episode delta ${episodeId} to cloud:`, err));
+             } else {
+                 this.saveEpisodeToCloud(episodeId, data)
+                     .then(() => console.log(`Episode ${episodeId} synced to cloud.`))
+                     .catch(err => console.error(`Failed to sync episode ${episodeId} to cloud:`, err));
+             }
 
              // Also update latest.json
              const content = JSON.stringify(data, null, 2);
@@ -211,6 +217,26 @@ export class MemoryManager {
         if (localSummary) return `PREVIOUSLY ON THE JOKESTERS (Local):\n${localSummary}`;
 
         return null;
+    }
+
+    public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: any): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
+        const filename = `episodes/${episodeId}/delta-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;
+        const content = JSON.stringify(newMessage, null, 2);
+
+        // Push to local sync queue
+        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
+        const queueRaw = localStorage.getItem(queueKey);
+        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+
+        // Generate a unique ID for this job to safely remove it later
+        const jobId = Math.random().toString(36).substring(2, 15);
+        queue.push({ id: jobId, filename, content });
+
+        localStorage.setItem(queueKey, JSON.stringify(queue));
+
+        // Trigger sync processing
+        this.processSyncQueue();
     }
 
     public async saveEpisodeToCloud(episodeId: string, data: any): Promise<void> {
