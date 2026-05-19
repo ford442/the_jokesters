@@ -4,6 +4,9 @@
 tasks_per_run: 3
 
 ## Phase 1: Configuration & Execution
+- [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
+- [x] Implement "RPG Tavern Brawl Mode" in `DreamModes_Fantasy.ts`
+- [x] Implement "Escape Room Game Master Mode" in `InteractiveMode.ts`
 - [x] 14. Implement Time-Traveling HOA Mode in DreamModes.ts
 - [x] 15. Register time_traveling_hoa in Director.ts
 - [x] 16. Add Time-Traveling HOA Mode to UI presets
@@ -55,6 +58,8 @@ tasks_per_run: 3
     - **NEW:** Play-by-Play Commentator: Comedian (Hermes-3)
     - **NEW:** Color Commentator / Analyst: Scientist (Qwen2.5)
     - **NEW:** Added "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
+    - **NEW:** Added "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
+    - **NEW:** Added "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 ## Cloud Persistence (Hugging Face Integration)
 - [x] Move heavy data out of localStorage to HF storage_manager.
 - [x] Authenticate with HF API: Validate tokens via `/whoami-v2` and store in `localStorage`.
@@ -76,23 +81,13 @@ tasks_per_run: 3
 - [x] Add "Dating App Profile Review Mode" to UI presets
 
 ## Phase 3: Next Steps & Ideas
-- **NEW IDEA:** "Tech Debt Confessional Mode" - Agents act as different layers of a legacy system confessing their sins (Pairings: Scientist as DB Admin, Philosopher as Original Architect, Comedian as New Intern).
-- **NEW IDEA:** "RPG Tavern Brawl Mode" - Agents act as fantasy characters in a tavern that is erupting into a brawl. Pairings: Comedian (Drunk Dwarf), Scientist (Rules-Lawyer Wizard), Philosopher (Brooding Rogue).
-- **NEW IDEA:** "Armchair Detectives Mode" - Agents act as overly confident true-crime podcast listeners trying to solve a minor mystery presented by the user. Pairings: Scientist (Forensic Analyst), Philosopher (Psychological Profiler), Comedian (Wild Conspiracy Theorist).
+- **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
+- **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
-- **NEW IDEA:** "Escape Room Game Master Mode" - Agents try to guide the user out of a bizarre escape room. Pairings: Comedian (Unhelpful hints, Hermes-3), Scientist (Overly complex puzzles, Qwen2.5), Philosopher (Existential dread about the room, Phi-3).
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
-- [x] Step 1: Authenticate with the HF API using tokens via `/whoami-v2`.
-- [x] Step 2: Set up a background Web Worker to push generated "Episode Scripts" (JSON) to a private Hugging Face Dataset from IndexedDB without blocking the main thread.
-- [x] Step 3: Implement an initialization step to fetch "Previous Episode Summaries" (`latest.json`) from HF to prime the `GroupChatManager` context at boot.
-
-## Output Requirements
-- [x] 10. Updated Plan updated with completed items, new velocity, and newly brainstormed mode & storage features.
-
-### Cloud Persistence (Hugging Face Integration)
-- [x] Implement Hugging Face API authentication mechanism via `/whoami-v2`.
-- [x] Develop background script/worker for pushing generated "Episode Scripts" (JSON) to a private Hugging Face Dataset.
-- [x] Add boot-time sequence to fetch "Previous Episode Summaries" (latest.json) to seed `GroupChatManager` continuity.
+- [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
+- [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
+- [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)

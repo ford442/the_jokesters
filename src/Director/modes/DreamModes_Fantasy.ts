@@ -54,6 +54,39 @@ export async function runMagicalDetentionLoop(scenario: Scenario, ctx: ModeConte
     }
 }
 
+export async function runRPGTavernBrawlLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍺 RPG TAVERN BRAWL: Roll for initiative!`, '#f39c12');
+
+    const drunkDwarf = 'comedian';
+    const rulesWizard = 'scientist';
+    const broodingRogue = 'philosopher';
+
+    ctx.callbacks.onTurnStart(broodingRogue);
+    await ctx.manager.chatForAgent(broodingRogue, `(TAVERN BRAWL: You are a brooding, edgy rogue sitting in the dark corner of the tavern. Introduce yourself mysteriously, and complain about how everyone here is too loud and ruining your dark, tragic backstory.)`, async (s) => await ctx.callbacks.onSpeak(s, broodingRogue, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Tavern Patron (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(drunkDwarf);
+        await ctx.manager.chatForAgent(drunkDwarf, `(TAVERN BRAWL: The Patron said: "${userInput}". You are a loud, incredibly drunk dwarf looking for a fight. Respond aggressively and challenge the patron or anyone else to an arm-wrestling contest or a brawl.)`, async (s) => await ctx.callbacks.onSpeak(s, drunkDwarf, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(rulesWizard);
+        await ctx.manager.chatForAgent(rulesWizard, `(TAVERN BRAWL: The Patron said: "${userInput}". You are a pedantic, rules-lawyer wizard. Interrupt the dwarf and cite the exact local tavern ordinances and magical laws that prohibit brawling, while casting "Protection from Energy" on your drink.)`, async (s) => await ctx.callbacks.onSpeak(s, rulesWizard, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(broodingRogue);
+        await ctx.manager.chatForAgent(broodingRogue, `(TAVERN BRAWL: The Patron said: "${userInput}". You are the brooding rogue. Sigh heavily at the chaos. Contemplate the philosophical meaninglessness of this conflict before stealthily stealing someone's coin purse in the confusion.)`, async (s) => await ctx.callbacks.onSpeak(s, broodingRogue, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
 /**
  * The Forbidden Spellbook
  * Agents act as different locked chapters of a forbidden spellbook, demanding the user pass absurd tests to read them.

@@ -299,3 +299,35 @@ export async function runParanoidSmokeDetectorLoop(_scenario: Scenario, ctx: Mod
     await manager.chatForAgent('philosopher', "(SYSTEM: You are analyzing the heat of the debate, mistaking conversational fire for literal fire.)", async (s) => callbacks.onSpeak(s, 'philosopher', {}));
 }
 
+export async function runTechDebtConfessionalLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💾 TECH DEBT CONFESSIONAL: Time to repent for your hacks!`, '#e74c3c');
+
+    const newIntern = 'comedian';
+    const dbAdmin = 'scientist';
+    const originalArchitect = 'philosopher';
+
+    ctx.callbacks.onTurnStart(originalArchitect);
+    await ctx.manager.chatForAgent(originalArchitect, `(TECH DEBT CONFESSIONAL: You are the original architect of this 20-year-old legacy system. Confess your greatest sin: creating a completely unreadable, heavily nested architecture that you thought was "elegant" at the time. Wax poetic about the beauty of your terrible decisions.)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('QA Engineer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dbAdmin);
+        await ctx.manager.chatForAgent(dbAdmin, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the grumpy, cynical DB Admin. Confess your own sins involving massive, unindexed tables and stored procedures that no one understands. Blame the original architect for the schemas.)`, async (s) => await ctx.callbacks.onSpeak(s, dbAdmin, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(newIntern);
+        await ctx.manager.chatForAgent(newIntern, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the terrified new intern who just started yesterday. Confess to accidentally dropping a production table or pushing API keys to a public repo because you were trying to copy code from StackOverflow.)`, async (s) => await ctx.callbacks.onSpeak(s, newIntern, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(originalArchitect);
+        await ctx.manager.chatForAgent(originalArchitect, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". Respond with a deeply philosophical justification for why these bugs and hacks are actually essential features of the system's "soul".)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
