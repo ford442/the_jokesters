@@ -421,6 +421,39 @@ export async function runDatingShowLoop(_scenario: Scenario, ctx: ModeContext) {
     }
 }
 
+export async function runEscapeRoomGameMasterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚪 ESCAPE ROOM GAME MASTER: Time is ticking...`, '#e67e22');
+
+    const unhelpfulHints = 'comedian';
+    const complexPuzzles = 'scientist';
+    const existentialDread = 'philosopher';
+
+    ctx.callbacks.onTurnStart(complexPuzzles);
+    await ctx.manager.chatForAgent(complexPuzzles, `(ESCAPE ROOM: You are an overly complex Game Master. Welcome the user to the "Room of Infinite Geometry". Explain the first puzzle, which requires solving a 5-dimensional calculus problem just to turn on the lights.)`, async (s) => await ctx.callbacks.onSpeak(s, complexPuzzles, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Player (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(unhelpfulHints);
+        await ctx.manager.chatForAgent(unhelpfulHints, `(ESCAPE ROOM: The player said: "${userInput}". You are the unhelpful Game Master giving terrible hints over the intercom. Give a hint that is completely useless, like "The key is in your heart" or "Have you tried pushing the wall really hard?")`, async (s) => await ctx.callbacks.onSpeak(s, unhelpfulHints, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(complexPuzzles);
+        await ctx.manager.chatForAgent(complexPuzzles, `(ESCAPE ROOM: The player said: "${userInput}". The player is failing. Introduce a new, even more complicated rule or puzzle mechanic involving prime numbers and ancient Sumerian text.)`, async (s) => await ctx.callbacks.onSpeak(s, complexPuzzles, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(existentialDread);
+        await ctx.manager.chatForAgent(existentialDread, `(ESCAPE ROOM: The player said: "${userInput}". You are the existential Game Master. Wonder aloud if any of us are truly "escaping" anything, or if the room is just a metaphor for life itself. Suggest they just sit down and accept their fate.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialDread, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
 export async function runSilentTreatmentLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', '🤫 THE SILENT TREATMENT: Make them talk!', '#34495e');
 

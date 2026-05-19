@@ -579,6 +579,21 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'dating_profile_review',
     title: "Dating App Profile Review Mode",
     description: 'Agents mercilessly review the user\'s hypothetical dating profile.'
+  },
+  {
+    id: 'tech_debt_confessional',
+    title: "Tech Debt Confessional Mode",
+    description: 'Agents act as different layers of a legacy system confessing their sins and terrible code.'
+  },
+  {
+    id: 'rpg_tavern_brawl',
+    title: "RPG Tavern Brawl Mode",
+    description: 'Agents act as fantasy characters in a tavern that is erupting into a massive brawl.'
+  },
+  {
+    id: 'escape_room_game_master',
+    title: "Escape Room Game Master Mode",
+    description: 'Agents try to guide (or hinder) the user out of a bizarre escape room.'
   }
 ];
 
