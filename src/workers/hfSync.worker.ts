@@ -26,14 +26,18 @@ self.onmessage = async (e: MessageEvent) => {
 
             const commitUrl = `https://huggingface.co/api/datasets/${cleanRepoId}/commit/main`;
 
+            // If item provides custom operations, use them, otherwise default to createOrUpdateFile
+            let operations = item.operations;
+            if (!operations) {
+                operations = [{
+                    operation: "createOrUpdateFile",
+                    pathOrUrl: item.filename,
+                    content: btoa(unescape(encodeURIComponent(item.content)))
+                }];
+            }
+
             const commitBody = {
-                operations: [
-                    {
-                        operation: "createOrUpdateFile",
-                        pathOrUrl: item.filename,
-                        content: btoa(unescape(encodeURIComponent(item.content)))
-                    }
-                ],
+                operations: operations,
                 commitMessage: `Update ${item.filename}`,
             };
 
