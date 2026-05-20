@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Phase 1: Configuration & Execution
 - [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
@@ -72,6 +72,10 @@ tasks_per_run: 3
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Pending Tasks (Next cycle)
+- [x] Implement "Time-Traveling QA Engineer Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Sentient Vending Machine Restocker Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Sentient API Endpoint Support Group Mode" in `DreamModes_Tech.ts`
+- [x] Update agent_plan.md to track execution
 - [x] Implement "Armchair Detectives Mode" in `InteractiveMode.ts`
 - [x] Register `armchair_detectives` in `Director.ts`
 - [x] Add "Armchair Detectives Mode" to UI presets
@@ -81,11 +85,20 @@ tasks_per_run: 3
 - [x] Add "Dating App Profile Review Mode" to UI presets
 
 ## Phase 3: Next Steps & Ideas
+- **NEW IDEA:** "AI Hallucination Anonymous" - Agents play AI models dealing with the reality that they made up a non-existent API. Pairings: Scientist (Denial), Philosopher (Questions reality), Comedian (Embraces the hallucination).
+- **NEW IDEA:** "Passive Aggressive Smart Home Mode" - Agents play different smart home devices annoyed at the user. Pairings: Scientist (Strict Thermostat), Philosopher (Existential Smart Fridge), Comedian (Chaotic Roomba).
+
 - **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
 - **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
+- [ ] Authenticating with the HF API using tokens via `/whoami-v2`.
+- [ ] Pushing finished "Episode Scripts" to a private Dataset.
+- [ ] Fetching "Previous Episode Summaries" at boot for continuity.
+
+- [ ] Offline-First Strategies: Cache episodes locally in IndexedDB using Dexie.js and only attempt Hugging Face sync when `navigator.onLine` is true. Implement a background sync retry mechanism upon reconnection.
+
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)

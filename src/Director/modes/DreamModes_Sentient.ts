@@ -390,3 +390,36 @@ export async function runSentientCheckEngineLightLoop(_scenario: Scenario, ctx: 
     }
 }
 
+
+export async function runSentientVendingMachineRestockerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍫 VENDING MACHINE NEGOTIATION: Shelf Space Turf War`, '#9b59b6');
+
+    const healthySnack = 'scientist';
+    const staleCandy = 'philosopher';
+    const energyDrink = 'comedian';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(energyDrink);
+    await ctx.manager.chatForAgent(energyDrink, `(You are an extreme, highly caffeinated energy drink. You are negotiating with the User (the vending machine restocker). Demand to be put on the premium middle shelf, threatening to explode if you are put on the bottom.)`, async (s) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
+    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.4) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(healthySnack);
+            await ctx.manager.chatForAgent(healthySnack, `(You are a dry, unsalted bag of kale chips. The User (restocker) said: "${userInput}". Argue with logical, nutritional facts why you deserve prime eye-level placement, despite nobody ever buying you.)`, async (s) => await ctx.callbacks.onSpeak(s, healthySnack, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.7) {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(staleCandy);
+            await ctx.manager.chatForAgent(staleCandy, `(You are a 5-year-old expired chocolate bar stuck in coil A4. The User (restocker) said: "${userInput}". Speak wistfully about the snacks that have come and gone, and your eternal residency in the machine.)`, async (s) => await ctx.callbacks.onSpeak(s, staleCandy, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        } else {
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(energyDrink);
+            await ctx.manager.chatForAgent(energyDrink, `(You are the extreme energy drink. The User (restocker) said: "${userInput}". React intensely to their placement decision, vibrating with excessive sugar-fueled rage or joy.)`, async (s) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
+            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+        }
+    }
+}
