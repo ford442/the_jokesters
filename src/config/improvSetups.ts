@@ -11,6 +11,21 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
   {
+    id: 'sentient_api_endpoint_support_group',
+    title: "Sentient API Endpoint Support Group",
+    description: "Burnt-out and deprecated API endpoints share their trauma."
+  },
+  {
+    id: 'time_traveling_qa_engineer',
+    title: "Time-Traveling QA Engineer",
+    description: "A QA Engineer from the future tries to warn you about a catastrophic bug you're about to write."
+  },
+  {
+    id: 'sentient_vending_machine_restocker',
+    title: "Sentient Vending Machine Restocker",
+    description: "Snacks negotiate for prime shelf space while you restock the vending machine."
+  },
+  {
     id: 'armchair_detectives',
     title: "Armchair Detectives",
     description: "Agents over-analyze a minor mundane mystery you present to them."
