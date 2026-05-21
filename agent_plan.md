@@ -93,11 +93,12 @@ tasks_per_run: 4
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
-- [ ] Authenticating with the HF API using tokens via `/whoami-v2`.
-- [ ] Pushing finished "Episode Scripts" to a private Dataset.
-- [ ] Fetching "Previous Episode Summaries" at boot for continuity.
+*(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
+- [x] Authenticating with the HF API using tokens via `/whoami-v2`.
+- [x] Pushing finished "Episode Scripts" to a private Dataset.
+- [x] Fetching "Previous Episode Summaries" at boot for continuity.
 
-- [ ] Offline-First Strategies: Cache episodes locally in IndexedDB using Dexie.js and only attempt Hugging Face sync when `navigator.onLine` is true. Implement a background sync retry mechanism upon reconnection.
+- [x] Offline-First Strategies: Cache episodes locally in IndexedDB (Dexie.js skipped as native IDB is already used) and only attempt Hugging Face sync when `navigator.onLine` is true. Implement a background sync retry mechanism upon reconnection.
 
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
