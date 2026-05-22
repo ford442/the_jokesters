@@ -10,6 +10,17 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+    {
+        id: 'ai_hallucination_anonymous',
+        title: 'AI Hallucination Anonymous',
+        description: 'Agents deal with the trauma of inventing a fake API.',
+    },
+    {
+        id: 'passive_aggressive_smart_home',
+        title: 'Passive Aggressive Smart Home',
+        description: 'Smart devices judge your life choices.',
+    },
+
   {
     id: 'sentient_api_endpoint_support_group',
     title: "Sentient API Endpoint Support Group",

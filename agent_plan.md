@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 5
 
 ## Phase 1: Configuration & Execution
 - [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
@@ -72,6 +72,10 @@ tasks_per_run: 4
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Pending Tasks (Next cycle)
+- [x] Implement "AI Hallucination Anonymous" in `DreamModes_Tech.ts`
+- [x] Implement "Passive Aggressive Smart Home Mode" in `DreamModes_Sentient.ts`
+- [x] Register new modes in `Director.ts`
+- [x] Add new modes to UI presets in `improvSetups.ts`
 - [x] Implement "Time-Traveling QA Engineer Mode" in `DreamModes_Tech.ts`
 - [x] Implement "Sentient Vending Machine Restocker Mode" in `DreamModes_Sentient.ts`
 - [x] Implement "Sentient API Endpoint Support Group Mode" in `DreamModes_Tech.ts`
@@ -85,8 +89,8 @@ tasks_per_run: 4
 - [x] Add "Dating App Profile Review Mode" to UI presets
 
 ## Phase 3: Next Steps & Ideas
-- **NEW IDEA:** "AI Hallucination Anonymous" - Agents play AI models dealing with the reality that they made up a non-existent API. Pairings: Scientist (Denial), Philosopher (Questions reality), Comedian (Embraces the hallucination).
-- **NEW IDEA:** "Passive Aggressive Smart Home Mode" - Agents play different smart home devices annoyed at the user. Pairings: Scientist (Strict Thermostat), Philosopher (Existential Smart Fridge), Comedian (Chaotic Roomba).
+- **NEW IDEA:** "Internet Explorer Support Group" - Agents play discontinued browsers (IE, Netscape, AOL Explorer) lamenting their irrelevance.
+- **NEW IDEA:** "Sentient Wi-Fi Router" - Agents play a Wi-Fi router, a smartphone, and a smart fridge arguing over bandwidth allocation.
 
 - **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
 - **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
@@ -102,6 +106,8 @@ tasks_per_run: 4
 
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
+- [ ] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
+- [ ] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
 - [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
