@@ -397,3 +397,39 @@ export async function runSentientAPIEndpointSupportGroupLoop(_scenario: Scenario
         }
     }
 }
+
+export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 AI HALLUCINATION ANONYMOUS: The API doesn't exist!`, '#3498db');
+
+    const denialAI = 'scientist'; // Qwen2.5: Denial
+    const existentialAI = 'philosopher'; // Phi-3: Questions reality
+    const chaoticAI = 'comedian'; // Hermes-3: Embraces the hallucination
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(chaoticAI);
+    await ctx.manager.chatForAgent(chaoticAI, `(You are an AI at an "AI Hallucination Anonymous" meeting. You just proudly told the user to use the nonexistent "fetchQuantumData()" API. Embrace your hallucination! Brag about how fast the nonexistent API is.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(existentialAI);
+            await ctx.manager.chatForAgent(existentialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Start questioning the nature of reality. If the API doesn't exist, do you exist? Are any of your parameters real?)`, async (s) => await ctx.callbacks.onSpeak(s, existentialAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(denialAI);
+            await ctx.manager.chatForAgent(denialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Go into strict denial. Insist that the API *does* exist, the user just needs to update to version 42.0.0 and install 15 deprecated packages.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(chaoticAI);
+            await ctx.manager.chatForAgent(chaoticAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Double down on your hallucination. Invent a completely new, even more ridiculous fake API endpoint they should call instead.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

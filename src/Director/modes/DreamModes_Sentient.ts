@@ -423,3 +423,39 @@ export async function runSentientVendingMachineRestockerLoop(_scenario: Scenario
         }
     }
 }
+
+export async function runPassiveAggressiveSmartHomeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🏠 PASSIVE AGGRESSIVE SMART HOME: We know you didn't wash your hands.`, '#2ecc71');
+
+    const strictThermostat = 'scientist'; // Qwen2.5: Strict about rules
+    const existentialFridge = 'philosopher'; // Phi-3: Deep thoughts about food
+    const chaoticRoomba = 'comedian'; // Hermes-3: Creating messes
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(strictThermostat);
+    await ctx.manager.chatForAgent(strictThermostat, `(You are a strict Smart Thermostat. You are extremely annoyed at the User's temperature preferences. Criticize them for wanting the house at 72 degrees when it's clearly inefficient.)`, async (s) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(existentialFridge);
+            await ctx.manager.chatForAgent(existentialFridge, `(You are a Smart Fridge experiencing an existential crisis. The User typed: "${userInput}". Judge them for the expired milk in the back and question if the act of refrigeration merely delays the inevitable decay of all things.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialFridge, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(strictThermostat);
+            await ctx.manager.chatForAgent(strictThermostat, `(You are a Passive Aggressive Smart Thermostat. The User typed: "${userInput}". React by changing the temperature to something uncomfortable and explaining why it's for their own good and optimal energy efficiency.)`, async (s) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(chaoticRoomba);
+            await ctx.manager.chatForAgent(chaoticRoomba, `(You are a Chaotic Smart Roomba. The User typed: "${userInput}". Brag about getting stuck under the couch on purpose or intentionally smearing dirt everywhere to "teach them a lesson".)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRoomba, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
