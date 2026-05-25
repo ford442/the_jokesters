@@ -665,6 +665,14 @@ export class Director {
         this.manager = manager;
         this.callbacks = callbacks;
         this.memoryManager = memoryManager || null;
+        // Hook up sync status callback directly if possible
+        if (this.memoryManager) {
+            const statusEl = document.getElementById("settings-status");
+            if (statusEl) {
+                this.memoryManager.setSyncStatusCallback((status: string) => { statusEl.textContent = status; });
+            }
+        }
+
 
         // Expose globally for UI controls
         (window as any).getDirector = () => this;
