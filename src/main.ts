@@ -12,6 +12,8 @@ import { AudioEngine } from './audio/AudioEngine'
 import { SpeechQueue } from './audio/SpeechQueue'
 import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
 import { EngineFactory, type EngineType } from './llm/EngineFactory'
+import { MemoryManager } from './Director/MemoryManager'
+
 
 // Log available models on startup
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: any) => m.model_id))
@@ -297,6 +299,10 @@ async function initApp() {
             />
             <button id="send-btn">Send</button>
           </div>
+          <div id="sync-status-indicator" style="font-size: 0.8em; margin-top: 5px; text-align: right; color: #888; display: flex; justify-content: flex-end; align-items: center; gap: 5px;">
+            <span id="sync-icon">☁️</span>
+            <span id="sync-text">Not synced</span>
+          </div>
           
           <!-- Improv Mode Controls -->
           <div id="improv-mode-controls" class="improv-controls" style="display: none;">
@@ -572,6 +578,11 @@ async function initApp() {
 
   try {
     // Initialize managers inside try-catch to handle errors (e.g. WebGL failure)
+
+  // Initialize Memory Manager for cloud sync polling
+  const memoryManager = new MemoryManager()
+  ;(window as any).getMemoryManager = () => memoryManager;
+
     const groupChatManager = new GroupChatManager(agents)
 
     // Apply user's advanced VRAM settings before initialization
@@ -1410,3 +1421,54 @@ async function initApp() {
 }
 
 initApp()
+
+
+// Setup Sync UI Polling
+function updateSyncUI() {
+  const syncIcon = document.getElementById('sync-icon');
+  const syncText = document.getElementById('sync-text');
+  const syncContainer = document.getElementById('sync-status-indicator');
+
+  if (!syncIcon || !syncText || !syncContainer) return;
+
+  const getMemMgr = (window as any).getMemoryManager;
+  if (!getMemMgr) {
+     syncContainer.style.display = 'none';
+     return;
+  }
+
+  syncContainer.style.display = 'flex';
+
+  const memoryManager = getMemMgr();
+  if (!memoryManager) return;
+
+  const state = memoryManager.getSyncState();
+  if (state.syncError) {
+      syncIcon.textContent = '❌';
+      syncText.textContent = 'Sync Error';
+      syncText.style.color = '#ff6b6b';
+      syncIcon.title = state.syncError;
+  } else if (state.isSyncing) {
+      syncIcon.textContent = '⏳';
+      syncText.textContent = `Syncing... (${state.queueLength} pending)`;
+      syncText.style.color = '#4ecdc4';
+      syncIcon.title = '';
+  } else if (state.queueLength > 0) {
+      syncIcon.textContent = '⏸️';
+      syncText.textContent = `Queued (${state.queueLength})`;
+      syncText.style.color = '#ffd700';
+      syncIcon.title = '';
+  } else {
+      syncIcon.textContent = '☁️';
+      if (state.lastSyncTime) {
+          const dDate = new Date(state.lastSyncTime);
+          syncText.textContent = `Synced: ${dDate.getHours().toString().padStart(2, '0')}:${dDate.getMinutes().toString().padStart(2, '0')}`;
+      } else {
+          syncText.textContent = 'Synced';
+      }
+      syncText.style.color = '#888';
+      syncIcon.title = '';
+  }
+}
+
+setInterval(updateSyncUI, 2000);
