@@ -8,6 +8,7 @@ export class MemoryManager {
     private syncWorker: Worker | null = null;
     private isSyncing: boolean = false;
     private currentProfile: string = 'default';
+    private syncStatusCallback: ((status: string) => void) | null = null;
 
     // IndexedDB Helpers
     private dbName = 'jokestersDB';
@@ -91,10 +92,15 @@ export class MemoryManager {
                         queue = queue.filter(q => q.id !== data.itemId);
                         localStorage.setItem(data.queueKey, JSON.stringify(queue));
                     }
+                    if (this.syncStatusCallback) this.syncStatusCallback('Synced item successfully.');
                 } else if (data.type === 'sync_complete') {
                     this.isSyncing = false;
+                    if (this.syncStatusCallback) this.syncStatusCallback('All items synced.');
+                    setTimeout(() => { if (this.syncStatusCallback && !this.isSyncing) this.syncStatusCallback(''); }, 3000);
                 } else if (data.type === 'sync_error') {
                     console.error('Sync error from worker:', data.error);
+                    if (this.syncStatusCallback) this.syncStatusCallback(`Sync error: ${data.error}`);
+                    setTimeout(() => { if (this.syncStatusCallback && !this.isSyncing) this.syncStatusCallback(''); }, 5000);
                 }
             };
         }
@@ -102,6 +108,10 @@ export class MemoryManager {
         this.processSyncQueue();
         this.ensureCloudSummaryCache();
         this.startDeltaConsolidationTask();
+    }
+
+    public setSyncStatusCallback(callback: (status: string) => void) {
+        this.syncStatusCallback = callback;
     }
 
     private loadProfileFromStorage(): void {
@@ -289,6 +299,8 @@ export class MemoryManager {
         let queue: { id: string, repoId?: string, filename: string, content: string }[] = JSON.parse(queueRaw);
         if (queue.length === 0) return;
 
+        if (this.syncStatusCallback) this.syncStatusCallback(`Syncing ${queue.length} item(s)...`);
+
         this.isSyncing = true;
 
         this.syncWorker.postMessage({
@@ -424,15 +436,14 @@ export class MemoryManager {
                             // Conflict resolution: Last-Writer-Wins (LWW) based on timestamp, fallback to length
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
-                                const cloudTimestamp = cloudData.timestamp || 0;
-                                const localTimestamp = localData.timestamp || 0;
-
-                                if (cloudTimestamp > localTimestamp) {
-                                    console.log(`Conflict resolved: Cloud version of ${filename} is newer. Updating local data...`);
+                                const cloudTime = new Date(cloudData.timestamp || 0).getTime();
+                                const localTime = new Date(localData.timestamp || 0).getTime();
+                                if (cloudData.history.length > localData.history.length || (cloudData.history.length === localData.history.length && cloudTime > localTime)) {
+                                    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
                                     this.save(`episode-${episodeId}`, cloudData);
                                     await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                } else if (localTimestamp > cloudTimestamp) {
-                                    console.log(`Conflict resolved: Local version of ${filename} is newer. Queuing cloud update...`);
+                                } else if (localData.history.length > cloudData.history.length || (localData.history.length === cloudData.history.length && localTime > cloudTime)) {
+                                    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
                                     this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
                                 } else {
                                     // Fallback to length if timestamps are equal or missing
