@@ -3,6 +3,10 @@
 ## Project Velocity
 tasks_per_run: 5
 
+### Project Velocity (Infrastructure & Reliability)
+- [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
+- [x] **Sync Indicator UI** — Fixed race condition in main.ts so UI elements are bound only after render completes.
+
 ## Phase 1: Configuration & Execution
 - [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
 - [x] Implement "RPG Tavern Brawl Mode" in `DreamModes_Fantasy.ts`
@@ -98,6 +102,7 @@ tasks_per_run: 5
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 *(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
+*(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
 - [x] Authenticating with the HF API using tokens via `/whoami-v2`.
 - [x] Pushing finished "Episode Scripts" to a private Dataset.
 - [x] Fetching "Previous Episode Summaries" at boot for continuity.
@@ -106,8 +111,8 @@ tasks_per_run: 5
 
 - [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
-- [ ] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
-- [ ] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
+- [x] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
+- [x] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
 - [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
