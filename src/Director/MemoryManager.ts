@@ -121,6 +121,23 @@ export class MemoryManager {
         }
     }
 
+
+    public getSyncState(): { isSyncing: boolean, queueLength: number, lastSyncTime: number | null, syncError: string | null } {
+        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
+        const queueRaw = localStorage.getItem(queueKey);
+        const queue = queueRaw ? JSON.parse(queueRaw) : [];
+        const lastSyncTimeStr = localStorage.getItem(`${this.prefix}${this.currentProfile}-last-sync-time`);
+        const lastSyncTime = lastSyncTimeStr ? parseInt(lastSyncTimeStr, 10) : null;
+        const syncError = localStorage.getItem(`${this.prefix}${this.currentProfile}-sync-error`);
+
+        return {
+            isSyncing: this.isSyncing,
+            queueLength: queue.length,
+            lastSyncTime,
+            syncError
+        };
+    }
+
     public switchProfile(profileName: string): void {
         this.currentProfile = profileName;
         localStorage.setItem(this.prefix + 'current-profile', profileName);
@@ -177,6 +194,7 @@ export class MemoryManager {
     }
 
     public saveEpisode(episodeId: string, data: any): void {
+        data.timestamp = Date.now();
         this.save(`episode-${episodeId}`, data);
         this.idbSet(`episode-${episodeId}`, data).catch(e => console.error(e));
 
@@ -415,7 +433,7 @@ export class MemoryManager {
                                 await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
                         } else {
-                            // Conflict resolution: compare length of history array to see which is more up-to-date
+                            // Conflict resolution: Last-Writer-Wins (LWW) based on timestamp, fallback to length
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
                                 const cloudTime = new Date(cloudData.timestamp || 0).getTime();
@@ -428,7 +446,17 @@ export class MemoryManager {
                                     console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
                                     this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
                                 } else {
-                                    console.log(`${filename} is up to date.`);
+                                    // Fallback to length if timestamps are equal or missing
+                                    if (cloudData.history.length > localData.history.length) {
+                                        console.log(`Conflict resolved: Cloud version of ${filename} is longer. Updating local data...`);
+                                        this.save(`episode-${episodeId}`, cloudData);
+                                        await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
+                                    } else if (localData.history.length > cloudData.history.length) {
+                                        console.log(`Conflict resolved: Local version of ${filename} is longer. Queuing cloud update...`);
+                                        this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+                                    } else {
+                                        console.log(`${filename} is up to date.`);
+                                    }
                                 }
                             }
                         }
