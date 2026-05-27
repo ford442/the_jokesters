@@ -1472,3 +1472,4 @@ function updateSyncUI() {
 }
 
 setInterval(updateSyncUI, 2000);
+window.addEventListener('syncStatusUpdated', updateSyncUI);

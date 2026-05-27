@@ -40,6 +40,21 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
         title: 'Passive Aggressive Smart Home',
         description: 'Smart devices judge your life choices.',
     },
+    {
+        id: 'internet_explorer_support_group',
+        title: 'Internet Explorer Support Group',
+        description: 'Discontinued browsers lament their irrelevance.',
+    },
+    {
+        id: 'sentient_wifi_router',
+        title: 'Sentient Wi-Fi Router',
+        description: 'Devices argue over bandwidth allocation.',
+    },
+    {
+        id: 'sentient_shopping_cart',
+        title: 'Sentient Shopping Cart',
+        description: 'Carts share their tragic existence.',
+    },
 
   {
     id: 'sentient_api_endpoint_support_group',

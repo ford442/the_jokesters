@@ -2,8 +2,8 @@
 // Import from the unified index which re-exports all categories
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
-import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop } from './modes/DreamModes_Sentient';
-import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop } from './modes/DreamModes_Tech';
+import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop } from './modes/DreamModes_Sentient';
+import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runSentientWiFiRouterLoop } from './modes/DreamModes_Tech';
 import { runMarsColonyHOALoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
@@ -270,6 +270,8 @@ export interface Scenario {
     | 'sentient_wifi_router'
     | 'sentient_coffee_machine'
     | 'mars_colony_hoa';
+    | 'sentient_shopping_cart';
+
     title: string;
     description: string;
     config?: {
@@ -530,6 +532,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sentient_wifi_router: runSentientWiFiRouterLoop,
     sentient_coffee_machine: runSentientCoffeeMachineLoop,
     mars_colony_hoa: runMarsColonyHOALoop,
+    sentient_shopping_cart: runSentientShoppingCartLoop,
+    internet_explorer_support_group: runInternetExplorerSupportGroupLoop,
+    sentient_wifi_router: runSentientWiFiRouterLoop,
+    sentient_shopping_cart: runSentientShoppingCartLoop,
     superhero_therapy: runSuperheroTherapyLoop,
     intergalactic_cooking: runIntergalacticCookingLoop,
     time_traveling_irs: runTimeTravelingIRSLoop,
