@@ -433,3 +433,28 @@ export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: 
         }
     }
 }
+
+export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    const netscape = 'scientist';
+    const aol = 'philosopher';
+    const ie = 'comedian';
+
+
+
+    ctx.callbacks.onTurnStart(netscape);
+    await ctx.manager.chatForAgent(
+        netscape,
+        "Welcome to the discontinued browsers support group. As the first true pioneer of the web, I'll start. It still hurts that I was replaced by bundled bloatware.",
+        (s) => ctx.callbacks.onSpeak(s, netscape, {}),
+        { hiddenInstruction: "You are Netscape Navigator. You are bitter that you invented the modern web but were destroyed by Microsoft. You consider yourself the true academic pioneer." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(aol);
+    await ctx.manager.chatForAgent(aol, "*Dial-up modem sounds* You've got mail! Remember when people paid by the hour to use me? Those were the days.", (s) => ctx.callbacks.onSpeak(s, aol, {}), { hiddenInstruction: "You are AOL Explorer. You speak in dial-up sounds and remember when the internet was delivered on CD-ROMs in the mail. You think everything is an 'AOL Keyword'." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(ie);
+    await ctx.manager.chatForAgent(ie, "Wait, are we starting? Sorry, I'm still loading the page... Yes, I am the default! Wait, who is Chrome?", (s) => ctx.callbacks.onSpeak(s, ie, {}), { hiddenInstruction: "You are Internet Explorer. You are incredibly slow, frequently crash, and refuse to accept that you are obsolete. You think you are still the default browser for the world." });
+    ctx.callbacks.onTurnEnd();
+}

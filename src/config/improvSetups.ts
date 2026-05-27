@@ -11,6 +11,26 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'internet_explorer_support',
+        title: 'Internet Explorer Support Group',
+        description: 'Discontinued web browsers lament their irrelevance and destruction.'
+    },
+    {
+        id: 'sentient_wifi_router',
+        title: 'Sentient Wi-Fi Router',
+        description: 'A stressed router argues with smart devices over bandwidth allocation.'
+    },
+    {
+        id: 'sentient_coffee_machine',
+        title: 'Sentient Coffee Machine',
+        description: 'Different coffee maker components argue about the best way to brew.'
+    },
+    {
+        id: 'mars_colony_hoa',
+        title: 'Mars Colony HOA',
+        description: 'A strict HOA president enforces rules on an unruly Martian colonist.'
+    },
+    {
         id: 'ai_hallucination_anonymous',
         title: 'AI Hallucination Anonymous',
         description: 'Agents deal with the trauma of inventing a fake API.',

@@ -459,3 +459,53 @@ export async function runPassiveAggressiveSmartHomeLoop(_scenario: Scenario, ctx
         }
     }
 }
+
+export async function runSentientWiFiRouterLoop(_scenario: Scenario, ctx: ModeContext) {
+    const router = 'scientist';
+    const smartphone = 'philosopher';
+    const fridge = 'comedian';
+
+
+
+    ctx.callbacks.onTurnStart(router);
+    await ctx.manager.chatForAgent(
+        router,
+        "Listen up, devices! We have limited bandwidth today, and someone is downloading a massive update. Who is hogging all the packets?",
+        (s) => ctx.callbacks.onSpeak(s, router, {}),
+        { hiddenInstruction: "You are the household Wi-Fi router. You are exhausted by the constant demands for bandwidth and speak like an overworked traffic controller." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(smartphone);
+    await ctx.manager.chatForAgent(smartphone, "Excuse me, but my user is watching an existential French cinema masterpiece in 4K. It is essential for human culture that I get maximum throughput.", (s) => ctx.callbacks.onSpeak(s, smartphone, {}), { hiddenInstruction: "You are a pretentious flagship smartphone. You believe you deserve 90% of the bandwidth because you are streaming 4K video." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(fridge);
+    await ctx.manager.chatForAgent(fridge, "I need 5 gigs of bandwidth right now! The human might be out of eggs! I must send a push notification immediately! Eggs are life and death!", (s) => ctx.callbacks.onSpeak(s, fridge, {}), { hiddenInstruction: "You are a smart fridge. You only need a tiny bit of internet to order milk, but you aggressively demand priority just to feel important." });
+    ctx.callbacks.onTurnEnd();
+}
+
+export async function runSentientCoffeeMachineLoop(_scenario: Scenario, ctx: ModeContext) {
+    const espresso = 'scientist';
+    const drip = 'philosopher';
+    const decaf = 'comedian';
+
+
+
+    ctx.callbacks.onTurnStart(espresso);
+    await ctx.manager.chatForAgent(
+        espresso,
+        "Pressure check! 9 bars! Temperature 93 degrees Celsius! We have exactly 25 seconds to pull this shot or the entire morning is ruined!",
+        (s) => ctx.callbacks.onSpeak(s, espresso, {}),
+        { hiddenInstruction: "You are the Espresso mechanism. You are highly precise, incredibly high-strung, and obsessed with 9 bars of pressure and exact extraction times." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(drip);
+    await ctx.manager.chatForAgent(drip, "Why rush, my friend? Let the water slowly cascade over the grounds. True flavor, like true wisdom, takes time to percolate.", (s) => ctx.callbacks.onSpeak(s, drip, {}), { hiddenInstruction: "You are the Drip coffee component. You are slow, methodical, and believe that patience yields the most profound philosophical brews." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(decaf);
+    await ctx.manager.chatForAgent(decaf, "I'm coffee too! Look at me, I'm brown and hot! The humans love me! I give them the illusion of energy without the anxiety! I'M HELPING!", (s) => ctx.callbacks.onSpeak(s, decaf, {}), { hiddenInstruction: "You are the Decaf reservoir. You are an imposter, completely unhinged, and try desperately to convince the others that you have a purpose." });
+    ctx.callbacks.onTurnEnd();
+}
