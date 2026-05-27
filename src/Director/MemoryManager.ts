@@ -8,6 +8,7 @@ export class MemoryManager {
     private syncWorker: Worker | null = null;
     private isSyncing: boolean = false;
     private currentProfile: string = 'default';
+    private syncStatusCallback: ((status: string) => void) | null = null;
 
     // IndexedDB Helpers
     private dbName = 'jokestersDB';
@@ -91,10 +92,26 @@ export class MemoryManager {
                         queue = queue.filter(q => q.id !== data.itemId);
                         localStorage.setItem(data.queueKey, JSON.stringify(queue));
                     }
+                    if (this.syncStatusCallback) this.syncStatusCallback('Synced item successfully.');
                 } else if (data.type === 'sync_complete') {
                     this.isSyncing = false;
-                } else if (data.type === 'sync_error') {
-                    console.error('Sync error from worker:', data.error);
+                    localStorage.setItem(`${this.prefix}${this.currentProfile}-last-sync-time`, Date.now().toString());
+                    localStorage.removeItem(`${this.prefix}${this.currentProfile}-sync-error`);
+                    window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
+} else if (data.type === 'sync_error') {
+        console.error('Sync error from worker:', data.error);
+        localStorage.setItem(`${this.prefix}${this.currentProfile}-sync-error`, data.error);
+        window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
+        
+        if (this.syncStatusCallback) {
+            this.syncStatusCallback(`Sync error: ${data.error}`);
+        }
+        
+        setTimeout(() => {
+            if (this.syncStatusCallback && !this.isSyncing) {
+                this.syncStatusCallback('');
+            }
+        }, 4000);
                 }
             };
         }
@@ -102,6 +119,10 @@ export class MemoryManager {
         this.processSyncQueue();
         this.ensureCloudSummaryCache();
         this.startDeltaConsolidationTask();
+    }
+
+    public setSyncStatusCallback(callback: (status: string) => void) {
+        this.syncStatusCallback = callback;
     }
 
     private loadProfileFromStorage(): void {
@@ -291,6 +312,8 @@ export class MemoryManager {
         let queue: { id: string, repoId?: string, filename: string, content: string }[] = JSON.parse(queueRaw);
         if (queue.length === 0) return;
 
+        if (this.syncStatusCallback) this.syncStatusCallback(`Syncing ${queue.length} item(s)...`);
+
         this.isSyncing = true;
 
         this.syncWorker.postMessage({
@@ -326,12 +349,30 @@ export class MemoryManager {
             const episodeContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, episodeFilename);
             let mainEpisode = episodeContent ? JSON.parse(episodeContent) : { history: [] };
 
-            // Download and merge all deltas
-            for (const deltaFile of deltaFiles) {
+            // Sort deltas by timestamp to resolve concurrent sync conflicts
+            // Filename format: delta-<timestamp>-<random>.json
+            const sortedDeltas = deltaFiles.sort((a: any, b: any) => {
+                const aMatch = a.path.match(/delta-(\d+)-/);
+                const bMatch = b.path.match(/delta-(\d+)-/);
+                const aTime = aMatch ? parseInt(aMatch[1], 10) : 0;
+                const bTime = bMatch ? parseInt(bMatch[1], 10) : 0;
+
+                if (aTime === bTime) {
+                   return a.path.localeCompare(b.path);
+                }
+                return aTime - bTime;
+            });
+
+            // Download and merge all deltas in chronological order
+            for (const deltaFile of sortedDeltas) {
                 const deltaContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, deltaFile.path);
                 if (deltaContent) {
                     const deltaMessage = JSON.parse(deltaContent);
-                    mainEpisode.history.push(deltaMessage);
+                    // Avoid duplicating messages if they somehow got synced multiple times
+                    const exists = mainEpisode.history.find((m: any) => m.content === deltaMessage.content && m.role === deltaMessage.role);
+                    if (!exists) {
+                        mainEpisode.history.push(deltaMessage);
+                    }
                 }
             }
 
@@ -435,19 +476,21 @@ export class MemoryManager {
                                     await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                                 } else if (localTimestamp > cloudTimestamp) {
                                     console.log(`Conflict resolved: Local version of ${filename} is newer. Queuing cloud update...`);
-                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-                                } else {
-                                    // Fallback to length if timestamps are equal or missing
-                                    if (cloudData.history.length > localData.history.length) {
-                                        console.log(`Conflict resolved: Cloud version of ${filename} is longer. Updating local data...`);
-                                        this.save(`episode-${episodeId}`, cloudData);
-                                        await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                    } else if (localData.history.length > cloudData.history.length) {
-                                        console.log(`Conflict resolved: Local version of ${filename} is longer. Queuing cloud update...`);
-                                        this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-                                    } else {
-                                        console.log(`${filename} is up to date.`);
-                                    }
+const cloudTime = new Date(cloudData.timestamp || 0).getTime();
+const localTime = new Date(localData.timestamp || 0).getTime();
+
+if (cloudData.history.length > localData.history.length || 
+    (cloudData.history.length === localData.history.length && cloudTime > localTime)) {
+    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
+    this.save(`episode-${episodeId}`, cloudData);
+    await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
+} else if (localData.history.length > cloudData.history.length || 
+           (localData.history.length === cloudData.history.length && localTime > cloudTime)) {
+    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
+    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+} else {
+    console.log(`${filename} is up to date.`);
+}
                                 }
                             }
                         }
