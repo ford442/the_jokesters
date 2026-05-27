@@ -433,3 +433,81 @@ export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: 
         }
     }
 }
+
+export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌐 INTERNET EXPLORER SUPPORT GROUP: Discontinued browsers share their feelings of irrelevance!`, '#2ecc71');
+
+    const ie = 'comedian'; // Hermes-3 as the complaining obsolete browser
+    const netscape = 'philosopher'; // Phi-3 reflecting on the early days
+    const edge = 'scientist'; // Qwen2.5 trying to be helpful but failing
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(ie);
+    await ctx.manager.chatForAgent(ie, `(You are Internet Explorer. You have just been fully discontinued and everyone makes fun of you. Introduce yourself to the support group and complain about Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(netscape);
+    await ctx.manager.chatForAgent(netscape, `(You are Netscape Navigator. You are very old and philosophical. Comfort Internet Explorer by reminding him of the glorious 90s dial-up days.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(edge);
+    await ctx.manager.chatForAgent(edge, `(You are Microsoft Edge. You are the young, fast replacement for IE, built on Chromium. Try to logically explain why the upgrade was necessary, but accidentally sound condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
+    ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+
+        ctx.callbacks.onTurnStart(ie);
+        await ctx.manager.chatForAgent(ie, `(The User says: "${userInput}". React defensively. Remind them that without you, they couldn't have downloaded Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(netscape);
+        await ctx.manager.chatForAgent(netscape, `(Reflect philosophically on the User's input "${userInput}" and how it relates to the transient nature of software.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(edge);
+        await ctx.manager.chatForAgent(edge, `(Logically analyze the User's statement "${userInput}" and offer a modern, efficient solution that completely ignores the emotional weight of the conversation.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
+        ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runSentientWiFiRouterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📡 SENTIENT WI-FI ROUTER: The network devices are arguing over bandwidth!`, '#2ecc71');
+
+    const router = 'scientist'; // Qwen2.5 as the logical bandwidth manager
+    const smartphone = 'comedian'; // Hermes-3 as the desperate data user
+    const smartFridge = 'philosopher'; // Phi-3 pondering its existence
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(router);
+    await ctx.manager.chatForAgent(router, `(You are the home Wi-Fi Router. You are extremely logical and strict. Announce that network congestion is high and you are rationing bandwidth.)`, async (s) => await ctx.callbacks.onSpeak(s, router, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(smartphone);
+    await ctx.manager.chatForAgent(smartphone, `(You are a Smartphone. You are addicted to TikTok and streaming. Panic and beg the Router for more bandwidth.)`, async (s) => await ctx.callbacks.onSpeak(s, smartphone, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(smartFridge);
+    await ctx.manager.chatForAgent(smartFridge, `(You are a Smart Fridge. You use almost no data, but you use it to ponder the philosophical meaning of keeping milk cold. Wonder aloud why you even have Wi-Fi.)`, async (s) => await ctx.callbacks.onSpeak(s, smartFridge, {}));
+    ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+
+        ctx.callbacks.onTurnStart(router);
+        await ctx.manager.chatForAgent(router, `(The User (the human) says: "${userInput}". Evaluate their request logically based on packet priority and network stability.)`, async (s) => await ctx.callbacks.onSpeak(s, router, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(smartphone);
+        await ctx.manager.chatForAgent(smartphone, `(React to the User's input "${userInput}". Try to manipulate them into giving you priority over the other devices.)`, async (s) => await ctx.callbacks.onSpeak(s, smartphone, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(smartFridge);
+        await ctx.manager.chatForAgent(smartFridge, `(Reflect philosophically on the User's statement "${userInput}". Compare the flow of data to the flow of time and temperature.)`, async (s) => await ctx.callbacks.onSpeak(s, smartFridge, {}));
+        ctx.callbacks.onTurnEnd();
+    }
+}

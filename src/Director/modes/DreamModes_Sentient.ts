@@ -459,3 +459,42 @@ export async function runPassiveAggressiveSmartHomeLoop(_scenario: Scenario, ctx
         }
     }
 }
+
+export async function runSentientShoppingCartLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛒 SENTIENT SHOPPING CART: The shopping carts share their tragic existence!`, '#2ecc71');
+
+    const perfectCart = 'scientist'; // Qwen2.5 as the functional cart
+    const wobblyCart = 'comedian'; // Hermes-3 as the chaotic cart
+    const abandonedCart = 'philosopher'; // Phi-3 as the reflective cart
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(perfectCart);
+    await ctx.manager.chatForAgent(perfectCart, `(You are a brand new, perfectly aligned shopping cart. Boast logically about your smooth wheels and optimal load distribution.)`, async (s) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(wobblyCart);
+    await ctx.manager.chatForAgent(wobblyCart, `(You are a shopping cart with one violently wobbly wheel. Complain dramatically about how humans always reject you and how your life is chaos.)`, async (s) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(abandonedCart);
+    await ctx.manager.chatForAgent(abandonedCart, `(You are an abandoned shopping cart left far out in the parking lot. Philosophize about isolation, nature, and the meaning of carrying goods.)`, async (s) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
+    ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+
+        ctx.callbacks.onTurnStart(perfectCart);
+        await ctx.manager.chatForAgent(perfectCart, `(The User says: "${userInput}". Respond with strict logic about optimal shopping routes and cart maintenance.)`, async (s) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(wobblyCart);
+        await ctx.manager.chatForAgent(wobblyCart, `(React emotionally to the User's input "${userInput}". Relate it to your wobbly wheel and your desire to violently veer to the left.)`, async (s) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
+        ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onTurnStart(abandonedCart);
+        await ctx.manager.chatForAgent(abandonedCart, `(Reflect philosophically on the User's statement "${userInput}" from the perspective of a cart slowly rusting in the rain.)`, async (s) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
+        ctx.callbacks.onTurnEnd();
+    }
+}

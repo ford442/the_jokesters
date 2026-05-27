@@ -95,6 +95,13 @@ export class MemoryManager {
                     if (this.syncStatusCallback) this.syncStatusCallback('Synced item successfully.');
                 } else if (data.type === 'sync_complete') {
                     this.isSyncing = false;
+                    localStorage.setItem(`${this.prefix}${this.currentProfile}-last-sync-time`, Date.now().toString());
+                    localStorage.removeItem(`${this.prefix}${this.currentProfile}-sync-error`);
+                    window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
+                } else if (data.type === 'sync_error') {
+                    console.error('Sync error from worker:', data.error);
+                    localStorage.setItem(`${this.prefix}${this.currentProfile}-sync-error`, data.error);
+                    window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
                     if (this.syncStatusCallback) this.syncStatusCallback('All items synced.');
                     setTimeout(() => { if (this.syncStatusCallback && !this.isSyncing) this.syncStatusCallback(''); }, 3000);
                 } else if (data.type === 'sync_error') {
@@ -336,12 +343,30 @@ export class MemoryManager {
             const episodeContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, episodeFilename);
             let mainEpisode = episodeContent ? JSON.parse(episodeContent) : { history: [] };
 
-            // Download and merge all deltas
-            for (const deltaFile of deltaFiles) {
+            // Sort deltas by timestamp to resolve concurrent sync conflicts
+            // Filename format: delta-<timestamp>-<random>.json
+            const sortedDeltas = deltaFiles.sort((a: any, b: any) => {
+                const aMatch = a.path.match(/delta-(\d+)-/);
+                const bMatch = b.path.match(/delta-(\d+)-/);
+                const aTime = aMatch ? parseInt(aMatch[1], 10) : 0;
+                const bTime = bMatch ? parseInt(bMatch[1], 10) : 0;
+
+                if (aTime === bTime) {
+                   return a.path.localeCompare(b.path);
+                }
+                return aTime - bTime;
+            });
+
+            // Download and merge all deltas in chronological order
+            for (const deltaFile of sortedDeltas) {
                 const deltaContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, deltaFile.path);
                 if (deltaContent) {
                     const deltaMessage = JSON.parse(deltaContent);
-                    mainEpisode.history.push(deltaMessage);
+                    // Avoid duplicating messages if they somehow got synced multiple times
+                    const exists = mainEpisode.history.find((m: any) => m.content === deltaMessage.content && m.role === deltaMessage.role);
+                    if (!exists) {
+                        mainEpisode.history.push(deltaMessage);
+                    }
                 }
             }
 
