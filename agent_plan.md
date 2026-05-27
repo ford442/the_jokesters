@@ -112,3 +112,8 @@ tasks_per_run: 6
 - [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
 - [x] Conflict Resolution for Cloud Sync (Step 6) — Added chronological timestamp-based sorting for concurrent delta merges in MemoryManager.ts
 - [x] UI Sync Indicators (Step 7) — Persist lastSyncTime + syncError directly from syncWorker events
+- [x] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
+- [x] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
+- [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
+- [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
+- [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
