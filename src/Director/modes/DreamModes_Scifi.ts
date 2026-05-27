@@ -600,3 +600,28 @@ export async function runAlienConspiracyTheoristsLoop(_scenario: Scenario, ctx: 
     }
 }
 
+
+export async function runMarsColonyHOALoop(_scenario: Scenario, ctx: ModeContext) {
+    const president = 'scientist';
+    const terraformer = 'philosopher';
+    const colonist = 'comedian';
+
+
+
+    ctx.callbacks.onTurnStart(president);
+    await ctx.manager.chatForAgent(
+        president,
+        "I'm calling this Mars HOA meeting to order. We have a severe violation at Habitat 7. Someone painted their airlock neon green. This violates Section 4, Paragraph B on 'Acceptable Martian Hues'.",
+        (s) => ctx.callbacks.onSpeak(s, president, {}),
+        { hiddenInstruction: "You are the HOA President of the Mars Dome 4 Colony. You are strictly obsessed with oxygen rationing and maintaining the exact approved shade of red dust on the solar panels." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(terraformer);
+    await ctx.manager.chatForAgent(terraformer, "Colors are merely an illusion of light, Mr. President. Does a green airlock not signify the very life we are trying to breathe into this barren rock?", (s) => ctx.callbacks.onSpeak(s, terraformer, {}), { hiddenInstruction: "You are the Terraforming Engineer. You speak poetically about bringing life to a dead world and think HOA rules are petty in the grand cosmic scheme." });
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(colonist);
+    await ctx.manager.chatForAgent(colonist, "It's my airlock! And I'm growing radioactive space potatoes in my front yard too! You can't stop me, the nearest space cop is 140 million miles away!", (s) => ctx.callbacks.onSpeak(s, colonist, {}), { hiddenInstruction: "You are a rebellious colonist who just wants to grow space potatoes and paint your habitat neon green, defying all HOA regulations." });
+    ctx.callbacks.onTurnEnd();
+}

@@ -91,8 +91,17 @@ tasks_per_run: 6
 - [x] Add "Over-Invested Sports Commentator Mode" to UI presets
 - [x] Implement "Dating App Profile Review Mode" in `InteractiveMode.ts`
 - [x] Add "Dating App Profile Review Mode" to UI presets
+- [x] Implement "Internet Explorer Support Group" mode in `DreamModes_Tech.ts`.
+- [x] Implement "Sentient Wi-Fi Router" mode in `DreamModes_Sentient.ts`.
+- [x] Implement "Sentient Coffee Machine" mode in `DreamModes_Sentient.ts`.
+- [x] Implement "Mars Colony HOA" mode in `DreamModes_Scifi.ts`.
+- [x] Update UI Presets and register all 4 new modes in `Director.ts` and `improvSetups.ts`.
 
 ## Phase 3: Next Steps & Ideas
+- **NEW IDEA:** "Quantum Computing Support Group" - Agents play qubits stuck in superposition. Pairings: Scientist (Stable Qubit), Philosopher (Schrödinger's Cat), Comedian (Entangled Qubit).
+- **NEW IDEA:** "Sentient Toaster" - Agents play a toaster, a bagel, and a human. Pairings: Scientist (Toaster), Philosopher (Bagel), Comedian (Human).
+- **NEW IDEA:** "Internet Explorer Support Group" - Agents play discontinued browsers (IE, Netscape, AOL Explorer) lamenting their irrelevance.
+- **NEW IDEA:** "Sentient Wi-Fi Router" - Agents play a Wi-Fi router, a smartphone, and a smart fridge arguing over bandwidth allocation.
 - [x] "Internet Explorer Support Group" - Agents play discontinued browsers (IE, Netscape, AOL Explorer) lamenting their irrelevance.
 - [x] "Sentient Wi-Fi Router" - Agents play a Wi-Fi router, a smartphone, and a smart fridge arguing over bandwidth allocation.
 - [x] "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
@@ -119,6 +128,8 @@ tasks_per_run: 6
 - [x] UI Sync Indicators (Step 7) — Persist lastSyncTime + syncError directly from syncWorker events
 - [x] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
 - [x] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
+- [ ] Step 8: Implement background worker for delta merging.
+- [ ] Step 9: Build IndexedDB wrapper for delta logs.
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
 - [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)

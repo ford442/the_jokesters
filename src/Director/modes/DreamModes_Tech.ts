@@ -436,10 +436,10 @@ export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: 
 
 export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🌐 INTERNET EXPLORER SUPPORT GROUP: Discontinued browsers share their feelings of irrelevance!`, '#2ecc71');
-
-    const ie = 'comedian'; // Hermes-3 as the complaining obsolete browser
-    const netscape = 'philosopher'; // Phi-3 reflecting on the early days
-    const edge = 'scientist'; // Qwen2.5 trying to be helpful but failing
+    
+    const ie = 'comedian';        // Hermes-3 - complaining obsolete browser
+    const netscape = 'philosopher'; // Phi-3 - reflecting on the early days
+    const edge = 'scientist';     // Qwen2.5 - trying to be helpful but failing
 
     // 1. Intro
     ctx.callbacks.onTurnStart(ie);
@@ -458,7 +458,6 @@ export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, c
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
 
-
         ctx.callbacks.onTurnStart(ie);
         await ctx.manager.chatForAgent(ie, `(The User says: "${userInput}". React defensively. Remind them that without you, they couldn't have downloaded Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
         ctx.callbacks.onTurnEnd();
@@ -475,9 +474,9 @@ export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, c
 
 export async function runSentientWiFiRouterLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `📡 SENTIENT WI-FI ROUTER: The network devices are arguing over bandwidth!`, '#2ecc71');
-
-    const router = 'scientist'; // Qwen2.5 as the logical bandwidth manager
-    const smartphone = 'comedian'; // Hermes-3 as the desperate data user
+    
+    const router = 'scientist';      // Qwen2.5 as the logical bandwidth manager
+    const smartphone = 'comedian';   // Hermes-3 as the desperate data user
     const smartFridge = 'philosopher'; // Phi-3 pondering its existence
 
     // 1. Intro
@@ -496,7 +495,6 @@ export async function runSentientWiFiRouterLoop(_scenario: Scenario, ctx: ModeCo
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
-
 
         ctx.callbacks.onTurnStart(router);
         await ctx.manager.chatForAgent(router, `(The User (the human) says: "${userInput}". Evaluate their request logically based on packet priority and network stability.)`, async (s) => await ctx.callbacks.onSpeak(s, router, {}));
