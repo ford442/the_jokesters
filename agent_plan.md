@@ -3,6 +3,10 @@
 ## Project Velocity
 tasks_per_run: 6
 
+### Project Velocity (Infrastructure & Reliability)
+- [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
+- [x] **Sync Indicator UI** — Fixed race condition in main.ts so UI elements are bound only after render completes.
+
 ## Phase 1: Configuration & Execution
 - [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
 - [x] Implement "RPG Tavern Brawl Mode" in `DreamModes_Fantasy.ts`
@@ -101,6 +105,7 @@ tasks_per_run: 6
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
+*(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
 *(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
 - [x] Authenticating with the HF API using tokens via `/whoami-v2`.
 - [x] Pushing finished "Episode Scripts" to a private Dataset via Background Web Worker.

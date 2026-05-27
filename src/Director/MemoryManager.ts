@@ -98,16 +98,20 @@ export class MemoryManager {
                     localStorage.setItem(`${this.prefix}${this.currentProfile}-last-sync-time`, Date.now().toString());
                     localStorage.removeItem(`${this.prefix}${this.currentProfile}-sync-error`);
                     window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
-                } else if (data.type === 'sync_error') {
-                    console.error('Sync error from worker:', data.error);
-                    localStorage.setItem(`${this.prefix}${this.currentProfile}-sync-error`, data.error);
-                    window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
-                    if (this.syncStatusCallback) this.syncStatusCallback('All items synced.');
-                    setTimeout(() => { if (this.syncStatusCallback && !this.isSyncing) this.syncStatusCallback(''); }, 3000);
-                } else if (data.type === 'sync_error') {
-                    console.error('Sync error from worker:', data.error);
-                    if (this.syncStatusCallback) this.syncStatusCallback(`Sync error: ${data.error}`);
-                    setTimeout(() => { if (this.syncStatusCallback && !this.isSyncing) this.syncStatusCallback(''); }, 5000);
+} else if (data.type === 'sync_error') {
+        console.error('Sync error from worker:', data.error);
+        localStorage.setItem(`${this.prefix}${this.currentProfile}-sync-error`, data.error);
+        window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
+        
+        if (this.syncStatusCallback) {
+            this.syncStatusCallback(`Sync error: ${data.error}`);
+        }
+        
+        setTimeout(() => {
+            if (this.syncStatusCallback && !this.isSyncing) {
+                this.syncStatusCallback('');
+            }
+        }, 4000);
                 }
             };
         }
@@ -201,6 +205,8 @@ export class MemoryManager {
     }
 
     public saveEpisode(episodeId: string, data: any): void {
+        // Always update timestamp on save for Last-Writer-Wins
+        data.updatedAt = Date.now();
         data.timestamp = Date.now();
         this.save(`episode-${episodeId}`, data);
         this.idbSet(`episode-${episodeId}`, data).catch(e => console.error(e));
@@ -461,27 +467,30 @@ export class MemoryManager {
                             // Conflict resolution: Last-Writer-Wins (LWW) based on timestamp, fallback to length
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
-                                const cloudTime = new Date(cloudData.timestamp || 0).getTime();
-                                const localTime = new Date(localData.timestamp || 0).getTime();
-                                if (cloudData.history.length > localData.history.length || (cloudData.history.length === localData.history.length && cloudTime > localTime)) {
-                                    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
+                                const cloudTimestamp = cloudData.timestamp || 0;
+                                const localTimestamp = localData.timestamp || 0;
+
+                                if (cloudTimestamp > localTimestamp) {
+                                    console.log(`Conflict resolved: Cloud version of ${filename} is newer. Updating local data...`);
                                     this.save(`episode-${episodeId}`, cloudData);
                                     await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                } else if (localData.history.length > cloudData.history.length || (localData.history.length === cloudData.history.length && localTime > cloudTime)) {
-                                    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
-                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-                                } else {
-                                    // Fallback to length if timestamps are equal or missing
-                                    if (cloudData.history.length > localData.history.length) {
-                                        console.log(`Conflict resolved: Cloud version of ${filename} is longer. Updating local data...`);
-                                        this.save(`episode-${episodeId}`, cloudData);
-                                        await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                    } else if (localData.history.length > cloudData.history.length) {
-                                        console.log(`Conflict resolved: Local version of ${filename} is longer. Queuing cloud update...`);
-                                        this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-                                    } else {
-                                        console.log(`${filename} is up to date.`);
-                                    }
+                                } else if (localTimestamp > cloudTimestamp) {
+                                    console.log(`Conflict resolved: Local version of ${filename} is newer. Queuing cloud update...`);
+const cloudTime = new Date(cloudData.timestamp || 0).getTime();
+const localTime = new Date(localData.timestamp || 0).getTime();
+
+if (cloudData.history.length > localData.history.length || 
+    (cloudData.history.length === localData.history.length && cloudTime > localTime)) {
+    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
+    this.save(`episode-${episodeId}`, cloudData);
+    await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
+} else if (localData.history.length > cloudData.history.length || 
+           (localData.history.length === cloudData.history.length && localTime > cloudTime)) {
+    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
+    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+} else {
+    console.log(`${filename} is up to date.`);
+}
                                 }
                             }
                         }
