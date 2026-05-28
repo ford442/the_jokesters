@@ -80,6 +80,126 @@ self.onmessage = async (e: MessageEvent) => {
         }
 
         self.postMessage({ type: 'sync_complete', queueKey });
+    } else if (type === 'consolidate_deltas') {
+        const { episodeId } = e.data;
+        if (!token || !repoId || !episodeId) {
+            self.postMessage({ type: 'sync_error', error: 'Missing token, repoId, or episodeId for consolidation.' });
+            return;
+        }
+
+        try {
+            let cleanRepoId = repoId;
+            if (cleanRepoId.startsWith("datasets/")) {
+                cleanRepoId = cleanRepoId.replace("datasets/", "");
+            }
+
+            const treeUrl = `https://huggingface.co/api/datasets/${cleanRepoId}/tree/main/episodes/${episodeId}`;
+            const treeResponse = await fetch(treeUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!treeResponse.ok) {
+                self.postMessage({ type: 'sync_error', error: `Failed to fetch tree: ${treeResponse.status}` });
+                return;
+            }
+
+            const files = await treeResponse.json();
+            const deltaFiles = files.filter((f: any) => f.type === 'file' && f.path.includes("delta-"));
+            if (deltaFiles.length === 0) {
+                self.postMessage({ type: 'consolidation_complete', episodeId });
+                return;
+            }
+
+            // Download main episode
+            const episodeFilename = `episodes/${episodeId}/episode.json`;
+            const rawFileUrl = `https://huggingface.co/datasets/${cleanRepoId}/resolve/main/${episodeFilename}`;
+            let mainEpisode: { history: any[] } = { history: [] };
+
+            try {
+                const episodeResponse = await fetch(rawFileUrl, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (episodeResponse.ok) {
+                    mainEpisode = await episodeResponse.json();
+                }
+            } catch (e) {
+                // Keep default empty mainEpisode if fetch fails
+            }
+
+            // Sort deltas by timestamp to resolve concurrent sync conflicts
+            // Filename format: delta-<timestamp>-<random>.json
+            const sortedDeltas = deltaFiles.sort((a: any, b: any) => {
+                const aMatch = a.path.match(/delta-(\d+)-/);
+                const bMatch = b.path.match(/delta-(\d+)-/);
+                const aTime = aMatch ? parseInt(aMatch[1], 10) : 0;
+                const bTime = bMatch ? parseInt(bMatch[1], 10) : 0;
+
+                if (aTime === bTime) {
+                   return a.path.localeCompare(b.path);
+                }
+                return aTime - bTime;
+            });
+
+            // Download and merge all deltas in chronological order
+            for (const deltaFile of sortedDeltas) {
+                const deltaUrl = `https://huggingface.co/datasets/${cleanRepoId}/resolve/main/${deltaFile.path}`;
+                try {
+                    const deltaResponse = await fetch(deltaUrl, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (deltaResponse.ok) {
+                        const deltaMessage = await deltaResponse.json();
+                        // Avoid duplicating messages if they somehow got synced multiple times
+                        const exists = mainEpisode.history.find((m: any) => m.content === deltaMessage.content && m.role === deltaMessage.role);
+                        if (!exists) {
+                            mainEpisode.history.push(deltaMessage);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch delta file", deltaFile.path, e);
+                }
+            }
+
+            // Now we have the merged episode, let's commit it and delete the deltas
+            const operations: any[] = [{
+                operation: "createOrUpdateFile",
+                pathOrUrl: episodeFilename,
+                content: btoa(unescape(encodeURIComponent(JSON.stringify(mainEpisode, null, 2))))
+            }];
+
+            for (const deltaFile of deltaFiles) {
+                operations.push({
+                    operation: "deleteFile",
+                    pathOrUrl: deltaFile.path
+                });
+            }
+
+            const commitUrl = `https://huggingface.co/api/datasets/${cleanRepoId}/commit/main`;
+            const commitBody = {
+                operations: operations,
+                commitMessage: `Consolidate deltas for ${episodeFilename}`,
+            };
+
+            const commitResponse = await fetch(commitUrl, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(commitBody),
+            });
+
+            if (!commitResponse.ok) {
+                const errText = await commitResponse.text();
+                console.error(`HF Upload failed: ${commitResponse.status} ${errText}`);
+                self.postMessage({ type: 'sync_error', error: `Upload failed: ${commitResponse.status}` });
+                return;
+            }
+
+            self.postMessage({ type: 'consolidation_complete', episodeId });
+        } catch (e: any) {
+            self.postMessage({ type: 'sync_error', error: e.message });
+        }
     }
 };
 

@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 6
+tasks_per_run: 2
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -112,6 +112,12 @@ tasks_per_run: 6
 - **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
 - **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
+- **NEW IDEA:** "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas), Philosopher (Brownie), Comedian (Mystery Meat).
+- **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha), Philosopher (Terms of Service), Comedian (Chatbot).
+
+## Cloud Persistence (Hugging Face Integration) Roadmap
+- [ ] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
+- [ ] Step 11: Real-time Cloud Conflict Dashboard - Expose UI that gives advanced users granular views into file revisions using HF Dataset history endpoints.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 *(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
@@ -128,8 +134,8 @@ tasks_per_run: 6
 - [x] UI Sync Indicators (Step 7) — Persist lastSyncTime + syncError directly from syncWorker events
 - [x] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
 - [x] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
-- [ ] Step 8: Implement background worker for delta merging.
-- [ ] Step 9: Build IndexedDB wrapper for delta logs.
+- [x] Step 8: Implement background worker for delta merging.
+- [x] Step 9: Build IndexedDB wrapper for delta logs.
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
 - [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)

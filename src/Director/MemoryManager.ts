@@ -13,18 +13,46 @@ export class MemoryManager {
     // IndexedDB Helpers
     private dbName = 'jokestersDB';
     private storeName = 'episodes';
+    private queueStoreName = 'syncQueue';
 
     private openDB(): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
+            const request = indexedDB.open(this.dbName, 2);
             request.onupgradeneeded = (event: any) => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
                     db.createObjectStore(this.storeName);
                 }
+                if (!db.objectStoreNames.contains(this.queueStoreName)) {
+                    db.createObjectStore(this.queueStoreName);
+                }
             };
             request.onsuccess = (event: any) => resolve(event.target.result);
             request.onerror = (event: any) => reject(event.target.error);
+        });
+    }
+
+    private async idbSetQueue(key: string, val: any): Promise<void> {
+        const db = await this.openDB();
+        const namespacedKey = `${this.currentProfile}-${key}`;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.queueStoreName, 'readwrite');
+            const store = tx.objectStore(this.queueStoreName);
+            const request = store.put(val, namespacedKey);
+            request.onsuccess = () => resolve();
+            request.onerror = (e: any) => reject(e.target.error);
+        });
+    }
+
+    private async idbGetQueue(key: string): Promise<any> {
+        const db = await this.openDB();
+        const namespacedKey = `${this.currentProfile}-${key}`;
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.queueStoreName, 'readonly');
+            const store = tx.objectStore(this.queueStoreName);
+            const request = store.get(namespacedKey);
+            request.onsuccess = (e: any) => resolve(e.target.result);
+            request.onerror = (e: any) => reject(e.target.error);
         });
     }
 
@@ -83,14 +111,14 @@ export class MemoryManager {
         this.loadProfileFromStorage();
         if (typeof Worker !== 'undefined') {
             this.syncWorker = new Worker(new URL('../workers/hfSync.worker.ts', import.meta.url), { type: 'module' });
-            this.syncWorker.onmessage = (e) => {
+            this.syncWorker.onmessage = async (e) => {
                 const data = e.data;
                 if (data.type === 'sync_success') {
-                    const queueRaw = localStorage.getItem(data.queueKey);
+                    const queueRaw = await this.idbGetQueue(data.queueKey);
                     if (queueRaw) {
-                        let queue: any[] = JSON.parse(queueRaw);
+                        let queue: any[] = queueRaw;
                         queue = queue.filter(q => q.id !== data.itemId);
-                        localStorage.setItem(data.queueKey, JSON.stringify(queue));
+                        await this.idbSetQueue(data.queueKey, queue);
                     }
                     if (this.syncStatusCallback) this.syncStatusCallback('Synced item successfully.');
                 } else if (data.type === 'sync_complete') {
@@ -133,10 +161,10 @@ export class MemoryManager {
     }
 
 
-    public getSyncState(): { isSyncing: boolean, queueLength: number, lastSyncTime: number | null, syncError: string | null } {
-        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-        const queueRaw = localStorage.getItem(queueKey);
-        const queue = queueRaw ? JSON.parse(queueRaw) : [];
+    public async getSyncState(): Promise<{ isSyncing: boolean, queueLength: number, lastSyncTime: number | null, syncError: string | null }> {
+        const queueKey = 'sync-queue';
+        const queueRaw = await this.idbGetQueue(queueKey);
+        const queue = queueRaw || [];
         const lastSyncTimeStr = localStorage.getItem(`${this.prefix}${this.currentProfile}-last-sync-time`);
         const lastSyncTime = lastSyncTimeStr ? parseInt(lastSyncTimeStr, 10) : null;
         const syncError = localStorage.getItem(`${this.prefix}${this.currentProfile}-sync-error`);
@@ -267,15 +295,15 @@ export class MemoryManager {
         const content = JSON.stringify(newMessage, null, 2);
 
         // Push to local sync queue
-        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-        const queueRaw = localStorage.getItem(queueKey);
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+        const queueKey = `sync-queue`;
+        const queueRaw = await this.idbGetQueue(queueKey);
+        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw || [];
 
         // Generate a unique ID for this job to safely remove it later
         const jobId = Math.random().toString(36).substring(2, 15);
         queue.push({ id: jobId, filename, content });
 
-        localStorage.setItem(queueKey, JSON.stringify(queue));
+        await this.idbSetQueue(queueKey, queue);
 
         // Trigger sync processing
         this.processSyncQueue();
@@ -286,9 +314,9 @@ export class MemoryManager {
         const filename = `episodes/${episodeId}/episode.json`;
         const content = JSON.stringify(data, null, 2);
         // Push to local sync queue
-        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-        const queueRaw = localStorage.getItem(queueKey);
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+        const queueKey = `sync-queue`;
+        const queueRaw = await this.idbGetQueue(queueKey);
+        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw || [];
 
         // Remove existing item if updating same file
         queue = queue.filter(q => q.filename !== filename);
@@ -296,7 +324,7 @@ export class MemoryManager {
         const jobId = Math.random().toString(36).substring(2, 15);
         queue.push({ id: jobId, filename, content });
 
-        localStorage.setItem(queueKey, JSON.stringify(queue));
+        await this.idbSetQueue(queueKey, queue);
 
         // Trigger sync processing
         this.processSyncQueue();
@@ -305,11 +333,11 @@ export class MemoryManager {
     private async processSyncQueue(): Promise<void> {
         if (this.isSyncing || !this.hfToken || !this.syncWorker) return;
 
-        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-        const queueRaw = localStorage.getItem(queueKey);
+        const queueKey = `sync-queue`;
+        const queueRaw = await this.idbGetQueue(queueKey);
         if (!queueRaw) return;
 
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = JSON.parse(queueRaw);
+        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw;
         if (queue.length === 0) return;
 
         if (this.syncStatusCallback) this.syncStatusCallback(`Syncing ${queue.length} item(s)...`);
@@ -334,73 +362,17 @@ export class MemoryManager {
     }
 
     public async consolidateEpisodeDeltas(episodeId: string): Promise<void> {
-        if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
-        try {
-            const treeResponse = await fetch(`https://huggingface.co/api/datasets/${this.hfRepoId}/tree/main/episodes/${episodeId}`, {
-                headers: { 'Authorization': `Bearer ${this.hfToken}` }
-            });
-            if (!treeResponse.ok) return;
-            const files = await treeResponse.json();
-            const deltaFiles = files.filter((f: any) => f.type === 'file' && f.path.includes("delta-"));
-            if (deltaFiles.length === 0) return;
-
-            // Download main episode
-            const episodeFilename = `episodes/${episodeId}/episode.json`;
-            const episodeContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, episodeFilename);
-            let mainEpisode = episodeContent ? JSON.parse(episodeContent) : { history: [] };
-
-            // Sort deltas by timestamp to resolve concurrent sync conflicts
-            // Filename format: delta-<timestamp>-<random>.json
-            const sortedDeltas = deltaFiles.sort((a: any, b: any) => {
-                const aMatch = a.path.match(/delta-(\d+)-/);
-                const bMatch = b.path.match(/delta-(\d+)-/);
-                const aTime = aMatch ? parseInt(aMatch[1], 10) : 0;
-                const bTime = bMatch ? parseInt(bMatch[1], 10) : 0;
-
-                if (aTime === bTime) {
-                   return a.path.localeCompare(b.path);
-                }
-                return aTime - bTime;
-            });
-
-            // Download and merge all deltas in chronological order
-            for (const deltaFile of sortedDeltas) {
-                const deltaContent = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, deltaFile.path);
-                if (deltaContent) {
-                    const deltaMessage = JSON.parse(deltaContent);
-                    // Avoid duplicating messages if they somehow got synced multiple times
-                    const exists = mainEpisode.history.find((m: any) => m.content === deltaMessage.content && m.role === deltaMessage.role);
-                    if (!exists) {
-                        mainEpisode.history.push(deltaMessage);
-                    }
-                }
-            }
-
-            // Now we have the merged episode, let's commit it and delete the deltas
-            const operations: any[] = [{
-                operation: "createOrUpdateFile",
-                pathOrUrl: episodeFilename,
-                content: btoa(unescape(encodeURIComponent(JSON.stringify(mainEpisode, null, 2))))
-            }];
-
-            for (const deltaFile of deltaFiles) {
-                operations.push({
-                    operation: "deleteFile",
-                    pathOrUrl: deltaFile.path
-                });
-            }
-
-            // Queue the operation to the worker using the custom operations array
-            const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-            const queueRaw = localStorage.getItem(queueKey);
-            let queue: any[] = queueRaw ? JSON.parse(queueRaw) : [];
-            const jobId = Math.random().toString(36).substring(2, 15);
-            queue.push({ id: jobId, filename: episodeFilename, operations });
-            localStorage.setItem(queueKey, JSON.stringify(queue));
-            this.processSyncQueue();
-        } catch (e) {
-            console.error("Failed to consolidate deltas for episode", episodeId, e);
+        if (!this.hfToken || !this.hfRepoId || !this.syncWorker) {
+            console.error("Cloud credentials or sync worker not configured.");
+            return;
         }
+
+        this.syncWorker.postMessage({
+            type: 'consolidate_deltas',
+            episodeId,
+            token: this.hfToken,
+            repoId: this.hfRepoId
+        });
     }
 
     public startDeltaConsolidationTask(): void {
@@ -507,15 +479,15 @@ if (cloudData.history.length > localData.history.length ||
         const content = JSON.stringify(scriptData, null, 2);
 
         // Use a background queue similar to episodes
-        const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-        const queueRaw = localStorage.getItem(queueKey);
-        let queue: { id: string, repoId: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+        const queueKey = `sync-queue`;
+        const queueRaw = await this.idbGetQueue(queueKey);
+        let queue: { id: string, repoId: string, filename: string, content: string }[] = queueRaw || [];
 
         // Modify sync queue items to specify repo ID if it's different
         const jobId = Math.random().toString(36).substring(2, 15);
         queue.push({ id: jobId, repoId: communityRepoId, filename, content });
 
-        localStorage.setItem(queueKey, JSON.stringify(queue));
+        await this.idbSetQueue(queueKey, queue);
         this.processSyncQueue();
     }
 
@@ -607,15 +579,15 @@ if (cloudData.history.length > localData.history.length ||
             const filename = `profile/user_preferences.json`;
             const content = JSON.stringify(profile, null, 2);
 
-            const queueKey = `${this.prefix}${this.currentProfile}-sync-queue`;
-            const queueRaw = localStorage.getItem(queueKey);
-            let queue: { id: string, filename: string, content: string }[] = queueRaw ? JSON.parse(queueRaw) : [];
+            const queueKey = `sync-queue`;
+            const queueRaw = await this.idbGetQueue(queueKey);
+            let queue: { id: string, filename: string, content: string }[] = queueRaw || [];
 
             queue = queue.filter(q => q.filename !== filename);
             const jobId = Math.random().toString(36).substring(2, 15);
             queue.push({ id: jobId, filename, content });
 
-            localStorage.setItem(queueKey, JSON.stringify(queue));
+            await this.idbSetQueue(queueKey, queue);
             this.processSyncQueue();
         }
     }
