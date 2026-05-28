@@ -3,7 +3,7 @@
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
 import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop } from './modes/DreamModes_Sentient';
-import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runSentientWiFiRouterLoop } from './modes/DreamModes_Tech';
+import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop } from './modes/DreamModes_Tech';
 import { runMarsColonyHOALoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
@@ -269,7 +269,7 @@ export interface Scenario {
     | 'internet_explorer_support'
     | 'sentient_wifi_router'
     | 'sentient_coffee_machine'
-    | 'mars_colony_hoa';
+    | 'mars_colony_hoa'
     | 'sentient_shopping_cart';
 
     title: string;
@@ -534,8 +534,6 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     mars_colony_hoa: runMarsColonyHOALoop,
     sentient_shopping_cart: runSentientShoppingCartLoop,
     internet_explorer_support_group: runInternetExplorerSupportGroupLoop,
-    sentient_wifi_router: runSentientWiFiRouterLoop,
-    sentient_shopping_cart: runSentientShoppingCartLoop,
     superhero_therapy: runSuperheroTherapyLoop,
     intergalactic_cooking: runIntergalacticCookingLoop,
     time_traveling_irs: runTimeTravelingIRSLoop,
