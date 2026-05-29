@@ -1,0 +1,3 @@
+[submodule "3rd_party/web-llm"]
+	path = 3rd_party/web-llm
+	url = https://github.com/ford442/web-llm.git

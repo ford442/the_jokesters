@@ -41,3 +41,7 @@ public/models/
 *.safetensors.lock
 
 # If you intentionally track small model-manifests, add an exception in .git/info/exclude or use a specific pattern
+
+# Generated web-llm fork artifacts (see scripts/build-webllm.sh and docs/webllm-customization-plan.md)
+3rd_party/web-llm-dist/
+

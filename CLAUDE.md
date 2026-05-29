@@ -67,6 +67,7 @@ npm run dev        # local dev server (Vite HMR)
 npm run build      # tsc + vite build → dist/
 npm run preview    # preview production build
 npm run perf:quick # run perf benchmarks (quick mode)
+./scripts/build-webllm.sh   # build custom web-llm from 3rd_party/ submodule (see docs/webllm-customization-plan.md)
 ```
 
 TypeScript must pass `npx tsc --noEmit` with zero errors before committing.

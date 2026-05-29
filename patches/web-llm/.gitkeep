@@ -1,0 +1,9 @@
+# Placeholder for web-llm .patch files
+#
+# Usage:
+#   - Create patches with: cd 3rd_party/web-llm && git format-patch -1 <commit>
+#   - Or manually: git diff > ../../patches/web-llm/0001-my-change.patch
+#   - The build script (scripts/build-webllm.sh) can apply them when APPLY_PATCHES=1
+#
+# Keep patches small, well-documented, and rebased against upstream tags when possible.
+# Prefer landing changes in the ford442/web-llm fork when they are substantial.
