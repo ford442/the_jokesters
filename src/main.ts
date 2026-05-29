@@ -300,8 +300,11 @@ async function initApp() {
             <button id="send-btn">Send</button>
           </div>
           <div id="sync-status-indicator" style="font-size: 0.8em; margin-top: 5px; text-align: right; color: #888; display: flex; justify-content: flex-end; align-items: center; gap: 5px;">
+
             <span id="sync-icon">☁️</span>
             <span id="sync-text">Not synced</span>
+            <button id="cloud-dashboard-btn" style="background: none; border: 1px solid #4ecdc4; color: #4ecdc4; border-radius: 4px; padding: 2px 5px; cursor: pointer; font-size: 0.9em; margin-left: 10px;">Dashboard</button>
+
           </div>
           
           <!-- Improv Mode Controls -->
@@ -1473,3 +1476,84 @@ function updateSyncUI() {
 
 setInterval(updateSyncUI, 2000);
 window.addEventListener('syncStatusUpdated', updateSyncUI);
+
+
+window.addEventListener('online', () => {
+    console.log("App is back online, triggering MemoryManager sync retry...");
+    if ((window as any).getMemoryManager) {
+        (window as any).getMemoryManager().processSyncQueue();
+    }
+});
+
+
+// Dashboard UI Logic
+const setupDashboard = () => {
+    const dashboardBtn = document.getElementById('cloud-dashboard-btn');
+    const dashboardModal = document.getElementById('cloud-dashboard-modal');
+    const closeBtn = document.getElementById('close-cloud-dashboard-btn');
+    const refreshBtn = document.getElementById('refresh-cloud-dashboard-btn');
+    const historyList = document.getElementById('cloud-history-list');
+
+    if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
+
+    const loadHistory = async () => {
+        historyList.innerHTML = '<div style="color: #888;">Loading history...</div>';
+        const getMemMgr = (window as any).getMemoryManager;
+        if (!getMemMgr) {
+            historyList.innerHTML = '<div style="color: #ff6b6b;">MemoryManager not available.</div>';
+            return;
+        }
+        const memoryManager = getMemMgr();
+        const history = await memoryManager.getCloudHistory();
+
+        historyList.innerHTML = '';
+        if (!history || history.length === 0) {
+            historyList.innerHTML = '<div style="color: #888;">No history found or error fetching.</div>';
+            return;
+        }
+
+        let items = history;
+        if (history.length > 0 && !history[0].commit && !history[0].oid) {
+            items.forEach((item: any) => {
+                const div = document.createElement('div');
+                div.style.background = 'rgba(255,255,255,0.05)';
+                div.style.padding = '10px';
+                div.style.borderRadius = '4px';
+                div.innerHTML = `<div style="font-weight: bold; color: #4ecdc4;">${item.path || 'Unknown file'}</div>
+                                 <div style="font-size: 0.85em; color: #ccc;">Size: ${item.size || 0} bytes</div>`;
+                historyList.appendChild(div);
+            });
+            return;
+        }
+
+        items.forEach((item: any) => {
+            const div = document.createElement('div');
+            div.style.background = 'rgba(255,255,255,0.05)';
+            div.style.padding = '10px';
+            div.style.borderRadius = '4px';
+
+            const date = item.date || item.createdAt || 'Unknown Date';
+            const message = item.message || item.commitMessage || item.title || 'No message';
+            const author = item.author ? (item.author.name || item.author) : 'Unknown';
+
+            div.innerHTML = `<div style="font-weight: bold; color: #4ecdc4;">${message}</div>
+                             <div style="font-size: 0.85em; color: #ccc;">By ${author} on ${new Date(date).toLocaleString()}</div>`;
+            historyList.appendChild(div);
+        });
+    };
+
+    dashboardBtn.addEventListener('click', () => {
+        dashboardModal.style.display = 'flex';
+        loadHistory();
+    });
+
+    closeBtn.addEventListener('click', () => {
+        dashboardModal.style.display = 'none';
+    });
+
+    refreshBtn.addEventListener('click', () => {
+        loadHistory();
+    });
+};
+
+setTimeout(setupDashboard, 1000); // init after app renders

@@ -330,7 +330,14 @@ export class MemoryManager {
         this.processSyncQueue();
     }
 
-    private async processSyncQueue(): Promise<void> {
+
+    public async processSyncQueue(): Promise<void> {
+        if (!navigator.onLine) {
+            console.log("Currently offline. Sync queued until connection is restored.");
+            if (this.syncStatusCallback) this.syncStatusCallback('Offline - sync paused');
+            return;
+        }
+
         if (this.isSyncing || !this.hfToken || !this.syncWorker) return;
 
         const queueKey = `sync-queue`;
@@ -695,5 +702,13 @@ if (cloudData.history.length > localData.history.length ||
         // Sort by score descending and return top matches
         results.sort((a, b) => b.score - a.score);
         return results.slice(0, 3).map(r => ({ episodeId: r.episodeId, snippet: r.snippet }));
+    }
+
+    public async getCloudHistory(): Promise<any[]> {
+        if (!this.hfToken || !this.hfRepoId) {
+            console.warn("Cannot fetch cloud history without credentials.");
+            return [];
+        }
+        return await this.hfStorage.getDatasetHistory(this.hfToken, this.hfRepoId);
     }
 }
