@@ -160,4 +160,43 @@ export class HFStorageManager {
             return null;
         }
     }
+
+    /**
+     * Fetches the commit history of a dataset to show granular file revisions.
+     * @param token The HF API token.
+     * @param repoId The repository ID.
+     */
+    public async getDatasetHistory(token: string, repoId: string): Promise<any[]> {
+        if (!token || !repoId) throw new Error("Missing token or repoId");
+
+        let cleanRepoId = repoId;
+        if (cleanRepoId.startsWith("datasets/")) {
+            cleanRepoId = cleanRepoId.replace("datasets/", "");
+        }
+
+        const url = `${this.apiBase}/datasets/${cleanRepoId}/paths-info/main`;
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (!response.ok) {
+                const treeUrl = `${this.apiBase}/datasets/${cleanRepoId}/tree/main`;
+                const treeResponse = await fetch(treeUrl, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (!treeResponse.ok) {
+                    throw new Error(`HF History fetch failed: ${treeResponse.status}`);
+                }
+                return await treeResponse.json();
+            }
+            return await response.json();
+        } catch (error) {
+            console.error("HF History fetch failed:", error);
+            return [];
+        }
+    }
 }

@@ -116,7 +116,7 @@ tasks_per_run: 2
 - **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha), Philosopher (Terms of Service), Comedian (Chatbot).
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
-- [ ] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
+- [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
 - [ ] Step 11: Real-time Cloud Conflict Dashboard - Expose UI that gives advanced users granular views into file revisions using HF Dataset history endpoints.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap

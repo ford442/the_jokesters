@@ -175,5 +175,20 @@
     <div id="news-ticker-container" style="display:none;">
       <div id="news-ticker-content">BREAKING NEWS: The simulation has been paused for maintenance.</div>
     </div>
-  </body>
+
+    <!-- Cloud Conflict Dashboard Modal -->
+    <div id="cloud-dashboard-modal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
+      <div style="background: #1a1a2e; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; max-height: 80vh; overflow-y: auto; color: white; border: 1px solid #4ecdc4;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h2 style="margin: 0; color: #4ecdc4;">Cloud Conflict Dashboard</h2>
+          <button id="close-cloud-dashboard-btn" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+        <p style="color: #ccc; font-size: 0.9em; margin-bottom: 15px;">Granular view of file revisions from the Hugging Face Dataset history.</p>
+        <button id="refresh-cloud-dashboard-btn" style="background: #0f3460; color: white; border: 1px solid #4ecdc4; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">Refresh</button>
+        <div id="cloud-history-list" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- History items injected here -->
+        </div>
+      </div>
+    </div>
+</body>
 </html>
