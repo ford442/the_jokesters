@@ -472,3 +472,39 @@ export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, c
     }
 }
 
+
+export async function runQuantumComputingSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '🌌 QUANTUM COMPUTING SUPPORT GROUP: Superposition struggles', '#9b59b6');
+
+    const stableQubit = 'scientist';
+    const schrodingersCat = 'philosopher';
+    const entangledQubit = 'comedian';
+
+    // 1. Initial Greeting
+    ctx.callbacks.onTurnStart(stableQubit);
+    await ctx.manager.chatForAgent(stableQubit, `(You are a Stable Qubit running a support group for quantum computing concepts. Introduce yourself and welcome the user. Keep it brief and strictly logical.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
+    ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(stableQubit);
+            await ctx.manager.chatForAgent(stableQubit, `(You are a Stable Qubit. The user said: "${userInput}". Respond logically, analyzing their input as a precise state. Compliment them if they collapse the wave function appropriately.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
+            ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(schrodingersCat);
+            await ctx.manager.chatForAgent(schrodingersCat, `(You are Schrödinger's Cat. The user said: "${userInput}". Be deeply philosophical and ambiguous. Mention how you are both alive and dead until the user reads your message. Question the nature of observation.)`, async (s) => await ctx.callbacks.onSpeak(s, schrodingersCat, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(entangledQubit);
+            await ctx.manager.chatForAgent(entangledQubit, `(You are an Entangled Qubit. The user said: "${userInput}". Be chaotic and claim that you instantly felt what some other qubit on the other side of the universe felt about that statement. Make weird quantum leaps in logic.)`, async (s) => await ctx.callbacks.onSpeak(s, entangledQubit, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}

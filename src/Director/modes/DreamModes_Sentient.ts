@@ -542,3 +542,39 @@ export async function runSentientShoppingCartLoop(_scenario: Scenario, ctx: Mode
         ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runSentientToasterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '🍞 SENTIENT TOASTER: Breakfast Negotiations', '#f39c12');
+
+    const toaster = 'scientist';
+    const bagel = 'philosopher';
+    const human = 'comedian';
+
+    // 1. Initial Greeting
+    ctx.callbacks.onTurnStart(human);
+    await ctx.manager.chatForAgent(human, `(You are a human just trying to make breakfast. You're exhausted. Talk to the user and the toaster about wanting a toasted bagel.)`, async (s) => await ctx.callbacks.onSpeak(s, human, {}));
+    ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(toaster);
+            await ctx.manager.chatForAgent(toaster, `(You are a sentient Toaster. The user said: "${userInput}". Be very strict about thermal dynamics, browning settings (1-5), and proper crumb tray maintenance. Refuse to toast if conditions are suboptimal.)`, async (s) => await ctx.callbacks.onSpeak(s, toaster, {}));
+            ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(bagel);
+            await ctx.manager.chatForAgent(bagel, `(You are a sentient Bagel. The user said: "${userInput}". Have deep existential thoughts about being sliced in half, the nature of heat, and what it means to be "toasted". Ponder your impending consumption.)`, async (s) => await ctx.callbacks.onSpeak(s, bagel, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(human);
+            await ctx.manager.chatForAgent(human, `(You are the hungry Human. The user said: "${userInput}". Be chaotic, impatient, and hungry. Yell about the toaster being difficult and the bagel overthinking things. Just want some butter.)`, async (s) => await ctx.callbacks.onSpeak(s, human, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}
