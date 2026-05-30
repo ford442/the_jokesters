@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -98,8 +98,8 @@ tasks_per_run: 2
 - [x] Update UI Presets and register all 4 new modes in `Director.ts` and `improvSetups.ts`.
 
 ## Phase 3: Next Steps & Ideas
-- **NEW IDEA:** "Quantum Computing Support Group" - Agents play qubits stuck in superposition. Pairings: Scientist (Stable Qubit), Philosopher (Schrödinger's Cat), Comedian (Entangled Qubit).
-- **NEW IDEA:** "Sentient Toaster" - Agents play a toaster, a bagel, and a human. Pairings: Scientist (Toaster), Philosopher (Bagel), Comedian (Human).
+- [x] "Quantum Computing Support Group" - Agents play qubits stuck in superposition. Pairings: Scientist (Stable Qubit), Philosopher (Schrödinger's Cat), Comedian (Entangled Qubit).
+- [x] "Sentient Toaster" - Agents play a toaster, a bagel, and a human. Pairings: Scientist (Toaster), Philosopher (Bagel), Comedian (Human).
 - **NEW IDEA:** "Internet Explorer Support Group" - Agents play discontinued browsers (IE, Netscape, AOL Explorer) lamenting their irrelevance.
 - **NEW IDEA:** "Sentient Wi-Fi Router" - Agents play a Wi-Fi router, a smartphone, and a smart fridge arguing over bandwidth allocation.
 - [x] "Internet Explorer Support Group" - Agents play discontinued browsers (IE, Netscape, AOL Explorer) lamenting their irrelevance.
@@ -114,10 +114,11 @@ tasks_per_run: 2
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
 - **NEW IDEA:** "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas), Philosopher (Brownie), Comedian (Mystery Meat).
 - **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha), Philosopher (Terms of Service), Comedian (Chatbot).
+- **NEW IDEA:** "Sentient Elevator Pitch" - Agents play an over-caffeinated founder, a cynical VC, and the literal elevator itself, pitching a terrible idea while ascending 100 floors. Pairings: Comedian (Founder), Scientist (VC), Philosopher (Elevator).
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
-- [ ] Step 11: Real-time Cloud Conflict Dashboard - Expose UI that gives advanced users granular views into file revisions using HF Dataset history endpoints.
+- [x] Step 11: Real-time Cloud Conflict Dashboard - Expose UI that gives advanced users granular views into file revisions using HF Dataset history endpoints.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 *(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*

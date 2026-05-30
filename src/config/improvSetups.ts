@@ -11,6 +11,16 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'quantum_computing_support_group',
+        title: 'Quantum Computing Support Group',
+        description: 'Qubits stuck in superposition argue about the nature of existence.'
+    },
+    {
+        id: 'sentient_toaster',
+        title: 'Sentient Toaster',
+        description: 'A toaster, a bagel, and a human argue about the perfect breakfast.'
+    },
+    {
         id: 'internet_explorer_support',
         title: 'Internet Explorer Support Group',
         description: 'Discontinued web browsers lament their irrelevance and destruction.'
