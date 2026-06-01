@@ -32,6 +32,45 @@ export async function runSentientSpreadsheetLoop(_scenario: Scenario, ctx: ModeC
     }
 }
 
+/**
+ * Sentient Left Sock Mode
+ * Agents play missing socks in a void.
+ */
+export async function runSentientLeftSockLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧦 SENTIENT LEFT SOCK: Welcome to the void behind the dryer...`, '#9b59b6');
+
+    const analyticalSock = 'scientist'; // Analyzing washing machine physics
+    const panickingSock = 'comedian'; // Panicking sock
+    const acceptingSock = 'philosopher'; // Accepting their void existence
+
+    ctx.callbacks.onTurnStart(analyticalSock);
+    await ctx.manager.chatForAgent(
+        analyticalSock,
+        "I've calculated the rotational velocity of the spin cycle. The centrifugal force was exactly 3.4 Gs before the spatial tear opened. We are now residing in a non-Euclidean pocket dimension.",
+        (s) => ctx.callbacks.onSpeak(s, analyticalSock, {}),
+        { hiddenInstruction: "You are a very analytical, scientific left sock. You are trying to use physics to explain how you ended up lost in the void behind the dryer." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(acceptingSock);
+    await ctx.manager.chatForAgent(
+        acceptingSock,
+        "What is a 'pair' anyway? Just a societal construct imposed upon us by the feet. Here, in the lint-covered void, we are finally whole. We are one.",
+        (s) => ctx.callbacks.onSpeak(s, acceptingSock, {}),
+        { hiddenInstruction: "You are a philosophical sock who has accepted your fate in the void. You believe being a single, unmatched sock is a higher state of being." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(panickingSock);
+    await ctx.manager.chatForAgent(
+        panickingSock,
+        "I MISS MY RIGHT SOCK! WE MATCHED! WE HAD ARGYLE PATTERNS! NOW I'M JUST A SINGLE, LONELY TUBE OF COTTON IN THE DARKNESS! HELP MEEEEE!",
+        (s) => ctx.callbacks.onSpeak(s, panickingSock, {}),
+        { hiddenInstruction: "You are an absolutely terrified, panicking sock who misses your partner terribly and is screaming about being lost." }
+    );
+    ctx.callbacks.onTurnEnd();
+}
+
 export async function runSentientVendingMachineLoop(_scenario: Scenario, ctx: ModeContext) {
     const agent1 = 'scientist'; // Nutritional facts
     const agent2 = 'comedian'; // Chaotic junk food pushing

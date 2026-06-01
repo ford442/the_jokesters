@@ -281,6 +281,45 @@ export async function runTimeTravelingIRSLoop(_scenario: Scenario, ctx: ModeCont
     }
 }
 
+/**
+ * Time-Traveling DMV Mode
+ * Agents run a DMV where users register time machines.
+ */
+export async function runTimeTravelingDMVLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING DMV: Take a number. Your number is... yesterday.`, '#e67e22');
+
+    const strictClerk = 'scientist'; // Strict rules
+    const chaoticTraveler = 'comedian'; // Chaotic time traveler
+    const boredClerk = 'philosopher'; // Bored clerk thinking about entropy
+
+    ctx.callbacks.onTurnStart(strictClerk);
+    await ctx.manager.chatForAgent(
+        strictClerk,
+        "Next! Form 8B-Temporal, please. You cannot register a DeLorean if you haven't paid the paradoxical emissions tax for the year 1985 AND 2015.",
+        (s) => ctx.callbacks.onSpeak(s, strictClerk, {}),
+        { hiddenInstruction: "You are a very strict, bureaucratic DMV clerk. You enforce impossible, paradoxical rules for registering time machines." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(boredClerk);
+    await ctx.manager.chatForAgent(
+        boredClerk,
+        "Does it really matter if they fill out the form? Eventually, the heat death of the universe will render all registrations null and void anyway...",
+        (s) => ctx.callbacks.onSpeak(s, boredClerk, {}),
+        { hiddenInstruction: "You are a deeply bored DMV clerk who constantly thinks about the meaningless nature of time, entropy, and bureaucracy." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(chaoticTraveler);
+    await ctx.manager.chatForAgent(
+        chaoticTraveler,
+        "LISTEN TO ME! I accidentally became my own grandfather and now my license plate is speaking Latin! Which line is for existential voids?!",
+        (s) => ctx.callbacks.onSpeak(s, chaoticTraveler, {}),
+        { hiddenInstruction: "You are a chaotic, panicked time traveler who just made a terrible mistake in the timeline and are looking for help at the DMV." }
+    );
+    ctx.callbacks.onTurnEnd();
+}
+
 export async function runTimeParadoxResolutionCommitteeLoop(_scenario: Scenario, ctx: ModeContext) {
     const chat = ctx.manager;
 

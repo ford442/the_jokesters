@@ -2,9 +2,10 @@
 // Import from the unified index which re-exports all categories
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
-import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop } from './modes/DreamModes_Sentient';
+import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop } from './modes/DreamModes_Sentient';
 import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop } from './modes/DreamModes_Tech';
-import { runMarsColonyHOALoop } from './modes/DreamModes_Scifi';
+import { runTimeTravelingDMVLoop } from './modes/DreamModes_Temporal';
+import { runMarsColonyHOALoop, runIntergalacticSpacePlumberLoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
@@ -272,7 +273,10 @@ export interface Scenario {
     | 'mars_colony_hoa'
     | 'sentient_shopping_cart'
     | 'quantum_computing_support_group'
-    | 'sentient_toaster';
+    | 'sentient_toaster'
+    | 'intergalactic_space_plumber'
+    | 'time_traveling_dmv'
+    | 'sentient_left_sock';
 
     title: string;
     description: string;
@@ -534,6 +538,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sentient_wifi_router: runSentientWiFiRouterLoop,
     sentient_coffee_machine: runSentientCoffeeMachineLoop,
     mars_colony_hoa: runMarsColonyHOALoop,
+    intergalactic_space_plumber: runIntergalacticSpacePlumberLoop,
+    time_traveling_dmv: runTimeTravelingDMVLoop,
+    sentient_left_sock: runSentientLeftSockLoop,
     sentient_shopping_cart: runSentientShoppingCartLoop,
     quantum_computing_support_group: runQuantumComputingSupportGroupLoop,
     sentient_toaster: runSentientToasterLoop,
