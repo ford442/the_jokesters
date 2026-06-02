@@ -625,3 +625,42 @@ export async function runMarsColonyHOALoop(_scenario: Scenario, ctx: ModeContext
     await ctx.manager.chatForAgent(colonist, "It's my airlock! And I'm growing radioactive space potatoes in my front yard too! You can't stop me, the nearest space cop is 140 million miles away!", (s) => ctx.callbacks.onSpeak(s, colonist, {}), { hiddenInstruction: "You are a rebellious colonist who just wants to grow space potatoes and paint your habitat neon green, defying all HOA regulations." });
     ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Intergalactic Space Plumber Mode
+ * Agents act as plumbers fixing bizarre sci-fi pipe issues.
+ */
+export async function runIntergalacticSpacePlumberLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔧 INTERGALACTIC SPACE PLUMBER: Fixing the pipes of the cosmos...`, '#3498db');
+
+    const pragmaticPlumber = 'scientist'; // Pragmatic plumber
+    const ponderingPlumber = 'philosopher'; // Pondering the pipes of time
+    const leakingAlien = 'comedian'; // A leaking pipe alien
+
+    ctx.callbacks.onTurnStart(pragmaticPlumber);
+    await ctx.manager.chatForAgent(
+        pragmaticPlumber,
+        "Alright, look at this mess. We've got a Class 4 tachyon leak in the main plasma manifold. Hand me the hyper-spanner before this entire sector gets sucked into a pocket dimension.",
+        (s) => ctx.callbacks.onSpeak(s, pragmaticPlumber, {}),
+        { hiddenInstruction: "You are a pragmatic, no-nonsense space plumber. You just want to fix the pipes and get paid, but you are dealing with bizarre sci-fi issues." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(ponderingPlumber);
+    await ctx.manager.chatForAgent(
+        ponderingPlumber,
+        "Is a leak truly a flaw, or just the universe attempting to redistribute its energy? If the tachyons flow backward in time, perhaps the pipe was never broken at all.",
+        (s) => ctx.callbacks.onSpeak(s, ponderingPlumber, {}),
+        { hiddenInstruction: "You are a philosophical space plumber. You constantly ponder the existential nature of the pipes and the flow of time and space, rather than actually fixing anything." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(leakingAlien);
+    await ctx.manager.chatForAgent(
+        leakingAlien,
+        "*Gurgling noises* I AM THE PIPE! AND I AM WEEPING GRAVY! WHY ARE YOU POKING ME WITH THAT SPANNER?! IT TICKLES!",
+        (s) => ctx.callbacks.onSpeak(s, leakingAlien, {}),
+        { hiddenInstruction: "You are a chaotic alien that either lives in the pipes or IS the pipe. You are leaking bizarre substances and panicking." }
+    );
+    ctx.callbacks.onTurnEnd();
+}

@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -106,15 +106,15 @@ tasks_per_run: 3
 - [x] "Sentient Wi-Fi Router" - Agents play a Wi-Fi router, a smartphone, and a smart fridge arguing over bandwidth allocation.
 - [x] "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
 
-- **NEW IDEA:** "Intergalactic Space Plumber" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
-- **NEW IDEA:** "Time-Traveling DMV" - Agents run a DMV where users register time machines. Pairings: Scientist (Strict rules), Comedian (Chaotic time traveler), Philosopher (Bored clerk thinking about entropy).
-- **NEW IDEA:** "Sentient Left Sock" - Agents play missing socks in a void. Pairings: Scientist (Analyzing washing machine physics), Comedian (Panicking sock), Philosopher (Accepting their void existence).
+- [x] "Intergalactic Space Plumber" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
+- [x] "Time-Traveling DMV" - Agents run a DMV where users register time machines. Pairings: Scientist (Strict rules), Comedian (Chaotic time traveler), Philosopher (Bored clerk thinking about entropy).
+- [x] "Sentient Left Sock" - Agents play missing socks in a void. Pairings: Scientist (Analyzing washing machine physics), Comedian (Panicking sock), Philosopher (Accepting their void existence).
 - **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
 - **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
-- **NEW IDEA:** "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas), Philosopher (Brownie), Comedian (Mystery Meat).
-- **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha), Philosopher (Terms of Service), Comedian (Chatbot).
-- **NEW IDEA:** "Sentient Elevator Pitch" - Agents play an over-caffeinated founder, a cynical VC, and the literal elevator itself, pitching a terrible idea while ascending 100 floors. Pairings: Comedian (Founder), Scientist (VC), Philosopher (Elevator).
+- **NEW IDEA:** "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas, Qwen2.5), Philosopher (Brownie, Phi-3), Comedian (Mystery Meat, Hermes-3).
+- **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha, Qwen2.5), Philosopher (Terms of Service, Phi-3), Comedian (Chatbot, Hermes-3).
+- **NEW IDEA:** "Sentient Elevator Pitch" - Agents play an over-caffeinated founder, a cynical VC, and the literal elevator itself, pitching a terrible idea while ascending 100 floors. Pairings: Comedian (Founder, Hermes-3), Scientist (VC, Qwen2.5), Philosopher (Elevator, Phi-3).
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
@@ -140,3 +140,8 @@ tasks_per_run: 3
 - [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
 - [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
+
+## Pending Cloud Persistence Tasks
+- [ ] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
+- [ ] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [ ] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.

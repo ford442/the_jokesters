@@ -597,6 +597,21 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'overheated_crt_monitor',
     title: "The Overheated CRT Monitor",
     description: 'Agents act as a massive, heavy CRT monitor warning the user it is about to degauss.'
+  },
+  {
+    id: 'intergalactic_space_plumber',
+    title: "Intergalactic Space Plumber Mode",
+    description: 'Agents act as plumbers fixing bizarre sci-fi pipe issues.'
+  },
+  {
+    id: 'time_traveling_dmv',
+    title: "Time-Traveling DMV Mode",
+    description: 'Agents run a DMV where users register time machines.'
+  },
+  {
+    id: 'sentient_left_sock',
+    title: "Sentient Left Sock Mode",
+    description: 'Agents play missing socks in a void.'
   }
 ];
 
