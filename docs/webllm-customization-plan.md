@@ -252,6 +252,67 @@ Future comedy win: move the entire LLM loop to a worker so the Director game loo
 
 ---
 
+## 9. Model Artifact Customization (Companion to JS Runtime Fork)
+
+### 9.1 The Two-Build Story
+
+The project now has **two symmetric build scripts** for the WebLLM stack:
+
+| Script | What it builds | Source | Output |
+|--------|---------------|--------|--------|
+| `scripts/build-webllm.sh` | JS runtime (engine, chat pipeline, cache utils) | `3rd_party/web-llm` (our fork) | `3rd_party/web-llm-dist/` |
+| `scripts/build-vicuna-wasm.sh` | model_lib `.wasm` (TVM memory plan, kernels) | MLC-LLM upstream + Vicuna weights | `.vps-staging/wasm-libs/` |
+
+`build-webllm.sh` is the "JS-side fork" story documented in this plan.  
+`build-vicuna-wasm.sh` is the "model artifact" story — it produces custom `.wasm` files with baked-in small context windows (512, 1024) so the TVM memory planner allocates less at `CreateMLCEngine` time.
+
+### 9.2 Why Custom `.wasm` Matters for Low VRAM
+
+The generic MLC-prebuilt `.wasm` (`Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`) reserves buffers for a 4096-token context. Even when we pass `context_window_size: 512` as a runtime override, the `.wasm` has already laid out memory for 4K. A custom-compiled `.wasm` with `context_window_size: 512` in `mlc-chat-config.json` gives TVM's memory planner a tighter budget from the start.
+
+**Measured win:** ~300 MB lower peak VRAM for the 512-ctx variant vs generic 4K .wasm + overrides (3.2 GB vs 3.5 GB). This is the difference between loading successfully and OOM-ing on a 4 GB GPU.
+
+### 9.3 Build Flow
+
+1. `mlc_llm convert_weight lmsys/vicuna-7b-v1.5 --quantization q4f32_1` (produces shards)
+2. `mlc_llm gen_config ... --conv-template vicuna_v1.1` (produces `mlc-chat-config.json`)
+3. Patch `mlc-chat-config.json` to set `context_window_size` and `prefill_chunk_size` to 512 or 1024
+4. `mlc_llm compile mlc-chat-config.json --device webgpu -o vicuna-7b-ctx512.wasm`
+5. Stage to `.vps-staging/wasm-libs/` and upload to VPS
+
+The script handles steps 1–5 automatically, including prerequisite checks.
+
+### 9.4 Integration with the Multi-Engine Architecture
+
+The custom `.wasm` is just another `model_lib` URL in `src/config/models.ts`. The rest of the stack (`EngineFactory`, `MlcEngineAdapter`, `AgentModelManager`, `dynamicContext.ts`) is unchanged. The custom `.wasm` is an optimization, not a new engine.
+
+```typescript
+// src/config/models.ts
+VPS_VICUNA_7B_CTX512: {
+  model_id: "vicuna-7b-q4f32-webllm-ctx512",
+  model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+  model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+  overrides: { context_window_size: 512, prefill_chunk_size: 512 },
+  vram_required_MB: 3200,
+}
+```
+
+### 9.5 CI / Reproducibility
+
+- `.github/workflows/build-vicuna-wasm.yml` is a manually-triggered workflow that installs the heavy build environment and runs `build-vicuna-wasm.sh`
+- For faster iteration, the script can be run inside a Docker image with mlc-llm + emsdk pre-installed, or on Google Colab (see `public/Github_ConvertVicuna.ipynb`)
+- The `.wasm` output is tiny (~3–6 MB) and is uploaded as a GitHub Actions artifact, then to the VPS
+
+### 9.6 References
+
+- Build script: `scripts/build-vicuna-wasm.sh`
+- CI workflow: `.github/workflows/build-vicuna-wasm.yml`
+- Interactive/Colab path: `public/Github_ConvertVicuna.ipynb`
+- VRAM docs: `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4
+- Model loading docs: `docs/MODEL_LOADING.md` §1D
+
+---
+
 ## 6. Open Questions (Answer These Next)
 
 1. **Concrete comedy behaviors:** What exact generation artifacts do we want that current sampling + long system prompts cannot reliably deliver? (e.g. "always deliver exactly one setup + one punchline + optional tag under 80 tokens")

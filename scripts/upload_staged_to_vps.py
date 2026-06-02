@@ -2,6 +2,11 @@
 """
 Upload all staged models from .vps-staging/ to the VPS.
 
+This includes:
+  - MLC WebLLM weight directories (downloaded by migrate_all_models.py)
+  - WASM model libraries (built by build-vicuna-wasm.sh -> .vps-staging/wasm-libs/)
+  - GGUF models, Transformers.js ONNX repos, TTS assets, etc.
+
 Run this from a machine with SSH key access to storage.noahcohn.com.
 """
 

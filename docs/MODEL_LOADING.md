@@ -177,7 +177,7 @@ Cosmetic but valuable. Track bytes/sec from `progressCallback` and project total
 ### Not worth doing ❌
 
 - **Sharding to a CDN like jsDelivr or Cloudflare R2** — cost/complexity not justified for a personal project; `storage.noahcohn.com` is fine.
-- **Custom-recompiling a smaller Vicuna with MLC's compiler** — unless you want to learn TVM/MLC, you'd spend a weekend to ship something that's already worse than Hermes-3.
+- ~~**Custom-recompiling a smaller Vicuna with MLC's compiler**~~ — **We now do this.** See `scripts/build-vicuna-wasm.sh` and `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4. The payoff is real for 4GB GPU users, even if Hermes-3 3B is still the better default for most people.
 - **Pruning / distilling Vicuna 7B yourself** — same reason. The community has moved on; Hermes-3 and Llama-3 are the distilled successors.
 - **2-bit / 3-bit quantization (VPTQ, AQLM, QuIP#)** — research-grade, no MLC pipeline support today, quality cliff at <4 bits is real. Reconsider if MLC ships a 3-bit kernel; until then it's a side quest.
 
@@ -223,5 +223,7 @@ First-load is ~2–4 GB depending on model size; subsequent loads are instant fr
 | 4 | Relabel two MLC Vicuna options | ✅ Done | `src/main.ts` |
 | 5 | Add `<link rel="preload">` for recommended `.wasm` | ✅ Done | `index.html` |
 | 6 | Show download ETA, not just percent | ✅ Done | `src/main.ts` |
+| 7 | Build & upload custom small-context Vicuna .wasm | 🟡 In Progress | `scripts/build-vicuna-wasm.sh` |
+| 8 | Register ctx512 / ctx1024 variants in model picker | 🟡 In Progress | `src/config/models.ts` |
 
 (1) and (2) are 30 minutes of work for measurable gains. (3) and (4) are picker-text edits. (5) and (6) are nice-to-have polish.

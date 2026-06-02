@@ -110,7 +110,54 @@ export const VPS_FP32_MODELS = {
     vram_required_MB: 3500,
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
     source: "vps",
-    notes: "Ultra-low VRAM preset — see docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.1",
+    notes: "Fallback ultra-low preset — uses generic 4K .wasm + runtime overrides. Prefer VPS_VICUNA_7B_CTX512 if available.",
+  },
+
+  /**
+   * Vicuna-7B with CUSTOM-COMPILED 512-context WASM
+   * - Same q4f32_1 weights as the other Vicuna entries
+   * - model_lib is a custom .wasm with baked-in 512-token memory plan
+   * - Reduces peak allocation during CreateMLCEngine vs generic 4K .wasm + overrides
+   * - VRAM: ~3.2GB (target < 3200 MB)
+   * - Best option for GPUs with exactly 4GB VRAM
+   * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
+   */
+  VPS_VICUNA_7B_CTX512: {
+    model_id: "vicuna-7b-q4f32-webllm-ctx512",
+    model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+    overrides: {
+      context_window_size: 512,
+      prefill_chunk_size: 512,
+      tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
+    },
+    vram_required_MB: 3200,
+    recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
+    source: "vps",
+    notes: "Custom-compiled 512-ctx .wasm — lowest VRAM Vicuna path. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
+  },
+
+  /**
+   * Vicuna-7B with CUSTOM-COMPILED 1024-context WASM
+   * - Same q4f32_1 weights, custom .wasm with baked-in 1024-token memory plan
+   * - Middle ground: more context than 512-ctx variant, less VRAM than generic 4K .wasm
+   * - VRAM: ~3.6GB
+   * - Good for GPUs with 4-5GB VRAM
+   * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
+   */
+  VPS_VICUNA_7B_CTX1024: {
+    model_id: "vicuna-7b-q4f32-webllm-ctx1024",
+    model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm`,
+    overrides: {
+      context_window_size: 1024,
+      prefill_chunk_size: 1024,
+      tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
+    },
+    vram_required_MB: 3600,
+    recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32"],
+    source: "vps",
+    notes: "Custom-compiled 1024-ctx .wasm — balanced Vicuna path. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
   },
 
   /**
@@ -465,8 +512,8 @@ export async function getRecommendedModel(): Promise<string> {
     const maxBufferSize = (adapter as any)?.limits?.maxBufferSize ?? 0;
     if (maxBufferSize > 0 && maxBufferSize < 268_435_456) {
       // <256MB maxBufferSize strongly suggests a low-VRAM GPU
-      console.log('[ModelConfig] Low buffer-size detected — recommending ultra-low VRAM preset');
-      return VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id;
+      console.log('[ModelConfig] Low buffer-size detected — recommending custom 512-ctx Vicuna');
+      return VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id;
     }
   } catch {
     // Adapter probing failed; fall through to normal logic

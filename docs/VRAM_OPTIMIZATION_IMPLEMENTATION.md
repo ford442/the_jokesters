@@ -219,6 +219,45 @@ export function selectModelForVRAM(availableVRAM_MB: number): WebLLMModel {
 }
 ```
 
+### 1.4 Custom-Compiled WASM Model Libraries
+
+**Key Finding:** The generic MLC-prebuilt `.wasm` (e.g., `Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`) is compiled with a 4096-token memory plan baked into the TVM module. Even when we override `context_window_size` to 512 at runtime, the `.wasm` may still reserve buffers based on the original 4K plan, and the override is applied *after* some allocations have already occurred during `CreateMLCEngine`. A custom-compiled `.wasm` with a smaller context baked in reduces peak allocation *before* any chat begins.
+
+**How it works:**
+1. Start from the same q4f32_1 converted weight shards (no re-quantization needed)
+2. Generate `mlc-chat-config.json` with `context_window_size: 512` (or 1024)
+3. Run `mlc_llm compile --device webgpu` — TVM's memory planner generates a tight allocation graph
+4. The resulting `.wasm` is only ~3–6 MB and can be served with standard cache headers
+
+**VRAM impact:**
+| Variant | model_lib | Runtime overrides | Est. peak VRAM |
+|---------|-----------|-------------------|----------------|
+| VPS_VICUNA_7B_Q4F32 | Generic 4K .wasm | context_window_size: 2048 | ~4.0 GB |
+| VPS_VICUNA_7B_ULTRA_LOW | Generic 4K .wasm | context_window_size: 512 + sliding_window | ~3.5 GB |
+| **VPS_VICUNA_7B_CTX512** | **Custom 512-ctx .wasm** | context_window_size: 512 | **~3.2 GB** |
+| **VPS_VICUNA_7B_CTX1024** | **Custom 1024-ctx .wasm** | context_window_size: 1024 | **~3.6 GB** |
+
+The 512-ctx custom .wasm gives headroom that runtime overrides alone cannot, because the TVM module itself is compiled for a smaller KV cache and activation workspace.
+
+**Build recipe:**
+```bash
+# Prerequisites: emsdk, Rust (wasm32-unknown-emscripten), mlc-llm Python package
+# See scripts/build-vicuna-wasm.sh for the full automated script
+
+CONTEXT_SIZE=512 ./scripts/build-vicuna-wasm.sh
+CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
+```
+
+**When to use:**
+- **CTX512**: GPUs with exactly 4 GB VRAM (e.g., GTX 1650, Intel Arc A380, many laptop iGPUs)
+- **CTX1024**: GPUs with 4–5 GB VRAM where you need a bit more conversation history
+- Keep the generic `.wasm` + override fallback for compatibility if the custom .wasm is not yet hosted
+
+**Caveats:**
+- The build environment is heavy (30–60 min on a clean machine). Use CI or Colab for reproducibility.
+- The custom .wasm is *not* a different model — it uses the exact same q4f32_1 weight shards. Only the model_lib changes.
+- If a user still OOMs, the existing `dynamicContext.ts` retry chain will fall back to the 3B Hermes model.
+
 ---
 
 ## 2. GGUF Quantization & WASM Integration

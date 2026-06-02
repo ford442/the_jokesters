@@ -1,0 +1,131 @@
+name: Build Custom Vicuna-7B WASM
+
+# -----------------------------------------------------------------------------
+# Purpose:
+#   Reproducibly compile custom Vicuna-7B WebLLM model_lib (.wasm) artifacts
+#   with baked-in small context windows (512, 1024).
+#
+#   This workflow is the CI companion to scripts/build-vicuna-wasm.sh.
+#   It can be triggered manually or scheduled, and uploads the resulting
+#   .wasm as a GitHub Actions artifact (and optionally to HuggingFace).
+#
+#   NOTE: The full MLC-LLM build environment (emsdk, TVM, Rust) is heavy.
+#   This workflow installs it from scratch on ubuntu-latest, which takes
+#   ~20-40 minutes. For faster iteration, use a self-hosted runner with
+#   the environment pre-installed, or run the script locally/Colab.
+# -----------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+    inputs:
+      context_size:
+        description: 'Target context window size'
+        required: true
+        default: '512'
+        type: choice
+        options:
+          - '512'
+          - '1024'
+      quantization:
+        description: 'MLC quantization scheme'
+        required: true
+        default: 'q4f32_1'
+        type: choice
+        options:
+          - 'q4f32_1'
+      skip_weight_conv:
+        description: 'Skip weight conversion (use pre-converted weights from HF cache)'
+        required: false
+        default: false
+        type: boolean
+      hf_upload:
+        description: 'Upload result to HuggingFace'
+        required: false
+        default: false
+        type: boolean
+
+  # Uncomment to auto-build both variants on a schedule (e.g., weekly)
+  # schedule:
+  #   - cron: '0 6 * * 0'
+
+jobs:
+  build-wasm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      CONTEXT_SIZE: ${{ github.event.inputs.context_size || '512' }}
+      QUANTIZATION: ${{ github.event.inputs.quantization || 'q4f32_1' }}
+      SKIP_WEIGHT_CONV: ${{ github.event.inputs.skip_weight_conv && '1' || '0' }}
+      HF_UPLOAD: ${{ github.event.inputs.hf_upload && '1' || '0' }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_REPO_ID: ford442/vicuna-7b-q4f32-webllm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs cmake ninja-build
+
+      - name: Install MLC-LLM Python packages
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --pre -U -f https://mlc.ai/wheels \
+            mlc-llm-nightly-cu128 mlc-ai-nightly-cu128
+
+      - name: Verify mlc_llm installation
+        run: python -c "import mlc_llm; print(mlc_llm.__version__)"
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
+          cd ~/emsdk
+          ./emsdk install tot
+          ./emsdk activate tot
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: wasm32-unknown-emscripten
+
+      - name: Verify toolchain
+        run: |
+          rustup target list --installed | grep wasm32-unknown-emscripten
+          python -c "import mlc_llm"
+
+      - name: Run build-vicuna-wasm.sh
+        run: |
+          export EMSDK_ROOT="$HOME/emsdk"
+          chmod +x scripts/build-vicuna-wasm.sh
+          scripts/build-vicuna-wasm.sh
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vicuna-7b-wasm-ctx${{ env.CONTEXT_SIZE }}
+          path: |
+            .vps-staging/wasm-libs/*.wasm
+            .vps-staging/wasm-libs/*.BUILD_INFO.txt
+          retention-days: 30
+
+      - name: Verify artifact
+        run: |
+          echo "Built artifacts:"
+          ls -lh .vps-staging/wasm-libs/
+
+      # -----------------------------------------------------------------------
+      # Optional: Upload to HuggingFace
+      # -----------------------------------------------------------------------
+      - name: Upload to HuggingFace
+        if: ${{ github.event.inputs.hf_upload == 'true' }}
+        run: |
+          echo "HuggingFace upload was triggered via workflow input."
+          echo "The build script handles this when HF_UPLOAD=1 and HF_TOKEN is set."
