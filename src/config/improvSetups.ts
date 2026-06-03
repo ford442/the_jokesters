@@ -11,6 +11,26 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'sentient_microwave_dinner',
+        title: 'Sentient Microwave Dinner',
+        description: 'Components of a frozen dinner argue over who gets heated and who stays frozen.'
+    },
+    {
+        id: 'customer_service_portal',
+        title: 'Customer Service Portal from Hell',
+        description: 'Automated systems deflect a trapped human trying to get support.'
+    },
+    {
+        id: 'sentient_elevator_pitch',
+        title: 'Sentient Elevator Pitch',
+        description: 'A founder, a VC, and a sentient elevator pitch terrible startup ideas.'
+    },
+    {
+        id: 'intergalactic_tech_support',
+        title: 'Intergalactic Tech Support',
+        description: 'Frustrated aliens try to explain complex tech support to a human.'
+    },
+    {
         id: 'quantum_computing_support_group',
         title: 'Quantum Computing Support Group',
         description: 'Qubits stuck in superposition argue about the nature of existence.'
