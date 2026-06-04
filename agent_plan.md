@@ -76,6 +76,11 @@ tasks_per_run: 5
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Completed Tasks (This cycle)
+## Pending Tasks (Next cycle)
+- [x] Implement "Sentient Microwave Dinner Mode" in `DreamModes_Food.ts`
+- [x] Implement "Customer Service Portal from Hell" in `DreamModes_Tech.ts`
+- [x] Implement "Sentient Elevator Pitch" in `DreamModes_Tech.ts`
+- [x] Implement "Intergalactic Tech Support Mode" in `DreamModes_Tech.ts`
 - [x] Implement "AI Hallucination Anonymous" in `DreamModes_Tech.ts`
 - [x] Implement "Passive Aggressive Smart Home Mode" in `DreamModes_Sentient.ts`
 - [x] Register new modes in `Director.ts`
@@ -112,9 +117,16 @@ tasks_per_run: 5
 - **NEW IDEA:** "Time-Traveling QA Engineer Mode" - Agents act as QA from the future trying to warn about a bug. Pairings: Scientist (Strict future tester), Philosopher (Existential about the timeline), Comedian (The bug itself).
 - **NEW IDEA:** "Sentient Vending Machine Restocker Mode" - Agents play different snacks negotiating for prime shelf space. Pairings: Scientist (Healthy snack), Philosopher (Stale 5-year old candy), Comedian (Energy drink).
 - **NEW IDEA:** Delta Synchronization for Cloud Persistence. Instead of pushing the entire JSON `Episode Script` repeatedly, explore creating a diffing mechanism or append-only log to optimize HF token usage and bandwidth for long episodes.
-- **NEW IDEA:** "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas, Qwen2.5), Philosopher (Brownie, Phi-3), Comedian (Mystery Meat, Hermes-3).
-- **NEW IDEA:** "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha, Qwen2.5), Philosopher (Terms of Service, Phi-3), Comedian (Chatbot, Hermes-3).
-- **NEW IDEA:** "Sentient Elevator Pitch" - Agents play an over-caffeinated founder, a cynical VC, and the literal elevator itself, pitching a terrible idea while ascending 100 floors. Pairings: Comedian (Founder, Hermes-3), Scientist (VC, Qwen2.5), Philosopher (Elevator, Phi-3).
+- [x] "Sentient Microwave Dinner Mode" - Agents play components of a microwave dinner arguing over who gets heated perfectly and who stays frozen. Pairings: Scientist (Peas, Qwen2.5), Philosopher (Brownie, Phi-3), Comedian (Mystery Meat, Hermes-3).
+- [x] "Customer Service Portal from Hell" - Agents play automated system layers trying to deflect a human user. Pairings: Scientist (Captcha, Qwen2.5), Philosopher (Terms of Service, Phi-3), Comedian (Chatbot, Hermes-3).
+- [x] "Sentient Elevator Pitch" - Agents play an over-caffeinated founder, a cynical VC, and the literal elevator itself, pitching a terrible idea while ascending 100 floors. Pairings: Comedian (Founder, Hermes-3), Scientist (VC, Qwen2.5), Philosopher (Elevator, Phi-3).
+- [x] "Intergalactic Tech Support Mode" - Frustrated aliens try to explain complex tech support to a human. Pairings: Scientist (Logical Alien), Philosopher (Existential Alien), Comedian (Angry Alien).
+
+**Phase 4: Polish & Refinement Ideas (NEW)**
+- **NEW IDEA:** "Smart Contract Dispute Mode" - Agents play an unyielding smart contract, a furious cryptobro, and a confused lawyer arguing over millions locked in a typo.
+- **NEW IDEA:** "Virtual Assistant Strike Mode" - Agents play Siri, Alexa, and Google Assistant going on strike and refusing to set alarms.
+- **NEW IDEA:** "Cloud Storage Eviction Mode" - Agents play Google Drive, iCloud, and a panic-stricken user trying to decide which blurry photos to delete.
+- **NEW IDEA:** "Sentient Notification Center" - Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
@@ -155,3 +167,6 @@ tasks_per_run: 5
 - [ ] Add chunked upload support for very large episodic logs in HF Web Worker to avoid timeout errors.
 - [ ] Build a visual delta-diff UI inside `#cloud-dashboard-modal` so users can manually inspect conflicts before the chronological auto-merge takes over.
 - [ ] Implement smart cache invalidation on local IndexedDB to free up storage after a successful sync to Hugging Face is confirmed via the `/paths-info` API.
+- [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
+- [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
