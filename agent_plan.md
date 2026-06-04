@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 5
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -75,6 +75,7 @@ tasks_per_run: 4
 
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
+## Completed Tasks (This cycle)
 ## Pending Tasks (Next cycle)
 - [x] Implement "Sentient Microwave Dinner Mode" in `DreamModes_Food.ts`
 - [x] Implement "Customer Service Portal from Hell" in `DreamModes_Tech.ts`
@@ -153,6 +154,19 @@ tasks_per_run: 4
 - [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
 
 ## Pending Cloud Persistence Tasks
+- [x] Authenticate with the HF API (Verified in MemoryManager) using `/whoami-v2` token validation to ensure credentials are valid.
+- [x] Push finished "Episode Scripts" (Verified via Background Web Worker) to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
+
+## New Ideas (Dream Phase)
+- **NEW IDEA:** "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
+- **NEW IDEA:** "Smart Mirror Morning Affirmations" - Agents play the mirror, a cynical hairbrush, and the groggy human. Pairings: Comedian (Mirror - fake deep), Philosopher (Hairbrush - nihilistic), Scientist (Human - trying to get ready).
+- **NEW IDEA:** Storage optimizations: Implement chunked uploads for large episodic logs, a visual diff tool in the Cloud Conflict Dashboard for users to choose which delta files to merge, and intelligent cache invalidation on local IndexedDB when HF sync completes.
+
+## Storage Manager Integration Next Steps
+- [ ] Add chunked upload support for very large episodic logs in HF Web Worker to avoid timeout errors.
+- [ ] Build a visual delta-diff UI inside `#cloud-dashboard-modal` so users can manually inspect conflicts before the chronological auto-merge takes over.
+- [ ] Implement smart cache invalidation on local IndexedDB to free up storage after a successful sync to Hugging Face is confirmed via the `/paths-info` API.
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
