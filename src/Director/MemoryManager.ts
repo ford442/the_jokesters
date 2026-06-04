@@ -126,6 +126,9 @@ export class MemoryManager {
                     localStorage.setItem(`${this.prefix}${this.currentProfile}-last-sync-time`, Date.now().toString());
                     localStorage.removeItem(`${this.prefix}${this.currentProfile}-sync-error`);
                     window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
+
+                    // Invalidate local cache if we just fully synced
+                    this.invalidateSyncedLocalEpisodes().catch(e => console.error("Error invalidating cache:", e));
 } else if (data.type === 'sync_error') {
         console.error('Sync error from worker:', data.error);
         localStorage.setItem(`${this.prefix}${this.currentProfile}-sync-error`, data.error);
@@ -710,5 +713,56 @@ if (cloudData.history.length > localData.history.length ||
             return [];
         }
         return await this.hfStorage.getDatasetHistory(this.hfToken, this.hfRepoId);
+    }
+
+    public async getPendingDeltas(): Promise<any[]> {
+        if (!this.hfToken || !this.hfRepoId) {
+            return [];
+        }
+
+        try {
+            const history = await this.getCloudHistory();
+            if (history && history.length > 0 && !history[0].commit && !history[0].oid) {
+                // Return files that contain "delta-"
+                return history.filter((item: any) => item.path && item.path.includes('delta-'));
+            }
+            return [];
+        } catch (e) {
+            console.error("Failed to get pending deltas:", e);
+            return [];
+        }
+    }
+
+    public async invalidateSyncedLocalEpisodes(): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) return;
+
+        try {
+            const history = await this.getCloudHistory();
+            if (!history || history.length === 0 || history[0].commit || history[0].oid) {
+                // Not the paths-info structure we expect or empty
+                return;
+            }
+
+            const cloudEpisodes = history
+                .filter((item: any) => item.path && item.path.startsWith('episodes/') && item.path.endsWith('/episode.json'))
+                .map((item: any) => item.path.replace('episodes/', '').replace('/episode.json', ''));
+
+            const localEpisodes = await this.listEpisodes();
+
+            for (const localEpisode of localEpisodes) {
+                if (cloudEpisodes.includes(localEpisode)) {
+                    // Check if there are any pending deltas for this episode
+                    const hasDeltas = history.some((item: any) => item.path && item.path.startsWith(`episodes/${localEpisode}/delta-`));
+                    if (!hasDeltas) {
+                        // Fully synced, we can safely remove the local copy to free up space
+                        console.log(`Cache Invalidation: Removing fully synced local episode ${localEpisode}`);
+                        localStorage.removeItem(`${this.prefix}${this.currentProfile}-episode-${localEpisode}`);
+                        await this.idbSet(`episode-${localEpisode}`, null);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to invalidate local cache:", e);
+        }
     }
 }

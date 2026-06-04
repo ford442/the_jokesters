@@ -1494,6 +1494,12 @@ const setupDashboard = () => {
     const refreshBtn = document.getElementById('refresh-cloud-dashboard-btn');
     const historyList = document.getElementById('cloud-history-list');
 
+    // Pending deltas UI elements
+    const checkDeltasBtn = document.getElementById('check-pending-deltas-btn');
+    const deltasContainer = document.getElementById('pending-deltas-container');
+    const deltasList = document.getElementById('pending-deltas-list');
+    const forceMergeBtn = document.getElementById('force-merge-deltas-btn');
+
     if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
 
     const loadHistory = async () => {
@@ -1554,6 +1560,59 @@ const setupDashboard = () => {
     refreshBtn.addEventListener('click', () => {
         loadHistory();
     });
+
+    if (checkDeltasBtn && deltasContainer && deltasList && forceMergeBtn) {
+        checkDeltasBtn.addEventListener('click', async () => {
+            deltasList.innerHTML = '<div style="color: #888;">Checking for pending deltas...</div>';
+            deltasContainer.style.display = 'block';
+
+            const getMemMgr = (window as any).getMemoryManager;
+            if (!getMemMgr) {
+                deltasList.innerHTML = '<div style="color: #ff6b6b;">MemoryManager not available.</div>';
+                return;
+            }
+
+            const memoryManager = getMemMgr();
+            const deltas = await memoryManager.getPendingDeltas();
+
+            deltasList.innerHTML = '';
+
+            if (!deltas || deltas.length === 0) {
+                deltasList.innerHTML = '<div style="color: #4ecdc4;">No pending deltas found. All episodes are fully merged!</div>';
+                forceMergeBtn.style.display = 'none';
+                return;
+            }
+
+            forceMergeBtn.style.display = 'block';
+
+            deltas.forEach((delta: any) => {
+                const div = document.createElement('div');
+                div.style.background = 'rgba(0,0,0,0.2)';
+                div.style.padding = '8px';
+                div.style.borderRadius = '4px';
+                div.style.fontSize = '0.9em';
+
+                // Extract episode ID from path (episodes/ID/delta-...)
+                const match = delta.path.match(/episodes\/([^\/]+)\/delta-/);
+                const episodeId = match ? match[1] : 'Unknown';
+
+                div.innerHTML = `<span style="color: #ffd700;">[Episode: ${episodeId}]</span> <span style="color: #ccc;">${delta.path.split('/').pop()}</span>`;
+                deltasList.appendChild(div);
+            });
+        });
+
+        forceMergeBtn.addEventListener('click', async () => {
+            const getMemMgr = (window as any).getMemoryManager;
+            if (!getMemMgr) return;
+            const memoryManager = getMemMgr();
+
+            deltasList.innerHTML = '<div style="color: #4ecdc4;">Triggering manual delta consolidation... Check background sync status.</div>';
+            forceMergeBtn.style.display = 'none';
+
+            // Re-run the delta consolidation task
+            memoryManager.startDeltaConsolidationTask();
+        });
+    }
 };
 
 setTimeout(setupDashboard, 1000); // init after app renders

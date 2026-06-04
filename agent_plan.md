@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -162,11 +162,14 @@ tasks_per_run: 5
 - **NEW IDEA:** "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
 - **NEW IDEA:** "Smart Mirror Morning Affirmations" - Agents play the mirror, a cynical hairbrush, and the groggy human. Pairings: Comedian (Mirror - fake deep), Philosopher (Hairbrush - nihilistic), Scientist (Human - trying to get ready).
 - **NEW IDEA:** Storage optimizations: Implement chunked uploads for large episodic logs, a visual diff tool in the Cloud Conflict Dashboard for users to choose which delta files to merge, and intelligent cache invalidation on local IndexedDB when HF sync completes.
+- **NEW IDEA:** "Software Update Ultimatum Mode" - Agents play an unyielding OS update prompt, a frantic user trying to save work, and a chaotic background process.
+- **NEW IDEA:** "Sentient Out-of-Office Auto-Reply" - Agents play an overly detailed out-of-office bot, a confused client, and the vacationing employee's anxious inner monologue.
+- **NEW IDEA:** Features: Export episode history to PDF format for sharing, and real-time voice-over (TTS) integration with local Web Speech API or external TTS providers for a truly immersive experience.
 
 ## Storage Manager Integration Next Steps
-- [ ] Add chunked upload support for very large episodic logs in HF Web Worker to avoid timeout errors.
-- [ ] Build a visual delta-diff UI inside `#cloud-dashboard-modal` so users can manually inspect conflicts before the chronological auto-merge takes over.
-- [ ] Implement smart cache invalidation on local IndexedDB to free up storage after a successful sync to Hugging Face is confirmed via the `/paths-info` API.
+- [x] Add chunked upload support for very large episodic logs in HF Web Worker to avoid timeout errors.
+- [x] Build a visual delta-diff UI inside `#cloud-dashboard-modal` so users can manually inspect conflicts before the chronological auto-merge takes over.
+- [x] Implement smart cache invalidation on local IndexedDB to free up storage after a successful sync to Hugging Face is confirmed via the `/paths-info` API.
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.

@@ -184,7 +184,20 @@
           <button id="close-cloud-dashboard-btn" style="background: #ff6b6b; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Close</button>
         </div>
         <p style="color: #ccc; font-size: 0.9em; margin-bottom: 15px;">Granular view of file revisions from the Hugging Face Dataset history.</p>
-        <button id="refresh-cloud-dashboard-btn" style="background: #0f3460; color: white; border: 1px solid #4ecdc4; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">Refresh</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="refresh-cloud-dashboard-btn" style="background: #0f3460; color: white; border: 1px solid #4ecdc4; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Refresh</button>
+            <button id="check-pending-deltas-btn" style="background: #1a1a2e; color: #ffd700; border: 1px solid #ffd700; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Check Pending Deltas</button>
+        </div>
+
+        <div id="pending-deltas-container" style="display: none; background: rgba(255,215,0,0.1); border: 1px dashed #ffd700; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <h3 style="color: #ffd700; margin-top: 0;">Pending Deltas</h3>
+            <p style="color: #ccc; font-size: 0.85em;">These are unsynced changes waiting to be merged into the main episode files.</p>
+            <div id="pending-deltas-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; max-height: 150px; overflow-y: auto;">
+                <!-- Pending deltas injected here -->
+            </div>
+            <button id="force-merge-deltas-btn" style="background: #ffd700; color: #1a1a2e; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">Force Merge All Deltas</button>
+        </div>
+
         <div id="cloud-history-list" style="display: flex; flex-direction: column; gap: 10px;">
           <!-- History items injected here -->
         </div>
