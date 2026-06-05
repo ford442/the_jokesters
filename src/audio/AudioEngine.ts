@@ -61,7 +61,7 @@ export class AudioEngine {
         }
 
         // 2. Load from VPS (only for M1, M2, F1, F2)
-        const stylePath = `https://storage.noahcohn.com/models/tts/voice_styles/${voiceId}.json`;
+        const stylePath = `https://storage.1ink.us/models/tts/voice_styles/${voiceId}.json`;
 
         try {
             console.log(`AudioEngine: Loading voice style '${voiceId}'...`);

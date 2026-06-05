@@ -18,7 +18,7 @@ import * as webllm from '@mlc-ai/web-llm'
  */
 
 // VPS Storage Configuration
-export const VPS_STORAGE_URL = 'https://storage.noahcohn.com/models';
+export const VPS_STORAGE_URL = 'https://storage.1ink.us/models';
 
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)

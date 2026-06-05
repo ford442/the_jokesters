@@ -47,7 +47,7 @@ export class TransformersEngineAdapter implements LLMEngine {
     env.allowLocalModels = false
     
     // Self-hosted model mirror on VPS
-    env.remoteHost = 'https://storage.noahcohn.com'
+    env.remoteHost = 'https://storage.1ink.us'
     ;(env as any).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
     
     onProgress?.({ progress: 0, text: `Loading ${modelConfig.name}...`, timeElapsed: 0 })

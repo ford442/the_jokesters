@@ -167,7 +167,7 @@ export class SupertonicTTS {
 export async function loadSupertonic() {
     const opt: ort.InferenceSession.SessionOptions = { executionProviders: ['webgpu', 'wasm'] };
 
-    const TTS_BASE_URL = 'https://storage.noahcohn.com/models/tts/onnx';
+    const TTS_BASE_URL = 'https://storage.1ink.us/models/tts/onnx';
 
     // Load Configs
     const [cfg, indexer] = await Promise.all([
