@@ -161,39 +161,45 @@ self.onmessage = async (e: MessageEvent) => {
             }
 
             // Now we have the merged episode, let's commit it and delete the deltas
-            const operations: any[] = [{
+            const allOperations: any[] = [{
                 operation: "createOrUpdateFile",
                 pathOrUrl: episodeFilename,
                 content: btoa(unescape(encodeURIComponent(JSON.stringify(mainEpisode, null, 2))))
             }];
 
             for (const deltaFile of deltaFiles) {
-                operations.push({
+                allOperations.push({
                     operation: "deleteFile",
                     pathOrUrl: deltaFile.path
                 });
             }
 
             const commitUrl = `https://huggingface.co/api/datasets/${cleanRepoId}/commit/main`;
-            const commitBody = {
-                operations: operations,
-                commitMessage: `Consolidate deltas for ${episodeFilename}`,
-            };
 
-            const commitResponse = await fetch(commitUrl, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(commitBody),
-            });
+            // Chunk operations into batches of 50 to avoid HF API timeouts
+            const chunkSize = 50;
+            for (let i = 0; i < allOperations.length; i += chunkSize) {
+                const chunk = allOperations.slice(i, i + chunkSize);
+                const commitBody = {
+                    operations: chunk,
+                    commitMessage: `Consolidate deltas for ${episodeFilename} (Part ${Math.floor(i / chunkSize) + 1})`,
+                };
 
-            if (!commitResponse.ok) {
-                const errText = await commitResponse.text();
-                console.error(`HF Upload failed: ${commitResponse.status} ${errText}`);
-                self.postMessage({ type: 'sync_error', error: `Upload failed: ${commitResponse.status}` });
-                return;
+                const commitResponse = await fetch(commitUrl, {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(commitBody),
+                });
+
+                if (!commitResponse.ok) {
+                    const errText = await commitResponse.text();
+                    console.error(`HF Upload failed for chunk: ${commitResponse.status} ${errText}`);
+                    self.postMessage({ type: 'sync_error', error: `Upload failed: ${commitResponse.status}` });
+                    return;
+                }
             }
 
             self.postMessage({ type: 'consolidation_complete', episodeId });
