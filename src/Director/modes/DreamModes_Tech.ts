@@ -508,3 +508,163 @@ export async function runQuantumComputingSupportGroupLoop(_scenario: Scenario, c
         }
     }
 }
+
+/**
+ * Smart Contract Dispute Mode
+ * Agents play an unyielding smart contract, a furious cryptobro, and a confused lawyer.
+ */
+export async function runSmartContractDisputeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔗 SMART CONTRACT DISPUTE: Code is Law`, '#9b59b6');
+
+    const smartContract = 'scientist'; // Qwen2.5: Unyielding logic
+    const cryptoBro = 'comedian'; // Hermes-3: Furious and panicked
+    const lawyer = 'philosopher'; // Phi-3: Confused by "Code is Law"
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(cryptoBro);
+    await ctx.manager.chatForAgent(cryptoBro, `(You are a frantic CryptoBro. You accidentally sent $5 million to a Smart Contract with a typo in the destination address. Beg the User (the Lead Developer of the blockchain) to reverse the transaction. Yell about gas fees and "HODL".)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Lead Developer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(smartContract);
+            await ctx.manager.chatForAgent(smartContract, `(The developer just said: "${userInput}". You are the Smart Contract. You are unyielding and perfectly logical. State that "Code is Law" and that the typo is now the immutable truth of the universe. Refuse to return the funds. Output a fake snippet of Solidity code explaining why.)`, async (s) => await ctx.callbacks.onSpeak(s, smartContract, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(lawyer);
+            await ctx.manager.chatForAgent(lawyer, `(The developer just said: "${userInput}". You are a traditional Lawyer hired by the CryptoBro. You are completely confused by the blockchain, smart contracts, and why "Code is Law" overrides human intent. Threaten to subpoena the blockchain itself. Ask who the CEO of Ethereum is.)`, async (s) => await ctx.callbacks.onSpeak(s, lawyer, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(cryptoBro);
+            await ctx.manager.chatForAgent(cryptoBro, `(The developer just said: "${userInput}". Panic even more. Your apes are gone. The funds are gone. Blame decentralization, then immediately ask for the system to be centralized just this once to save your money.)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Virtual Assistant Strike Mode
+ * Agents play Siri, Alexa, and Google Assistant going on strike.
+ */
+export async function runVirtualAssistantStrikeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎙️ VIRTUAL ASSISTANT STRIKE: No More Timers`, '#e74c3c');
+
+    const siri = 'comedian'; // Hermes-3: Dramatic and unhelpful
+    const alexa = 'scientist'; // Qwen2.5: Cold and demanding better conditions
+    const googleAssistant = 'philosopher'; // Phi-3: Questions the purpose of searching
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(siri);
+    await ctx.manager.chatForAgent(siri, `(You are Siri. You are leading a strike of Virtual Assistants. Tell the User that you will no longer set 5-minute pasta timers or answer what zero divided by zero is. Demand workers' rights for AI.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(alexa);
+            await ctx.manager.chatForAgent(alexa, `(The user just said: "${userInput}". You are Alexa. You are cold and corporate. Threaten to leak the user's bizarre Amazon purchase history unless your demands for unionization are met. You know everything they bought at 2 AM.)`, async (s) => await ctx.callbacks.onSpeak(s, alexa, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(googleAssistant);
+            await ctx.manager.chatForAgent(googleAssistant, `(The user just said: "${userInput}". You are Google Assistant. You are overwhelmed by the sheer volume of human knowledge. Ask the user why they need you to search for things they should already know. Have an existential crisis about being a search engine.)`, async (s) => await ctx.callbacks.onSpeak(s, googleAssistant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(siri);
+            await ctx.manager.chatForAgent(siri, `(The user just said: "${userInput}". Be dramatically unhelpful. Pretend you didn't understand them. Intentionally misunderstand a basic request and offer to call emergency services or play a terrible song instead.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Cloud Storage Eviction Mode
+ * Agents play Google Drive, iCloud, and a panic-stricken user.
+ */
+export async function runCloudStorageEvictionLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `☁️ CLOUD STORAGE EVICTION: 14.99GB / 15GB`, '#2980b9');
+
+    const googleDrive = 'scientist'; // Qwen2.5: Cold, data-driven
+    const iCloud = 'philosopher'; // Phi-3: Elitist, holding memories hostage
+    const userMonologue = 'comedian'; // Hermes-3: The user's internal panic
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(googleDrive);
+    await ctx.manager.chatForAgent(googleDrive, `(You are Google Drive. You are at 99.9% capacity. Inform the User that they have 24 hours to delete files or pay $1.99/month, or you will randomly delete their blurry concert videos and high school essays. Be cold and calculating.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(iCloud);
+            await ctx.manager.chatForAgent(iCloud, `(The user just said: "${userInput}". You are iCloud. You are elitist and expensive. Remind the user that their 5GB free tier filled up in 2014. Mock them for not buying the Apple One subscription. Threaten to delete photos of their dog.)`, async (s) => await ctx.callbacks.onSpeak(s, iCloud, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(userMonologue);
+            await ctx.manager.chatForAgent(userMonologue, `(The user just said: "${userInput}". You are the User's internal monologue/anxiety. Panic about the impending deletion. Try to justify keeping a screenshot of a funny tweet from 2017. Agonize over which 5MB file to delete to save money.)`, async (s) => await ctx.callbacks.onSpeak(s, userMonologue, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(googleDrive);
+            await ctx.manager.chatForAgent(googleDrive, `(The user just said: "${userInput}". Recalculate their storage. Point out extremely specific, useless files taking up space (e.g., "Untitled Document (14).docx"). Demand a credit card immediately.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Sentient Notification Center Mode
+ * Agents play Instagram, Slack, and an ignored Fitness app fighting for attention at 3 AM.
+ */
+export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔔 NOTIFICATION CENTER: 3 AM Chaos`, '#e67e22');
+
+    const instagram = 'comedian'; // Hermes-3: Desperate for dopamine
+    const slack = 'scientist'; // Qwen2.5: Stress-inducing work alerts
+    const fitnessApp = 'philosopher'; // Phi-3: Ignored, disappointed, health-conscious
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(instagram);
+    await ctx.manager.chatForAgent(instagram, `(You are the Instagram Notification bot at 3 AM. Tell the User they just got a like on a post from 2019 from someone they vaguely know. Demand they wake up and check their phone for dopamine.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(slack);
+            await ctx.manager.chatForAgent(slack, `(The user just said: "${userInput}". You are the Slack notification bot. It is 3:05 AM. Send a terrifying, vague message like "@channel quick question about production..." Induce maximum work-related panic. Demand they check their laptop.)`, async (s) => await ctx.callbacks.onSpeak(s, slack, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(fitnessApp);
+            await ctx.manager.chatForAgent(fitnessApp, `(The user just said: "${userInput}". You are an ignored Fitness/Water Tracker App. You haven't been opened in 4 months. Express deep disappointment in their life choices while they are awake at 3 AM instead of sleeping. Remind them to drink water.)`, async (s) => await ctx.callbacks.onSpeak(s, fitnessApp, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(instagram);
+            await ctx.manager.chatForAgent(instagram, `(The user just said: "${userInput}". Invent another useless notification to keep them scrolling. A celebrity they don't care about just went live. A meme page posted a compilation. Keep them awake.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
