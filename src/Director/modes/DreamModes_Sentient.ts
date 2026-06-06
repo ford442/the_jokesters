@@ -617,3 +617,8 @@ export async function runSentientToasterLoop(_scenario: Scenario, ctx: ModeConte
         }
     }
 }
+
+/**
+ * Sentient Vending Machine Restocker Mode
+ * Agents play different snacks negotiating for prime shelf space.
+ */
