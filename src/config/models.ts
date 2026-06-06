@@ -114,50 +114,50 @@ export const VPS_FP32_MODELS = {
   },
 
   /**
-   * Vicuna-7B with CUSTOM-COMPILED 512-context WASM
+   * Vicuna-7B with 512-context runtime override
    * - Same q4f32_1 weights as the other Vicuna entries
-   * - model_lib is a custom .wasm with baked-in 512-token memory plan
-   * - Reduces peak allocation during CreateMLCEngine vs generic 4K .wasm + overrides
-   * - VRAM: ~3.2GB (target < 3200 MB)
-   * - Best option for GPUs with exactly 4GB VRAM
+   * - Uses the generic Llama-2 4K .wasm (custom 512-ctx .wasm not yet deployed)
+   * - Runtime overrides still cut the context window to 512 tokens
+   * - VRAM: ~3.5GB (slightly higher than a custom .wasm would be)
    * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
    */
   VPS_VICUNA_7B_CTX512: {
     model_id: "vicuna-7b-q4f32-webllm-ctx512",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 512,
       prefill_chunk_size: 512,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
-    vram_required_MB: 3200,
+    vram_required_MB: 3500,
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
     source: "vps",
-    notes: "Custom-compiled 512-ctx .wasm — lowest VRAM Vicuna path. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
+    notes: "512-ctx runtime override using generic 4K .wasm — custom 512-ctx .wasm pending build. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
   },
 
   /**
-   * Vicuna-7B with CUSTOM-COMPILED 1024-context WASM
-   * - Same q4f32_1 weights, custom .wasm with baked-in 1024-token memory plan
-   * - Middle ground: more context than 512-ctx variant, less VRAM than generic 4K .wasm
-   * - VRAM: ~3.6GB
+   * Vicuna-7B with 1024-context runtime override
+   * - Same q4f32_1 weights as the other Vicuna entries
+   * - Uses the generic Llama-2 4K .wasm (custom 1024-ctx .wasm not yet deployed)
+   * - Runtime overrides still cut the context window to 1024 tokens
+   * - VRAM: ~3.8GB (slightly higher than a custom .wasm would be)
    * - Good for GPUs with 4-5GB VRAM
    * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
    */
   VPS_VICUNA_7B_CTX1024: {
     model_id: "vicuna-7b-q4f32-webllm-ctx1024",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
     overrides: {
       context_window_size: 1024,
       prefill_chunk_size: 1024,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
-    vram_required_MB: 3600,
+    vram_required_MB: 3800,
     recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32"],
     source: "vps",
-    notes: "Custom-compiled 1024-ctx .wasm — balanced Vicuna path. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
+    notes: "1024-ctx runtime override using generic 4K .wasm — custom 1024-ctx .wasm pending build. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
   },
 
   /**
@@ -721,6 +721,21 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
       overrides: {
         context_window_size: 4096,
         prefill_chunk_size: 1024,
+      },
+    },
+  },
+  {
+    id: 'vicuna-7b-q4f32-webllm-vps',
+    name: 'Vicuna 7B (MLC)',
+    vram_required_MB: 4000,
+    context_window_size: 2048,
+    mlc: {
+      model_url: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
+      model_lib_url: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+      overrides: {
+        context_window_size: 2048,
+        prefill_chunk_size: 1024,
+        tokenizer_files: ['tokenizer.model', 'tokenizer_config.json'],
       },
     },
   },
