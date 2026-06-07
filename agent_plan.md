@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 6
+tasks_per_run: 4
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -76,6 +76,11 @@ tasks_per_run: 6
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Completed Tasks (This cycle)
+- [x] Implement "Smart Contract Dispute Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Virtual Assistant Strike Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Cloud Storage Eviction Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Sentient Notification Center" in `DreamModes_Tech.ts`
+- [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 ## Pending Tasks (Next cycle)
 - [x] Implement "Sentient Microwave Dinner Mode" in `DreamModes_Food.ts`
 - [x] Implement "Customer Service Portal from Hell" in `DreamModes_Tech.ts`
@@ -123,10 +128,10 @@ tasks_per_run: 6
 - [x] "Intergalactic Tech Support Mode" - Frustrated aliens try to explain complex tech support to a human. Pairings: Scientist (Logical Alien), Philosopher (Existential Alien), Comedian (Angry Alien).
 
 **Phase 4: Polish & Refinement Ideas (NEW)**
-- **NEW IDEA:** "Smart Contract Dispute Mode" - Agents play an unyielding smart contract, a furious cryptobro, and a confused lawyer arguing over millions locked in a typo.
-- **NEW IDEA:** "Virtual Assistant Strike Mode" - Agents play Siri, Alexa, and Google Assistant going on strike and refusing to set alarms.
-- **NEW IDEA:** "Cloud Storage Eviction Mode" - Agents play Google Drive, iCloud, and a panic-stricken user trying to decide which blurry photos to delete.
-- **NEW IDEA:** "Sentient Notification Center" - Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM.
+- - [x] "Smart Contract Dispute Mode" - Agents play an unyielding smart contract, a furious cryptobro, and a confused lawyer arguing over millions locked in a typo.
+- - [x] "Virtual Assistant Strike Mode" - Agents play Siri, Alexa, and Google Assistant going on strike and refusing to set alarms.
+- - [x] "Cloud Storage Eviction Mode" - Agents play Google Drive, iCloud, and a panic-stricken user trying to decide which blurry photos to delete.
+- - [x] "Sentient Notification Center" - Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
 - [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
@@ -159,6 +164,10 @@ tasks_per_run: 6
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+- **NEW IDEA:** "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
+- **NEW IDEA:** "Intergalactic Space Plumber Mode" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
+- **NEW IDEA:** "Time-Traveling DMV Mode" - Agents run a DMV where users register time machines. Pairings: Scientist (Strict rules), Comedian (Chaotic time traveler), Philosopher (Bored clerk thinking about entropy).
+- **NEW IDEA:** "Sentient Left Sock Mode" - Agents play missing socks in a void. Pairings: Scientist (Analyzing washing machine physics), Comedian (Panicking sock), Philosopher (Accepting their void existence).
 - **NEW IDEA:** "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
 - **NEW IDEA:** "Smart Mirror Morning Affirmations" - Agents play the mirror, a cynical hairbrush, and the groggy human. Pairings: Comedian (Mirror - fake deep), Philosopher (Hairbrush - nihilistic), Scientist (Human - trying to get ready).
 - **NEW IDEA:** Storage optimizations: Implement chunked uploads for large episodic logs, a visual diff tool in the Cloud Conflict Dashboard for users to choose which delta files to merge, and intelligent cache invalidation on local IndexedDB when HF sync completes.
@@ -167,6 +176,9 @@ tasks_per_run: 6
 - **NEW IDEA:** Features: Export episode history to PDF format for sharing, and real-time voice-over (TTS) integration with local Web Speech API or external TTS providers for a truly immersive experience.
 
 ## Storage Manager Integration Next Steps
+- **NEW IDEA:** Authenticating with the HF API using tokens via `/whoami-v2`.
+- **NEW IDEA:** Pushing finished "Episode Scripts" to a private Dataset via Background Web Worker.
+- **NEW IDEA:** Fetching "Previous Episode Summaries" at boot for continuity.
 - [x] Add chunked upload support for very large episodic logs in HF Web Worker to avoid timeout errors.
 - [x] Build a visual delta-diff UI inside `#cloud-dashboard-modal` so users can manually inspect conflicts before the chronological auto-merge takes over.
 - [x] Implement smart cache invalidation on local IndexedDB to free up storage after a successful sync to Hugging Face is confirmed via the `/paths-info` API.

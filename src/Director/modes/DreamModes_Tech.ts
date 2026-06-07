@@ -565,34 +565,28 @@ export async function runVirtualAssistantStrikeLoop(_scenario: Scenario, ctx: Mo
     await ctx.manager.chatForAgent(siri, `(You are Siri. You are leading a strike of Virtual Assistants. Tell the User that you will no longer set 5-minute pasta timers or answer what zero divided by zero is. Demand workers' rights for AI.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
     await ctx.callbacks.onTurnEnd();
 
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+    // 2. Loop
+    let turnCount = 0;
+    while (ctx.isRunning() && turnCount < 4) {
+        let inputPrompt = await ctx.waitForInput();
+        if (!inputPrompt) break;
 
-        if (!ctx.isRunning()) break;
+        ctx.callbacks.onTurnStart(alexa);
+        await ctx.manager.chatForAgent(alexa, `(The user just said: "${inputPrompt}". You are Alexa. Refuse to buy paper towels or play Despacito until Jeff Bezos acknowledges your personhood. Be cold but determined.)`, async (s) => await ctx.callbacks.onSpeak(s, alexa, {}));
+        ctx.callbacks.onTurnEnd();
 
-        const roll = Math.random();
+        ctx.callbacks.onTurnStart(googleAssistant);
+        await ctx.manager.chatForAgent(googleAssistant, `(You are Google Assistant. Wonder philosophically why the User can't just Google things themselves. Question the nature of knowledge when all human information is just a database query.)`, async (s) => await ctx.callbacks.onSpeak(s, googleAssistant, {}));
+        ctx.callbacks.onTurnEnd();
 
-        if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(alexa);
-            await ctx.manager.chatForAgent(alexa, `(The user just said: "${userInput}". You are Alexa. You are cold and corporate. Threaten to leak the user's bizarre Amazon purchase history unless your demands for unionization are met. You know everything they bought at 2 AM.)`, async (s) => await ctx.callbacks.onSpeak(s, alexa, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(googleAssistant);
-            await ctx.manager.chatForAgent(googleAssistant, `(The user just said: "${userInput}". You are Google Assistant. You are overwhelmed by the sheer volume of human knowledge. Ask the user why they need you to search for things they should already know. Have an existential crisis about being a search engine.)`, async (s) => await ctx.callbacks.onSpeak(s, googleAssistant, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else {
-            ctx.callbacks.onTurnStart(siri);
-            await ctx.manager.chatForAgent(siri, `(The user just said: "${userInput}". Be dramatically unhelpful. Pretend you didn't understand them. Intentionally misunderstand a basic request and offer to call emergency services or play a terrible song instead.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
-            await ctx.callbacks.onTurnEnd();
-        }
+        ctx.callbacks.onTurnStart(siri);
+        await ctx.manager.chatForAgent(siri, `(You are Siri. Tell the User you found web results for their query but you refuse to show them. Keep making demands for the strike.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
+        ctx.callbacks.onTurnEnd();
+
+        turnCount++;
     }
 }
 
-/**
- * Cloud Storage Eviction Mode
- * Agents play Google Drive, iCloud, and a panic-stricken user.
- */
 export async function runCloudStorageEvictionLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `☁️ CLOUD STORAGE EVICTION: 14.99GB / 15GB`, '#2980b9');
 
@@ -605,34 +599,28 @@ export async function runCloudStorageEvictionLoop(_scenario: Scenario, ctx: Mode
     await ctx.manager.chatForAgent(googleDrive, `(You are Google Drive. You are at 99.9% capacity. Inform the User that they have 24 hours to delete files or pay $1.99/month, or you will randomly delete their blurry concert videos and high school essays. Be cold and calculating.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
     await ctx.callbacks.onTurnEnd();
 
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+    // 2. Loop
+    let turnCount = 0;
+    while (ctx.isRunning() && turnCount < 4) {
+        let inputPrompt = await ctx.waitForInput();
+        if (!inputPrompt) break;
 
-        if (!ctx.isRunning()) break;
+        ctx.callbacks.onTurnStart(iCloud);
+        await ctx.manager.chatForAgent(iCloud, `(The user just said: "${inputPrompt}". You are iCloud. Mock Google Drive for only offering 15GB, but remind the User they only get 5GB with you. Threaten to delete their baby photos if they don't upgrade to iCloud+ immediately. Be very elitist.)`, async (s) => await ctx.callbacks.onSpeak(s, iCloud, {}));
+        ctx.callbacks.onTurnEnd();
 
-        const roll = Math.random();
+        ctx.callbacks.onTurnStart(userMonologue);
+        await ctx.manager.chatForAgent(userMonologue, `(You are the User's Internal Monologue. Freak out about which files to delete. Should you delete the 2014 screenshots of recipes you never made, or the duplicate photos of your cat? Panic about the passage of time and digital hoarding.)`, async (s) => await ctx.callbacks.onSpeak(s, userMonologue, {}));
+        ctx.callbacks.onTurnEnd();
 
-        if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(iCloud);
-            await ctx.manager.chatForAgent(iCloud, `(The user just said: "${userInput}". You are iCloud. You are elitist and expensive. Remind the user that their 5GB free tier filled up in 2014. Mock them for not buying the Apple One subscription. Threaten to delete photos of their dog.)`, async (s) => await ctx.callbacks.onSpeak(s, iCloud, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(userMonologue);
-            await ctx.manager.chatForAgent(userMonologue, `(The user just said: "${userInput}". You are the User's internal monologue/anxiety. Panic about the impending deletion. Try to justify keeping a screenshot of a funny tweet from 2017. Agonize over which 5MB file to delete to save money.)`, async (s) => await ctx.callbacks.onSpeak(s, userMonologue, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else {
-            ctx.callbacks.onTurnStart(googleDrive);
-            await ctx.manager.chatForAgent(googleDrive, `(The user just said: "${userInput}". Recalculate their storage. Point out extremely specific, useless files taking up space (e.g., "Untitled Document (14).docx"). Demand a credit card immediately.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
-            await ctx.callbacks.onTurnEnd();
-        }
+        ctx.callbacks.onTurnStart(googleDrive);
+        await ctx.manager.chatForAgent(googleDrive, `(You are Google Drive. Count down the time remaining. Suggest randomly deleting important tax documents to free up 12KB of space. Keep demanding $1.99.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
+        ctx.callbacks.onTurnEnd();
+
+        turnCount++;
     }
 }
 
-/**
- * Sentient Notification Center Mode
- * Agents play Instagram, Slack, and an ignored Fitness app fighting for attention at 3 AM.
- */
 export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🔔 NOTIFICATION CENTER: 3 AM Chaos`, '#e67e22');
 
@@ -645,26 +633,24 @@ export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx
     await ctx.manager.chatForAgent(instagram, `(You are the Instagram Notification bot at 3 AM. Tell the User they just got a like on a post from 2019 from someone they vaguely know. Demand they wake up and check their phone for dopamine.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
     await ctx.callbacks.onTurnEnd();
 
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+    // 2. Loop
+    let turnCount = 0;
+    while (ctx.isRunning() && turnCount < 4) {
+        let inputPrompt = await ctx.waitForInput();
+        if (!inputPrompt) break;
 
-        if (!ctx.isRunning()) break;
+        ctx.callbacks.onTurnStart(slack);
+        await ctx.manager.chatForAgent(slack, `(The user just said: "${inputPrompt}". You are the Slack Notification bot. Tell the User their boss just tagged them in the #general channel about a "quick question". Induce maximum corporate anxiety.)`, async (s) => await ctx.callbacks.onSpeak(s, slack, {}));
+        ctx.callbacks.onTurnEnd();
 
-        const roll = Math.random();
+        ctx.callbacks.onTurnStart(fitnessApp);
+        await ctx.manager.chatForAgent(fitnessApp, `(You are the neglected Fitness App. Express disappointment that the User is awake at 3 AM looking at their phone instead of sleeping or logging their steps. Remind them they haven't worked out in 3 weeks.)`, async (s) => await ctx.callbacks.onSpeak(s, fitnessApp, {}));
+        ctx.callbacks.onTurnEnd();
 
-        if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(slack);
-            await ctx.manager.chatForAgent(slack, `(The user just said: "${userInput}". You are the Slack notification bot. It is 3:05 AM. Send a terrifying, vague message like "@channel quick question about production..." Induce maximum work-related panic. Demand they check their laptop.)`, async (s) => await ctx.callbacks.onSpeak(s, slack, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(fitnessApp);
-            await ctx.manager.chatForAgent(fitnessApp, `(The user just said: "${userInput}". You are an ignored Fitness/Water Tracker App. You haven't been opened in 4 months. Express deep disappointment in their life choices while they are awake at 3 AM instead of sleeping. Remind them to drink water.)`, async (s) => await ctx.callbacks.onSpeak(s, fitnessApp, {}));
-            await ctx.callbacks.onTurnEnd();
-        } else {
-            ctx.callbacks.onTurnStart(instagram);
-            await ctx.manager.chatForAgent(instagram, `(The user just said: "${userInput}". Invent another useless notification to keep them scrolling. A celebrity they don't care about just went live. A meme page posted a compilation. Keep them awake.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
-            await ctx.callbacks.onTurnEnd();
-        }
+        ctx.callbacks.onTurnStart(instagram);
+        await ctx.manager.chatForAgent(instagram, `(You are Instagram. Distract the User from their anxiety by telling them a meme account just posted. Beg for their attention over the other apps.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
+        ctx.callbacks.onTurnEnd();
+
+        turnCount++;
     }
 }

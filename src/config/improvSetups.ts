@@ -700,6 +700,26 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'escape_room_game_master',
     title: "Escape Room Game Master Mode",
     description: 'Agents try to guide (or hinder) the user out of a bizarre escape room.'
+  },
+  {
+    id: "smart_contract_dispute",
+    title: "Smart Contract Dispute Mode",
+    description: "Agents play an unyielding smart contract, a furious cryptobro, and a confused lawyer arguing over millions locked in a typo."
+  },
+  {
+    id: "virtual_assistant_strike",
+    title: "Virtual Assistant Strike Mode",
+    description: "Agents play Siri, Alexa, and Google Assistant going on strike and refusing to set alarms."
+  },
+  {
+    id: "cloud_storage_eviction",
+    title: "Cloud Storage Eviction Mode",
+    description: "Agents play Google Drive, iCloud, and a panic-stricken user trying to decide which blurry photos to delete."
+  },
+  {
+    id: "sentient_notification_center",
+    title: "Sentient Notification Center Mode",
+    description: "Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM."
   }
 ];
 

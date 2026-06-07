@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-06-05T21:35:58.822673
+**Test Date:** 2026-06-07T02:32:27.030686
 
 ## Test Summary
 
@@ -17,8 +17,8 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 33.1s |
-| Load Time | 2.4s |
+| Build Time | 30.8s |
+| Load Time | 1.0s |
 | JS Heap Memory | 48.1 MB |
 | Console Errors | 2 |
 | Console Warnings | 3 |
@@ -61,7 +61,7 @@ The following 5 personas are configured:
 **Warnings (3):**
 - No available adapters....
 - [ServiceWorker] Registration failed (non-critical): SecurityError: Failed to register a ServiceWorke...
-- The resource https://storage.noahcohn.com/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-...
+- The resource https://storage.1ink.us/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgp...
 
 ## Notes
 
