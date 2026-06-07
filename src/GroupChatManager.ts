@@ -20,48 +20,12 @@ import type { EngineType } from './llm/EngineFactory'
 import { EngineFactory } from './llm/EngineFactory'
 import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
 
-// ============================================================================
-// PROFANITY LEVEL CONFIGURATION
-// ============================================================================
-// Adjust this to control how the AI uses profanity:
-// - 'PG'       : Family-friendly, no swearing at all
-// - 'CASUAL'   : Light profanity (damn, hell, crap)  
-// - 'GRITTY'   : Realistic casual swearing (shit, f*ck, etc.)
-// - 'UNCENSORED': Full uncensored language (use with caution)
-// ============================================================================
-export const PROFANITY_LEVEL: 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED' = 'GRITTY'
+import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
+import { PROFANITY_LEVEL, PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_MAX_TOKENS } from './config/chatConfig'
+export type { ProfanityLevel, Agent, Message, ErrorCategory }
+export { PROFANITY_LEVEL }
 
-export type ProfanityLevel = 'PG' | 'CASUAL' | 'GRITTY' | 'UNCENSORED'
-
-// Shortened style guides to reduce token usage
-const PROFANITY_INSTRUCTIONS: Record<ProfanityLevel, string> = {
-  PG: `Keep it family-friendly. No swearing.`,
-  CASUAL: `Mild language OK (damn, hell). No strong profanity.`,
-  GRITTY: `Casual swearing OK (shit, f*ck). No sexual/violent content.`,
-  UNCENSORED: `Full language freedom. No sexual/violent content.`,
-}
-
-// Default max tokens per generation turn (user-adjustable via UI slider)
-const DEFAULT_MAX_TOKENS = 96
-// Absolute ceiling — never exceed this regardless of user setting
-const ABSOLUTE_MAX_TOKENS = 512
-
-export interface Agent {
-  id: string
-  name: string
-  systemPrompt: string
-  temperature: number
-  top_p: number
-  color: string
-}
-
-export interface Message {
-  role: 'system' | 'user' | 'assistant'
-  content: string
-}
-
-export type ErrorCategory = 'webgpu' | 'oom' | 'network' | 'unknown'
-
+import { buildSystemMessage } from './llm/helpers/PromptCompiler'
 export class GroupChatManager {
   private engine: LLMEngine | null = null
   private engineType: EngineType = 'mlc'
@@ -537,18 +501,7 @@ export class GroupChatManager {
     throw lastError
   }
 
-  private buildSystemMessage(
-    agentSystemPrompt: string,
-    hiddenInstruction?: string
-  ): string {
-    let systemMessage = agentSystemPrompt + '\n\n' + this.styleInstruction;
-    
-    if (hiddenInstruction && hiddenInstruction.trim()) {
-      systemMessage += '\n\n### DIRECTOR\'S SECRET NOTE ###\n' + hiddenInstruction + '\n(You MUST incorporate this note immediately!)';
-    }
-    
-    return systemMessage;
-  }
+
 
   async chat(
     userMessage: string | import('./llm/LLMEngine').ContentPart[],
@@ -860,8 +813,10 @@ export class GroupChatManager {
         const currentAgent = this.agents[this.currentAgentIndex]
         
         // Build combined system message
-        const systemMessage = this.buildSystemMessage(
-          currentAgent.systemPrompt,
+        const systemMessage = buildSystemMessage(
+          currentAgent,
+          undefined,
+          this.currentProfanityLevel,
           options.hiddenInstruction
         )
 
