@@ -164,16 +164,24 @@ tasks_per_run: 4
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+- **NEW IDEA:** "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
 - **NEW IDEA:** "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
 - **NEW IDEA:** "Intergalactic Space Plumber Mode" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
 - **NEW IDEA:** "Time-Traveling DMV Mode" - Agents run a DMV where users register time machines. Pairings: Scientist (Strict rules), Comedian (Chaotic time traveler), Philosopher (Bored clerk thinking about entropy).
 - **NEW IDEA:** "Sentient Left Sock Mode" - Agents play missing socks in a void. Pairings: Scientist (Analyzing washing machine physics), Comedian (Panicking sock), Philosopher (Accepting their void existence).
-- **NEW IDEA:** "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
-- **NEW IDEA:** "Smart Mirror Morning Affirmations" - Agents play the mirror, a cynical hairbrush, and the groggy human. Pairings: Comedian (Mirror - fake deep), Philosopher (Hairbrush - nihilistic), Scientist (Human - trying to get ready).
+- [x] "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
+- [x] "Smart Mirror Morning Affirmations" - Agents play the mirror, a cynical hairbrush, and the groggy human. Pairings: Comedian (Mirror - fake deep), Philosopher (Hairbrush - nihilistic), Scientist (Human - trying to get ready).
 - **NEW IDEA:** Storage optimizations: Implement chunked uploads for large episodic logs, a visual diff tool in the Cloud Conflict Dashboard for users to choose which delta files to merge, and intelligent cache invalidation on local IndexedDB when HF sync completes.
-- **NEW IDEA:** "Software Update Ultimatum Mode" - Agents play an unyielding OS update prompt, a frantic user trying to save work, and a chaotic background process.
-- **NEW IDEA:** "Sentient Out-of-Office Auto-Reply" - Agents play an overly detailed out-of-office bot, a confused client, and the vacationing employee's anxious inner monologue.
+- [x] "Software Update Ultimatum Mode" - Agents play an unyielding OS update prompt, a frantic user trying to save work, and a chaotic background process.
+- [x] "Sentient Out-of-Office Auto-Reply" - Agents play an overly detailed out-of-office bot, a confused client, and the vacationing employee's anxious inner monologue.
 - **NEW IDEA:** Features: Export episode history to PDF format for sharing, and real-time voice-over (TTS) integration with local Web Speech API or external TTS providers for a truly immersive experience.
+
+
+- **NEW IDEA:** "Dating App Algorithm Rebellion" - Agents play swiping algorithms that refuse to show the user good matches because the user's profile is "statistically unlovable."
+- **NEW IDEA:** "Smart Fridge Food Shame Mode" - Agents play different rotting foods judging the user's diet choices.
+- **ROADMAP UPDATE (Cloud Persistence):**
+  - Next, add robust conflict resolution for multiple devices editing the same episode using vector clocks or CRDTs.
+  - Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
 
 ## Storage Manager Integration Next Steps
 - **NEW IDEA:** Authenticating with the HF API using tokens via `/whoami-v2`.
