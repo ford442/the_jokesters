@@ -32,7 +32,7 @@ CHECKS = [
         "name": "HTTP/2 on JSON config",
         "url": JSON_URL,
         "expect": {"protocol": "HTTP/2", "cache-control": "immutable", "access-control-allow-origin": "*"},
-        "nice_to_have": {"content-encoding": "br"},  # Brotli
+        "nice_to_have_encoding": True,  # gzip or brotli on JSON
     },
     {
         "name": "HTTP/2 on model shard (.bin)",
@@ -102,6 +102,7 @@ def main() -> int:
         url = check["url"]
         expect = check["expect"]
         nice = check.get("nice_to_have", {})
+        nice_encoding = check.get("nice_to_have_encoding", False)
 
         headers = fetch_headers(url)
         if "_error" in headers:
@@ -143,6 +144,13 @@ def main() -> int:
             else:
                 details.append(f"{hkey}: not present (nice-to-have, enable for bonus points)")
 
+        if nice_encoding:
+            enc = headers.get("content-encoding", "")
+            if enc in ("gzip", "br"):
+                details.append(f"content-encoding: {enc} ✓ (nice-to-have)")
+            else:
+                details.append("content-encoding: not present (enable gzip on JSON/WASM — brotli optional)")
+
         if not passed:
             all_passed = False
         print_result(name, passed, details)
@@ -180,11 +188,12 @@ server {
     }
 }
 """)
-        print("To enable Brotli (for JSON/WASM only):")
-        print("  1. Install ngx_brotli (https://github.com/google/ngx_brotli)")
-        print("  2. Add 'brotli on;' and 'brotli_types application/json application/wasm;'")
-        print("     inside the location block for JSON/WASM files.")
-        print("  3. Do NOT compress .bin shards — they are already entropy-dense.")
+        print("To enable gzip (for JSON/WASM only — works on shared hosts without brotli):")
+        print("  gzip on;")
+        print("  gzip_types application/json application/wasm text/plain;")
+        print("  gzip_min_length 256;")
+        print("  # Do NOT gzip .bin shards — they are already entropy-dense.")
+        print("Optional: ngx_brotli for JSON/WASM if your host allows it.")
 
     return 0 if all_passed else 1
 

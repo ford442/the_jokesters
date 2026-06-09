@@ -6,7 +6,7 @@ import * as webllm from '@mlc-ai/web-llm'
  * Priorities:
  * 1. FP32 models (q4f32_1) - Universally compatible with WebGPU
  * 2. FP16 models (q4f16_1) - Faster but requires shader-f16 support
- * 3. VPS-hosted at storage.noahcohn.com - Reliable range header support
+ * 3. VPS-hosted at storage.1ink.us (primary CDN) — mirror: storage.noahcohn.com
  * 4. Hugging Face fallback - Redundancy
  * 
  * WebLLM Note: q4f16_1 requires 'shader-f16' GPU feature which is not
@@ -18,52 +18,34 @@ import * as webllm from '@mlc-ai/web-llm'
  */
 
 // VPS Storage Configuration
-export const VPS_STORAGE_URL = 'https://storage.1ink.us/models';
+// Primary: storage.1ink.us — benchmarked ~2x faster downloads than noahcohn
+// Mirror: storage.noahcohn.com (nginx deploy API host) — fallback on network errors
+export const VPS_STORAGE_ORIGIN = 'https://storage.1ink.us';
+export const VPS_STORAGE_URL = `${VPS_STORAGE_ORIGIN}/models`;
+export const VPS_STORAGE_MIRROR = 'https://storage.noahcohn.com/models';
+export const VPS_STORAGE_HOSTS = ['storage.1ink.us', 'storage.noahcohn.com'] as const;
+
+/** Rewrite a model URL to the mirror host (no-op if already on mirror). */
+export function toMirrorStorageUrl(url: string): string {
+  return url.includes(VPS_STORAGE_URL)
+    ? url.replace(VPS_STORAGE_URL, VPS_STORAGE_MIRROR)
+    : url;
+}
+
+/** Clone a model config entry with mirror storage URLs. */
+export function withMirrorStorageUrls<T extends { model: string; model_lib: string }>(config: T): T {
+  return {
+    ...config,
+    model: toMirrorStorageUrl(config.model),
+    model_lib: toMirrorStorageUrl(config.model_lib),
+  };
+}
 
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)
- * These models are hosted on our VPS with full range header support
+ * Order matters for fallback chain: Vicuna 7B q4f32 first, then smaller models.
  */
 export const VPS_FP32_MODELS = {
-  /**
-   * Llama-2-7B-chat with q4f32_1 quantization
-   * - 4-bit weights, fp32 compute
-   * - Universally compatible (no shader-f16 required)
-   * - VRAM: ~4GB
-   * - Hosted on VPS for reliable range requests
-   */
-  VPS_LLAMA_2_7B_Q4F32: {
-    model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
-    model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
-    overrides: {
-      context_window_size: 4096,
-      prefill_chunk_size: 1024,
-    },
-    vram_required_MB: 4000,
-    recommended_for: ["all_gpus", "reliable", "fp32"],
-    source: "vps",
-  },
-
-  /**
-   * Hermes-3-Llama-3.2-3B with q4f32_1 quantization
-   * - Smaller, faster model with fp32 compute
-   * - VRAM: ~2.5GB
-   * - Hosted on VPS
-   */
-  VPS_HERMES_3_3B_Q4F32: {
-    model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
-    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
-    overrides: {
-      context_window_size: 4096,
-      prefill_chunk_size: 1024,
-    },
-    vram_required_MB: 2500,
-    recommended_for: ["all_gpus", "speed", "fp32"],
-    source: "vps",
-  },
-
   /**
    * ford442's Custom Vicuna-7B with q4f32_1 quantization
    * - Custom modified Vicuna model
@@ -161,6 +143,25 @@ export const VPS_FP32_MODELS = {
   },
 
   /**
+   * Hermes-3-Llama-3.2-3B with q4f32_1 quantization
+   * - Smaller, faster model with fp32 compute
+   * - VRAM: ~2.5GB
+   * - Hosted on VPS
+   */
+  VPS_HERMES_3_3B_Q4F32: {
+    model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
+    model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    overrides: {
+      context_window_size: 4096,
+      prefill_chunk_size: 1024,
+    },
+    vram_required_MB: 2500,
+    recommended_for: ["all_gpus", "speed", "fp32"],
+    source: "vps",
+  },
+
+  /**
    * Llama-3.2-3B-Instruct with q4f32_1 quantization
    * - Latest Llama 3.2 with fp32 compute
    * - VRAM: ~2.5GB
@@ -176,6 +177,25 @@ export const VPS_FP32_MODELS = {
     },
     vram_required_MB: 2500,
     recommended_for: ["all_gpus", "modern", "fp32"],
+    source: "vps",
+  },
+
+  /**
+   * Llama-2-7B-chat with q4f32_1 quantization
+   * - 4-bit weights, fp32 compute
+   * - Universally compatible (no shader-f16 required)
+   * - VRAM: ~4GB
+   */
+  VPS_LLAMA_2_7B_Q4F32: {
+    model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
+    model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
+    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    overrides: {
+      context_window_size: 4096,
+      prefill_chunk_size: 1024,
+    },
+    vram_required_MB: 4000,
+    recommended_for: ["all_gpus", "reliable", "fp32"],
     source: "vps",
   },
 };
@@ -391,9 +411,27 @@ export const OPTIMIZED_MODELS = {
 
 /**
  * Default model configuration for the application
- * Uses VPS-hosted Hermes-3-3B-q4f32 for universal compatibility
+ * Vicuna 7B q4f32 on VPS — primary quality target for fp32 WebGPU
  */
-export const defaultModelId = VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
+export const defaultModelId = VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
+
+/** Human-readable labels for the status bar */
+const MODEL_DISPLAY_NAMES: Record<string, string> = {
+  'vicuna-7b-q4f32-webllm-vps': 'Vicuna 7B',
+  'vicuna-7b-q4f32-webllm-ultra-low': 'Vicuna 7B (ultra-low)',
+  'vicuna-7b-q4f32-webllm-ctx512': 'Vicuna 7B (512 ctx)',
+  'vicuna-7b-q4f32-webllm-ctx1024': 'Vicuna 7B (1024 ctx)',
+  'ford442/vicuna-7b-q4f32-webllm': 'Vicuna 7B (HF)',
+  'Hermes-3-Llama-3.2-3B-q4f32_1-MLC': 'Hermes-3 3B',
+  'Hermes-3-Llama-3.2-3B-q4f16_1-MLC': 'Hermes-3 3B',
+  'Llama-3.2-3B-Instruct-q4f32_1-MLC': 'Llama 3.2 3B',
+  'Llama-2-7b-chat-hf-q4f32_1-MLC': 'Llama-2 7B',
+};
+
+export function getModelDisplayName(modelId: string | null): string {
+  if (!modelId) return 'Ready';
+  return MODEL_DISPLAY_NAMES[modelId] ?? modelId.replace(/-MLC$/, '').replace(/-/g, ' ');
+}
 
 /**
  * Build model list for WebLLM
@@ -502,7 +540,6 @@ export async function getRecommendedModel(): Promise<string> {
   // Check for GPU memory (rough estimate)
   const gpu = (navigator as any).gpu;
   if (!gpu) {
-    // No WebGPU support, return smallest model
     return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
   }
 
@@ -523,12 +560,13 @@ export async function getRecommendedModel(): Promise<string> {
   const supportsF16 = await checkF16Support();
 
   if (!supportsF16) {
-    console.log('[ModelConfig] GPU does not support shader-f16, using FP32 models');
-    return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
+    console.log('[ModelConfig] GPU does not support shader-f16, using Vicuna 7B q4f32');
+    return VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
   }
 
-  // Default to VPS-hosted FP32 model for reliability
-  return defaultModelId;
+  // Default recommendation: Vicuna 7B q4f32 (universal fp32, self-hosted)
+  console.log('[ModelConfig] Recommending Vicuna 7B q4f32');
+  return VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
 }
 
 /**

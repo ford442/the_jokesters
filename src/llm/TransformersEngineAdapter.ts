@@ -13,6 +13,7 @@ import type {
   InitProgressReport, 
   UnifiedModelConfig 
 } from './LLMEngine'
+import { VPS_STORAGE_ORIGIN } from '../config/models'
 
 export interface TransformersEngineConfig {
   model_id: string  // HuggingFace model ID
@@ -47,7 +48,7 @@ export class TransformersEngineAdapter implements LLMEngine {
     env.allowLocalModels = false
     
     // Self-hosted model mirror on VPS
-    env.remoteHost = 'https://storage.1ink.us'
+    env.remoteHost = VPS_STORAGE_ORIGIN
     ;(env as any).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
     
     onProgress?.({ progress: 0, text: `Loading ${modelConfig.name}...`, timeElapsed: 0 })

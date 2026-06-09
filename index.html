@@ -5,9 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Jokesters - Multi-Agent Chat</title>
-    <!-- Preload the recommended model's WASM lib to warm the cache while the user reads the picker -->
+    <!-- Warm DNS + TLS to primary model CDN (storage.1ink.us — fastest host) -->
+    <link rel="dns-prefetch" href="https://storage.1ink.us" />
+    <link rel="preconnect" href="https://storage.1ink.us" crossorigin />
+    <link rel="dns-prefetch" href="https://storage.noahcohn.com" />
+    <!-- Preload Vicuna 7B WASM lib (default model) -->
     <link rel="preload" as="fetch" crossorigin
-      href="https://storage.1ink.us/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm" />
+      href="https://storage.1ink.us/models/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm" />
     <style>
       #webgpu-error {
         display: none;

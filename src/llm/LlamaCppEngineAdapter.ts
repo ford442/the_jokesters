@@ -15,11 +15,12 @@ import type {
   LLMEngine,
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
+import { VPS_STORAGE_URL } from '../config/models'
 
 // WASM binary URLs for wllama — self-hosted on VPS
 const WASM_FROM_VPS = {
-  'single-thread/wllama.wasm': 'https://storage.1ink.us/models/wllama-wasm/single-thread.wasm',
-  'multi-thread/wllama.wasm': 'https://storage.1ink.us/models/wllama-wasm/multi-thread.wasm',
+  'single-thread/wllama.wasm': `${VPS_STORAGE_URL}/wllama-wasm/single-thread.wasm`,
+  'multi-thread/wllama.wasm': `${VPS_STORAGE_URL}/wllama-wasm/multi-thread.wasm`,
 }
 
 export class LlamaCppEngineAdapter implements LLMEngine {
