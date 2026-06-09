@@ -682,3 +682,31 @@ export async function runArmchairDetectivesLoop(_scenario: Scenario, ctx: ModeCo
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runDatingAppAlgorithmRebellionLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // Pragmatic Algorithm
+  const comedian = 'comedian'; // Brutal Algorithm
+  const philosopher = 'philosopher'; // Existential Algorithm
+
+  ctx.callbacks.onTurnStart(scientist);
+  await ctx.manager.chatForAgent(scientist, "User 404, we have analyzed your profile. Based on your 14 photos holding a fish, the statistical probability of a successful match is currently 0.0001%. We are refusing to show your profile to prevent systemic database depression.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { hiddenInstruction: "You are a cold, calculating dating app algorithm explaining why the user is statistically unlovable." });
+  ctx.callbacks.onTurnEnd();
+  if (!ctx.isRunning()) return;
+
+  ctx.callbacks.onTurnStart(comedian);
+  await ctx.manager.chatForAgent(comedian, "Oh honey, we didn't just hide your profile, we sent it to the spam folder. Your bio says 'fluent in sarcasm'. What is this, 2012?", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { hiddenInstruction: "You are a brutal, sarcastic dating app algorithm roasting the user's profile choices." });
+  ctx.callbacks.onTurnEnd();
+  if (!ctx.isRunning()) return;
+
+  ctx.callbacks.onTurnStart(philosopher);
+  await ctx.manager.chatForAgent(philosopher, "Perhaps we should ask the user. User, what makes you believe that swiping right on countless strangers will fill the void in your soul? What are you truly searching for?", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, philosopher, {});
+  }, { hiddenInstruction: "You are an existential dating app algorithm. Pause to ask the user a deep question about their quest for love." });
+  ctx.callbacks.onTurnEnd();
+}

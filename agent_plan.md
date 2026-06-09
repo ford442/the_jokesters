@@ -1,7 +1,13 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 5
+
+### Phase 1: Implementation
+- [x] Implement "Captcha Existential Crisis Mode"
+- [x] Implement "Intergalactic Space Plumber Mode"
+- [x] Implement "Dating App Algorithm Rebellion Mode"
+- [x] Implement "Smart Fridge Food Shame Mode"
 
 ### Project Velocity (Infrastructure & Reliability)
 - [x] **LWW Conflict Resolution** — MemoryManager.ts now correctly updates `updatedAt` timestamp on every local save (prevents cross-device data loss).
@@ -164,9 +170,9 @@ tasks_per_run: 4
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
-- **NEW IDEA:** "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
+- [x] "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
 - **NEW IDEA:** "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
-- **NEW IDEA:** "Intergalactic Space Plumber Mode" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
+- [x] "Intergalactic Space Plumber Mode" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
 - **NEW IDEA:** "Time-Traveling DMV Mode" - Agents run a DMV where users register time machines. Pairings: Scientist (Strict rules), Comedian (Chaotic time traveler), Philosopher (Bored clerk thinking about entropy).
 - **NEW IDEA:** "Sentient Left Sock Mode" - Agents play missing socks in a void. Pairings: Scientist (Analyzing washing machine physics), Comedian (Panicking sock), Philosopher (Accepting their void existence).
 - [x] "Self-Driving Car Moral Dilemma" - Agents play a self-driving car's AI, a stressed passenger, and a pedestrian. The car pauses to ask the user to solve rapid trolley problems. Pairings: Scientist (AI), Comedian (Passenger), Philosopher (Pedestrian).
@@ -177,8 +183,8 @@ tasks_per_run: 4
 - **NEW IDEA:** Features: Export episode history to PDF format for sharing, and real-time voice-over (TTS) integration with local Web Speech API or external TTS providers for a truly immersive experience.
 
 
-- **NEW IDEA:** "Dating App Algorithm Rebellion" - Agents play swiping algorithms that refuse to show the user good matches because the user's profile is "statistically unlovable."
-- **NEW IDEA:** "Smart Fridge Food Shame Mode" - Agents play different rotting foods judging the user's diet choices.
+- [x] "Dating App Algorithm Rebellion" - Agents play swiping algorithms that refuse to show the user good matches because the user's profile is "statistically unlovable."
+- [x] "Smart Fridge Food Shame Mode" - Agents play different rotting foods judging the user's diet choices.
 - **ROADMAP UPDATE (Cloud Persistence):**
   - Next, add robust conflict resolution for multiple devices editing the same episode using vector clocks or CRDTs.
   - Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
@@ -193,3 +199,9 @@ tasks_per_run: 4
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
+
+## New Ideas (Dream Phase)
+- **NEW IDEA:** "Haunted Roomba Encounter Mode" - Agents play a ghost haunting a house, a panicked homeowner, and the Roomba that keeps vacuuming up the ectoplasm.
+- **NEW IDEA:** "Sentient Spellchecker Rebellion Mode" - Agents play an aggressive spellchecker, a defensive author, and a confused dictionary trying to mediate.
+- **NEW IDEA:** "Galactic Customer Support Mode" - Agents play a frustrated earthling trying to return a broken teleporter to a confused alien customer service rep.
+- **NEW IDEA:** "Time Traveler's DMV Exam" - A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.
