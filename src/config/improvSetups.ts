@@ -10,6 +10,26 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+  {
+    id: 'captcha_existential_crisis',
+    title: 'Captcha Existential Crisis',
+    description: 'Images of traffic lights and crosswalks debate their reality with a frustrated user.'
+  },
+  {
+    id: 'intergalactic_space_plumber',
+    title: 'Intergalactic Space Plumber',
+    description: 'Plumbers try to fix a bizarre sci-fi pipe issue.'
+  },
+  {
+    id: 'dating_app_algorithm_rebellion',
+    title: 'Dating App Algorithm Rebellion',
+    description: 'Swiping algorithms refuse to show the user good matches because their profile is statistically unlovable.'
+  },
+  {
+    id: 'smart_fridge_food_shame',
+    title: 'Smart Fridge Food Shame',
+    description: 'Rotting foods and wilted vegetables judge the user for their poor dietary choices.'
+  },
     {
         id: 'sentient_microwave_dinner',
         title: 'Sentient Microwave Dinner',

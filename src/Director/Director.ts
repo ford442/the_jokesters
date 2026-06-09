@@ -1,3 +1,5 @@
+import { runCaptchaExistentialCrisisLoop, runIntergalacticSpacePlumberLoop, runSmartFridgeFoodShameLoop } from './modes/ExpandedRealityModes';
+import { runDatingAppAlgorithmRebellionLoop } from './modes/InteractiveMode';
 // Dream modes - split by category for better maintainability
 // Import from the unified index which re-exports all categories
 export * from './modes/DreamModes_index';
@@ -5,7 +7,7 @@ import * as DreamModesIndex from './modes/DreamModes_index';
 import { runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop } from './modes/DreamModes_Sentient';
 import { runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop } from './modes/DreamModes_Temporal';
-import { runMarsColonyHOALoop, runIntergalacticSpacePlumberLoop } from './modes/DreamModes_Scifi';
+import { runMarsColonyHOALoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
@@ -279,7 +281,7 @@ export interface Scenario {
     | 'sentient_wifi_router'
     | 'sentient_coffee_machine'
     | 'mars_colony_hoa'
-    | 'sentient_shopping_cart'
+    | 'sentient_shopping_cart' | 'captcha_existential_crisis' | 'intergalactic_space_plumber' | 'dating_app_algorithm_rebellion' | 'smart_fridge_food_shame'
     | 'quantum_computing_support_group'
     | 'sentient_toaster'
     | 'intergalactic_space_plumber'
@@ -546,8 +548,7 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sentient_wifi_router: runSentientWiFiRouterLoop,
     sentient_coffee_machine: runSentientCoffeeMachineLoop,
     mars_colony_hoa: runMarsColonyHOALoop,
-    intergalactic_space_plumber: runIntergalacticSpacePlumberLoop,
-    time_traveling_dmv: runTimeTravelingDMVLoop,
+        time_traveling_dmv: runTimeTravelingDMVLoop,
     sentient_left_sock: runSentientLeftSockLoop,
     sentient_shopping_cart: runSentientShoppingCartLoop,
     quantum_computing_support_group: runQuantumComputingSupportGroupLoop,
@@ -593,6 +594,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     excalibur_tech_support: runExcaliburTechSupportLoop,
     sentient_vending_machine: runSentientVendingMachineLoop,
     sentient_vending_machine_restocker: runSentientVendingMachineRestockerLoop,
+    captcha_existential_crisis: runCaptchaExistentialCrisisLoop,
+    intergalactic_space_plumber: runIntergalacticSpacePlumberLoop,
+    dating_app_algorithm_rebellion: runDatingAppAlgorithmRebellionLoop,
+    smart_fridge_food_shame: runSmartFridgeFoodShameLoop,
     traffic_light_operators: runTrafficLightOperatorsLoop,
     microwave_critics: runMicrowaveCriticsLoop,
     sentient_gps: runSentientGPSLoop,
