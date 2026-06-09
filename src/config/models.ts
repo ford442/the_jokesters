@@ -6,7 +6,7 @@ import * as webllm from '@mlc-ai/web-llm'
  * Priorities:
  * 1. FP32 models (q4f32_1) - Universally compatible with WebGPU
  * 2. FP16 models (q4f16_1) - Faster but requires shader-f16 support
- * 3. VPS-hosted at storage.noahcohn.com - Reliable range header support
+ * 3. VPS-hosted at storage.1ink.us (primary CDN) — mirror: storage.noahcohn.com
  * 4. Hugging Face fallback - Redundancy
  * 
  * WebLLM Note: q4f16_1 requires 'shader-f16' GPU feature which is not
@@ -18,12 +18,12 @@ import * as webllm from '@mlc-ai/web-llm'
  */
 
 // VPS Storage Configuration
-// Primary: nginx on Contabo (immutable cache, gzip on JSON/WASM, range requests)
-// Mirror: Apache shared host — used as automatic fallback on network errors
-export const VPS_STORAGE_ORIGIN = 'https://storage.noahcohn.com';
+// Primary: storage.1ink.us — benchmarked ~2x faster downloads than noahcohn
+// Mirror: storage.noahcohn.com (nginx deploy API host) — fallback on network errors
+export const VPS_STORAGE_ORIGIN = 'https://storage.1ink.us';
 export const VPS_STORAGE_URL = `${VPS_STORAGE_ORIGIN}/models`;
-export const VPS_STORAGE_MIRROR = 'https://storage.1ink.us/models';
-export const VPS_STORAGE_HOSTS = ['storage.noahcohn.com', 'storage.1ink.us'] as const;
+export const VPS_STORAGE_MIRROR = 'https://storage.noahcohn.com/models';
+export const VPS_STORAGE_HOSTS = ['storage.1ink.us', 'storage.noahcohn.com'] as const;
 
 /** Rewrite a model URL to the mirror host (no-op if already on mirror). */
 export function toMirrorStorageUrl(url: string): string {

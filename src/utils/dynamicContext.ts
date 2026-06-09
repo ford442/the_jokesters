@@ -495,7 +495,7 @@ export async function loadModelWithDynamicContext(
       }
     }
 
-    // Retry via mirror host (storage.1ink.us) when primary VPS fetch fails
+    // Retry via mirror host (storage.noahcohn.com) when primary VPS fetch fails
     const onPrimaryHost = typeof modelConfig.model === 'string' && modelConfig.model.includes(VPS_STORAGE_URL);
     const alreadyMirrored = Boolean((modelConfig as { _mirrorAttempted?: boolean })._mirrorAttempted);
     if (onPrimaryHost && !alreadyMirrored && isLikelyNetworkError(errorMsg)) {

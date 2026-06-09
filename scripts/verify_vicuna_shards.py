@@ -16,7 +16,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-DEFAULT_HOST = "storage.noahcohn.com"
+DEFAULT_HOST = "storage.1ink.us"
 STAGING_CACHE = Path(__file__).resolve().parent.parent / ".vps-staging/vicuna-7b-q4f32-webllm/ndarray-cache.json"
 
 

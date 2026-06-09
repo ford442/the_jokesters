@@ -11,8 +11,8 @@ import aiohttp
 
 import os
 
-VPS_BASE = os.environ.get("VPS_BASE", "https://storage.noahcohn.com/models/")
-VPS_MIRROR = os.environ.get("VPS_MIRROR", "https://storage.1ink.us/models/")
+VPS_BASE = os.environ.get("VPS_BASE", "https://storage.1ink.us/models/")
+VPS_MIRROR = os.environ.get("VPS_MIRROR", "https://storage.noahcohn.com/models/")
 
 # Models and representative files to check
 CHECKS = [
@@ -106,7 +106,7 @@ async def main():
     if primary_ok:
         print("Primary OK; mirror has failures (fallback may be degraded).")
         sys.exit(0)
-    print("Primary host checks failed. Verify nginx on storage.noahcohn.com.")
+    print("Primary host checks failed. Verify storage.1ink.us model paths.")
     sys.exit(1)
 
 
