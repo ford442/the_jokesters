@@ -64,13 +64,41 @@ async function fetchWithRetry(
   throw lastError || new Error(`fetch failed after ${maxRetries} retries`);
 }
 
+/** VPS hosts serve flat files; WebLLM's cleanModelUrl() injects /resolve/main/ (HF-style). */
+const VPS_RESOLVE_MAIN_RE =
+  /^(https:\/\/storage\.(?:1ink\.us|noahcohn\.com)\/models\/[^/]+)\/resolve\/main\/(.+)$/;
+
 /**
- * Check if URL is for a model file
+ * Map WebLLM's HF-style VPS URL back to the flat path nginx/Apache actually serves.
+ * e.g. .../vicuna-7b/resolve/main/mlc-chat-config.json → .../vicuna-7b/mlc-chat-config.json
+ */
+function rewriteVpsModelUrl(url: string): string {
+  const match = url.match(VPS_RESOLVE_MAIN_RE);
+  if (match) {
+    return `${match[1]}/${match[2]}`;
+  }
+  return url;
+}
+
+/**
+ * Check if URL is a model download we should intercept (with retry / rewrite).
  */
 function isModelFile(url: string): boolean {
   const isModelHost = MODEL_HOSTS.some(host => url.includes(host));
   if (!isModelHost) return false;
-  return url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm');
+  // Weight / runtime binaries
+  if (url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm')) {
+    return true;
+  }
+  // Config + tokenizer JSON (WebLLM fetches these before shards)
+  if (url.includes('.json') && url.includes('/models/')) {
+    return true;
+  }
+  // VPS /resolve/main/ paths (any extension) — needs rewrite
+  if (VPS_RESOLVE_MAIN_RE.test(url)) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -159,76 +187,72 @@ async function downloadParallel(
  */
 // @ts-ignore - FetchEvent is service worker specific
 self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondWith(r: Promise<Response> | Response): void }) => {
-  const url = event.request.url;
+  const requestUrl = event.request.url;
 
-  if (!isModelFile(url)) {
+  if (!isModelFile(requestUrl)) {
     return; // Let browser handle non-model requests
   }
 
-  console.log('[ServiceWorker] Intercepting model download:', url);
+  const fetchUrl = rewriteVpsModelUrl(requestUrl);
+  if (fetchUrl !== requestUrl) {
+    console.log('[ServiceWorker] Rewrote VPS URL:', requestUrl, '→', fetchUrl);
+  } else {
+    console.log('[ServiceWorker] Intercepting model download:', requestUrl);
+  }
+
+  const fetchInit: RequestInit = {
+    method: event.request.method,
+    mode: event.request.mode,
+    credentials: event.request.credentials,
+    cache: event.request.cache,
+    redirect: event.request.redirect,
+    referrer: event.request.referrer,
+    referrerPolicy: event.request.referrerPolicy,
+    integrity: event.request.integrity,
+    headers: event.request.headers,
+  };
 
   event.respondWith(
     (async () => {
       try {
-        // Get file size via HEAD
+        // Small JSON/config files — fetch directly (no parallel chunking)
+        const isSmallConfig =
+          fetchUrl.includes('.json') ||
+          (!fetchUrl.includes('.bin') && !fetchUrl.includes('.wasm') && !fetchUrl.includes('.gguf'));
+
+        if (isSmallConfig) {
+          return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
+        }
+
+        // Get file size via HEAD for large binaries
         let headResponse: Response | null = null;
         let fileSize = 0;
         try {
-          headResponse = await fetchWithRetry(url, { method: 'HEAD' }, 1);
+          headResponse = await fetchWithRetry(fetchUrl, { method: 'HEAD' }, 1);
           fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
         } catch (headError) {
-          console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', url);
-          return fetchWithRetry(event.request.url, {
-            mode: event.request.mode,
-            credentials: event.request.credentials,
-            cache: event.request.cache,
-            redirect: event.request.redirect,
-            referrer: event.request.referrer,
-            referrerPolicy: event.request.referrerPolicy,
-            integrity: event.request.integrity,
-          }, MAX_RETRIES);
+          console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', fetchUrl);
+          return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
         }
 
         if (fileSize === 0 || !headResponse.ok) {
-          return fetchWithRetry(event.request.url, {
-            mode: event.request.mode,
-            credentials: event.request.credentials,
-            cache: event.request.cache,
-            redirect: event.request.redirect,
-            referrer: event.request.referrer,
-            referrerPolicy: event.request.referrerPolicy,
-            integrity: event.request.integrity,
-          }, MAX_RETRIES);
+          return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
         }
 
         const supportsRanges =
           headResponse.headers.has('accept-ranges') &&
           headResponse.headers.get('accept-ranges') !== 'none';
 
-        // CRITICAL: For files smaller than one chunk (all model shards are ~30 MB)
-        // skip parallel download entirely. Just pass through with retry logic.
-        // This avoids buffering the entire shard multiple times in SW memory,
-        // which was causing net::ERR_FAILED on memory-constrained systems.
         if (supportsRanges && fileSize > CHUNK_SIZE) {
-          console.log('[ServiceWorker] Using parallel download for:', url);
-          return await downloadParallel(url, fileSize);
-        } else {
-          console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', url);
-          // Preserve original request properties (mode, credentials, headers) for CORS
-          return fetchWithRetry(event.request.url, {
-            mode: event.request.mode,
-            credentials: event.request.credentials,
-            cache: event.request.cache,
-            redirect: event.request.redirect,
-            referrer: event.request.referrer,
-            referrerPolicy: event.request.referrerPolicy,
-            integrity: event.request.integrity,
-          }, MAX_RETRIES);
+          console.log('[ServiceWorker] Using parallel download for:', fetchUrl);
+          return await downloadParallel(fetchUrl, fileSize);
         }
+
+        console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', fetchUrl);
+        return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
-        // Final fallback: let the browser handle it natively
-        return fetch(event.request);
+        return fetch(fetchUrl, fetchInit);
       }
     })()
   );

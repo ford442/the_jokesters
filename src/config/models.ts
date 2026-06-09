@@ -20,6 +20,9 @@ import * as webllm from '@mlc-ai/web-llm'
 // VPS Storage Configuration
 // Primary: storage.1ink.us — benchmarked ~2x faster downloads than noahcohn
 // Mirror: storage.noahcohn.com (nginx deploy API host) — fallback on network errors
+//
+// WebLLM's cleanModelUrl() appends /resolve/main/ (HuggingFace layout). Our VPS serves
+// flat paths (no /resolve/main/). src/service-worker.ts rewrites those URLs at fetch time.
 export const VPS_STORAGE_ORIGIN = 'https://storage.1ink.us';
 export const VPS_STORAGE_URL = `${VPS_STORAGE_ORIGIN}/models`;
 export const VPS_STORAGE_MIRROR = 'https://storage.noahcohn.com/models';
