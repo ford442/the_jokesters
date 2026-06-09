@@ -1,4 +1,5 @@
 import { SupertonicPipeline, Style } from './SupertonicPipeline';
+import { VPS_STORAGE_URL } from '../config/models';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -61,7 +62,7 @@ export class AudioEngine {
         }
 
         // 2. Load from VPS (only for M1, M2, F1, F2)
-        const stylePath = `https://storage.1ink.us/models/tts/voice_styles/${voiceId}.json`;
+        const stylePath = `${VPS_STORAGE_URL}/tts/voice_styles/${voiceId}.json`;
 
         try {
             console.log(`AudioEngine: Loading voice style '${voiceId}'...`);

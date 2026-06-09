@@ -13,6 +13,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
 import { EngineFactory, type EngineType } from './llm/EngineFactory'
 import { MemoryManager } from './Director/MemoryManager'
+import { getModelDisplayName } from './config/models'
 
 
 // Log available models on startup
@@ -139,19 +140,20 @@ async function initApp() {
           <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
 
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <!-- Recommended — fastest default for modern GPUs -->
-            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC/WebGPU · ~2 GB VRAM ★ Recommended</option>
+            <!-- Recommended — Vicuna 7B q4f32 on VPS (universal fp32 WebGPU) -->
+            <option value="vicuna-7b-q4f32-webllm-vps" selected>Vicuna 7B q4f32 · MLC/WebGPU · ~4 GB VRAM ★ Recommended</option>
+
+            <!-- Smaller / faster alternatives -->
+            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC/WebGPU · ~2 GB VRAM (fast, needs f16)</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · MLC/WebGPU · ~2 GB VRAM (no f16 needed)</option>
 
             <!-- Best quality (f16-capable GPUs) -->
             <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
             <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
 
-            <!-- Best quality (no f16 required) -->
+            <!-- Other 7B fp32 options -->
             <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (no f16 needed)</option>
-            <option value="vicuna-7b-q4f32-webllm-vps">Vicuna 7B · self-hosted · MLC/WebGPU · ~4 GB VRAM (reliable, no f16)</option>
 
-            <!-- Compatibility / smaller (universal) -->
-            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · MLC/WebGPU · ~2 GB VRAM (no f16 needed)</option>
             <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · MLC/WebGPU · ~2.5 GB VRAM (no f16 needed)</option>
             <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · MLC/WebGPU · ~2.5 GB VRAM</option>
 
@@ -353,7 +355,7 @@ async function initApp() {
     'Hermes-3-Llama-3.2-3B-q4f32_1-MLC':  'Same Hermes-3 3B in universal f32 mode — works on GPUs without f16 shader support.',
     'Llama-3.2-3B-Instruct-q4f32_1-MLC':  'Standard 3B in f32 mode. Compatible with older or integrated GPUs.',
     'Llama-2-7b-chat-hf-q4f32_1-MLC':     'Llama-2 7B Chat (Meta). Mid-size model, richer responses than 3B. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
-    'vicuna-7b-q4f32-webllm-vps':          'Vicuna 7B · self-hosted mirror. Reliable, no HF dependency. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
+    'vicuna-7b-q4f32-webllm-vps':          'Default choice. Vicuna 7B q4f32 from storage.noahcohn.com (~4 GB). Universal fp32 WebGPU — no f16 shader required. Auto-falls back to mirror on network errors.',
     'Hermes-3-Llama-3.1-8B-q4f16_1-MLC':  'Best quality available. Requires RTX 30xx / RX 6000 / M1 Pro or better with f16 shader support.',
     'Llama-3.1-8B-Instruct-q4f16_1-MLC':  'Meta 8B flagship. Excellent reasoning. Requires f16-capable GPU with 5+ GB VRAM.',
   }
@@ -653,7 +655,7 @@ async function initApp() {
 
     // Stage 5: Ready - Enable all interactions (100%)
     currentInitState = 'READY'
-    setProgress("Ready!", 100)
+    setProgress(`Ready — ${getModelDisplayName(groupChatManager.getLoadedModelId())}`, 100)
 
     // Hide loading, show chat
     loadingDiv.style.display = 'none'
@@ -1356,7 +1358,7 @@ async function initApp() {
       },
       network: {
         title: 'Network Error',
-        suggestion: 'Check your connection and reload. Model weights download from HuggingFace CDN.'
+        suggestion: 'Check your connection and reload. Models download from storage.noahcohn.com (mirror: storage.1ink.us).'
       },
       unknown: {
         title: 'Initialization Failed',

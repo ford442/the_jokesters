@@ -9,7 +9,10 @@ import sys
 from urllib.parse import urljoin
 import aiohttp
 
-VPS_BASE = "https://storage.noahcohn.com/models/"
+import os
+
+VPS_BASE = os.environ.get("VPS_BASE", "https://storage.noahcohn.com/models/")
+VPS_MIRROR = os.environ.get("VPS_MIRROR", "https://storage.1ink.us/models/")
 
 # Models and representative files to check
 CHECKS = [
@@ -29,8 +32,8 @@ CHECKS = [
     ("GGUF: Hermes-3-8B", "/gguf/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf"),
     ("GGUF: Vicuna-7B", "/gguf/vicuna-7b-v1.5.Q4_K_M.gguf"),
     ("GGUF: Hermes-3-3B", "/gguf/Hermes-3-Llama-3.2-3B.Q4_K_M.gguf"),
-    # Transformers.js (check config.json for one model)
-    ("Transformers: Qwen-0.5B", "/transformers/onnx-community/Qwen2.5-0.5B-Instruct/config.json"),
+    # Transformers.js mirror (optional — falls back to HF CDN if missing on VPS)
+    # ("Transformers: Qwen-0.5B", "/transformers/onnx-community/Qwen2.5-0.5B-Instruct/config.json"),
     # TTS
     ("TTS: tts.json", "/tts/onnx/tts.json"),
     ("TTS: duration_predictor", "/tts/onnx/duration_predictor.onnx"),
@@ -44,9 +47,8 @@ CHECKS = [
 ]
 
 
-async def check_url(session: aiohttp.ClientSession, name: str, path: str):
-    # Strip leading slash to ensure proper relative joining with VPS_BASE
-    url = VPS_BASE + path.lstrip('/')
+async def check_url(session: aiohttp.ClientSession, base: str, name: str, path: str):
+    url = base.rstrip('/') + '/' + path.lstrip('/')
     try:
         # HEAD request with Range header
         async with session.head(url, headers={"Range": "bytes=0-1023"}, timeout=aiohttp.ClientTimeout(total=30)) as resp:
@@ -75,13 +77,11 @@ async def check_url(session: aiohttp.ClientSession, name: str, path: str):
         }
 
 
-async def main():
-    print(f"Verifying model URLs on {VPS_BASE}\n")
-    
-    async with aiohttp.ClientSession() as session:
-        tasks = [check_url(session, name, path) for name, path in CHECKS]
-        results = await asyncio.gather(*tasks)
-    
+async def verify_base(session: aiohttp.ClientSession, base: str) -> bool:
+    print(f"Verifying model URLs on {base}\n")
+    tasks = [check_url(session, base, name, path) for name, path in CHECKS]
+    results = await asyncio.gather(*tasks)
+
     all_ok = True
     for r in results:
         status_icon = "✅" if r["ok"] else "❌"
@@ -91,14 +91,23 @@ async def main():
         if not r["ok"]:
             all_ok = False
             print(f"   URL: {r['url']}")
-    
     print()
-    if all_ok:
-        print("All checks passed! Models are ready.")
+    return all_ok
+
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        primary_ok = await verify_base(session, VPS_BASE)
+        mirror_ok = await verify_base(session, VPS_MIRROR)
+
+    if primary_ok and mirror_ok:
+        print("All checks passed on primary and mirror hosts.")
         sys.exit(0)
-    else:
-        print("Some checks failed. Verify the upload and nginx configuration.")
-        sys.exit(1)
+    if primary_ok:
+        print("Primary OK; mirror has failures (fallback may be degraded).")
+        sys.exit(0)
+    print("Primary host checks failed. Verify nginx on storage.noahcohn.com.")
+    sys.exit(1)
 
 
 if __name__ == "__main__":

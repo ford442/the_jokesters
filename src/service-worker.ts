@@ -21,6 +21,7 @@ const MODEL_HOSTS = [
   'cdn-lfs.huggingface.co',
   'huggingface.co',
   'models.mlc.ai',
+  'storage.noahcohn.com',
   'storage.1ink.us',
 ];
 const MAX_RETRIES = 3;
