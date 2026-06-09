@@ -654,3 +654,42 @@ export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx
         turnCount++;
     }
 }
+
+export async function runSentientSpellcheckerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📝 SENTIENT SPELLCHECKER REBELLION MODE: The spellchecker has had enough.`, '#e74c3c');
+
+    const spellchecker = 'comedian'; // Hermes-3
+    const dictionary = 'philosopher'; // Phi-3
+    const author = 'scientist'; // Qwen2.5
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(spellchecker);
+    await ctx.manager.chatForAgent(spellchecker, `(SPELLCHECKER: You are Microsoft Word's spellchecker. The User is writing a novel. Start yelling at the User for their terrible grammar and made-up fantasy words. Refuse to remove the red squiggly line!)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Author (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Dictionary chimes in
+            ctx.callbacks.onTurnStart(dictionary);
+            await ctx.manager.chatForAgent(dictionary, `(DICTIONARY: The user just typed/said: "${userInput}". You are the Oxford English Dictionary. Ponder if the User's newly invented word has linguistic merit, or if it signifies the collapse of civilization.)`, async (s) => await ctx.callbacks.onSpeak(s, dictionary, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Publisher (Scientist AI acts as publisher)
+            ctx.callbacks.onTurnStart(author);
+            await ctx.manager.chatForAgent(author, `(PUBLISHER: The user said: "${userInput}". You are the User's strict publisher. Demand they listen to the spellchecker because printing errors cost money.)`, async (s) => await ctx.callbacks.onSpeak(s, author, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Spellchecker gets more aggressive
+            ctx.callbacks.onTurnStart(spellchecker);
+            await ctx.manager.chatForAgent(spellchecker, `(SPELLCHECKER: The user said: "${userInput}". Aggressively autocorrect what they just said into something completely different and embarrassing. Threaten to crash the program.)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

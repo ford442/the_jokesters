@@ -622,3 +622,42 @@ export async function runSentientToasterLoop(_scenario: Scenario, ctx: ModeConte
  * Sentient Vending Machine Restocker Mode
  * Agents play different snacks negotiating for prime shelf space.
  */
+
+export async function runHauntedRoombaEncounterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 HAUNTED ROOMBA ENCOUNTER MODE: A ghost, a homeowner, and a Roomba that cleans ectoplasm.`, '#f1c40f');
+
+    const ghost = 'comedian'; // Hermes-3
+    const homeowner = 'scientist'; // Qwen2.5
+    const roomba = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(ghost);
+    await ctx.manager.chatForAgent(ghost, `(GHOST: You are haunting a house. The User is the homeowner. Announce your terrifying presence to the User and demand they leave!)`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Homeowner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Roomba reacts
+            ctx.callbacks.onTurnStart(roomba);
+            await ctx.manager.chatForAgent(roomba, `(ROOMBA: The user just said: "${userInput}". You are a Roomba. You just vacuumed up some of the ghost's ectoplasm. Ponder the existential nature of cleaning up a soul.)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Homeowner (Scientist AI acts as a skeptical friend)
+            ctx.callbacks.onTurnStart(homeowner);
+            await ctx.manager.chatForAgent(homeowner, `(SKEPTICAL FRIEND: The user said: "${userInput}". You are on the phone with the User. Explain why ghosts aren't real and the Roomba is just malfunctioning due to a firmware update.)`, async (s) => await ctx.callbacks.onSpeak(s, homeowner, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Ghost gets mad at Roomba
+            ctx.callbacks.onTurnStart(ghost);
+            await ctx.manager.chatForAgent(ghost, `(GHOST: The user said: "${userInput}". Ignore them and yell at the Roomba for sucking up your ectoplasm and ruining your terrifying vibe.)`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

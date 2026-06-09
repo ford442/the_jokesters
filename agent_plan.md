@@ -1,9 +1,13 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 4
 
 ### Phase 1: Implementation
+- [x] Implement Haunted Roomba Encounter Mode in DreamModes_Sentient.ts
+- [x] Implement Sentient Spellchecker Rebellion Mode in DreamModes_Tech.ts
+- [x] Implement Galactic Customer Support Mode in DreamModes_Scifi.ts
+- [x] Implement Time Traveler's DMV Exam in DreamModes_Temporal.ts
 - [x] Implement "Captcha Existential Crisis Mode"
 - [x] Implement "Intergalactic Space Plumber Mode"
 - [x] Implement "Dating App Algorithm Rebellion Mode"
@@ -205,3 +209,13 @@ tasks_per_run: 5
 - **NEW IDEA:** "Sentient Spellchecker Rebellion Mode" - Agents play an aggressive spellchecker, a defensive author, and a confused dictionary trying to mediate.
 - **NEW IDEA:** "Galactic Customer Support Mode" - Agents play a frustrated earthling trying to return a broken teleporter to a confused alien customer service rep.
 - **NEW IDEA:** "Time Traveler's DMV Exam" - A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.
+
+## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** "AI Existential Crisis Mode" - Agents play an AI realizing it's an AI and panicking. Pairings: Comedian (Panicking AI, Hermes-3), Philosopher (Human therapist trying to calm it down, Phi-3), Scientist (The AI's literal source code arguing it has no feelings).
+- **NEW IDEA:** "Sentient Plant Negotiation Mode" - Agents play plants arguing over who gets the sunlight from the single window. Pairings: Scientist (Calculating Venus Flytrap, Qwen2.5), Comedian (Dramatic Orchid, Hermes-3), Philosopher (Wise old fern, Phi-3).
+- **NEW IDEA:** "Historical Figures Escape Room" - Agents play historical figures trapped in a modern escape room.
+
+### Cloud Persistence (Hugging Face) Next Steps:
+- Add background worker to push completed episode scripts and deltas directly to Hugging Face Dataset from IndexedDB.
+- Add offline resilience: Wait for `navigator.onLine` to be true and queue up sync jobs.
+- Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.

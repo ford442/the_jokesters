@@ -454,3 +454,42 @@ export async function runTimeTravelingHOALoop(scenario: Scenario, ctx: ModeConte
     }
 }
 
+
+export async function runTimeTravelersDMVExamLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚗 TIME TRAVELER'S DMV EXAM: Parallel parking a hover-car.`, '#e67e22');
+
+    const instructor = 'comedian'; // Hermes-3
+    const mechanic = 'scientist'; // Qwen2.5
+    const historian = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(instructor);
+    await ctx.manager.chatForAgent(instructor, `(INSTRUCTOR: You are a driving instructor from 1995. The User is a time traveler from 3024 taking their DMV test in a hover-car. Yell at them for floating above the curb and confusing your clipboard!)`, async (s) => await ctx.callbacks.onSpeak(s, instructor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Time Traveler (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Mechanic complains
+            ctx.callbacks.onTurnStart(mechanic);
+            await ctx.manager.chatForAgent(mechanic, `(MECHANIC: The user just said: "${userInput}". You are a mechanic from 1995 in the back seat. Freak out over the quantum engine emitting tachyons instead of exhaust.)`, async (s) => await ctx.callbacks.onSpeak(s, mechanic, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Historian ponders
+            ctx.callbacks.onTurnStart(historian);
+            await ctx.manager.chatForAgent(historian, `(HISTORIAN: The user said: "${userInput}". You are a hologram historian built into the dashboard. Remind the User that failing this test in 1995 means they will never be born.)`, async (s) => await ctx.callbacks.onSpeak(s, historian, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Instructor penalizes
+            ctx.callbacks.onTurnStart(instructor);
+            await ctx.manager.chatForAgent(instructor, `(INSTRUCTOR: The user said: "${userInput}". Deduct points for a ridiculous 1990s traffic violation, like failing to check the rearview mirror for a DeLorean. Demand they perform a 3-point temporal shift.)`, async (s) => await ctx.callbacks.onSpeak(s, instructor, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

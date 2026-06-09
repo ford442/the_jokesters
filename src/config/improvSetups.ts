@@ -10,6 +10,27 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+    {
+        id: 'haunted_roomba_encounter',
+        title: 'Haunted Roomba Encounter',
+        description: 'A ghost, a panicked homeowner, and the Roomba that keeps vacuuming up ectoplasm.'
+    },
+    {
+        id: 'sentient_spellchecker',
+        title: 'Sentient Spellchecker Rebellion',
+        description: 'An aggressive spellchecker, a defensive author, and a confused dictionary trying to mediate.'
+    },
+    {
+        id: 'galactic_customer_support',
+        title: 'Galactic Customer Support',
+        description: 'A frustrated earthling trying to return a broken teleporter to a confused alien customer service rep.'
+    },
+    {
+        id: 'time_travelers_dmv_exam',
+        title: 'Time Traveler\'s DMV Exam',
+        description: 'A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.'
+    },
+
   {
     id: 'captcha_existential_crisis',
     title: 'Captcha Existential Crisis',
