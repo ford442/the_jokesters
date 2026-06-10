@@ -664,3 +664,42 @@ export async function runIntergalacticSpacePlumberLoop(_scenario: Scenario, ctx:
     );
     ctx.callbacks.onTurnEnd();
 }
+
+export async function runGalacticCustomerSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 GALACTIC CUSTOMER SUPPORT: Trying to return a broken teleporter.`, '#3498db');
+
+    const rep = 'comedian'; // Hermes-3
+    const manager = 'philosopher'; // Phi-3
+    const manual = 'scientist'; // Qwen2.5
+
+    // 1. Intro
+    ctx.callbacks.onTurnStart(rep);
+    await ctx.manager.chatForAgent(rep, `(ALIEN REP: You are an underpaid alien customer service rep. The User is a human who bought a cheap teleporter that sent their left arm to another dimension. Greet them with extreme corporate apathy.)`, async (s) => await ctx.callbacks.onSpeak(s, rep, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Human Customer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Manager steps in
+            ctx.callbacks.onTurnStart(manager);
+            await ctx.manager.chatForAgent(manager, `(MANAGER: The user just said: "${userInput}". You are the alien manager. Ponder the philosophical implications of the human's missing arm. Does it really matter in the grand scheme of the cosmos?)`, async (s) => await ctx.callbacks.onSpeak(s, manager, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Manual read
+            ctx.callbacks.onTurnStart(manual);
+            await ctx.manager.chatForAgent(manual, `(MANUAL: The user said: "${userInput}". You are the sentient teleporter instruction manual. Read out a highly complex, absurd technical troubleshooting step involving quasars and duct tape to retrieve the arm.)`, async (s) => await ctx.callbacks.onSpeak(s, manual, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            // Rep denies request
+            ctx.callbacks.onTurnStart(rep);
+            await ctx.manager.chatForAgent(rep, `(ALIEN REP: The user said: "${userInput}". Explain why this voids the warranty. Put them on a bizarre, interdimensional hold.)`, async (s) => await ctx.callbacks.onSpeak(s, rep, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
