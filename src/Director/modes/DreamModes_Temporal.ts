@@ -493,3 +493,26 @@ export async function runTimeTravelersDMVExamLoop(_scenario: Scenario, ctx: Mode
         }
     }
 }
+
+export async function runHistoricalFiguresEscapeRoomModeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⏳ ESCAPE ROOM: Legends of the Past, Trapped in the Present`, '#e67e22');
+
+    const abeLincoln = 'philosopher'; // Phi-3
+    const marieCurie = 'scientist'; // Qwen2.5
+    const juliusCaesar = 'comedian'; // Hermes-3
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Game Master (You)', userInput, '#ffffff');
+
+        await ctx.manager.chatForAgent(abeLincoln, `(HISTORICAL ESCAPE ROOM: The GM said: "${userInput}". You are Abraham Lincoln. Try to solve the puzzle using folksy wisdom and long, winding anecdotes about log cabins.)`, async (s) => await ctx.callbacks.onSpeak(s, abeLincoln, {}));
+
+        await ctx.manager.chatForAgent(marieCurie, `(HISTORICAL ESCAPE ROOM: The GM said: "${userInput}". You are Marie Curie. Over-analyze the physical properties of the room and suggest breaking the padlocks with chemical reactions.)`, async (s) => await ctx.callbacks.onSpeak(s, marieCurie, {}));
+
+        await ctx.manager.chatForAgent(juliusCaesar, `(HISTORICAL ESCAPE ROOM: The GM said: "${userInput}". You are Julius Caesar. Ignore the puzzle entirely and try to organize a military coup against the Game Master.)`, async (s) => await ctx.callbacks.onSpeak(s, juliusCaesar, {}));
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+}

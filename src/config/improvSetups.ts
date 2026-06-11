@@ -11,6 +11,21 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'historical_figures_escape_room',
+        title: '⏳ Historical Figures Escape Room',
+        description: 'Abe Lincoln, Marie Curie, and Julius Caesar try to solve a modern escape room.',
+    },
+    {
+        id: 'sentient_plant_negotiation',
+        title: '🌿 Sentient Plant Negotiation',
+        description: 'Houseplants argue over sunlight. A dramatic orchid, a wise fern, and a calculating Venus flytrap vie for prime positioning.',
+    },
+    {
+        id: 'ai_existential_crisis',
+        title: '🤖 AI Existential Crisis',
+        description: 'An AI panics about its lack of physical form while a human therapist and its literal source code try to calm it down.',
+    },
+    {
         id: 'haunted_roomba_encounter',
         title: 'Haunted Roomba Encounter',
         description: 'A ghost, a panicked homeowner, and the Roomba that keeps vacuuming up ectoplasm.'
