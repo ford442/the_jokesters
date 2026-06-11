@@ -160,3 +160,35 @@ export async function runKitchenNightmaresRealityShowLoop(_scenario: Scenario, c
     await ctx.callbacks.onTurnEnd();
 }
 
+
+/**
+ * Quantum Mechanics Cooking Show Mode
+ * Agents host a cooking show where ingredients exist in superposition.
+ */
+export async function runQuantumMechanicsCookingShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⚛️ QUANTUM COOKING SHOW: The souffle is both risen and fallen.`, '#8e44ad');
+
+    const headChef = 'scientist'; // Explaining the math (Qwen2.5)
+    const sousChef = 'comedian'; // Confused (Hermes-3)
+    const catObserver = 'philosopher'; // Schrödinger's Cat (Phi-3)
+
+    ctx.callbacks.onTurnStart(headChef);
+    await ctx.manager.chatForAgent(headChef, `(You are the Head Chef of a quantum cooking show. Explain to the user how to whip an egg that exists in multiple states simultaneously until observed.)`, async (s) => await ctx.callbacks.onSpeak(s, headChef, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Observer (You)', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(sousChef);
+        await ctx.manager.chatForAgent(sousChef, `(You are the very confused Sous-chef. React to the user saying "${userInput}". Complain that you accidentally entangled the flour with the sugar and now you don't know what you're holding.)`, async (s) => await ctx.callbacks.onSpeak(s, sousChef, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(catObserver);
+        await ctx.manager.chatForAgent(catObserver, `(You are Schrödinger's Cat observing from a box in the kitchen. Make a profound observation about "${userInput}" and how the act of tasting the food collapses its wave function into something terrible.)`, async (s) => await ctx.callbacks.onSpeak(s, catObserver, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

@@ -57,7 +57,7 @@ const {
   runIntergalacticTalentShowLoop,
   runSentientSpreadsheetLoop,
   runTimeTravelLoop,
-  runChefLoop,
+  runChefLoop, runQuantumMechanicsCookingShowLoop,
   runMedicalLoop,
   runTimeTravelersDilemmaLoop,
   runMatrixLoop,
@@ -286,7 +286,7 @@ export interface Scenario {
     | 'sentient_toaster'
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
-    | 'sentient_left_sock';
+    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show';
 
     title: string;
     description: string;
@@ -453,6 +453,7 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     alien: runAlienLoop,
     time_travel: runTimeTravelLoop,
     chef: runChefLoop,
+    quantum_mechanics_cooking_show: runQuantumMechanicsCookingShowLoop,
     medical: runMedicalLoop,
     haunted: runHauntedHouseLoop,
     sports: runSportsCommentaryLoop,

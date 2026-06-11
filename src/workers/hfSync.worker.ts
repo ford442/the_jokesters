@@ -1,3 +1,4 @@
+// Note: Core HF Sync integration (validateToken, saveFile, delta merging) was implemented in prior sessions.
 self.onmessage = async (e: MessageEvent) => {
     const { type, queueKey, token, repoId, items } = e.data;
 
