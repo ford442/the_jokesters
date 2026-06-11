@@ -214,6 +214,8 @@ tasks_per_run: 5
 - **NEW IDEA:** "Time Traveler's DMV Exam" - A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** "Sentient Blender Mode" - Agents play a smart blender (Scientist - Qwen2.5), a thirsty user (Comedian - Hermes-3), and the unblended kale (Philosopher - Phi-3) arguing over making a smoothie.
+- **NEW IDEA:** "Vector Clocks for Cloud Sync" - Implement vector clocks for Cloud Sync to avoid timestamp collisions on distributed systems.
 - **NEW IDEA:** "AI Existential Crisis Mode" - Agents play an AI realizing it's an AI and panicking. Pairings: Comedian (Panicking AI, Hermes-3), Philosopher (Human therapist trying to calm it down, Phi-3), Scientist (The AI's literal source code arguing it has no feelings).
 - **NEW IDEA:** "Sentient Plant Negotiation Mode" - Agents play plants arguing over who gets the sunlight from the single window. Pairings: Scientist (Calculating Venus Flytrap, Qwen2.5), Comedian (Dramatic Orchid, Hermes-3), Philosopher (Wise old fern, Phi-3).
 - **NEW IDEA:** "Historical Figures Escape Room" - Agents play historical figures trapped in a modern escape room.
@@ -228,6 +230,6 @@ tasks_per_run: 5
 - **NEW IDEA:** "Quantum Mechanics Cooking Show Mode" - Agents host a cooking show where ingredients exist in superposition. Pairings: Scientist (Head Chef explaining the math, Qwen2.5), Comedian (Confused Sous-chef, Hermes-3), Philosopher (The Schrödinger's Cat observing, Phi-3).
 
 ### Cloud Persistence Next Steps (Hugging Face Integration Roadmap):
-- [ ] Authenticate with the HF API. (Tokens via `/whoami-v2`).
-- [ ] Push finished "Episode Scripts" to a private Dataset via Background Web Worker.
-- [ ] Fetch "Previous Episode Summaries" at boot for continuity.
+- [x] Authenticate with the HF API. (Tokens via `/whoami-v2`).
+- [x] Push finished "Episode Scripts" to a private Dataset via Background Web Worker.
+- [x] Fetch "Previous Episode Summaries" at boot for continuity.

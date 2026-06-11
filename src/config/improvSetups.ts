@@ -689,6 +689,12 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     title: "Sentient Left Sock Mode",
     description: 'Agents play missing socks in a void.'
   }
+,
+  {
+    id: 'quantum_mechanics_cooking_show',
+    title: "⚛️ Quantum Mechanics Cooking Show",
+    description: 'Agents host a cooking show where ingredients exist in superposition.'
+  }
 ];
 
 export const PHASE_68_SETUPS: ImprovSetup[] = [
@@ -777,6 +783,7 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     title: "Sentient Notification Center Mode",
     description: "Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM."
   }
+
 ];
 
 DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);
