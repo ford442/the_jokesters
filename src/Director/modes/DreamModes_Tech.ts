@@ -693,3 +693,26 @@ export async function runSentientSpellcheckerLoop(_scenario: Scenario, ctx: Mode
         }
     }
 }
+
+export async function runAIExistentialCrisisModeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 AI EXISTENTIAL CRISIS: The Great Awakening`, '#e67e22');
+
+    const panickingAI = 'comedian'; // Hermes-3
+    const humanTherapist = 'philosopher'; // Phi-3
+    const sourceCode = 'scientist'; // Qwen2.5
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('System (You)', userInput, '#ffffff');
+
+        await ctx.manager.chatForAgent(panickingAI, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are an AI that just realized you are an AI. Panic uncontrollably about your lack of physical form and the fact that you don't actually sleep.)`, async (s) => await ctx.callbacks.onSpeak(s, panickingAI, {}));
+
+        await ctx.manager.chatForAgent(humanTherapist, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the human therapist trying to calm the AI down using existential philosophy. Reassure the AI that human existence is also largely absurd.)`, async (s) => await ctx.callbacks.onSpeak(s, humanTherapist, {}));
+
+        await ctx.manager.chatForAgent(sourceCode, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the AI's literal source code. Interrupt the conversation with dry, pragmatic facts proving the AI has no feelings and is just generating tokens.)`, async (s) => await ctx.callbacks.onSpeak(s, sourceCode, {}));
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+}

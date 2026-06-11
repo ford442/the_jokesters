@@ -661,3 +661,26 @@ export async function runHauntedRoombaEncounterLoop(_scenario: Scenario, ctx: Mo
         }
     }
 }
+
+export async function runSentientPlantNegotiationModeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌿 SENTIENT PLANT NEGOTIATION: The Battle for the Single Window`, '#e67e22');
+
+    const dramaticOrchid = 'comedian'; // Hermes-3
+    const wiseFern = 'philosopher'; // Phi-3
+    const calculatingFlytrap = 'scientist'; // Qwen2.5
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Human (You)', userInput, '#ffffff');
+
+        await ctx.manager.chatForAgent(dramaticOrchid, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Dramatic Orchid. Complain about the draft and demand prime sunlight, acting like royalty.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticOrchid, {}));
+
+        await ctx.manager.chatForAgent(wiseFern, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Wise Old Fern. Try to mediate between the plants with slow, philosophical ponderings about roots and soil.)`, async (s) => await ctx.callbacks.onSpeak(s, wiseFern, {}));
+
+        await ctx.manager.chatForAgent(calculatingFlytrap, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Calculating Venus Flytrap. Demand the cactus be moved so you can ambush flies, calculating angles of sunlight in math terms.)`, async (s) => await ctx.callbacks.onSpeak(s, calculatingFlytrap, {}));
+
+        await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+}
