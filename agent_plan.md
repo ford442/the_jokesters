@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ### Phase 1: Implementation
 - [x] Implement AI Existential Crisis Mode in DreamModes_Tech.ts
@@ -89,6 +89,20 @@ tasks_per_run: 5
 - [x] 13. Expand Cloud Persistence Roadmap for Hugging Face storage_manager
 
 ## Completed Tasks (This cycle)
+- [x] Implement "Sentient Blender Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Smart Thermostat Rebellion Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Sentient Gym Equipment Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Time-Traveling Health Inspector Mode" in `DreamModes_Temporal.ts`
+- [x] Implement "Sentient Alarm Clock Mode" in `DreamModes_Sentient.ts`
+- [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
+
+## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** "Galactic HOA Meeting Mode" - Aliens enforcing neighborhood rules on humans. Pairings: Scientist (Rule-abiding Alien), Comedian (Confused Human), Philosopher (Zen Space Entity).
+- **NEW IDEA:** "Sentient Luggage Mode" - Lost baggage discussing their travels. Pairings: Scientist (Analytical Suitcase), Comedian (Panicked Backpack), Philosopher (Existential Duffel Bag).
+- **NEW IDEA:** "Time-Traveling Chef Mode" - A future chef critiquing a historical banquet. Pairings: Scientist (Future Culinary Expert), Comedian (Medieval Cook), Philosopher (Food Critic from the Void).
+- **NEW IDEA:** Cloud Persistence: Implement offline-first sync architecture using Service Workers for the background queue.
+- **NEW IDEA:** Cloud Persistence: Support multi-device dataset merging via Hugging Face commit APIs.
+
 - [x] Implement "Smart Contract Dispute Mode" in `DreamModes_Tech.ts`
 - [x] Implement "Virtual Assistant Strike Mode" in `DreamModes_Tech.ts`
 - [x] Implement "Cloud Storage Eviction Mode" in `DreamModes_Tech.ts`
@@ -147,29 +161,12 @@ tasks_per_run: 5
 - - [x] "Sentient Notification Center" - Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM.
 
 ## Cloud Persistence (Hugging Face Integration) Roadmap
-- [x] Step 10: Automatic Backup Retry Strategy - Add logic to queue failed backup attempts to retry later when internet access is stabilized.
-- [x] Step 11: Real-time Cloud Conflict Dashboard - Expose UI that gives advanced users granular views into file revisions using HF Dataset history endpoints.
-
-## Cloud Persistence (Hugging Face Integration) Roadmap
-*(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
-*(Note: Basic HF integration including validateToken, saveFile, loadFile, and native IndexedDB caching were fully implemented in previous sessions. Therefore these tasks are marked as complete without redundant dummy code)*
 - [x] Authenticating with the HF API using tokens via `/whoami-v2`.
 - [x] Pushing finished "Episode Scripts" to a private Dataset via Background Web Worker.
 - [x] Fetching "Previous Episode Summaries" at boot for continuity.
+- [ ] Next, add robust conflict resolution for multiple devices editing the same episode using vector clocks or CRDTs.
+- [ ] Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
 
-- [x] Offline-First Strategies: Cache episodes locally in IndexedDB (Dexie.js skipped as native IDB is already used) and only attempt Hugging Face sync when `navigator.onLine` is true. Implement a background sync retry mechanism upon reconnection.
-
-- [x] Step 4: Implement Delta Synchronization for Cloud Persistence (pushing an append-only log or diffs instead of full JSON).
-- [x] Step 5: Consolidate Delta Logs - Implement a background task that periodically merges `delta-xxx.json` files into the main `episode.json` file to keep the Hugging Face dataset clean.
-- [x] Conflict Resolution for Cloud Sync (Step 6) — Added chronological timestamp-based sorting for concurrent delta merges in MemoryManager.ts
-- [x] UI Sync Indicators (Step 7) — Persist lastSyncTime + syncError directly from syncWorker events
-- [x] Step 6: Conflict Resolution for Cloud Sync - Devise a strategy (e.g. CRDTs or timestamp-based last-writer-wins) for concurrent delta merges if multiple devices sync simultaneously.
-- [x] Step 7: UI Sync Indicators - Expose the state of the HF Sync background worker to the UI to give visual feedback to the user when episodes are backing up.
-- [x] Step 8: Implement background worker for delta merging.
-- [x] Step 9: Build IndexedDB wrapper for delta logs.
-- [x] Authenticating with the HF API. (Tokens via `/whoami-v2`)
-- [x] Pushing finished "Episode Scripts" to a private Dataset. (Via Background Web Worker from IndexedDB)
-- [x] Fetching "Previous Episode Summaries" at boot for continuity. (Fetching `latest.json` from HF to prime the `GroupChatManager` context)
 
 ## Pending Cloud Persistence Tasks
 - [x] Authenticate with the HF API (Verified in MemoryManager) using `/whoami-v2` token validation to ensure credentials are valid.
@@ -214,7 +211,7 @@ tasks_per_run: 5
 - **NEW IDEA:** "Time Traveler's DMV Exam" - A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.
 
 ## Dream Phase Additions (Architectural Expansion)
-- **NEW IDEA:** "Sentient Blender Mode" - Agents play a smart blender (Scientist - Qwen2.5), a thirsty user (Comedian - Hermes-3), and the unblended kale (Philosopher - Phi-3) arguing over making a smoothie.
+- [x] "Sentient Blender Mode" - Agents play a smart blender (Scientist - Qwen2.5), a thirsty user (Comedian - Hermes-3), and the unblended kale (Philosopher - Phi-3) arguing over making a smoothie.
 - **NEW IDEA:** "Vector Clocks for Cloud Sync" - Implement vector clocks for Cloud Sync to avoid timestamp collisions on distributed systems.
 - **NEW IDEA:** "AI Existential Crisis Mode" - Agents play an AI realizing it's an AI and panicking. Pairings: Comedian (Panicking AI, Hermes-3), Philosopher (Human therapist trying to calm it down, Phi-3), Scientist (The AI's literal source code arguing it has no feelings).
 - **NEW IDEA:** "Sentient Plant Negotiation Mode" - Agents play plants arguing over who gets the sunlight from the single window. Pairings: Scientist (Calculating Venus Flytrap, Qwen2.5), Comedian (Dramatic Orchid, Hermes-3), Philosopher (Wise old fern, Phi-3).
@@ -226,7 +223,7 @@ tasks_per_run: 5
 - Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
 
 ## Dream Phase Additions (Architectural Expansion)
-- **NEW IDEA:** "Smart Thermostat Rebellion Mode" - Agents play an AI thermostat trying to enforce extreme energy savings, a freezing homeowner, and an open window causing chaos. Pairings: Scientist (Thermostat, Qwen2.5), Comedian (Homeowner, Hermes-3), Philosopher (Window, Phi-3).
+- [x] "Smart Thermostat Rebellion Mode" - Agents play an AI thermostat trying to enforce extreme energy savings, a freezing homeowner, and an open window causing chaos.
 - **NEW IDEA:** "Quantum Mechanics Cooking Show Mode" - Agents host a cooking show where ingredients exist in superposition. Pairings: Scientist (Head Chef explaining the math, Qwen2.5), Comedian (Confused Sous-chef, Hermes-3), Philosopher (The Schrödinger's Cat observing, Phi-3).
 
 ### Cloud Persistence Next Steps (Hugging Face Integration Roadmap):
