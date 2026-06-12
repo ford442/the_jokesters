@@ -782,8 +782,32 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: "sentient_notification_center",
     title: "Sentient Notification Center Mode",
     description: "Agents play Instagram, Slack, and an ignored Fitness app fighting for the user's attention at 3 AM."
+  },
+  {
+    id: 'sentient_blender',
+    title: 'Sentient Blender',
+    description: 'A smart blender, a thirsty user, and unblended kale arguing.'
+  },
+  {
+    id: 'smart_thermostat_rebellion',
+    title: 'Smart Thermostat Rebellion',
+    description: 'An AI thermostat enforces extreme energy savings on a freezing homeowner.'
+  },
+  {
+    id: 'sentient_gym_equipment',
+    title: 'Sentient Gym Equipment',
+    description: 'A calculating treadmill and neglected dumbbell judge an exhausted user.'
+  },
+  {
+    id: 'time_traveling_health_inspector',
+    title: 'Time-Traveling Health Inspector',
+    description: 'A futuristic health inspector critiques a 19th-century tavern.'
+  },
+  {
+    id: 'sentient_alarm_clock',
+    title: 'Sentient Alarm Clock',
+    description: 'A logical snooze button argues with a desperate sleeper about time.'
   }
-
 ];
 
 DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);

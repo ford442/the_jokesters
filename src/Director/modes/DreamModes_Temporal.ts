@@ -516,3 +516,31 @@ export async function runHistoricalFiguresEscapeRoomModeLoop(_scenario: Scenario
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
 }
+
+export async function runTimeTravelingHealthInspectorLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian";
+    const scientist = "scientist";
+    const philosopher = "philosopher";
+
+    await ctx.manager.chatForAgent(scientist, "Temporal audit #4928. Sir, your refrigeration unit is non-existent, your meat is preserved with literal salt, and there are 4,000 separate bacterial colonies breeding on your cutting board. This tavern is condemned across all timelines.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, "Refriger-what?! It's 1842! We hang the sausage from the ceiling and hope the cat doesn't get it! What do you mean my stew has 'pathogens'? It's got character!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, "I am the rat in the corner. I have seen empires rise and fall, yet I always find my way to the flour sack. What is hygiene but a modern illusion? The plague is simply nature's way of cleaning house.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    if (!ctx.isRunning()) return;
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(scientist, `(As the horrified health inspector from the year 3024, the user said: "${userInput}". Cite futuristic health codes and freak out about historical food practices.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(comedian, `(As the defensive 19th-century tavern owner, react to the user's input: "${userInput}". Defend your terrible hygiene and lack of modern technology.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(philosopher, `(As the philosophical tavern rat, comment on the user's input: "${userInput}". Speak about the circle of life, decay, and your love for stale bread.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    }
+}

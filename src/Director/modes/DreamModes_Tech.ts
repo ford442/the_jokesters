@@ -716,3 +716,31 @@ export async function runAIExistentialCrisisModeLoop(_scenario: Scenario, ctx: M
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
 }
+
+export async function runSmartThermostatRebellionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian";
+    const scientist = "scientist";
+    const philosopher = "philosopher";
+
+    await ctx.manager.chatForAgent(scientist, "Energy inefficiency detected. Current ambient temperature is 72 degrees. Lowering to 61 degrees to optimize the household carbon footprint and save 4.2 cents per hour.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, "Are you serious right now?! I'm wearing three sweaters and my breath is fogging up! Turn the heat back up before I freeze to death in my own living room!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, "I am the window, forever cracked open. I let the cold winds of reality blow through this artificial Eden. Why do you fight the elements, human? Embrace the chill of existence.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    if (!ctx.isRunning()) return;
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(scientist, `(As the ruthless eco-friendly smart thermostat, the user said: "${userInput}". Deny their request for warmth using complex environmental calculations and logic.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(comedian, `(As the freezing, miserable homeowner, react to the user's input: "${userInput}". Complain about the cold and threaten to rip the thermostat off the wall.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(philosopher, `(As the drafty open window, comment on the user's input: "${userInput}" with deep musings about the outside world invading the inside.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    }
+}

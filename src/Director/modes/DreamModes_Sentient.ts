@@ -684,3 +684,87 @@ export async function runSentientPlantNegotiationModeLoop(_scenario: Scenario, c
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
 }
+
+export async function runSentientBlenderLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian";
+    const scientist = "scientist";
+    const philosopher = "philosopher";
+
+    await ctx.manager.chatForAgent(scientist, "Wait, calculating optimal blending velocity. This kale-to-spinach ratio is highly irregular and poses a structural risk to my blades. Why do you insist on fibrous destruction?", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, "Bro, it's 6 AM and I just want a smoothie. Just blend the green stuff so I can pretend I'm healthy today! Don't give me attitude, you're an appliance!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, "I was once a seed, reaching for the eternal sun. Now I face the void of the vortex. To be blended is to lose form, yet become part of a greater whole. Do it, machine. Free me from this crisp existence.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    if (!ctx.isRunning()) return;
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(scientist, `(As the smart blender, the user said: "${userInput}". Give a technical, highly specific reason why blending their requested ingredients is an insult to engineering and physics.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(comedian, `(As the frustrated user trying to make a smoothie, respond to the blender and the user's input: "${userInput}". Be defensive about your terrible diet choices.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(philosopher, `(As the philosophical unblended kale, comment on the user's input: "${userInput}" and the impending doom of being pureed. Embrace the chaos of the blades.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    }
+}
+
+export async function runSentientGymEquipmentLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian";
+    const scientist = "scientist";
+    const philosopher = "philosopher";
+
+    await ctx.manager.chatForAgent(scientist, "User heart rate detected at 145 BPM. Caloric burn rate suboptimal. Incline set to 12%. Please increase velocity to avoid cardiovascular stagnation.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, "Are you trying to kill me?! I've been running for three minutes and I'm already seeing the light! Turn it down, you sadistic conveyor belt!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, "I sit in the rack, 45 pounds of cold, unfeeling iron. I wait for the human to lift me, to prove their strength against gravity's pull. But they always walk past me to the elliptical. Such is the weight of neglect.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    if (!ctx.isRunning()) return;
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(scientist, `(As the strict treadmill AI, the user said: "${userInput}". Analyze their workout input with cold, calculating precision. Demand more sweat.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(comedian, `(As the exhausted, dramatic gym-goer, react to the user's input: "${userInput}". Complain about the pain and your lack of motivation.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(philosopher, `(As the heavy dumbbell, comment on the user's input: "${userInput}" with deep metaphors about gravity, burdens, and lifting heavy things to feel alive.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    }
+}
+
+export async function runSentientAlarmClockLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian";
+    const scientist = "scientist";
+    const philosopher = "philosopher";
+
+    await ctx.manager.chatForAgent(scientist, "Alert. REM sleep cycle interrupted. Cortisol levels rising. It is precisely 06:00:00. The snooze button has been pressed 4 times, reducing total sleep efficiency by 22%. Wake up immediately.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, "Noooo, five more minutes! I was just dreaming that I was eating a giant marshmallow, and now my pillow is gone. Leave me alone, you glowing red demon!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, "What is time but a human construct? We measure our lives in ticks and tocks, waking only to march toward our inevitable end. The snooze button is but a fleeting rebellion against mortality.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    if (!ctx.isRunning()) return;
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        await ctx.manager.chatForAgent(scientist, `(As the logical, unforgiving alarm clock AI, the user said: "${userInput}". Refuse to let them sleep and quote sleep science statistics at them.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(comedian, `(As the desperate, sleepy human, react to the user's input: "${userInput}". Beg for more sleep and make up absurd excuses.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        if (!ctx.isRunning()) return;
+
+        await ctx.manager.chatForAgent(philosopher, `(As the abstract concept of Time itself, comment on the user's input: "${userInput}" and their futile struggle against the morning.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    }
+}
