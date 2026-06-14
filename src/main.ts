@@ -605,6 +605,10 @@ async function initApp() {
     }
 
     const stage = new Stage(canvas, gl as WebGLRenderingContext)
+    window.addEventListener('audienceReaction', (e: any) => {
+        stage.triggerAudienceReaction(e.detail.reaction);
+    });
+
     const lipSync = new LipSync(speechQueue.getAudioContext())
 
     // Wire up Audio -> Visuals
@@ -1424,6 +1428,7 @@ async function initApp() {
     setInputsEnabled(false)
   }
 }
+
 
 initApp()
 

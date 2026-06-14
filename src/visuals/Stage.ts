@@ -10,6 +10,10 @@ export class Stage {
     private actors: Map<string, Actor> = new Map();
     private activeActorId: string | null = null;
     private lipSync: LipSync | null = null;
+    private crowd: THREE.Group | null = null;
+    private crowdMembers: { mesh: THREE.Mesh, basePos: THREE.Vector3, phase: number, speed: number }[] = [];
+    private audienceReactionState: 'neutral' | 'cheer' | 'groan' = 'neutral';
+    private crowdLight: THREE.PointLight | null = null;
 
     constructor(canvas: HTMLCanvasElement, context?: WebGLRenderingContext) {
         this.scene = new THREE.Scene();
@@ -25,6 +29,7 @@ export class Stage {
         this.setupLights();
         this.setupGround();
         this.initActors();
+        this.setupAudience();
 
         window.addEventListener('resize', () => this.onWindowResize());
     }
@@ -132,6 +137,68 @@ export class Stage {
         this.addActor('scientist', scientist);
     }
 
+
+    private setupAudience() {
+        this.crowd = new THREE.Group();
+        this.scene.add(this.crowd);
+
+        // A light that shines on the crowd
+        this.crowdLight = new THREE.PointLight(0x5555ff, 0.2, 20);
+        this.crowdLight.position.set(0, 5, 8);
+        this.scene.add(this.crowdLight);
+
+        const crowdColors = [0xff6b6b, 0x4ecdc4, 0x45b7d1, 0xffd700, 0x8e44ad, 0x2ecc71];
+        const numMembers = 40;
+
+        for (let i = 0; i < numMembers; i++) {
+            // Randomize position in the "stands" in the foreground
+            const x = (Math.random() - 0.5) * 18;
+            const z = 6 + Math.random() * 4;
+            const y = (z - 6) * 0.5 + 0.5; // Slight stadium seating rise
+
+            const geo = new THREE.SphereGeometry(0.3, 8, 8);
+            const mat = new THREE.MeshStandardMaterial({
+                color: crowdColors[Math.floor(Math.random() * crowdColors.length)],
+                roughness: 0.8
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+
+            const basePos = new THREE.Vector3(x, y, z);
+            mesh.position.copy(basePos);
+
+            this.crowd.add(mesh);
+            this.crowdMembers.push({
+                mesh,
+                basePos,
+                phase: Math.random() * Math.PI * 2,
+                speed: 1 + Math.random() * 2
+            });
+        }
+    }
+
+    public triggerAudienceReaction(reaction: 'cheer' | 'groan' | 'neutral') {
+        this.audienceReactionState = reaction;
+        if (this.crowdLight) {
+            if (reaction === 'cheer') {
+                this.crowdLight.color = new THREE.Color(0xffd700);
+                this.crowdLight.intensity = 1.0;
+            } else if (reaction === 'groan') {
+                this.crowdLight.color = new THREE.Color(0xff0000);
+                this.crowdLight.intensity = 0.5;
+            } else {
+                this.crowdLight.color = new THREE.Color(0x5555ff);
+                this.crowdLight.intensity = 0.2;
+            }
+        }
+
+        // Reset back to neutral after a few seconds
+        if (reaction !== 'neutral') {
+            setTimeout(() => {
+                this.triggerAudienceReaction('neutral');
+            }, 3000);
+        }
+    }
+
     private addActor(id: string, actor: Actor) {
         this.actors.set(id, actor);
         this.scene.add(actor.group);
@@ -168,6 +235,18 @@ export class Stage {
         }
 
         // Idle animation for others?
+
+        // Update audience
+        const time = Date.now() * 0.001;
+        const bounceHeight = this.audienceReactionState === 'cheer' ? 0.5 : (this.audienceReactionState === 'groan' ? 0.05 : 0.1);
+        const speedMult = this.audienceReactionState === 'cheer' ? 3 : (this.audienceReactionState === 'groan' ? 0.5 : 1);
+
+        this.crowdMembers.forEach(member => {
+            // Bob up and down
+            const yOffset = Math.sin(time * member.speed * speedMult + member.phase) * bounceHeight;
+            member.mesh.position.y = member.basePos.y + Math.abs(yOffset);
+        });
+
 
         this.renderer.render(this.scene, this.camera);
     }

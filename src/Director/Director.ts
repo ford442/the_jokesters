@@ -189,7 +189,7 @@ const {
   runLostDeliveryDriversLoop,
 } = DreamModesIndex as any;
 
-import { runRoastLoop, runEnhancedRoastLoop, runHecklerInteractionLoop, runStoryLoop, runCollaborativeStoryLoop, runDebateLoop, runMusicalLoop, runMusicalImprovSessionLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop } from './modes/PerformanceMode';
+import { runRoastLoop, runEnhancedRoastLoop, runHecklerInteractionLoop, runStoryLoop, runCollaborativeStoryLoop, runDebateLoop, runMusicalLoop, runMusicalImprovSessionLoop, runPodcastLoop, runScriptLoop, runDreamLoop, runHistoricalLoop, runStandupLoop, runAudienceInteractionLoop } from './modes/PerformanceMode';
 // Expanded Reality modes - split by category for better maintainability
 // Import from the unified index which re-exports all categories
 export * from './modes/ExpandedRealityModes_index';
@@ -463,6 +463,7 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     interrogation: runInterrogationLoop,
     browser_history_interrogation: runBrowserHistoryInterrogationLoop,
     sports_commentator: runSportsCommentatorLoop,
+    audience_interaction: runAudienceInteractionLoop,
     dating_profile_review: runDatingAppProfileReviewLoop,
     armchair_detectives: runArmchairDetectivesLoop,
     museum_tour: runMuseumTourLoop,
