@@ -11,6 +11,12 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'audience_interaction',
+        title: 'Audience Interaction',
+        description: 'Agents perform standup and crowd work. You are the audience!',
+    },
+
+    {
         id: 'historical_figures_escape_room',
         title: '⏳ Historical Figures Escape Room',
         description: 'Abe Lincoln, Marie Curie, and Julius Caesar try to solve a modern escape room.',

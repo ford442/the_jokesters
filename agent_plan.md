@@ -1,9 +1,10 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 6
+tasks_per_run: 1
 
 ### Phase 1: Implementation
+- [x] Implement Audience Interaction Mode (Crowd Work)
 - [x] Implement AI Existential Crisis Mode in DreamModes_Tech.ts
 - [x] Implement Sentient Plant Negotiation Mode in DreamModes_Sentient.ts
 - [x] Implement Historical Figures Escape Room Mode in DreamModes_Temporal.ts
@@ -230,3 +231,13 @@ tasks_per_run: 6
 - [x] Authenticate with the HF API. (Tokens via `/whoami-v2`).
 - [x] Push finished "Episode Scripts" to a private Dataset via Background Web Worker.
 - [x] Fetch "Previous Episode Summaries" at boot for continuity.
+
+## New Ideas (Dream Phase)
+- **NEW IDEA:** "Chain Reaction Mode" — One agent's joke triggers visual + prompt chain reactions across the whole stage and other agents (explosive comedy escalation).
+- **NEW IDEA:** "Multi-Modal Input Expansion" — Improve Voice Input with real-time interruption support + camera-based emotion detection to influence agent reactions.
+- **NEW IDEA:** "Audience Heckler Mode" — An agent takes the role of a heckler in the audience and interrupts the current performing agent to cause chaos. Model pairing: Use Hermes-3 for the unfiltered heckler.
+- **NEW IDEA:** "Visual Stage Destruction" — In high-chaos modes (Roast, Meltdown), let the stage physically react with falling props, lighting malfunctions, and background changes synced to jokes.
+
+## Storage Manager Integration Next Steps
+- **NEW IDEA:** Implement dynamic chunking of `Episode Script` based on total token count to optimize Hugging Face rate limits.
+- **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.

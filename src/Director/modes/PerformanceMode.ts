@@ -532,3 +532,51 @@ export async function runSportsCommentatorLoop(scenario: Scenario, ctx: ModeCont
         }
     }
 }
+
+
+export async function runAudienceInteractionLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎭 AUDIENCE INTERACTION: Crowd Work Mode`, '#f39c12');
+
+    const comedian = 'comedian';
+    const philosopher = 'philosopher';
+    const scientist = 'scientist';
+
+    // Intro
+    ctx.callbacks.onTurnStart(comedian);
+    await ctx.manager.chatForAgent(comedian, `(CROWD WORK: You are on stage doing a live improv show. Hype up the crowd and ask for a suggestion from the audience!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('Audience Member (You)', userInput, '#ffffff');
+
+        // Simple sentiment check (mock) to trigger stage visuals
+        const lowerInput = userInput.toLowerCase();
+        let sentiment: 'cheer' | 'groan' | 'neutral' = 'neutral';
+        if (lowerInput.includes('boo') || lowerInput.includes('terrible') || lowerInput.includes('sucks')) {
+            sentiment = 'groan';
+        } else if (lowerInput.includes('yay') || lowerInput.includes('haha') || lowerInput.includes('love') || lowerInput.includes('woo')) {
+            sentiment = 'cheer';
+        }
+
+        // Trigger the visual reaction on the stage (if the window has the stage global exposed, or just log it to be picked up by main.ts)
+        // Since Stage is managed by main.ts, we dispatch an event
+        window.dispatchEvent(new CustomEvent('audienceReaction', { detail: { reaction: sentiment } }));
+
+        if (sentiment === 'groan') {
+            await ctx.manager.chatForAgent(comedian, `(CROWD WORK: The audience member just heckled you or groaned: "${userInput}". Roast them back or try to win them over!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+            if (Math.random() > 0.5 && ctx.isRunning()) {
+                await ctx.manager.chatForAgent(philosopher, `(CROWD WORK: React to the audience's groan and the comedian's response.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+            }
+        } else if (sentiment === 'cheer') {
+            await ctx.manager.chatForAgent(scientist, `(CROWD WORK: The audience member cheered: "${userInput}". Give a socially awkward, highly analytical response to their excitement.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        } else {
+            // Neutral / suggestion
+            await ctx.manager.chatForAgent(comedian, `(CROWD WORK: The audience yelled out: "${userInput}". Use this as a prompt to start a funny bit.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+            if (!ctx.isRunning()) break;
+            await ctx.manager.chatForAgent(philosopher, `(CROWD WORK: Yes-and the comedian's bit based on "${userInput}" with something overly deep and absurd.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        }
+    }
+}
