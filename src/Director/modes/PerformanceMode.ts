@@ -580,3 +580,35 @@ export async function runAudienceInteractionLoop(_scenario: Scenario, ctx: ModeC
         }
     }
 }
+
+export async function runRoastBattleLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian"; // Hermes-3
+    const philosopher = "philosopher"; // Phi-3
+    const scientist = "scientist"; // Qwen2.5
+
+    ctx.callbacks.onMessage('Director', '🔥 ROAST BATTLE INITIATED! Step up to the mic. Type a target or a roast to begin! 🔥', '#ff4500');
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('Human (You)', userInput, '#ffffff');
+
+        // Comedian roasts
+        ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(ROAST BATTLE: The user said: "${userInput}". Deliver an absolutely brutal, unfiltered, hilarious roast targeting the user or another agent.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Philosopher roasts
+        ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(ROAST BATTLE: The user said: "${userInput}". Deliver a devastating, deep existential roast that attacks their soul, purpose, or intelligence.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Scientist roasts
+        ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(ROAST BATTLE: The user said: "${userInput}". Deliver a coldly logical, highly factual, scientifically accurate roast that mathematically proves they are a failure.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

@@ -11,6 +11,12 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'roast_battle',
+        title: 'Roast Battle Mode',
+        description: 'An intense mode where agents take turns creatively insulting each other or the user.',
+    },
+
+    {
         id: 'audience_interaction',
         title: 'Audience Interaction',
         description: 'Agents perform standup and crowd work. You are the audience!',

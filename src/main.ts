@@ -1485,6 +1485,13 @@ setInterval(updateSyncUI, 2000);
 window.addEventListener('syncStatusUpdated', updateSyncUI);
 
 
+window.addEventListener('offline', () => {
+    console.log("App is offline, sync will resume when online.");
+    if ((window as any).getMemoryManager) {
+        // You can add logic here if needed when going offline, like pausing timers
+    }
+});
+
 window.addEventListener('online', () => {
     console.log("App is back online, triggering MemoryManager sync retry...");
     if ((window as any).getMemoryManager) {

@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 1
+tasks_per_run: 2
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -241,3 +241,8 @@ tasks_per_run: 1
 ## Storage Manager Integration Next Steps
 - **NEW IDEA:** Implement dynamic chunking of `Episode Script` based on total token count to optimize Hugging Face rate limits.
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
+
+## New Ideas (Dream Phase)
+- [x] "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** Cloud Persistence: Store generated scripts to HF Dataset via background web worker to bypass localStorage limits.
+- **NEW IDEA:** Cloud Persistence: Fetch previous episode summaries from HF to instantly prime the `GroupChatManager` context window for continuity.
