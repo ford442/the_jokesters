@@ -300,14 +300,15 @@ VPS_VICUNA_7B_CTX512: {
 ### 9.5 CI / Reproducibility
 
 - `.github/workflows/build-vicuna-wasm.yml` is a manually-triggered workflow that installs the heavy build environment and runs `build-vicuna-wasm.sh`
-- For faster iteration, the script can be run inside a Docker image with mlc-llm + emsdk pre-installed, or on Google Colab (see `public/Github_ConvertVicuna.ipynb`)
+- For faster iteration, the script can be run inside a Docker image with mlc-llm + emsdk pre-installed, or on Google Colab (see `public/Jokesters_WebLLM_Compile.ipynb`)
 - The `.wasm` output is tiny (~3–6 MB) and is uploaded as a GitHub Actions artifact, then to the VPS
 
 ### 9.6 References
 
 - Build script: `scripts/build-vicuna-wasm.sh`
 - CI workflow: `.github/workflows/build-vicuna-wasm.yml`
-- Interactive/Colab path: `public/Github_ConvertVicuna.ipynb`
+- **Primary Colab notebook:** `public/Jokesters_WebLLM_Compile.ipynb` (full pipeline: convert, gen_config, compile, package, test)
+- Legacy Vicuna notebook: `public/Github_ConvertVicuna.ipynb` (deprecated — redirects to the notebook above)
 - VRAM docs: `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4
 - Model loading docs: `docs/MODEL_LOADING.md` §1D
 

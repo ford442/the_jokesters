@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jokesters — Custom WebLLM Model Smoke Test</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --accent: #ff6b6b;
+      --accent2: #4ecdc4;
+      --text: #e8eef7;
+      --muted: #8b9cb3;
+      --border: #2d3a4d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: radial-gradient(ellipse at top, #1a2740 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); margin-bottom: 20px; }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+    input, textarea {
+      width: 100%;
+      background: #0d1218;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+    }
+    textarea { min-height: 72px; resize: vertical; font-family: inherit; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 700px) { .row { grid-template-columns: 1fr; } }
+    button {
+      background: linear-gradient(135deg, var(--accent), #e05555);
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    #status {
+      padding: 12px;
+      border-radius: 8px;
+      background: #0d1218;
+      border-left: 4px solid var(--accent2);
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    #status.error { border-left-color: var(--accent); }
+    #log {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      white-space: pre-wrap;
+      max-height: 220px;
+      overflow-y: auto;
+      background: #0d1218;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      color: #b8c7da;
+    }
+    #chat {
+      min-height: 200px;
+      max-height: 360px;
+      overflow-y: auto;
+    }
+    .msg { margin: 10px 0; padding: 10px 12px; border-radius: 8px; line-height: 1.45; }
+    .msg.user { background: #1e3350; border-left: 3px solid #64b5f6; }
+    .msg.assistant { background: #1a2e28; border-left: 3px solid var(--accent2); }
+    .msg.system { background: #2a2418; border-left: 3px solid #ffb74d; color: #f0d9a8; }
+    .hint { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+    code { background: #0d1218; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🎭 Jokesters — Custom WebLLM Smoke Test</h1>
+    <p class="subtitle">
+      Verify a custom-compiled <code>model_lib</code> + weights + <code>mlc-chat-config.json</code>
+      before wiring them into <code>src/config/models.ts</code>.
+      Use Chrome 113+ with WebGPU enabled.
+    </p>
+
+    <div class="panel">
+      <div class="row">
+        <div>
+          <label for="modelId">model_id (AppConfig key)</label>
+          <input id="modelId" value="jokesters-custom-model" />
+        </div>
+        <div>
+          <label for="vramMb">vram_required_MB (informational)</label>
+          <input id="vramMb" type="number" value="4000" />
+        </div>
+      </div>
+      <label for="modelUrl">model URL (weights folder, trailing slash)</label>
+      <input id="modelUrl" placeholder="https://storage.1ink.us/models/my-model/ or HF resolve/main/" />
+      <label for="modelLibUrl">model_lib URL (.wasm)</label>
+      <input id="modelLibUrl" placeholder="https://storage.1ink.us/models/wasm-libs/my-model-ctx1024-webgpu.wasm" />
+      <label for="overridesJson">overrides JSON (optional — must match compile-time context)</label>
+      <textarea id="overridesJson">{
+  "context_window_size": 1024,
+  "prefill_chunk_size": 512,
+  "sliding_window_size": 256
+}</textarea>
+      <button id="loadBtn">Load Model</button>
+      <button id="resetBtn" class="secondary">Reset</button>
+      <p class="hint">
+        Tip: serve this file over HTTP (<code>npm run preview</code> or <code>python -m http.server</code>).
+        Opening via <code>file://</code> may block model fetches.
+      </p>
+    </div>
+
+    <div id="status">⏳ Configure URLs above, then click <strong>Load Model</strong>.</div>
+
+    <div class="panel">
+      <label for="prompt">Test prompt</label>
+      <textarea id="prompt">The Comedian, Philosopher, and Scientist walk into a browser tab. The Comedian says:</textarea>
+      <button id="sendBtn" disabled>Generate</button>
+      <div id="chat"></div>
+    </div>
+
+    <div class="panel">
+      <strong>Diagnostics</strong>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $("status");
+    const logEl = $("log");
+    const chatEl = $("chat");
+    let engine = null;
+
+    function log(line) {
+      const ts = new Date().toISOString().slice(11, 19);
+      logEl.textContent += `[${ts}] ${line}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function addMsg(role, text) {
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+      div.textContent = text;
+      chatEl.appendChild(div);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function parseOverrides() {
+      const raw = $("overridesJson").value.trim();
+      if (!raw) return {};
+      try {
+        return JSON.parse(raw);
+      } catch (e) {
+        throw new Error(`Invalid overrides JSON: ${e.message}`);
+      }
+    }
+
+    function readConfigFromQuery() {
+      const p = new URLSearchParams(location.search);
+      if (p.get("model")) $("modelUrl").value = p.get("model");
+      if (p.get("lib")) $("modelLibUrl").value = p.get("lib");
+      if (p.get("id")) $("modelId").value = p.get("id");
+    }
+
+    async function loadModel() {
+      $("loadBtn").disabled = true;
+      $("sendBtn").disabled = true;
+      chatEl.innerHTML = "";
+      logEl.textContent = "";
+      engine = null;
+
+      try {
+        if (!navigator.gpu) {
+          throw new Error("WebGPU not available. Use Chrome 113+ with hardware acceleration.");
+        }
+
+        const modelId = $("modelId").value.trim();
+        const model = $("modelUrl").value.trim();
+        const model_lib = $("modelLibUrl").value.trim();
+        const vram_required_MB = Number($("vramMb").value) || 4000;
+        const overrides = parseOverrides();
+
+        if (!modelId || !model || !model_lib) {
+          throw new Error("model_id, model URL, and model_lib URL are required.");
+        }
+
+        setStatus("🔧 Initializing WebLLM engine…");
+        log(`model_id=${modelId}`);
+        log(`model=${model}`);
+        log(`model_lib=${model_lib}`);
+        log(`overrides=${JSON.stringify(overrides)}`);
+
+        const record = {
+          model_id: modelId,
+          model,
+          model_lib,
+          vram_required_MB,
+          overrides,
+        };
+
+        const t0 = performance.now();
+        engine = await webllm.CreateMLCEngine(
+          modelId,
+          {
+            initProgressCallback: (report) => {
+              const pct = report.progress != null ? ` (${Math.round(report.progress * 100)}%)` : "";
+              setStatus(`⏳ ${report.text}${pct}`);
+              if (report.text) log(report.text);
+            },
+            appConfig: { model_list: [record] },
+          },
+          overrides,
+        );
+
+        const loadMs = Math.round(performance.now() - t0);
+        setStatus(`✅ Model loaded in ${loadMs} ms. Ready to generate.`);
+        log(`Load complete in ${loadMs} ms`);
+        $("sendBtn").disabled = false;
+        addMsg("system", "Model loaded. The avatars would be lip-syncing by now.");
+      } catch (err) {
+        const msg = err?.message || String(err);
+        setStatus(`❌ ${msg}`, true);
+        log(`ERROR: ${msg}`);
+        console.error(err);
+      } finally {
+        $("loadBtn").disabled = false;
+      }
+    }
+
+    async function generate() {
+      if (!engine) return;
+      const prompt = $("prompt").value.trim();
+      if (!prompt) return;
+
+      $("sendBtn").disabled = true;
+      addMsg("user", prompt);
+      setStatus("🤖 Generating…");
+
+      try {
+        const t0 = performance.now();
+        let firstTokenMs = null;
+        let out = "";
+
+        const stream = await engine.chat.completions.create({
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.8,
+          max_tokens: 128,
+          stream: true,
+        });
+
+        const assistantDiv = document.createElement("div");
+        assistantDiv.className = "msg assistant";
+        chatEl.appendChild(assistantDiv);
+
+        for await (const chunk of stream) {
+          const delta = chunk.choices?.[0]?.delta?.content;
+          if (delta) {
+            if (firstTokenMs == null) firstTokenMs = Math.round(performance.now() - t0);
+            out += delta;
+            assistantDiv.textContent = out;
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+        }
+
+        const totalMs = Math.round(performance.now() - t0);
+        const tokEstimate = out.split(/\s+/).filter(Boolean).length;
+        const tps = totalMs > 0 ? (tokEstimate / (totalMs / 1000)).toFixed(1) : "?";
+
+        setStatus(`✅ Done — ~${tokEstimate} words in ${totalMs} ms (TTFT ${firstTokenMs ?? "?"} ms, ~${tps} w/s)`);
+        log(`TTFT=${firstTokenMs}ms total=${totalMs}ms chars=${out.length}`);
+      } catch (err) {
+        const msg = err?.message || String(err);
+        setStatus(`❌ ${msg}`, true);
+        log(`ERROR: ${msg}`);
+        addMsg("system", msg);
+      } finally {
+        $("sendBtn").disabled = false;
+      }
+    }
+
+    $("loadBtn").addEventListener("click", loadModel);
+    $("sendBtn").addEventListener("click", generate);
+    $("resetBtn").addEventListener("click", () => location.reload());
+    readConfigFromQuery();
+  </script>
+</body>
+</html>

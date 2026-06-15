@@ -31,7 +31,7 @@
 #     mlcaicommunity/mlc-llm-ci:latest \
 #     /workspace/scripts/build-vicuna-wasm.sh
 #
-#   # Option B: Run on Google Colab (see public/Github_ConvertVicuna.ipynb)
+#   # Option B: Run on Google Colab (see public/Jokesters_WebLLM_Compile.ipynb)
 #   # The notebook is the source of truth for the manual/Colab path.
 #
 #   # Option C: Run locally if you have the full MLC build env
