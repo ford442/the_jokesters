@@ -1,3 +1,10 @@
+/// <reference lib="webworker" />
+// Inject manifest from vite-plugin-pwa
+import { precacheAndRoute } from 'workbox-precaching';
+
+// @ts-ignore
+precacheAndRoute(self.__WB_MANIFEST || []);
+
 /**
  * Service Worker for Parallel Model Downloads
  *

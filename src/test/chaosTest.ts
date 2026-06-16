@@ -366,7 +366,7 @@ export class CallbackEngineChaosTester {
       try {
         // Try to register with malformed context
         this.engine.registerJoke(jokeId, ['test'], input);
-        this.engine.getCallbackMetrics(jokeId); // Verify metrics available
+        const _metrics = this.engine.getCallbackMetrics(jokeId); // Verify metrics available
         
         return {
           passed: true,
@@ -396,7 +396,7 @@ export class CallbackEngineChaosTester {
       this.engine.recordCallback(jokeId);
       
       // Get metrics
-      this.engine.getCallbackMetrics(jokeId); // Verify metrics retrieval works
+      const metrics = this.engine.getCallbackMetrics(jokeId); // Verify metrics retrieval works
       
       // Check if we can retrieve themes
       const themes = this.engine.getAllThemes();
