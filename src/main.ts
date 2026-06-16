@@ -1,3 +1,4 @@
+import { registerSW } from 'virtual:pwa-register';
 import './style.css'
 import { GroupChatManager, type ErrorCategory } from './GroupChatManager'
 import type { Agent, ProfanityLevel } from './GroupChatManager'
@@ -61,15 +62,18 @@ const agents: Agent[] = [
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
-  // Register service worker for parallel model downloads (optional optimization)
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register('./service-worker.js')
-      console.log('[ServiceWorker] Registered for parallel downloads:', registration)
-    } catch (error) {
-      console.warn('[ServiceWorker] Registration failed (non-critical):', error)
-      // Service worker is optional - continue without it
-    }
+  // Register service worker for parallel model downloads and PWA offline support
+  try {
+    registerSW({
+      onNeedRefresh() {
+        console.log('[ServiceWorker] New content available, please refresh.');
+      },
+      onOfflineReady() {
+        console.log('[ServiceWorker] App is ready for offline use.');
+      },
+    });
+  } catch (error) {
+    console.warn('[ServiceWorker] Registration failed (non-critical):', error)
   }
 
   // Configuration constants for prerendering
