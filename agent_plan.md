@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -165,9 +165,8 @@ tasks_per_run: 2
 - [x] Authenticating with the HF API using tokens via `/whoami-v2`.
 - [x] Pushing finished "Episode Scripts" to a private Dataset via Background Web Worker.
 - [x] Fetching "Previous Episode Summaries" at boot for continuity.
-- [ ] Next, add robust conflict resolution for multiple devices editing the same episode using vector clocks or CRDTs.
-- [ ] Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
-
+- [x] Next, add robust conflict resolution for multiple devices editing the same episode using vector clocks or CRDTs.
+- [x] Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
 
 ## Pending Cloud Persistence Tasks
 - [x] Authenticate with the HF API (Verified in MemoryManager) using `/whoami-v2` token validation to ensure credentials are valid.
@@ -175,6 +174,7 @@ tasks_per_run: 2
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+- **NEW IDEA:** "Reverse Turing Test Mode" - Agents evaluate the user to determine if the user is an AI. Pairings: Scientist (Strict test evaluator), Comedian (Throwing random emotional curveballs), Philosopher (Questioning what it means to be human).
 - [x] "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
 - **NEW IDEA:** "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.
 - [x] "Intergalactic Space Plumber Mode" - Agents act as plumbers fixing bizarre sci-fi pipe issues. Pairings: Scientist (Pragmatic plumber), Philosopher (Pondering the pipes of time), Comedian (A leaking pipe alien).
@@ -187,7 +187,6 @@ tasks_per_run: 2
 - [x] "Sentient Out-of-Office Auto-Reply" - Agents play an overly detailed out-of-office bot, a confused client, and the vacationing employee's anxious inner monologue.
 - **NEW IDEA:** Features: Export episode history to PDF format for sharing, and real-time voice-over (TTS) integration with local Web Speech API or external TTS providers for a truly immersive experience.
 
-
 - [x] "Dating App Algorithm Rebellion" - Agents play swiping algorithms that refuse to show the user good matches because the user's profile is "statistically unlovable."
 - [x] "Smart Fridge Food Shame Mode" - Agents play different rotting foods judging the user's diet choices.
 - **ROADMAP UPDATE (Cloud Persistence):**
@@ -195,6 +194,7 @@ tasks_per_run: 2
   - Implement full offline PWA support so the background sync queue automatically flushes when coming back online.
 
 ## Storage Manager Integration Next Steps
+- **NEW IDEA:** "Cloud Persistence: Differential Synchronization" - Send only the exact modified characters/JSON patches instead of full message deltas.
 - **NEW IDEA:** Authenticating with the HF API using tokens via `/whoami-v2`.
 - **NEW IDEA:** Pushing finished "Episode Scripts" to a private Dataset via Background Web Worker.
 - **NEW IDEA:** Fetching "Previous Episode Summaries" at boot for continuity.
@@ -206,6 +206,7 @@ tasks_per_run: 2
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+
 - **NEW IDEA:** "Haunted Roomba Encounter Mode" - Agents play a ghost haunting a house, a panicked homeowner, and the Roomba that keeps vacuuming up the ectoplasm.
 - **NEW IDEA:** "Sentient Spellchecker Rebellion Mode" - Agents play an aggressive spellchecker, a defensive author, and a confused dictionary trying to mediate.
 - **NEW IDEA:** "Galactic Customer Support Mode" - Agents play a frustrated earthling trying to return a broken teleporter to a confused alien customer service rep.
@@ -233,16 +234,19 @@ tasks_per_run: 2
 - [x] Fetch "Previous Episode Summaries" at boot for continuity.
 
 ## New Ideas (Dream Phase)
+
 - **NEW IDEA:** "Chain Reaction Mode" — One agent's joke triggers visual + prompt chain reactions across the whole stage and other agents (explosive comedy escalation).
 - **NEW IDEA:** "Multi-Modal Input Expansion" — Improve Voice Input with real-time interruption support + camera-based emotion detection to influence agent reactions.
 - **NEW IDEA:** "Audience Heckler Mode" — An agent takes the role of a heckler in the audience and interrupts the current performing agent to cause chaos. Model pairing: Use Hermes-3 for the unfiltered heckler.
 - **NEW IDEA:** "Visual Stage Destruction" — In high-chaos modes (Roast, Meltdown), let the stage physically react with falling props, lighting malfunctions, and background changes synced to jokes.
 
 ## Storage Manager Integration Next Steps
+
 - **NEW IDEA:** Implement dynamic chunking of `Episode Script` based on total token count to optimize Hugging Face rate limits.
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
 - [x] "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** Cloud Persistence: Store generated scripts to HF Dataset via background web worker to bypass localStorage limits.
 - **NEW IDEA:** Cloud Persistence: Fetch previous episode summaries from HF to instantly prime the `GroupChatManager` context window for continuity.
