@@ -62,18 +62,22 @@ const agents: Agent[] = [
 async function initApp() {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
-  // Register service worker for parallel model downloads and PWA offline support
-  try {
-    registerSW({
-      onNeedRefresh() {
-        console.log('[ServiceWorker] New content available, please refresh.');
-      },
-      onOfflineReady() {
-        console.log('[ServiceWorker] App is ready for offline use.');
-      },
-    });
-  } catch (error) {
-    console.warn('[ServiceWorker] Registration failed (non-critical):', error)
+  // Register service worker for parallel model downloads and PWA offline capability
+  if ('serviceWorker' in navigator) {
+    try {
+      registerSW({
+        onNeedRefresh() {
+          console.log('[ServiceWorker] New content available, please refresh.');
+        },
+        onOfflineReady() {
+          console.log('[ServiceWorker] App is ready for offline use.');
+        },
+      });
+      console.log('[ServiceWorker] Registered via virtual:pwa-register');
+    } catch (error) {
+      console.warn('[ServiceWorker] Registration failed (non-critical):', error);
+      // Service worker is optional - continue without it
+    }
   }
 
   // Configuration constants for prerendering

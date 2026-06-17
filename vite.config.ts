@@ -2,6 +2,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import compression from 'vite-plugin-compression2';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './',
@@ -76,12 +77,61 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
+      registerType: 'autoUpdate',
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'service-worker.ts',
       injectManifest: {
         injectionPoint: undefined // We'll inject manually or use it for SW generation
       }
+        globPatterns: ['**/*.{js,css,html,woff2,wasm,json}'],
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024 // 10 MB to allow some larger local json files
+      },
+      manifest: {
+        name: 'The Jokesters',
+        short_name: 'Jokesters',
+        description: 'AI-powered comedy improv with 3D avatars and real-time WebGPU inference',
+        theme_color: '#6b46c1',
+        background_color: '#0f0f23',
+        display: 'standalone',
+        orientation: 'any',
+        start_url: '/',
+        icons: [
+          { src: '/vite.svg', sizes: 'any', type: 'image/svg+xml' }
+        ]
+      },
+      workbox: {
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('webllm') ||
+                                     url.pathname.includes('.bin') ||
+                                     url.pathname.includes('.safetensors') ||
+                                     url.pathname.includes('models'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'webllm-models',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/tts/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tts-assets',
+              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
+      },
+      devOptions: {
+        enabled: true,
+      },
     }),
     viteStaticCopy({
       targets: [

@@ -8,6 +8,7 @@ export class MemoryManager {
     private syncWorker: Worker | null = null;
     private isSyncing: boolean = false;
     private currentProfile: string = 'default';
+    private clientId: string;
     private syncStatusCallback: ((status: string) => void) | null = null;
 
     // IndexedDB Helpers
@@ -108,6 +109,12 @@ export class MemoryManager {
 
     constructor() {
         this.hfStorage = new HFStorageManager();
+        let storedId = localStorage.getItem(this.prefix + 'client-id');
+        if (!storedId) {
+            storedId = Math.random().toString(36).substring(2, 15);
+            localStorage.setItem(this.prefix + 'client-id', storedId);
+        }
+        this.clientId = storedId;
         this.loadProfileFromStorage();
         if (typeof Worker !== 'undefined') {
             this.syncWorker = new Worker(new URL('../workers/hfSync.worker.ts', import.meta.url), { type: 'module' });
@@ -236,7 +243,9 @@ export class MemoryManager {
     }
 
     public saveEpisode(episodeId: string, data: any): void {
-        // Always update timestamp on save for Last-Writer-Wins
+        // Update vector clock and timestamp
+        if (!data.vectorClock) data.vectorClock = {};
+        data.vectorClock[this.clientId] = (data.vectorClock[this.clientId] || 0) + 1;
         data.updatedAt = Date.now();
         data.timestamp = Date.now();
         this.save(`episode-${episodeId}`, data);
@@ -446,33 +455,62 @@ export class MemoryManager {
                                 await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
                         } else {
-                            // Conflict resolution: Last-Writer-Wins (LWW) based on timestamp, fallback to length
+                            // Conflict resolution: Vector Clocks, fallback to Last-Writer-Wins (LWW)
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
-                                const cloudTimestamp = cloudData.timestamp || 0;
-                                const localTimestamp = localData.timestamp || 0;
+                                const cloudClock = cloudData.vectorClock || {};
+                                const localClock = localData.vectorClock || {};
 
-                                if (cloudTimestamp > localTimestamp) {
-                                    console.log(`Conflict resolved: Cloud version of ${filename} is newer. Updating local data...`);
+                                // Check if cloud dominates local
+                                let cloudDominates = false;
+                                let localDominates = false;
+
+                                const allKeys = new Set([...Object.keys(cloudClock), ...Object.keys(localClock)]);
+                                for (const key of allKeys) {
+                                    const c = cloudClock[key] || 0;
+                                    const l = localClock[key] || 0;
+                                    if (c > l) cloudDominates = true;
+                                    if (l > c) localDominates = true;
+                                }
+
+                                if (cloudDominates && !localDominates) {
+                                    console.log(`Conflict resolved (Vector Clock): Cloud version of ${filename} is newer. Updating local data...`);
                                     this.save(`episode-${episodeId}`, cloudData);
                                     await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                } else if (localTimestamp > cloudTimestamp) {
-                                    console.log(`Conflict resolved: Local version of ${filename} is newer. Queuing cloud update...`);
-const cloudTime = new Date(cloudData.timestamp || 0).getTime();
-const localTime = new Date(localData.timestamp || 0).getTime();
+                                } else if (localDominates && !cloudDominates) {
+                                    console.log(`Conflict resolved (Vector Clock): Local version of ${filename} is newer. Queuing cloud update...`);
+                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+                                } else if (cloudDominates && localDominates) {
+                                    // Concurrent changes - Merge histories based on timestamps
+                                    console.log(`Conflict resolved (Vector Clock): Concurrent changes detected for ${filename}. Merging...`);
+                                    const mergedHistory = [...cloudData.history, ...localData.history];
 
-if (cloudData.history.length > localData.history.length || 
-    (cloudData.history.length === localData.history.length && cloudTime > localTime)) {
-    console.log(`Cloud version of ${filename} is newer. Updating local data...`);
-    this.save(`episode-${episodeId}`, cloudData);
-    await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-} else if (localData.history.length > cloudData.history.length || 
-           (localData.history.length === cloudData.history.length && localTime > cloudTime)) {
-    console.log(`Local version of ${filename} is newer. Queuing cloud update...`);
-    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-} else {
-    console.log(`${filename} is up to date.`);
-}
+                                    // Remove duplicates
+                                    const uniqueHistory = [];
+                                    const seen = new Set();
+                                    for (const msg of mergedHistory) {
+                                        const key = msg.role + ':' + msg.content;
+                                        if (!seen.has(key)) {
+                                            seen.add(key);
+                                            uniqueHistory.push(msg);
+                                        }
+                                    }
+
+                                    localData.history = uniqueHistory;
+
+                                    // Merge vector clocks by taking max
+                                    for (const key of allKeys) {
+                                        localData.vectorClock[key] = Math.max(cloudClock[key] || 0, localClock[key] || 0);
+                                    }
+                                    localData.vectorClock[this.clientId] = (localData.vectorClock[this.clientId] || 0) + 1;
+                                    localData.updatedAt = Date.now();
+                                    localData.timestamp = Date.now();
+
+                                    this.save(`episode-${episodeId}`, localData);
+                                    await this.idbSet(`episode-${episodeId}`, localData).catch(e => console.error(e));
+                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+                                } else {
+                                    console.log(`${filename} is up to date.`);
                                 }
                             }
                         }
