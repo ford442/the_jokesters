@@ -1,3 +1,4 @@
+import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import compression from 'vite-plugin-compression2';
@@ -81,6 +82,8 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'service-worker.ts',
       injectManifest: {
+        injectionPoint: undefined // We'll inject manually or use it for SW generation
+      }
         globPatterns: ['**/*.{js,css,html,woff2,wasm,json}'],
         maximumFileSizeToCacheInBytes: 50 * 1024 * 1024 // 10 MB to allow some larger local json files
       },
