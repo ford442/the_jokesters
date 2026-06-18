@@ -59,13 +59,9 @@ await page.waitForSelector('#launch-btn', { visible: true, timeout: 30000 });
 log('setup panel visible, WebGPU gate passed');
 
 
-// Select engine + model
+// Select engine + model FIRST (the model 'change' handler resets the context
+// dropdown to the model default), then apply context / max-tokens overrides.
 await page.select('#engine-select', ENGINE).catch(() => {});
-if (process.env.CTX) await page.select('#context-size-select', process.env.CTX).catch(() => {});
-if (process.env.MAXTOK) await page.evaluate((v) => {
-  const s = document.getElementById('max-tokens-slider');
-  if (s) { s.value = v; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new Event('change', { bubbles: true })); }
-}, process.env.MAXTOK);
 await page.evaluate((model) => {
   const sel = document.getElementById('model-select-launch');
   if (![...sel.options].some((o) => o.value === model)) {
@@ -81,9 +77,22 @@ await page.evaluate(() => {
   const m = document.getElementById('cloud-dashboard-modal');
   if (m) m.style.display = 'none';
 });
+// Let any async model-change handler settle first.
+await new Promise((r) => setTimeout(r, 2000));
 await page.screenshot({ path: `${OUT}/01_setup.png` });
 
-await page.evaluate(() => document.getElementById('launch-btn').click());
+// Set context / max-tokens and click launch in ONE synchronous evaluate so the
+// async model-change handler can't reset the context dropdown in between.
+const applied = await page.evaluate((ctx, maxtok) => {
+  const cs = document.getElementById('context-size-select');
+  if (cs && ctx) cs.value = ctx;
+  const ms = document.getElementById('max-tokens-slider');
+  if (ms && maxtok) ms.value = maxtok;
+  const result = { ctx: cs ? cs.value : null, maxtok: ms ? ms.value : null };
+  document.getElementById('launch-btn').click();
+  return result;
+}, process.env.CTX || '', process.env.MAXTOK || '');
+log('applied settings at launch click:', JSON.stringify(applied));
 log('clicked launch, waiting for model load...');
 
 // Poll progress while waiting for chat container to appear (display:flex)
