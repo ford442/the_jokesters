@@ -11,6 +11,21 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'reverse_turing_test',
+        title: 'Reverse Turing Test Mode',
+        description: 'Agents evaluate the user to determine if they are an AI.',
+    },
+    {
+        id: 'sentient_luggage',
+        title: 'Sentient Luggage Mode',
+        description: 'Lost baggage discussing their travels and existential dread.',
+    },
+    {
+        id: 'time_traveling_chef',
+        title: 'Time-Traveling Chef Mode',
+        description: 'A future chef critiques a historical banquet.',
+    },
+    {
         id: 'roast_battle',
         title: 'Roast Battle Mode',
         description: 'An intense mode where agents take turns creatively insulting each other or the user.',

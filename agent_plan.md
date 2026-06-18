@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -250,3 +250,17 @@ tasks_per_run: 3
 - [x] "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** Cloud Persistence: Store generated scripts to HF Dataset via background web worker to bypass localStorage limits.
 - **NEW IDEA:** Cloud Persistence: Fetch previous episode summaries from HF to instantly prime the `GroupChatManager` context window for continuity.
+
+## Pending Tasks (Next cycle)
+- [x] Implement "Reverse Turing Test Mode" in `InteractiveMode.ts`
+- [x] Implement "Sentient Luggage Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Time-Traveling Chef Mode" in `DreamModes_Temporal.ts`
+- [x] Register new modes in `Director.ts`
+- [x] Add new modes to UI presets in `improvSetups.ts`
+
+
+## Storage Manager Integration Next Steps (Expanded Roadmap)
+- **NEW IDEA:** "Cloud Persistence: Differential Synchronization" - Send only the exact modified characters/JSON patches instead of full message deltas to minimize token usage on HF.
+- **NEW IDEA:** Export episode history to PDF format for sharing.
+- **NEW IDEA:** Implement dynamic chunking of `Episode Script` based on total token count to optimize Hugging Face rate limits.
+- **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.

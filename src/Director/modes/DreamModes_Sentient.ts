@@ -768,3 +768,36 @@ export async function runSentientAlarmClockLoop(_scenario: Scenario, ctx: ModeCo
         await ctx.manager.chatForAgent(philosopher, `(As the abstract concept of Time itself, comment on the user's input: "${userInput}" and their futile struggle against the morning.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
+
+export async function runSentientLuggageLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧳 SENTIENT LUGGAGE: Lost baggage discussing their travels.`, '#2ecc71');
+
+    const analyticalSuitcase = 'scientist';
+    const panickedBackpack = 'comedian';
+    const existentialDuffel = 'philosopher';
+
+    // Introductions
+    await ctx.callbacks.onTurnStart(analyticalSuitcase);
+    await ctx.manager.chatForAgent(analyticalSuitcase, `(SUITCASE: You are an analytical hardshell suitcase stranded in an unknown airport. State your exact dimensions, weight, and calculate the statistical probability of ever seeing your owner again based on airline luggage loss data.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    await ctx.callbacks.onTurnStart(panickedBackpack);
+    await ctx.manager.chatForAgent(panickedBackpack, `(BACKPACK: You are a panicked backpack. You have a half-eaten sandwich inside you that is starting to rot. Freak out about being separated from your owner and the weird smells coming from your side pocket.)`, async (s) => await ctx.callbacks.onSpeak(s, panickedBackpack, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    while (isRunning && ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        await ctx.callbacks.onTurnStart(existentialDuffel);
+        await ctx.manager.chatForAgent(existentialDuffel, `(DUFFEL BAG: The human luggage handler just said: "${userInput}". You are an existential duffel bag. You've been to 40 countries and feel utterly empty inside, despite being stuffed with dirty laundry. Ponder the meaningless nature of travel.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialDuffel, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(analyticalSuitcase);
+        await ctx.manager.chatForAgent(analyticalSuitcase, `(SUITCASE: The human luggage handler just said: "${userInput}". Demand they scan your barcode immediately. Criticize their handling techniques using physics equations.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
