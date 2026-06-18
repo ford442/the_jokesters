@@ -1,3 +1,4 @@
+import './utils/installVpsFetch'
 import { registerSW } from 'virtual:pwa-register';
 import './style.css'
 import { GroupChatManager, type ErrorCategory } from './GroupChatManager'
@@ -14,7 +15,7 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
 import { EngineFactory, type EngineType } from './llm/EngineFactory'
 import { MemoryManager } from './Director/MemoryManager'
-import { getModelDisplayName } from './config/models'
+import { getModelDisplayName, VPS_STORAGE_URL } from './config/models'
 
 
 // Log available models on startup
@@ -363,7 +364,7 @@ async function initApp() {
     'Hermes-3-Llama-3.2-3B-q4f32_1-MLC':  'Same Hermes-3 3B in universal f32 mode — works on GPUs without f16 shader support.',
     'Llama-3.2-3B-Instruct-q4f32_1-MLC':  'Standard 3B in f32 mode. Compatible with older or integrated GPUs.',
     'Llama-2-7b-chat-hf-q4f32_1-MLC':     'Llama-2 7B Chat (Meta). Mid-size model, richer responses than 3B. ~4 GB VRAM, works on any WebGPU GPU — no f16 required.',
-    'vicuna-7b-q4f32-webllm-vps':          'Default choice. Vicuna 7B q4f32 from storage.1ink.us (~4 GB). Universal fp32 WebGPU — no f16 shader required. Auto-falls back to noahcohn mirror on network errors.',
+    'vicuna-7b-q4f32-webllm-vps':          'Default choice. Vicuna 7B q4f32 from storage.1ink.us (~4 GB). Universal fp32 WebGPU — no f16 shader required.',
     'Hermes-3-Llama-3.1-8B-q4f16_1-MLC':  'Best quality available. Requires RTX 30xx / RX 6000 / M1 Pro or better with f16 shader support.',
     'Llama-3.1-8B-Instruct-q4f16_1-MLC':  'Meta 8B flagship. Excellent reasoning. Requires f16-capable GPU with 5+ GB VRAM.',
   }
@@ -634,7 +635,7 @@ async function initApp() {
     // Stage 2: Initialize Audio Engine (25%)
     currentInitState = 'AUDIO'
     setProgress("Initializing Audio Engine...", 25)
-    await audioEngine.init('./tts/onnx');
+    await audioEngine.init(`${VPS_STORAGE_URL}/tts/onnx`);
 
     // Stage 3: Initialize WebLLM with progress (55% of total progress)
     currentInitState = 'MODEL'
@@ -1370,7 +1371,7 @@ async function initApp() {
       },
       network: {
         title: 'Network Error',
-        suggestion: 'Check your connection and reload. Models download from storage.1ink.us (mirror: storage.noahcohn.com).'
+        suggestion: 'Check your connection and reload. Models download from storage.1ink.us.'
       },
       unknown: {
         title: 'Initialization Failed',

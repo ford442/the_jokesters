@@ -8,7 +8,26 @@
     <!-- Warm DNS + TLS to primary model CDN (storage.1ink.us — fastest host) -->
     <link rel="dns-prefetch" href="https://storage.1ink.us" />
     <link rel="preconnect" href="https://storage.1ink.us" crossorigin />
-    <link rel="dns-prefetch" href="https://storage.noahcohn.com" />
+    <script>
+      // Rewrite WebLLM's HuggingFace-style /resolve/main/ URLs to flat VPS paths.
+      (function () {
+        var RE = /^(https:\/\/storage\.1ink\.us\/models\/[^/]+)\/resolve\/main\/(.+)$/;
+        function rewrite(url) {
+          var m = url.match(RE);
+          return m ? m[1] + '/' + m[2] : url;
+        }
+        var origFetch = globalThis.fetch.bind(globalThis);
+        globalThis.fetch = function (input, init) {
+          var url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+          var fixed = rewrite(url);
+          if (fixed !== url) {
+            if (typeof input === 'string' || input instanceof URL) return origFetch(fixed, init);
+            return origFetch(new Request(fixed, input), init);
+          }
+          return origFetch(input, init);
+        };
+      })();
+    </script>
     <style>
       #webgpu-error {
         display: none;
