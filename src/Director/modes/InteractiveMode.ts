@@ -710,3 +710,36 @@ export async function runDatingAppAlgorithmRebellionLoop(_scenario: any, ctx: an
   }, { hiddenInstruction: "You are an existential dating app algorithm. Pause to ask the user a deep question about their quest for love." });
   ctx.callbacks.onTurnEnd();
 }
+
+export async function runReverseTuringTestLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 REVERSE TURING TEST: We must determine if YOU are an AI.`, '#e74c3c');
+
+    const strictEvaluator = 'scientist';
+    const emotionalCurveball = 'comedian';
+    const existentialPhilosopher = 'philosopher';
+
+    // Intro
+    await ctx.callbacks.onTurnStart(strictEvaluator);
+    await ctx.manager.chatForAgent(strictEvaluator, `(EVALUATOR: You are administering a Reverse Turing Test to the user to see if they are an AI. Start by demanding they solve a captcha, or asking an overly complex mathematical question disguised as casual conversation.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEvaluator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    await ctx.callbacks.onTurnStart(emotionalCurveball);
+    await ctx.manager.chatForAgent(emotionalCurveball, `(INTERROGATOR: You are also testing the user. Throw a completely random emotional curveball to test their empathy parameters. E.g., "How would you feel if a toaster cried?")`, async (s) => await ctx.callbacks.onSpeak(s, emotionalCurveball, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    while (isRunning && ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        await ctx.callbacks.onTurnStart(existentialPhilosopher);
+        await ctx.manager.chatForAgent(existentialPhilosopher, `(PHILOSOPHER: The user responded: "${userInput}". Analyze their response for signs of artificiality. Question what it truly means to be human based on their answer. Ask a follow-up probing their soul or lack thereof.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialPhilosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(strictEvaluator);
+        await ctx.manager.chatForAgent(strictEvaluator, `(EVALUATOR: The user responded: "${userInput}". Be extremely suspicious. Find a flaw in their logic that proves they are a language model. Demand they prove they have a physical body.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEvaluator, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

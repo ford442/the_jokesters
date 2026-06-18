@@ -544,3 +544,36 @@ export async function runTimeTravelingHealthInspectorLoop(_scenario: Scenario, c
         await ctx.manager.chatForAgent(philosopher, `(As the philosophical tavern rat, comment on the user's input: "${userInput}". Speak about the circle of life, decay, and your love for stale bread.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
+
+export async function runTimeTravelingChefLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👨‍🍳 TIME-TRAVELING CHEF: A future chef critiques a historical banquet.`, '#f1c40f');
+
+    const futureExpert = 'scientist';
+    const medievalCook = 'comedian';
+    const voidCritic = 'philosopher';
+
+    // Introductions
+    await ctx.callbacks.onTurnStart(futureExpert);
+    await ctx.manager.chatForAgent(futureExpert, `(FUTURE CHEF: You are a culinary expert from the year 3045. Critique the sanitary conditions of this 15th-century kitchen using advanced microbiological terminology and explain how you synthesize flavor using lasers.)`, async (s) => await ctx.callbacks.onSpeak(s, futureExpert, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    await ctx.callbacks.onTurnStart(medievalCook);
+    await ctx.manager.chatForAgent(medievalCook, `(MEDIEVAL COOK: You are a stressed medieval cook. You don't understand what 'lasers' or 'microbes' are. Defend your roasted boar recipe. You just threw a whole squirrel in the soup for extra flavor. Be defensive and chaotic.)`, async (s) => await ctx.callbacks.onSpeak(s, medievalCook, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    while (isRunning && ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        await ctx.callbacks.onTurnStart(voidCritic);
+        await ctx.manager.chatForAgent(voidCritic, `(VOID CRITIC: The time-traveling diner said: "${userInput}". You are a food critic from beyond time and space. Critique the metaphysical texture of the meal. Ponder if consumption is just the universe eating itself.)`, async (s) => await ctx.callbacks.onSpeak(s, voidCritic, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(medievalCook);
+        await ctx.manager.chatForAgent(medievalCook, `(MEDIEVAL COOK: The time-traveling diner said: "${userInput}". Misunderstand their modern dietary request (e.g., vegan, gluten-free) as a form of witchcraft or a bizarre disease. Offer them more gruel.)`, async (s) => await ctx.callbacks.onSpeak(s, medievalCook, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
