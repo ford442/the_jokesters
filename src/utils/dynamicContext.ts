@@ -1,5 +1,4 @@
 import * as webllm from '@mlc-ai/web-llm';
-import { VPS_STORAGE_URL, withMirrorStorageUrls } from '../config/models';
 
 export interface ContextConfig {
   context_window_size: number;
@@ -343,18 +342,6 @@ export function buildVRAMOverrides(
 // Model Loading
 // ============================================================================
 
-function isLikelyNetworkError(message: string): boolean {
-  const lower = message.toLowerCase();
-  return (
-    lower.includes('failed to fetch') ||
-    lower.includes('network') ||
-    lower.includes('cache.add') ||
-    lower.includes('err_failed') ||
-    lower.includes('timeout') ||
-    lower.includes('aborted') && lower.includes('fetch')
-  );
-}
-
 /**
  * Main function: Load model with dynamic context and VRAM optimizations
  */
@@ -493,15 +480,6 @@ export async function loadModelWithDynamicContext(
         console.warn('[DynamicContext] OOM at minimum context, retrying with KV cache quantization');
         return loadModelWithDynamicContext(modelConfig, minContext, onProgress, { ...vramConfig, kv_cache_quantization: 'int8' });
       }
-    }
-
-    // Retry via mirror host (storage.noahcohn.com) when primary VPS fetch fails
-    const onPrimaryHost = typeof modelConfig.model === 'string' && modelConfig.model.includes(VPS_STORAGE_URL);
-    const alreadyMirrored = Boolean((modelConfig as { _mirrorAttempted?: boolean })._mirrorAttempted);
-    if (onPrimaryHost && !alreadyMirrored && isLikelyNetworkError(errorMsg)) {
-      console.warn('[DynamicContext] Primary storage failed, retrying via mirror host...');
-      const mirrorConfig = { ...withMirrorStorageUrls(modelConfig), _mirrorAttempted: true };
-      return loadModelWithDynamicContext(mirrorConfig, preferredContext, onProgress, vramConfig);
     }
 
     throw error;

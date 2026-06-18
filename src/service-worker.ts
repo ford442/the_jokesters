@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 // Inject manifest from vite-plugin-pwa
 import { precacheAndRoute } from 'workbox-precaching';
+import { rewriteVpsModelUrl } from './utils/vpsStorageUrl';
 
 // @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST || []);
@@ -29,7 +30,6 @@ const MODEL_HOSTS = [
   'huggingface.co',
   'models.mlc.ai',
   'storage.1ink.us',
-  'storage.noahcohn.com',
 ];
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
@@ -72,19 +72,8 @@ async function fetchWithRetry(
 }
 
 /** VPS hosts serve flat files; WebLLM's cleanModelUrl() injects /resolve/main/ (HF-style). */
-const VPS_RESOLVE_MAIN_RE =
-  /^(https:\/\/storage\.(?:1ink\.us|noahcohn\.com)\/models\/[^/]+)\/resolve\/main\/(.+)$/;
-
-/**
- * Map WebLLM's HF-style VPS URL back to the flat path nginx/Apache actually serves.
- * e.g. .../vicuna-7b/resolve/main/mlc-chat-config.json → .../vicuna-7b/mlc-chat-config.json
- */
-function rewriteVpsModelUrl(url: string): string {
-  const match = url.match(VPS_RESOLVE_MAIN_RE);
-  if (match) {
-    return `${match[1]}/${match[2]}`;
-  }
-  return url;
+function rewriteVpsModelUrlForSw(url: string): string {
+  return rewriteVpsModelUrl(url);
 }
 
 /**
@@ -102,7 +91,7 @@ function isModelFile(url: string): boolean {
     return true;
   }
   // VPS /resolve/main/ paths (any extension) — needs rewrite
-  if (VPS_RESOLVE_MAIN_RE.test(url)) {
+  if (url.includes('storage.1ink.us/models/') && url.includes('/resolve/main/')) {
     return true;
   }
   return false;
@@ -200,7 +189,7 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
     return; // Let browser handle non-model requests
   }
 
-  const fetchUrl = rewriteVpsModelUrl(requestUrl);
+  const fetchUrl = rewriteVpsModelUrlForSw(requestUrl);
   if (fetchUrl !== requestUrl) {
     console.log('[ServiceWorker] Rewrote VPS URL:', requestUrl, '→', fetchUrl);
   } else {

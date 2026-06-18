@@ -1,5 +1,6 @@
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import { RNG } from '../utils/RNG';
+import { VPS_STORAGE_URL } from '../utils/vpsStorageUrl';
 
 // Note: We do NOT import 'onnxruntime-web' at the top level. 
 // This prevents Vite from pre-bundling the worker logic that looks for .mjs files.
@@ -122,6 +123,7 @@ export class SupertonicPipeline {
 
         // Candidate bases to probe, in preferred order
         const candidates = [
+            `${VPS_STORAGE_URL}/tts/onnx`,
             modelPath,
             modelPath.replace(/^\.\//, ''),
             'tts/onnx',

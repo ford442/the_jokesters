@@ -1,4 +1,7 @@
 import * as webllm from '@mlc-ai/web-llm'
+import { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
+
+export { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL }
 
 /**
  * Model Configuration with VPS-hosted models
@@ -6,7 +9,7 @@ import * as webllm from '@mlc-ai/web-llm'
  * Priorities:
  * 1. FP32 models (q4f32_1) - Universally compatible with WebGPU
  * 2. FP16 models (q4f16_1) - Faster but requires shader-f16 support
- * 3. VPS-hosted at storage.1ink.us (primary CDN) — mirror: storage.noahcohn.com
+ * 3. VPS-hosted at storage.1ink.us
  * 4. Hugging Face fallback - Redundancy
  * 
  * WebLLM Note: q4f16_1 requires 'shader-f16' GPU feature which is not
@@ -17,32 +20,8 @@ import * as webllm from '@mlc-ai/web-llm'
  *     attention to fit 7B models into <4GB VRAM.
  */
 
-// VPS Storage Configuration
-// Primary: storage.1ink.us — benchmarked ~2x faster downloads than noahcohn
-// Mirror: storage.noahcohn.com (nginx deploy API host) — fallback on network errors
-//
 // WebLLM's cleanModelUrl() appends /resolve/main/ (HuggingFace layout). Our VPS serves
-// flat paths (no /resolve/main/). src/service-worker.ts rewrites those URLs at fetch time.
-export const VPS_STORAGE_ORIGIN = 'https://storage.1ink.us';
-export const VPS_STORAGE_URL = `${VPS_STORAGE_ORIGIN}/models`;
-export const VPS_STORAGE_MIRROR = 'https://storage.noahcohn.com/models';
-export const VPS_STORAGE_HOSTS = ['storage.1ink.us', 'storage.noahcohn.com'] as const;
-
-/** Rewrite a model URL to the mirror host (no-op if already on mirror). */
-export function toMirrorStorageUrl(url: string): string {
-  return url.includes(VPS_STORAGE_URL)
-    ? url.replace(VPS_STORAGE_URL, VPS_STORAGE_MIRROR)
-    : url;
-}
-
-/** Clone a model config entry with mirror storage URLs. */
-export function withMirrorStorageUrls<T extends { model: string; model_lib: string }>(config: T): T {
-  return {
-    ...config,
-    model: toMirrorStorageUrl(config.model),
-    model_lib: toMirrorStorageUrl(config.model_lib),
-  };
-}
+// flat paths (no /resolve/main/). src/utils/vpsStorageUrl.ts rewrites those URLs at fetch time.
 
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)

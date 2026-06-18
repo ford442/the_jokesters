@@ -2,7 +2,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import compression from 'vite-plugin-compression2';
-import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './',
@@ -82,10 +81,9 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'service-worker.ts',
       injectManifest: {
-        injectionPoint: undefined // We'll inject manually or use it for SW generation
-      }
+        injectionPoint: undefined,
         globPatterns: ['**/*.{js,css,html,woff2,wasm,json}'],
-        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024 // 10 MB to allow some larger local json files
+        maximumFileSizeToCacheInBytes: 50 * 1024 * 1024,
       },
       manifest: {
         name: 'The Jokesters',
@@ -100,35 +98,6 @@ export default defineConfig({
           { src: '/vite.svg', sizes: 'any', type: 'image/svg+xml' }
         ]
       },
-      workbox: {
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.includes('webllm') ||
-                                     url.pathname.includes('.bin') ||
-                                     url.pathname.includes('.safetensors') ||
-                                     url.pathname.includes('models'),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'webllm-models',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 365,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: ({ url }) => url.pathname.startsWith('/tts/'),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'tts-assets',
-              expiration: { maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-        ],
-      },
       devOptions: {
         enabled: true,
       },
@@ -140,10 +109,8 @@ export default defineConfig({
           src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
           dest: 'assets/ort'
         }
-        // Note: TTS model files (tts.json, unicode_indexer.json, *.onnx) are expected
-        // to be hosted at ./tts/onnx/ on the deployment server
-        // Note: Voice style JSON files (F1.json, F2.json, M1.json, M2.json) are expected
-        // to be hosted at ./tts/voice_styles/ on the deployment server
+        // TTS model files are hosted at storage.1ink.us/models/tts/onnx/
+        // Voice styles at storage.1ink.us/models/tts/voice_styles/
       ]
     }),
     compression({
