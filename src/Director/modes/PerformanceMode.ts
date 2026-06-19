@@ -612,3 +612,99 @@ export async function runRoastBattleLoop(_scenario: Scenario, ctx: ModeContext) 
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runChainReactionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = 'comedian';
+    const scientist = 'scientist';
+    const philosopher = 'philosopher';
+
+    await ctx.callbacks.onTurnStart(comedian);
+    await ctx.manager.chatForAgent(comedian, `(COMEDIAN: Tell a joke so incredibly bad or controversial that it initiates a chain reaction. End your joke by knocking over an imaginary prop.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    let round = 0;
+    while (isRunning && ctx.isRunning() && round < 3) {
+        await ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(SCIENTIST: React strictly to the physical chaos caused by the previous speaker. Explain how the falling prop violated the laws of physics and inadvertently cause MORE chaos by knocking into something else.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(PHILOSOPHER: The stage is falling apart due to the chain reaction. Comment on how this destruction perfectly mirrors the collapse of societal structures, then accidentally trigger an even larger disaster on stage.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(COMEDIAN: The stage is basically destroyed now. Try to tell another joke amidst the absolute chaos, pretending everything is perfectly normal. Accidentally cause an explosion or fire.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        round++;
+    }
+}
+
+export async function runAudienceHecklerLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = 'comedian'; // Standup comedian
+    const heckler = 'philosopher'; // The unfiltered heckler in the audience
+    const scientist = 'scientist'; // The nervous club manager
+
+    await ctx.callbacks.onTurnStart(comedian);
+    await ctx.manager.chatForAgent(comedian, `(COMEDIAN: You are a standup comedian trying to get through your set about dating in the modern age. Start your first joke confidently.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    let round = 0;
+    while (isRunning && ctx.isRunning() && round < 3) {
+        await ctx.callbacks.onTurnStart(heckler);
+        await ctx.manager.chatForAgent(heckler, `(HECKLER: You are an aggressive, drunk audience member. Interrupt the comedian with an overly specific, personal, and absurd insult about their delivery or appearance.)`, async (s) => await ctx.callbacks.onSpeak(s, heckler, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(COMEDIAN: Snap back at the heckler. Try to destroy them with a clever comeback and regain control of the room, but clearly show you are sweating.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(MANAGER: You are the club manager peeking out from backstage. Try to de-escalate the situation using logical arguments, club policies, and health and safety regulations, but fail miserably.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        round++;
+    }
+}
+
+export async function runVisualStageDestructionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = 'comedian';
+    const scientist = 'scientist';
+    const philosopher = 'philosopher';
+
+    await ctx.callbacks.onTurnStart(comedian);
+    await ctx.manager.chatForAgent(comedian, `(COMEDIAN: You are hosting a high-stakes roast, but the venue was built by cheap contractors. Deliver a roast so hot that a literal stage light falls from the ceiling.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    let round = 0;
+    while (isRunning && ctx.isRunning() && round < 3) {
+        await ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(SCIENTIST: A stage light just crashed. Explain why the structural integrity of the room is failing due to the comedian's words, and accidentally cause the curtain to catch fire while explaining it.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(PHILOSOPHER: The stage is on fire and falling apart. Ignore the danger completely and relate the destruction to the inherent decay of all artistic endeavors. A piece of the ceiling falls on you mid-sentence.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(COMEDIAN: Scream in panic but try to keep the show going. Deliver the punchline of your joke as the floor begins to give way underneath you.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        round++;
+    }
+}

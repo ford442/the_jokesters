@@ -703,3 +703,35 @@ export async function runGalacticCustomerSupportLoop(_scenario: Scenario, ctx: M
         }
     }
 }
+
+export async function runGalacticHOAMeetingLoop(_scenario: Scenario, ctx: ModeContext) {
+    const scientist = 'scientist'; // Rule-abiding Alien
+    const comedian = 'comedian'; // Confused Human
+    const philosopher = 'philosopher'; // Zen Space Entity
+
+    await ctx.callbacks.onTurnStart(scientist);
+    await ctx.manager.chatForAgent(scientist, `(SCIENTIST: You are Zorblax, the Galactic HOA President. You strictly enforce rules like "No unauthorized wormholes on the front lawn" and "Nebula gardens must be trimmed to exactly 3 parsecs". Scold the human for their recent violation.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    let isRunning = true;
+    let round = 0;
+    while (isRunning && ctx.isRunning() && round < 3) {
+        await ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(COMEDIAN: You are a confused human who just moved in. You have no idea what a 'hyper-drive driveway' is or why your garbage cans are violating interstellar law. Argue back defensively and try to use human logic.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(PHILOSOPHER: You are a Zen Space Entity, floating at the meeting. You speak in riddles about the cosmos, entropy, and the futility of HOA guidelines when everything will eventually succumb to the heat death of the universe.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(SCIENTIST: Respond to the human's ignorance and the Space Entity's unhelpful existentialism. Threaten them with a 500-credit fine or banishment to the shadow realm.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        round++;
+    }
+}
