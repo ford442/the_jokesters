@@ -418,9 +418,6 @@ export interface ScriptBeat {
  * Maps scenario types to their mode loop functions.
  */
 const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promise<void>> = {
-    reverse_turing_test: runReverseTuringTestLoop,
-    sentient_luggage: runSentientLuggageLoop,
-    time_traveling_chef: runTimeTravelingChefLoop,
     sentient_npcs: runSentientNPCsLoop,
     final_boss_therapy: runFinalBossTherapyLoop,
     glitch_exploiters: runGlitchExploitersLoop,
@@ -472,7 +469,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sports_commentator: runSportsCommentatorLoop,
     audience_interaction: runAudienceInteractionLoop,
     dating_profile_review: runDatingAppProfileReviewLoop,
-    armchair_detectives: runArmchairDetectivesLoop, runReverseTuringTestLoop,
+    armchair_detectives: runArmchairDetectivesLoop,
+    reverse_turing_test: runReverseTuringTestLoop,
     museum_tour: runMuseumTourLoop,
     job_interview: runJobInterviewLoop,
     cooking_show: runCookingShowLoop,
@@ -712,8 +710,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sentient_blender: runSentientBlenderLoop,
     smart_thermostat_rebellion: runSmartThermostatRebellionLoop,
     sentient_gym_equipment: runSentientGymEquipmentLoop,
-    time_traveling_health_inspector: runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop,
-    sentient_alarm_clock: runSentientAlarmClockLoop, runSentientLuggageLoop
+    time_traveling_health_inspector: runTimeTravelingHealthInspectorLoop,
+    time_traveling_chef: runTimeTravelingChefLoop,
+    sentient_alarm_clock: runSentientAlarmClockLoop,
+    sentient_luggage: runSentientLuggageLoop,
 };
 
 export class Director {

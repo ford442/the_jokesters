@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 1
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)

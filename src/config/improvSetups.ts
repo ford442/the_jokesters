@@ -834,7 +834,14 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'sentient_alarm_clock',
     title: 'Sentient Alarm Clock',
     description: 'A logical snooze button argues with a desperate sleeper about time.'
+  },
+  {
+    id: 'reverse_turing_test',
+    title: 'Reverse Turing Test Mode',
+    description: 'Agents evaluate the user to determine if the user is an AI.'
   }
+
+
 ];
 
 DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);
