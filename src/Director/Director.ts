@@ -419,9 +419,6 @@ export interface ScriptBeat {
  * Maps scenario types to their mode loop functions.
  */
 const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promise<void>> = {
-    reverse_turing_test: runReverseTuringTestLoop,
-    sentient_luggage: runSentientLuggageLoop,
-    time_traveling_chef: runTimeTravelingChefLoop,
     sentient_npcs: runSentientNPCsLoop,
     final_boss_therapy: runFinalBossTherapyLoop,
     glitch_exploiters: runGlitchExploitersLoop,
@@ -473,7 +470,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sports_commentator: runSportsCommentatorLoop,
     audience_interaction: runAudienceInteractionLoop,
     dating_profile_review: runDatingAppProfileReviewLoop,
-    armchair_detectives: runArmchairDetectivesLoop, runReverseTuringTestLoop,
+    armchair_detectives: runArmchairDetectivesLoop,
+    reverse_turing_test: runReverseTuringTestLoop,
     museum_tour: runMuseumTourLoop,
     job_interview: runJobInterviewLoop,
     cooking_show: runCookingShowLoop,
@@ -718,6 +716,10 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
         galactic_hoa_meeting: runGalacticHOAMeetingLoop,
         chain_reaction: runChainReactionLoop,
         audience_heckler: runAudienceHecklerLoop,
+    sentient_luggage: runSentientLuggageLoop,
+    time_traveling_chef: runTimeTravelingChefLoop,
+    sentient_alarm_clock: runSentientAlarmClockLoop,
+
         visual_stage_destruction: runVisualStageDestructionLoop, runSentientLuggageLoop
 };
 
