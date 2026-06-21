@@ -10,6 +10,28 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+
+    {
+        id: 'galactic_hoa_meeting',
+        title: 'Galactic HOA Meeting',
+        description: 'Aliens enforcing strict cosmic neighborhood rules on a confused human.'
+    },
+    {
+        id: 'chain_reaction',
+        title: 'Chain Reaction Mode',
+        description: 'Every joke triggers an increasingly catastrophic chain of physical stage events.'
+    },
+    {
+        id: 'audience_heckler',
+        title: 'Audience Heckler Mode',
+        description: 'A relentless heckler interrupts the standup routine causing absolute chaos.'
+    },
+    {
+        id: 'visual_stage_destruction',
+        title: 'Visual Stage Destruction',
+        description: 'The roast is so intense the stage literally starts to collapse and catch fire.'
+    },
+
     {
         id: 'reverse_turing_test',
         title: 'Reverse Turing Test Mode',

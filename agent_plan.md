@@ -110,6 +110,11 @@ tasks_per_run: 1
 - [x] Implement "Sentient Notification Center" in `DreamModes_Tech.ts`
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 ## Pending Tasks (Next cycle)
+- [x] Implement "Galactic HOA Meeting Mode" in `DreamModes_Scifi.ts`
+- [x] Implement "Chain Reaction Mode" in `PerformanceMode.ts`
+- [x] Implement "Audience Heckler Mode" in `PerformanceMode.ts`
+- [x] Implement "Visual Stage Destruction Mode" in `PerformanceMode.ts`
+
 - [x] Implement "Sentient Microwave Dinner Mode" in `DreamModes_Food.ts`
 - [x] Implement "Customer Service Portal from Hell" in `DreamModes_Tech.ts`
 - [x] Implement "Sentient Elevator Pitch" in `DreamModes_Tech.ts`
@@ -264,3 +269,14 @@ tasks_per_run: 1
 - **NEW IDEA:** Export episode history to PDF format for sharing.
 - **NEW IDEA:** Implement dynamic chunking of `Episode Script` based on total token count to optimize Hugging Face rate limits.
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
+
+## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Parallel Universe Cable TV Mode" — Agents play characters rapidly flipping through increasingly absurd and terrifying alternate dimension television channels. Pairings: Comedian (Surreal talk show host, Hermes-3), Scientist (Documentary narrator explaining impossible physics, Qwen2.5), Philosopher (Infomercial pitchman for existential dread, Phi-3).
+- **NEW IDEA:** "Sentient Cloud Infrastructure Mode" — A breakdown of cloud services arguing over who crashed the production database. Pairings: Scientist (AWS Kubernetes Cluster, strict and exhausted, Qwen2.5), Comedian (Serverless Function that timed out, Hermes-3), Philosopher (S3 bucket contemplating the weight of endless user data, Phi-3).
+- **NEW IDEA:** "Time-Traveling IRS Audit Mode" — Agents play an auditor from the year 3000 taxing a medieval king for un-declared treasure hoarding. Pairings: Scientist (Time-Traveling Auditor, Qwen2.5), Comedian (Medieval King, Hermes-3), Philosopher (The Royal Accountant who just discovered math, Phi-3).
+
+## Storage Manager Integration Next Steps (Cloud Infrastructure)
+
+- **NEW IDEA:** **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
+- **NEW IDEA:** **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
