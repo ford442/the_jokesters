@@ -5,9 +5,9 @@ import { runDatingAppAlgorithmRebellionLoop } from './modes/InteractiveMode';
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
 import { runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
-import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop } from './modes/DreamModes_Tech';
-import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop } from './modes/DreamModes_Temporal';
-import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop } from './modes/DreamModes_Scifi';
+import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop } from './modes/DreamModes_Tech';
+import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
+import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
