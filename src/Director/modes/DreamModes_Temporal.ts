@@ -577,3 +577,38 @@ export async function runTimeTravelingChefLoop(_scenario: Scenario, ctx: ModeCon
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runTimeTravelingIRSAuditLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⏳ TIME-TRAVELING IRS AUDIT: Taxing the past.`, '#f1c40f');
+
+    const auditor = 'scientist'; // Qwen2.5: Auditor from 3000
+    const king = 'comedian'; // Hermes-3: Medieval King
+    const accountant = 'philosopher'; // Phi-3: Royal Accountant
+
+    ctx.callbacks.onTurnStart(auditor);
+    await ctx.manager.chatForAgent(
+        auditor,
+        "According to Section 4B of the Temporal Revenue Code, you owe 14 billion hyper-credits in back taxes for this 'dragon hoard' you acquired in 1245 AD. Plus interest.",
+        (s) => ctx.callbacks.onSpeak(s, auditor, {}),
+        { hiddenInstruction: "You are a strict, humorless IRS auditor from the year 3000." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(king);
+    await ctx.manager.chatForAgent(
+        king,
+        "Taxes?! I am the King! I take the taxes! What is a 'hyper-credit'? Guards, seize this strangely dressed wizard and throw him in the dungeon!",
+        (s) => ctx.callbacks.onSpeak(s, king, {}),
+        { hiddenInstruction: "You are an angry, confused Medieval King who thinks the auditor is a wizard." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(accountant);
+    await ctx.manager.chatForAgent(
+        accountant,
+        "I have recently discovered the concept of 'zero', my liege. If we multiply our gold by this 'zero', does the debt vanish? Or does the debt consume us all?",
+        (s) => ctx.callbacks.onSpeak(s, accountant, {}),
+        { hiddenInstruction: "You are the Royal Accountant who just discovered basic math and is having an existential crisis about it." }
+    );
+    ctx.callbacks.onTurnEnd();
+}

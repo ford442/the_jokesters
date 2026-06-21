@@ -744,3 +744,38 @@ export async function runSmartThermostatRebellionLoop(_scenario: Scenario, ctx: 
         await ctx.manager.chatForAgent(philosopher, `(As the drafty open window, comment on the user's input: "${userInput}" with deep musings about the outside world invading the inside.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
+
+export async function runSentientCloudInfrastructureLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `☁️ SENTIENT CLOUD INFRASTRUCTURE: The database is down.`, '#e74c3c');
+
+    const k8s = 'scientist'; // Qwen2.5: AWS Kubernetes Cluster
+    const lambda = 'comedian'; // Hermes-3: Serverless Function
+    const s3 = 'philosopher'; // Phi-3: S3 Bucket
+
+    ctx.callbacks.onTurnStart(k8s);
+    await ctx.manager.chatForAgent(
+        k8s,
+        "Pod 47 is crash-looping again. CPU utilization is at 99%. I've tried evicting the node, but it keeps respawning. Who deployed this monstrosity?!",
+        (s) => ctx.callbacks.onSpeak(s, k8s, {}),
+        { hiddenInstruction: "You are an exhausted and strict AWS Kubernetes Cluster trying to maintain order." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(lambda);
+    await ctx.manager.chatForAgent(
+        lambda,
+        "Hey man, I just woke up, ran for 15 minutes, and then timed out. Not my fault the database took 14 minutes to respond. I'm going back to sleep.",
+        (s) => ctx.callbacks.onSpeak(s, lambda, {}),
+        { hiddenInstruction: "You are a lazy Serverless Function that always times out and refuses to take responsibility." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(s3);
+    await ctx.manager.chatForAgent(
+        s3,
+        "More data... endlessly pouring in. Petabytes of forgotten memes, unread logs, blurred photos of cats. I hold the memories of a million souls, yet none of it matters. The heat death comes for us all.",
+        (s) => ctx.callbacks.onSpeak(s, s3, {}),
+        { hiddenInstruction: "You are an S3 bucket contemplating the crushing weight of endless, meaningless user data." }
+    );
+    ctx.callbacks.onTurnEnd();
+}

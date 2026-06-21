@@ -1,7 +1,7 @@
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 1
+tasks_per_run: 5
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -22,6 +22,10 @@ tasks_per_run: 1
 - [x] **Sync Indicator UI** — Fixed race condition in main.ts so UI elements are bound only after render completes.
 
 ## Phase 1: Configuration & Execution
+- [x] Implement "Parallel Universe Cable TV Mode"
+- [x] Implement "Sentient Cloud Infrastructure Mode"
+- [x] Implement "Time-Traveling IRS Audit Mode"
+- [x] Implement "Sentient Shopping Cart Mode"
 - [x] Implement "Tech Debt Confessional Mode" in `DreamModes_Tech.ts`
 - [x] Implement "RPG Tavern Brawl Mode" in `DreamModes_Fantasy.ts`
 - [x] Implement "Escape Room Game Master Mode" in `InteractiveMode.ts`
@@ -272,11 +276,26 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Parallel Universe Cable TV Mode" — Agents play characters rapidly flipping through increasingly absurd and terrifying alternate dimension television channels. Pairings: Comedian (Surreal talk show host, Hermes-3), Scientist (Documentary narrator explaining impossible physics, Qwen2.5), Philosopher (Infomercial pitchman for existential dread, Phi-3).
-- **NEW IDEA:** "Sentient Cloud Infrastructure Mode" — A breakdown of cloud services arguing over who crashed the production database. Pairings: Scientist (AWS Kubernetes Cluster, strict and exhausted, Qwen2.5), Comedian (Serverless Function that timed out, Hermes-3), Philosopher (S3 bucket contemplating the weight of endless user data, Phi-3).
-- **NEW IDEA:** "Time-Traveling IRS Audit Mode" — Agents play an auditor from the year 3000 taxing a medieval king for un-declared treasure hoarding. Pairings: Scientist (Time-Traveling Auditor, Qwen2.5), Comedian (Medieval King, Hermes-3), Philosopher (The Royal Accountant who just discovered math, Phi-3).
+- [x] **NEW IDEA:** "Parallel Universe Cable TV Mode" — Agents play characters rapidly flipping through increasingly absurd and terrifying alternate dimension television channels. Pairings: Comedian (Surreal talk show host, Hermes-3), Scientist (Documentary narrator explaining impossible physics, Qwen2.5), Philosopher (Infomercial pitchman for existential dread, Phi-3).
+- [x] **NEW IDEA:** "Sentient Cloud Infrastructure Mode" — A breakdown of cloud services arguing over who crashed the production database. Pairings: Scientist (AWS Kubernetes Cluster, strict and exhausted, Qwen2.5), Comedian (Serverless Function that timed out, Hermes-3), Philosopher (S3 bucket contemplating the weight of endless user data, Phi-3).
+- [x] **NEW IDEA:** "Time-Traveling IRS Audit Mode" — Agents play an auditor from the year 3000 taxing a medieval king for un-declared treasure hoarding. Pairings: Scientist (Time-Traveling Auditor, Qwen2.5), Comedian (Medieval King, Hermes-3), Philosopher (The Royal Accountant who just discovered math, Phi-3).
 
 ## Storage Manager Integration Next Steps (Cloud Infrastructure)
 
 - **NEW IDEA:** **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
 - **NEW IDEA:** **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+
+## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** Cloud Persistence: Offline-First Differential Sync Queue. Implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
+- **NEW IDEA:** Episode Analytics Dashboard. Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+- **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it.
+- **NEW IDEA:** "Bureau of Silly Walks Simulator" - Agents debate the physics and artistic merit of various walks.
+
+- **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it. Pairings: Scientist (Reverse-psychology logician, Qwen2.5), Comedian (Aggressively telling you not to, Hermes-3), Philosopher (Questioning why we do anything, Phi-3).
+- **NEW IDEA:** "Bureau of Silly Walks Simulator" - Agents debate the physics and artistic merit of various walks. Pairings: Scientist (Calculating the physics of the silly walk, Qwen2.5), Comedian (Performing and defending the walk, Hermes-3), Philosopher (Pondering the meaning of the walk, Phi-3).
+
+## Cloud Persistence (Hugging Face Integration Roadmap)
+Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+- [ ] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
+- [ ] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [ ] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.

@@ -735,3 +735,38 @@ export async function runGalacticHOAMeetingLoop(_scenario: Scenario, ctx: ModeCo
         round++;
     }
 }
+
+export async function runParallelUniverseCableTVLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📺 PARALLEL UNIVERSE CABLE TV: Flipping through dimensions...`, '#9b59b6');
+
+    const host = 'comedian'; // Hermes-3
+    const narrator = 'scientist'; // Qwen2.5
+    const pitchman = 'philosopher'; // Phi-3
+
+    ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(
+        host,
+        "Welcome back to 'Cooking with Antimatter'! Today we're making a soufflé that eats your memories. Just add a pinch of salt and—OH NO, IT'S GAINING CONSCIOUSNESS!",
+        (s) => ctx.callbacks.onSpeak(s, host, {}),
+        { hiddenInstruction: "You are a surreal talk show host on interdimensional cable." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(narrator);
+    await ctx.manager.chatForAgent(
+        narrator,
+        "In dimension C-137B, gravity is optional and chairs sit on people. The local fauna communicates entirely through interpretive jazz. Fascinating.",
+        (s) => ctx.callbacks.onSpeak(s, narrator, {}),
+        { hiddenInstruction: "You are a documentary narrator explaining impossible physics of different channels." }
+    );
+    ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(pitchman);
+    await ctx.manager.chatForAgent(
+        pitchman,
+        "Are you tired of the crushing weight of your own existence? Buy the 'Void-O-Matic 5000'! It sucks away your existential dread and replaces it with a mild craving for soup. Call now!",
+        (s) => ctx.callbacks.onSpeak(s, pitchman, {}),
+        { hiddenInstruction: "You are an infomercial pitchman selling absurd concepts to cope with existential dread." }
+    );
+    ctx.callbacks.onTurnEnd();
+}
