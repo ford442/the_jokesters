@@ -296,6 +296,6 @@ tasks_per_run: 5
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
-- [ ] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
-- [ ] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
-- [ ] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
+- [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
+- [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.

@@ -711,16 +711,14 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     sentient_blender: runSentientBlenderLoop,
     smart_thermostat_rebellion: runSmartThermostatRebellionLoop,
     sentient_gym_equipment: runSentientGymEquipmentLoop,
-    time_traveling_health_inspector: runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop,
-            sentient_alarm_clock: runSentientAlarmClockLoop,
+    time_traveling_health_inspector: runTimeTravelingHealthInspectorLoop,
+        sentient_alarm_clock: runSentientAlarmClockLoop,
         galactic_hoa_meeting: runGalacticHOAMeetingLoop,
         chain_reaction: runChainReactionLoop,
         audience_heckler: runAudienceHecklerLoop,
     sentient_luggage: runSentientLuggageLoop,
     time_traveling_chef: runTimeTravelingChefLoop,
-    sentient_alarm_clock: runSentientAlarmClockLoop,
-
-        visual_stage_destruction: runVisualStageDestructionLoop, runSentientLuggageLoop
+        visual_stage_destruction: runVisualStageDestructionLoop
 };
 
 export class Director {
