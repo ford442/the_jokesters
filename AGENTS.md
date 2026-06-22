@@ -648,6 +648,56 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 
 ---
 
+## Cursor Cloud specific instructions
+
+Standard commands are unchanged (see **Build and Development Commands** above): `npm install`,
+`npm run dev` (→ `http://localhost:5173`), `npm run build`, `npm run preview`, `npm run perf`.
+The notes below capture non-obvious gotchas discovered when running this app in a Cloud VM
+(headless Linux, **no GPU**).
+
+### Lint / test / build (what actually runs here)
+- **Lint / typecheck:** there is no ESLint; the project's check is `npx tsc --noEmit` (must be clean
+  before committing — see `CLAUDE.md`).
+- **Tests:** `npm run perf` runs `tests/perf/ci-runner.ts`. Only the **memory-leak** test runs in
+  Node and passes; the FPS / TTS / LLM benchmarks need a real browser/GPU and are reported as
+  `Violations` (`gl.getExtension is not a function`, `Worker timeout`, `Invalid URL`). This is
+  expected — the run still exits `0` ("All performance benchmarks passed").
+- `python smoke_test.py` hardcodes `cwd='/app'` (Docker-oriented) and is not suited to this VM.
+
+### Running the app in a browser (WebGPU is mandatory)
+- `index.html` hard-gates on `navigator.gpu.requestAdapter()`; with no adapter it shows
+  **"WebGPU Not Available"** and never renders the app. The default headless Chrome here only has
+  `swiftshader-webgl` (WebGL, **not** WebGPU), so the gate fails out of the box.
+- To get a **software WebGPU** adapter, launch Chrome with `--enable-unsafe-webgpu
+  --enable-features=Vulkan` **and** point the Vulkan loader at Chrome's bundled SwiftShader ICD:
+  `VK_ICD_FILENAMES=/opt/google/chrome/vk_swiftshader_icd.json`. (WebGPU is only exposed on secure
+  contexts, i.e. `http://localhost`/https — not `data:` URLs.) Driving via the bundled `puppeteer`
+  with these args is the reliable way to test the full app.
+- Software WebGPU **works but is very slow**: loading the smallest hosted model
+  (`Hermes-3-Llama-3.2-3B-q4f32_1-MLC`) compiles shaders for ~10 min, and **token generation is
+  impractically slow** (a short reply may not finish within many minutes). Model download, shader
+  compile/load to the interactive "Ready" state, 3D avatars, and TTS init all succeed; only LLM
+  *generation* is GPU-bound and effectively too slow on CPU.
+- `shader-f16` is unavailable on SwiftShader, so only **q4f32** MLC models load. The f16 MLC models
+  and the Transformers.js (q4f16) models will not run here.
+
+### Model hosting / engine caveats
+- Models stream from `storage.1ink.us` (reachable). The HuggingFace xet CDN
+  (`us.aws.cdn.hf.co`) **times out** from this VM, so HF-hosted models (e.g. `TinyLlama-1.1B-Chat-GGUF`)
+  fail to download. Prefer the VPS-hosted MLC/GGUF models.
+- The **llama.cpp (wllama)** engine loads VPS-hosted wasm that mismatches the installed
+  `@wllama/wllama` JS glue and fails to instantiate (`function import requires a callable`). Use the
+  **MLC** engine.
+- WebLLM caches weights via the **Cache API** using HF-style `…/resolve/main/…` URLs. The
+  `index.html` `fetch` wrapper cannot rewrite those (`Cache.add()` bypasses it); the service worker
+  (`src/service-worker.ts`) does the rewrite but only controls the page **after a reload** (it never
+  calls `clients.claim()`). A fresh first load can therefore 404 on `mlc-chat-config.json` — reload
+  so the SW takes control (or rewrite `/resolve/main/` at the network layer in a test harness).
+- A **"Cloud Conflict Dashboard"** modal (`#cloud-dashboard-modal`) is rendered with `display:flex`
+  by default and overlays the **Load Model & Start** button; dismiss/hide it before interacting.
+
+---
+
 ## License
 
 MIT License
