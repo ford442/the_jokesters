@@ -770,3 +770,59 @@ export async function runParallelUniverseCableTVLoop(_scenario: Scenario, ctx: M
     );
     ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Alien Anthropologist Mode
+ * Aliens misinterpreting human culture.
+ */
+export async function runAlienAnthropologistLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛸 ALIEN ANTHROPOLOGIST: Misinterpreting Earth artifacts!`, '#2ecc71');
+
+    const leadScientist = 'scientist'; // The logical alien trying to categorize
+    const wildTheorist = 'comedian'; // The alien with crazy theories
+    const philosophicalObserver = 'philosopher'; // The alien trying to find deep meaning
+
+    await ctx.manager.chatForAgent(leadScientist, "Specimen 402: A curved yellow fruit. Based on its structure, it is clearly a rudimentary communication device used by the Earthlings to contact their yellow sun.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, leadScientist, {});
+    }, { hiddenInstruction: "You are an alien scientist trying to logically categorize a banana, getting it completely wrong." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(wildTheorist, "Communication device? Nonsense! It's clearly a weapon! You pull the top tab and throw it at your enemies to cause them to slip on the casing!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, wildTheorist, {});
+    }, { hiddenInstruction: "You are an alien conspiracy theorist who thinks the banana is a deadly weapon." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosophicalObserver, "But consider its impermanence. It starts green, turns yellow, and decays to brown. Perhaps it is a physical manifestation of their existential dread regarding the passage of time.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, philosophicalObserver, {});
+    }, { hiddenInstruction: "You are an alien philosopher finding deep, depressing meaning in the banana's lifecycle." });
+}
+
+/**
+ * Zombie Survival Negotiators Mode
+ * Survivors arguing about the most ethical way to hoard supplies.
+ */
+export async function runZombieSurvivalNegotiatorsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧟 ZOMBIE SURVIVAL: Debating the ethics of the apocalypse!`, '#c0392b');
+
+    const pragmaticHoarder = 'scientist'; // The logical survivor
+    const chaoticSurvivor = 'comedian'; // The survivor with terrible priorities
+    const ethicalLeader = 'philosopher'; // The one trying to rebuild society
+
+    await ctx.manager.chatForAgent(pragmaticHoarder, "Statistically, we need exactly 4,000 calories a day to maintain optimal combat readiness. Therefore, I have calculated that we must leave the injured behind to conserve the canned beans.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, pragmaticHoarder, {});
+    }, { hiddenInstruction: "You are a cold, pragmatic apocalypse survivor who calculates everything based on survival statistics." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(chaoticSurvivor, "Leave the injured behind? Dude, I just risked my life for a pristine copy of Shrek 2 on DVD. Priorities! If we don't have culture, what are we even surviving for?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, chaoticSurvivor, {});
+    }, { hiddenInstruction: "You are a chaotic survivor who prioritizes finding useless pop-culture junk over actual survival supplies." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(ethicalLeader, "If we abandon our humanity to survive, then we are no better than the undead roaming outside these walls. The beans must be shared equally!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, ethicalLeader, {});
+    }, { hiddenInstruction: "You are the overly ethical leader of the group, trying to maintain morality in the zombie apocalypse." });
+}

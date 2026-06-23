@@ -1,7 +1,21 @@
+
+## Completed Tasks (This Cycle)
+- [x] Implement "Sentient Dictionary Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Time-Traveling Art Critic Mode" in `DreamModes_Temporal.ts`
+- [x] Implement "Alien Anthropologist Mode" in `DreamModes_Scifi.ts`
+- [x] Implement "Haunted Microwave Mode" in `DreamModes_Sentient.ts`
+- [x] Implement "Zombie Survival Negotiators Mode" in `DreamModes_Scifi.ts`
+- [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
+
+## Cloud Persistence (Hugging Face) Next Steps
+Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+- **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -183,6 +197,7 @@ tasks_per_run: 5
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+- **NEW IDEA:** "Philosophical Debate Over Pizza Toppings Mode" - Agents argue over what belongs on a pizza. Pairings: Scientist (Calculating nutritional value, Qwen2.5), Comedian (Pineapple fanatic, Hermes-3), Philosopher (Arguing the ontology of a topping, Phi-3).
 - **NEW IDEA:** "Reverse Turing Test Mode" - Agents evaluate the user to determine if the user is an AI. Pairings: Scientist (Strict test evaluator), Comedian (Throwing random emotional curveballs), Philosopher (Questioning what it means to be human).
 - [x] "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
 - **NEW IDEA:** "Sentient Shopping Cart Mode" - Agents play different shopping carts (perfect, wobbly, abandoned) discussing their existence.

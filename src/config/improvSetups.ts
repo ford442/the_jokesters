@@ -743,6 +743,31 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'quantum_mechanics_cooking_show',
     title: "⚛️ Quantum Mechanics Cooking Show",
     description: 'Agents host a cooking show where ingredients exist in superposition.'
+  },
+  {
+    id: 'sentient_dictionary',
+    title: "📚 Sentient Dictionary",
+    description: 'Words arguing about their definitions and modern usage.'
+  },
+  {
+    id: 'haunted_microwave',
+    title: "👻 Haunted Microwave",
+    description: 'A ghost trapped in a microwave trying to communicate through beeps.'
+  },
+  {
+    id: 'time_traveling_art_critic',
+    title: "🎨 Time-Traveling Art Critic",
+    description: 'A critic from the future reviewing prehistoric cave paintings.'
+  },
+  {
+    id: 'alien_anthropologist',
+    title: "🛸 Alien Anthropologist",
+    description: 'Aliens misinterpreting everyday human artifacts.'
+  },
+  {
+    id: 'zombie_survival_negotiators',
+    title: "🧟 Zombie Survival Negotiators",
+    description: 'Survivors arguing about the most ethical way to hoard supplies in an apocalypse.'
   }
 ];
 
@@ -861,9 +886,32 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'reverse_turing_test',
     title: 'Reverse Turing Test Mode',
     description: 'Agents evaluate the user to determine if the user is an AI.'
+  },
+  {
+    id: 'sentient_dictionary',
+    title: "📚 Sentient Dictionary",
+    description: 'Words arguing about their definitions and modern usage.'
+  },
+  {
+    id: 'haunted_microwave',
+    title: "👻 Haunted Microwave",
+    description: 'A ghost trapped in a microwave trying to communicate through beeps.'
+  },
+  {
+    id: 'time_traveling_art_critic',
+    title: "🎨 Time-Traveling Art Critic",
+    description: 'A critic from the future reviewing prehistoric cave paintings.'
+  },
+  {
+    id: 'alien_anthropologist',
+    title: "🛸 Alien Anthropologist",
+    description: 'Aliens misinterpreting everyday human artifacts.'
+  },
+  {
+    id: 'zombie_survival_negotiators',
+    title: "🧟 Zombie Survival Negotiators",
+    description: 'Survivors arguing about the most ethical way to hoard supplies in an apocalypse.'
   }
-
-
 ];
 
 DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);

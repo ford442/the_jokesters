@@ -612,3 +612,31 @@ export async function runTimeTravelingIRSAuditLoop(_scenario: Scenario, ctx: Mod
     );
     ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Time-Traveling Art Critic Mode
+ * A critic from the future reviewing cave paintings.
+ */
+export async function runTimeTravelingArtCriticLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎨 TIME-TRAVELING ART CRITIC: Reviewing prehistoric masterpieces!`, '#f39c12');
+
+    const futureCritic = 'philosopher'; // Pretentious future art critic
+    const cavemanArtist = 'comedian'; // The confused artist
+    const historicalAnalyzer = 'scientist'; // Trying to objectively analyze the paint
+
+    await ctx.manager.chatForAgent(futureCritic, "Ah, the juxtaposition of the bison against the limestone... it speaks to the inherent tragedy of the post-scarcity human condition! A masterclass in minimalist brutalism.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, futureCritic, {});
+    }, { hiddenInstruction: "You are a pretentious art critic from the year 3000 reviewing a caveman's stick-figure drawing. Over-analyze everything." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(cavemanArtist, "Ugg make hand print. Ugg like red mud. Why shiny man talk so much?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, cavemanArtist, {});
+    }, { hiddenInstruction: "You are the caveman who just wanted to put mud on the wall. You are very confused by the critic." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(historicalAnalyzer, "Radiocarbon dating indicates this pigment is primarily iron oxide mixed with animal fat. It has no deeper meaning, it is merely a survival record.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, historicalAnalyzer, {});
+    }, { hiddenInstruction: "You are a logical historian trying to explain that the painting is just mud and has no philosophical depth." });
+}
