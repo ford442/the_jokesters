@@ -1,3 +1,5 @@
+import { runAlienAnthropologistLoop, runZombieSurvivalNegotiatorsLoop } from './modes/DreamModes_Scifi';
+import { runSentientDictionaryLoop, runHauntedMicrowaveLoop } from './modes/DreamModes_Sentient';
 import { runCaptchaExistentialCrisisLoop, runIntergalacticSpacePlumberLoop, runSmartFridgeFoodShameLoop } from './modes/ExpandedRealityModes';
 import { runDatingAppAlgorithmRebellionLoop } from './modes/InteractiveMode';
 // Dream modes - split by category for better maintainability
@@ -7,6 +9,7 @@ import * as DreamModesIndex from './modes/DreamModes_index';
 import { runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
 import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
+import { runTimeTravelingArtCriticLoop } from './modes/DreamModes_Temporal';
 import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
@@ -290,7 +293,7 @@ export interface Scenario {
     | 'sentient_toaster'
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
-    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show';
+    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
 
     title: string;
     description: string;
@@ -419,6 +422,11 @@ export interface ScriptBeat {
  * Maps scenario types to their mode loop functions.
  */
 const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promise<void>> = {
+    sentient_dictionary: runSentientDictionaryLoop,
+    haunted_microwave: runHauntedMicrowaveLoop,
+    time_traveling_art_critic: runTimeTravelingArtCriticLoop,
+    alien_anthropologist: runAlienAnthropologistLoop,
+    zombie_survival_negotiators: runZombieSurvivalNegotiatorsLoop,
     sentient_npcs: runSentientNPCsLoop,
     final_boss_therapy: runFinalBossTherapyLoop,
     glitch_exploiters: runGlitchExploitersLoop,

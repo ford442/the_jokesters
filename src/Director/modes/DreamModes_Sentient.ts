@@ -801,3 +801,59 @@ export async function runSentientLuggageLoop(_scenario: Scenario, ctx: ModeConte
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+/**
+ * Sentient Dictionary Mode
+ * Words arguing about their definitions and modern usage.
+ */
+export async function runSentientDictionaryLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📚 SENTIENT DICTIONARY: Words are arguing about their evolving meanings!`, '#e74c3c');
+
+    const traditionalWord = 'scientist'; // Clinging to the original Latin root
+    const modernSlang = 'comedian'; // The new, completely different meaning
+    const confusedMediator = 'philosopher'; // The dictionary editor trying to make sense of it
+
+    await ctx.manager.chatForAgent(traditionalWord, "I am the original, pure definition of this word. You have completely ruined my legacy with your modern slang!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, traditionalWord, {});
+    }, { hiddenInstruction: "You are a traditional dictionary definition furious about how your word is used now. Be pedantic and literal." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(modernSlang, "Bro, languages evolve. No one uses you like that anymore, it's all about the vibes now.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, modernSlang, {});
+    }, { hiddenInstruction: "You are the modern slang version of the word. Be flippant and dismissive of the original meaning." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(confusedMediator, "Perhaps meaning is entirely subjective. Does a word inherently possess definition, or is it merely a vessel for human intent?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, confusedMediator, {});
+    }, { hiddenInstruction: "You are the dictionary editor pondering the philosophy of linguistics." });
+}
+
+/**
+ * Haunted Microwave Mode
+ * A ghost trapped in a microwave trying to communicate through beeps.
+ */
+export async function runHauntedMicrowaveLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 HAUNTED MICROWAVE: There's a ghost in the kitchen appliances!`, '#8e44ad');
+
+    const ghost = 'philosopher'; // The ghost trapped in the microwave
+    const hungryHuman = 'comedian'; // Just wants to heat up their food
+    const smartFridge = 'scientist'; // Analyzing the spectral anomalies
+
+    await ctx.manager.chatForAgent(hungryHuman, "Why is my microwave beeping in Morse code? I just want my Hot Pocket!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, hungryHuman, {});
+    }, { hiddenInstruction: "You are very hungry and annoyed that your microwave is haunted." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(ghost, "BEEP... BEEP... The mortal realm is cold, but the radiation is warm. Free me from this culinary prison!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, ghost, {});
+    }, { hiddenInstruction: "You are a ghost haunting a microwave. Express your existential dread through microwave metaphors." });
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(smartFridge, "My sensors detect a class-3 spectral anomaly in the microwave oven. Initiating defrost cycle to neutralize ectoplasm.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, smartFridge, {});
+    }, { hiddenInstruction: "You are the logical smart fridge trying to solve the ghost problem with appliance functions." });
+}
