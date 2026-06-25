@@ -768,6 +768,16 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     id: 'zombie_survival_negotiators',
     title: "🧟 Zombie Survival Negotiators",
     description: 'Survivors arguing about the most ethical way to hoard supplies in an apocalypse.'
+  },
+  {
+    id: 'philosophical_pizza_debate',
+    title: 'Philosophical Debate Over Pizza',
+    description: 'Agents passionately argue over what toppings belong on a pizza.'
+  },
+  {
+    id: 'bureau_of_silly_walks_simulator',
+    title: 'Bureau of Silly Walks Simulator',
+    description: 'Agents debate the physics and artistic merit of various silly walks.'
   }
 ];
 
@@ -911,6 +921,16 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     id: 'zombie_survival_negotiators',
     title: "🧟 Zombie Survival Negotiators",
     description: 'Survivors arguing about the most ethical way to hoard supplies in an apocalypse.'
+  },
+  {
+    id: 'philosophical_pizza_debate',
+    title: 'Philosophical Debate Over Pizza',
+    description: 'Agents passionately argue over what toppings belong on a pizza.'
+  },
+  {
+    id: 'bureau_of_silly_walks_simulator',
+    title: 'Bureau of Silly Walks Simulator',
+    description: 'Agents debate the physics and artistic merit of various silly walks.'
   }
 ];
 

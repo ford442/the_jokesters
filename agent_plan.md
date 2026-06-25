@@ -15,7 +15,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 6
+tasks_per_run: 1
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -128,6 +128,15 @@ tasks_per_run: 6
 - [x] Implement "Sentient Notification Center" in `DreamModes_Tech.ts`
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 ## Pending Tasks (Next cycle)
+- [x] Implement "Bureau of Silly Walks Simulator" in `DreamModes_Absurdist_Philosophical_PartA.ts`
+- [x] Register `bureau_of_silly_walks_simulator` in `Director.ts`
+- [x] Add `bureau_of_silly_walks_simulator` to UI presets in `improvSetups.ts`
+
+
+
+
+
+
 - [x] Implement "Galactic HOA Meeting Mode" in `DreamModes_Scifi.ts`
 - [x] Implement "Chain Reaction Mode" in `PerformanceMode.ts`
 - [x] Implement "Audience Heckler Mode" in `PerformanceMode.ts`
@@ -314,3 +323,4 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
+- **NEW IDEA:** "Semantic Search for Cloud Memories" - Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
