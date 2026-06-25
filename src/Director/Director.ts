@@ -60,7 +60,7 @@ const {
   runIntergalacticTalentShowLoop,
   runSentientSpreadsheetLoop,
   runTimeTravelLoop,
-  runChefLoop, runQuantumMechanicsCookingShowLoop,
+  runChefLoop, runQuantumMechanicsCookingShowLoop, runPhilosophicalDebateOverPizzaToppingsLoop,
   runMedicalLoop,
   runTimeTravelersDilemmaLoop,
   runMatrixLoop,
@@ -75,6 +75,7 @@ const {
   runParallelUniverseLoop,
   runOmniscientNarratorLoop,
   runReversePsychologyLoop,
+  runBureauOfSillyWalksSimulatorLoop,
   runBureauOfSillyWalksLoop,
   runTimeTravelingRealEstateLoop,
   runIntergalacticHOALoop,
@@ -293,7 +294,7 @@ export interface Scenario {
     | 'sentient_toaster'
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
-    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
+    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'philosophical_pizza_debate' | 'bureau_of_silly_walks_simulator' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
 
     title: string;
     description: string;
@@ -467,6 +468,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     time_travel: runTimeTravelLoop,
     chef: runChefLoop,
     quantum_mechanics_cooking_show: runQuantumMechanicsCookingShowLoop,
+    philosophical_pizza_debate: runPhilosophicalDebateOverPizzaToppingsLoop,
+    bureau_of_silly_walks_simulator: runBureauOfSillyWalksSimulatorLoop,
     medical: runMedicalLoop,
     haunted: runHauntedHouseLoop,
     sports: runSportsCommentaryLoop,

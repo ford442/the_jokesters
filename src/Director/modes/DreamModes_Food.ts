@@ -192,3 +192,35 @@ export async function runQuantumMechanicsCookingShowLoop(_scenario: Scenario, ct
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+/**
+ * Philosophical Debate Over Pizza Toppings Mode
+ * Agents argue over what belongs on a pizza.
+ */
+export async function runPhilosophicalDebateOverPizzaToppingsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍕 PIZZA DEBATE: To top, or not to top.`, '#8e44ad');
+
+    const scientistAgent = 'scientist'; // Calculating nutritional value, Qwen2.5
+    const comedianAgent = 'comedian'; // Pineapple fanatic, Hermes-3
+    const philosopherAgent = 'philosopher'; // Arguing the ontology of a topping, Phi-3
+
+    ctx.callbacks.onTurnStart(scientistAgent);
+    await ctx.manager.chatForAgent(scientistAgent, `(You are a highly logical scientist. Analyze the user's choice of pizza topping mathematically, calculating the structural integrity and thermodynamic properties of a slice.)`, async (s) => await ctx.callbacks.onSpeak(s, scientistAgent, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(comedianAgent);
+        await ctx.manager.chatForAgent(comedianAgent, `(You are an unhinged fanatic who believes pineapple is the ONLY valid pizza topping. React to "${userInput}" by violently defending sweet and savory flavor combinations, calling anything else a coward's meal.)`, async (s) => await ctx.callbacks.onSpeak(s, comedianAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(philosopherAgent);
+        await ctx.manager.chatForAgent(philosopherAgent, `(You are a deep philosopher. React to "${userInput}". Question the very ontology of a 'topping'. Does adding an ingredient make it a new entity, or is it merely a pizza in a different state of being?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopherAgent, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

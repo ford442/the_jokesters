@@ -841,3 +841,41 @@ export async function runDisasterMoviePresidentLoop(scenario: Scenario, ctx: Mod
     }
 }
 
+
+/**
+ * Bureau of Silly Walks Simulator
+ * Agents debate the physics and artistic merit of various walks.
+ */
+export async function runBureauOfSillyWalksSimulatorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚶 BUREAU OF SILLY WALKS: Analyzing the biomechanics of absurdity.`, '#8e44ad');
+
+    const physicist = 'scientist'; // Calculating physics, Qwen2.5
+    const performer = 'comedian'; // Performing walk, Hermes-3
+    const philosopher = 'philosopher'; // Pondering meaning, Phi-3
+
+    ctx.callbacks.onTurnStart(physicist);
+    await ctx.manager.chatForAgent(physicist, `(You are a rigid physicist studying human locomotion. Ask the user to describe a new "silly walk" so you can analyze its torque, center of gravity, and potential for causing injury.)`, async (s) => await ctx.callbacks.onSpeak(s, physicist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User', userInput, '#ffffff');
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(performer);
+        await ctx.manager.chatForAgent(performer, `(You are a chaotic physical comedian. Enthusiastically act out the user's walk: "${userInput}". Describe the physical sensation and how it makes your joints feel. Defend its artistic genius.)`, async (s) => await ctx.callbacks.onSpeak(s, performer, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(You are a deep thinker. React to the walk described: "${userInput}". Ponder what this walk says about the human condition. Is moving forward inefficiently a rebellion against the inevitable march of time?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(physicist);
+        await ctx.manager.chatForAgent(physicist, `(You are the physicist. Critically dissect the mechanics of "${userInput}". Suggest an aerodynamic improvement that completely ruins the silliness of the walk.)`, async (s) => await ctx.callbacks.onSpeak(s, physicist, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
