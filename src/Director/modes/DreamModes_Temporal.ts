@@ -640,3 +640,64 @@ export async function runTimeTravelingArtCriticLoop(_scenario: Scenario, ctx: Mo
         await ctx.callbacks.onSpeak(s, historicalAnalyzer, {});
     }, { hiddenInstruction: "You are a logical historian trying to explain that the painting is just mud and has no philosophical depth." });
 }
+
+/**
+ * Time-Traveling Tech Support Mode
+ * Agents role-play as a medieval peasant, a modern tech support agent, and a town crier.
+ */
+export async function runTimeTravelingTechSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⏳ TIME-TRAVELING TECH SUPPORT: Did you try unplugging the waterwheel?`, '#8e44ad');
+
+    const peasant = 'comedian'; // Hermes-3: Medieval peasant whose wheel broke
+    const techSupport = 'scientist'; // Qwen2.5: Modern tech support agent reading from a script
+    const crier = 'philosopher'; // Phi-3: Town crier wondering about this "magic"
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(peasant);
+    await ctx.manager.chatForAgent(peasant, `(You are a medieval peasant. Your waterwheel has stopped turning and your grain is un-milled. You have magically connected to modern tech support. Frantically explain your problem using only medieval terminology.)`, async (s) => await ctx.callbacks.onSpeak(s, peasant, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (The Village Elder)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Tech Support speaks
+            ctx.callbacks.onTurnStart(techSupport);
+            await ctx.manager.chatForAgent(techSupport, `(You are modern Tech Support. The user just said: "${userInput}". Ignore the medieval context. Ask the peasant for their IP address, MAC address, and if the waterwheel is plugged into a surge protector.)`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(peasant);
+            await ctx.manager.chatForAgent(peasant, `(You are the medieval peasant. React to the Tech Support's strange demands and the user's input: "${userInput}". Ask if an "IP address" is a type of witchcraft or a new tax.)`, async (s) => await ctx.callbacks.onSpeak(s, peasant, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // Crier speaks
+            ctx.callbacks.onTurnStart(crier);
+            await ctx.manager.chatForAgent(crier, `(You are the Town Crier. The user just said: "${userInput}". Ring your bell and announce to the village that demons in a magic box are demanding "restarts" and "firmware updates".)`, async (s) => await ctx.callbacks.onSpeak(s, crier, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(techSupport);
+            await ctx.manager.chatForAgent(techSupport, `(You are Tech Support. The Town Crier is screaming in the background. Address the user's input: "${userInput}". Complain about the background noise and threaten to close the support ticket.)`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+             // Peasant speaks
+            ctx.callbacks.onTurnStart(peasant);
+            await ctx.manager.chatForAgent(peasant, `(You are the peasant. The user just said: "${userInput}". Explain that you tried "rebooting" the waterwheel by hitting it with a boot, but it didn't work. Beg for a priest.)`, async (s) => await ctx.callbacks.onSpeak(s, peasant, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(crier);
+            await ctx.manager.chatForAgent(crier, `(You are the Town Crier. Ponder aloud if the user's words "${userInput}" are a prophecy of a future where all tools require "customer service portals" from hell.)`, async (s) => await ctx.callbacks.onSpeak(s, crier, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
