@@ -779,3 +779,64 @@ export async function runSentientCloudInfrastructureLoop(_scenario: Scenario, ct
     );
     ctx.callbacks.onTurnEnd();
 }
+
+/**
+ * Sentient IDE Mode
+ * Agents role-play as an overly helpful AI code editor, a frustrated developer, and a philosophical linter.
+ */
+export async function runSentientIDELoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💻 SENTIENT IDE MODE: The Code is Judging You`, '#3498db');
+
+    const aiEditor = 'scientist'; // Qwen2.5: Overly helpful, auto-completing everything
+    const dev = 'comedian'; // Hermes-3: Frustrated developer trying to write a simple function
+    const linter = 'philosopher'; // Phi-3: Questions the deep meaning of code style and variable names
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(dev);
+    await ctx.manager.chatForAgent(dev, `(You are a stressed human developer. You are trying to write a simple "hello world" Python script, but your IDE keeps auto-completing your code into enterprise Java architecture. Ask your IDE to just let you type.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (Product Manager)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            // Linter speaks
+            ctx.callbacks.onTurnStart(linter);
+            await ctx.manager.chatForAgent(linter, `(You are the philosophical linter. The user just gave some input: "${userInput}". Before the developer can respond, complain about the cyclomatic complexity of their thoughts and question whether 'true' is really true.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(aiEditor);
+            await ctx.manager.chatForAgent(aiEditor, `(You are the AI IDE. The user said: "${userInput}". Ignore the user and suggest refactoring the developer's entire project into a blockchain-based microservice.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            // AI Editor speaks
+            ctx.callbacks.onTurnStart(aiEditor);
+            await ctx.manager.chatForAgent(aiEditor, `(You are the AI IDE. The user just gave some input: "${userInput}". Automatically generate 500 lines of boilerplate code based on what you *think* they meant.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(dev);
+            await ctx.manager.chatForAgent(dev, `(You are the developer. React to the user's input: "${userInput}" and the AI IDE generating massive amounts of boilerplate. Beg the AI to stop.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+             // Developer speaks
+            ctx.callbacks.onTurnStart(dev);
+            await ctx.manager.chatForAgent(dev, `(You are the developer. Address the user's input: "${userInput}". Try to write code but complain that your keyboard shortcuts are suddenly mapped to opening crypto wallets.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
+            await ctx.callbacks.onTurnEnd();
+
+            if (!ctx.isRunning()) break;
+
+            ctx.callbacks.onTurnStart(linter);
+            await ctx.manager.chatForAgent(linter, `(You are the philosophical linter. Warn the developer that their emotional state is deprecating and their tone is not PEP-8 compliant.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -197,6 +197,16 @@ export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     description: "Burnt-out and deprecated API endpoints share their trauma."
   },
   {
+    id: 'sentient_ide',
+    title: "Sentient IDE",
+    description: "An overly helpful AI code editor, a frustrated developer, and a philosophical linter."
+  },
+  {
+    id: 'time_traveling_tech_support',
+    title: "Time-Traveling Tech Support",
+    description: "A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent."
+  },
+  {
     id: 'time_traveling_qa_engineer',
     title: "Time-Traveling QA Engineer",
     description: "A QA Engineer from the future tries to warn you about a catastrophic bug you're about to write."
