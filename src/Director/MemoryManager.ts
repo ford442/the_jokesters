@@ -745,6 +745,44 @@ export class MemoryManager {
         return results.slice(0, 3).map(r => ({ episodeId: r.episodeId, snippet: r.snippet }));
     }
 
+
+    public async getEpisodeAnalytics(): Promise<{ totalEpisodes: number, totalTokensProxy: number, avgEpisodeLength: number, commonModes: { [key: string]: number } }> {
+        await this.ensureCloudSummaryCache();
+
+        let totalEpisodes = 0;
+        let totalTokensProxy = 0;
+        let avgEpisodeLength = 0;
+        const commonModes: { [key: string]: number } = {};
+
+        // Let's actually count local episodes from IndexedDB as well to get better metrics.
+        const allKeys = await this.idbKeys();
+        totalEpisodes = allKeys.length;
+
+        for (const key of allKeys) {
+            const episode = await this.idbGet(key);
+            if (episode && episode.history && Array.isArray(episode.history)) {
+                totalTokensProxy += JSON.stringify(episode.history).length;
+            }
+            if (episode && episode.scenario && episode.scenario.type) {
+                commonModes[episode.scenario.type] = (commonModes[episode.scenario.type] || 0) + 1;
+            }
+        }
+
+        if (totalEpisodes > 0) {
+            avgEpisodeLength = Math.round(totalTokensProxy / totalEpisodes);
+        } else if (this.cloudSummaryCache && this.cloudSummaryCache.history && Array.isArray(this.cloudSummaryCache.history)) {
+            // Fallback to cloud summary if local DB is empty
+            totalEpisodes = 1;
+            totalTokensProxy = JSON.stringify(this.cloudSummaryCache.history).length;
+            avgEpisodeLength = totalTokensProxy;
+            if (this.cloudSummaryCache.scenario && this.cloudSummaryCache.scenario.type) {
+                commonModes[this.cloudSummaryCache.scenario.type] = 1;
+            }
+        }
+
+        return { totalEpisodes, totalTokensProxy, avgEpisodeLength, commonModes };
+    }
+
     public async getCloudHistory(): Promise<any[]> {
         if (!this.hfToken || !this.hfRepoId) {
             console.warn("Cannot fetch cloud history without credentials.");

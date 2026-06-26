@@ -207,6 +207,14 @@
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <button id="refresh-cloud-dashboard-btn" style="background: #0f3460; color: white; border: 1px solid #4ecdc4; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Refresh</button>
             <button id="check-pending-deltas-btn" style="background: #1a1a2e; color: #ffd700; border: 1px solid #ffd700; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Check Pending Deltas</button>
+            <button id="view-analytics-btn" style="background: #1a1a2e; color: #ff6b6b; border: 1px solid #ff6b6b; padding: 5px 10px; border-radius: 4px; cursor: pointer;">View Analytics</button>
+        </div>
+
+        <div id="episode-analytics-container" style="display: none; background: rgba(255,107,107,0.1); border: 1px dashed #ff6b6b; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <h3 style="color: #ff6b6b; margin-top: 0;">Episode Analytics</h3>
+            <div id="episode-analytics-content" style="color: #ccc; font-size: 0.85em; display: flex; flex-direction: column; gap: 8px;">
+                <!-- Analytics injected here -->
+            </div>
         </div>
 
         <div id="pending-deltas-container" style="display: none; background: rgba(255,215,0,0.1); border: 1px dashed #ffd700; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
