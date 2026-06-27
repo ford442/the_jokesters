@@ -30,7 +30,11 @@ const MODEL_HOSTS = [
   'huggingface.co',
   'models.mlc.ai',
   'storage.1ink.us',
+  'storage.noahcohn.com',
 ];
+
+/** Contabo mirror — .gz twins may exist here before DreamHost sync completes */
+const GZ_MIRROR_ORIGIN = 'https://storage.noahcohn.com';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
 
@@ -121,82 +125,91 @@ function isGzEligible(url: string): boolean {
  *
  * The .gz files must be pre-created on the VPS with `gzip -9 <shard>`.
  */
-async function tryFetchGzCompressed(url: string): Promise<Response | null> {
-  const gzUrl = url + '.gz';
-  try {
-    const headResp = await fetch(gzUrl, { method: 'HEAD' });
-    if (!headResp.ok) return null;
-
-    const compressedSize = parseInt(headResp.headers.get('content-length') || '0', 10);
-    if (compressedSize === 0) return null;
-
-    const supportsRanges =
-      headResp.headers.has('accept-ranges') &&
-      headResp.headers.get('accept-ranges') !== 'none';
-
-    console.log(`[ServiceWorker] Found .gz shard: ${gzUrl} (${(compressedSize / 1024 / 1024).toFixed(1)} MB compressed)`);
-
-    // Download compressed bytes — parallel if the server supports Range requests
-    let compressedBytes: Uint8Array;
-    if (supportsRanges && compressedSize > CHUNK_SIZE) {
-      const combined = await downloadParallel(gzUrl, compressedSize);
-      const buf = await combined.arrayBuffer();
-      compressedBytes = new Uint8Array(buf);
-    } else {
-      const resp = await fetchWithRetry(gzUrl, {}, MAX_RETRIES);
-      const buf = await resp.arrayBuffer();
-      compressedBytes = new Uint8Array(buf);
-    }
-
-    // Decompress using the native browser DecompressionStream (gzip)
-    const ds = new DecompressionStream('gzip');
-    const writer = ds.writable.getWriter();
-    const reader = ds.readable.getReader();
-
-    // Write all compressed bytes then close; collect decompressed chunks
-    (async () => {
-      try {
-        await writer.write(compressedBytes);
-        await writer.close();
-      } catch { /* reader will see the error */ }
-    })();
-
-    const decompressedChunks: Uint8Array[] = [];
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      decompressedChunks.push(value as Uint8Array);
-    }
-
-    const totalSize = decompressedChunks.reduce((s, c) => s + c.length, 0);
-    const decompressed = new Uint8Array(totalSize);
-    let offset = 0;
-    for (const chunk of decompressedChunks) {
-      decompressed.set(chunk, offset);
-      offset += chunk.length;
-    }
-
-    console.log(
-      `[ServiceWorker] Decompressed ${gzUrl}: ` +
-      `${(compressedSize / 1024 / 1024).toFixed(1)} MB → ${(totalSize / 1024 / 1024).toFixed(1)} MB`
-    );
-
-    return new Response(decompressed.buffer.slice(decompressed.byteOffset, decompressed.byteOffset + decompressed.byteLength), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/octet-stream',
-        'Content-Length': String(totalSize),
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-        'Access-Control-Allow-Headers': 'Range, Origin, Accept, Content-Type',
-        'Accept-Ranges': 'bytes',
-      },
-    });
-  } catch (error) {
-    // .gz not found or decompression failed — caller will try the plain URL
-    console.log(`[ServiceWorker] No usable .gz for ${url}:`, (error as Error).message ?? error);
-    return null;
+function gzCandidateUrls(url: string): string[] {
+  const primary = url + '.gz';
+  if (!url.startsWith('https://storage.1ink.us/')) {
+    return [primary];
   }
+  const mirror = primary.replace('https://storage.1ink.us/', `${GZ_MIRROR_ORIGIN}/`);
+  return mirror === primary ? [primary] : [primary, mirror];
+}
+
+async function tryFetchGzCompressed(url: string): Promise<Response | null> {
+  for (const gzUrl of gzCandidateUrls(url)) {
+    try {
+      const headResp = await fetch(gzUrl, { method: 'HEAD' });
+      if (!headResp.ok) continue;
+
+      const compressedSize = parseInt(headResp.headers.get('content-length') || '0', 10);
+      if (compressedSize === 0) continue;
+
+      const supportsRanges =
+        headResp.headers.has('accept-ranges') &&
+        headResp.headers.get('accept-ranges') !== 'none';
+
+      console.log(`[ServiceWorker] Found .gz shard: ${gzUrl} (${(compressedSize / 1024 / 1024).toFixed(1)} MB compressed)`);
+
+      // Download compressed bytes — parallel if the server supports Range requests
+      let compressedBytes: Uint8Array;
+      if (supportsRanges && compressedSize > CHUNK_SIZE) {
+        const combined = await downloadParallel(gzUrl, compressedSize);
+        const buf = await combined.arrayBuffer();
+        compressedBytes = new Uint8Array(buf);
+      } else {
+        const resp = await fetchWithRetry(gzUrl, {}, MAX_RETRIES);
+        const buf = await resp.arrayBuffer();
+        compressedBytes = new Uint8Array(buf);
+      }
+
+      // Decompress using the native browser DecompressionStream (gzip)
+      const ds = new DecompressionStream('gzip');
+      const writer = ds.writable.getWriter();
+      const reader = ds.readable.getReader();
+
+      // Write all compressed bytes then close; collect decompressed chunks
+      (async () => {
+        try {
+          await writer.write(compressedBytes);
+          await writer.close();
+        } catch { /* reader will see the error */ }
+      })();
+
+      const decompressedChunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        decompressedChunks.push(value as Uint8Array);
+      }
+
+      const totalSize = decompressedChunks.reduce((s, c) => s + c.length, 0);
+      const decompressed = new Uint8Array(totalSize);
+      let offset = 0;
+      for (const chunk of decompressedChunks) {
+        decompressed.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      console.log(
+        `[ServiceWorker] Decompressed ${gzUrl}: ` +
+        `${(compressedSize / 1024 / 1024).toFixed(1)} MB → ${(totalSize / 1024 / 1024).toFixed(1)} MB`
+      );
+
+      return new Response(decompressed.buffer.slice(decompressed.byteOffset, decompressed.byteOffset + decompressed.byteLength), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': String(totalSize),
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Allow-Headers': 'Range, Origin, Accept, Content-Type',
+          'Accept-Ranges': 'bytes',
+        },
+      });
+    } catch (error) {
+      console.log(`[ServiceWorker] No usable .gz for ${gzUrl}:`, (error as Error).message ?? error);
+    }
+  }
+  return null;
 }
 
 /**
