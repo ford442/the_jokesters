@@ -15,7 +15,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 1
+tasks_per_run: 2
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -328,3 +328,21 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
 - **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
 - **NEW IDEA:** Cloud Persistence: "Peer-to-Peer Sync WebRTC" - Use WebRTC to sync IndexedDB episodes directly between local devices without going through HuggingFace, if on the same network.
+
+## Cloud Persistence (Hugging Face Integration Roadmap)
+Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+
+- [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
+- [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
+- [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
+- [ ] Add background worker to push completed episode scripts and deltas directly to Hugging Face Dataset from IndexedDB.
+- [ ] Add offline resilience: Wait for `navigator.onLine` to be true and queue up sync jobs.
+- [ ] Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
+- [ ] Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
+- [ ] **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
+- [ ] **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+- [ ] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
+
+## New Ideas (Creative Expansion)
+- [ ] **"Sentient IDE Mode"** - An overly helpful AI code editor (Scientist), a frustrated developer (Comedian), and a philosophical linter (Philosopher).
+- [ ] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
