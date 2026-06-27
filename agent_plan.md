@@ -12,6 +12,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
 - **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
 - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+- **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 # Implementation Roadmap
 
 ## Project Velocity
@@ -320,6 +323,9 @@ tasks_per_run: 2
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+- **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
@@ -331,6 +337,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+- **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
@@ -344,5 +353,10 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [ ] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
 
 ## New Ideas (Creative Expansion)
-- [ ] **"Sentient IDE Mode"** - An overly helpful AI code editor (Scientist), a frustrated developer (Comedian), and a philosophical linter (Philosopher).
-- [ ] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
+- [x] **"Sentient IDE Mode"** - An overly helpful AI code editor (Scientist), a frustrated developer (Comedian), and a philosophical linter (Philosopher).
+- [x] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
+
+## New Ideas (Dream Phase)
+- **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
+- **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
+- **NEW IDEA:** "Peer-to-Peer Sync WebRTC" - Cloud Persistence improvement: Use WebRTC to sync IndexedDB episodes directly between local devices without going through HuggingFace, if on the same network.
