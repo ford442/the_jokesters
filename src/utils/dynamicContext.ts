@@ -193,34 +193,67 @@ export class DynamicContextManager {
 // ============================================================================
 
 /**
- * Estimate available VRAM
+ * Static memory overhead to subtract from the raw probe result.
+ * Accounts for Three.js stage (InstancedMesh + shadows), ONNX TTS runtime,
+ * AudioContext, and WebGPU driver overhead — empirically ~900 MB on a
+ * typical load before the LLM is allocated.
+ */
+export const APP_OVERHEAD_MB = 900;
+
+/** Last successful VRAM estimate; cached so multiple callers don't re-probe. */
+let _cachedVRAMEstimate: number | null = null;
+
+/**
+ * Estimate available VRAM after accounting for app overhead.
+ * Uses test-allocations to probe GPU memory, then subtracts APP_OVERHEAD_MB.
+ * Result is cached — subsequent calls return the same value instantly.
  */
 export async function estimateAvailableVRAM(): Promise<number> {
+  if (_cachedVRAMEstimate !== null) return _cachedVRAMEstimate;
+
   const nav = navigator as any;
-  if (!nav.gpu) return 2048;
+  if (!nav.gpu) {
+    _cachedVRAMEstimate = 2048;
+    return _cachedVRAMEstimate;
+  }
 
   try {
     const adapter = await nav.gpu.requestAdapter();
-    if (!adapter) return 2048;
-    
-    // Try test allocations
+    if (!adapter) {
+      _cachedVRAMEstimate = 2048;
+      return _cachedVRAMEstimate;
+    }
+
+    // Try test allocations from largest to smallest
     const device = await adapter.requestDevice();
-    const testSizes = [4, 3, 2, 1.5, 1];
-    
+    const testSizes = [8, 6, 4, 3, 2, 1.5, 1];
+
+    let probedMB = 1024;
     for (const sizeGB of testSizes) {
       try {
         const testBuffer = device.createBuffer({
           size: sizeGB * 1024 * 1024 * 1024,
-          usage: 32 // GPUBufferUsage.STORAGE is 32 in WebGPU
+          usage: 32 // GPUBufferUsage.STORAGE
         });
         testBuffer.destroy();
-        return sizeGB * 1024;
-      } catch { /* continue */ }
+        probedMB = sizeGB * 1024;
+        break;
+      } catch { /* try smaller */ }
     }
-    return 1024;
+
+    // Subtract static app overhead so callers don't over-commit
+    _cachedVRAMEstimate = Math.max(512, probedMB - APP_OVERHEAD_MB);
+    console.log(`[VRAM] Probed: ${probedMB} MB, after ${APP_OVERHEAD_MB} MB overhead → ${_cachedVRAMEstimate} MB available for model`);
+    return _cachedVRAMEstimate;
   } catch {
-    return 2048;
+    _cachedVRAMEstimate = 2048;
+    return _cachedVRAMEstimate;
   }
+}
+
+/** Invalidate the VRAM cache (call before re-probing after page state change). */
+export function invalidateVRAMCache(): void {
+  _cachedVRAMEstimate = null;
 }
 
 /**
@@ -230,35 +263,42 @@ export function getContextConfigForVRAM(
   vramMB: number,
   modelParams: '3b' | '7b' | '8b' = '7b'
 ): ContextConfig {
+  // Ordered LARGEST-first so the loop returns the biggest context that fits within budget.
+  // Fallback (last entry) is always the smallest / most conservative choice.
   const configs: Record<string, ContextConfig[]> = {
     '3b': [
-      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 2500, label: 'balanced' },
       { context_window_size: 4096, prefill_chunk_size: 1024, vram_estimate_mb: 3000, label: 'full' },
+      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 2500, label: 'balanced' },
+      { context_window_size: 1024, prefill_chunk_size: 512,  vram_estimate_mb: 2000, label: 'compact' },
+      { context_window_size: 512,  prefill_chunk_size: 256,  vram_estimate_mb: 1800, label: 'minimal' },
     ],
     '7b': [
-      { context_window_size: 128, prefill_chunk_size: 128, vram_estimate_mb: 2800, label: 'minimal' },
-      { context_window_size: 256, prefill_chunk_size: 256, vram_estimate_mb: 3100, label: 'compact' },
-      { context_window_size: 512, prefill_chunk_size: 512, vram_estimate_mb: 3500, label: 'balanced' },
-      { context_window_size: 1024, prefill_chunk_size: 1024, vram_estimate_mb: 4000, label: 'standard' },
-      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 5500, label: 'extended' },
-      { context_window_size: 4096, prefill_chunk_size: 1024, vram_estimate_mb: 8000, label: 'full' },
+      { context_window_size: 4096, prefill_chunk_size: 1024, vram_estimate_mb: 7500, label: 'full' },
+      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 5200, label: 'extended' },
+      { context_window_size: 1024, prefill_chunk_size: 1024, vram_estimate_mb: 3900, label: 'balanced' },
+      { context_window_size: 512,  prefill_chunk_size: 512,  vram_estimate_mb: 3400, label: 'compact' },
+      { context_window_size: 256,  prefill_chunk_size: 256,  vram_estimate_mb: 3000, label: 'minimal' },
+      { context_window_size: 128,  prefill_chunk_size: 128,  vram_estimate_mb: 2800, label: 'ultra-minimal' },
     ],
     '8b': [
-      { context_window_size: 512, prefill_chunk_size: 512, vram_estimate_mb: 5200, label: 'balanced' },
-      { context_window_size: 1024, prefill_chunk_size: 1024, vram_estimate_mb: 6000, label: 'standard' },
-      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 7500, label: 'extended' },
+      { context_window_size: 2048, prefill_chunk_size: 1024, vram_estimate_mb: 7200, label: 'extended' },
+      { context_window_size: 1024, prefill_chunk_size: 1024, vram_estimate_mb: 5800, label: 'balanced' },
+      { context_window_size: 512,  prefill_chunk_size: 512,  vram_estimate_mb: 4800, label: 'compact' },
+      { context_window_size: 256,  prefill_chunk_size: 256,  vram_estimate_mb: 3800, label: 'minimal' },
     ],
   };
 
   const modelConfigs = configs[modelParams];
-  const safeVRAM = vramMB * 0.8;
-  
+  const safeVRAM = vramMB * 0.85; // 85% safety margin (generous — overhead already subtracted by estimateAvailableVRAM)
+
+  // Return the largest context window that fits within the VRAM budget
   for (const config of modelConfigs) {
     if (config.vram_estimate_mb <= safeVRAM) {
       return config;
     }
   }
-  return modelConfigs[0];
+  // All configs exceed budget — fall back to the smallest (last entry)
+  return modelConfigs[modelConfigs.length - 1];
 }
 
 /**
@@ -459,16 +499,24 @@ export async function loadModelWithDynamicContext(
     
     const errorMsg = error?.message || String(error);
 
-    // On OOM, retry with smaller context and optionally lower KV cache quantization
+    // On OOM, retry with smaller context and optionally force KV cache quantization
     if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
-      // For 7B models (like Vicuna), don't go below 512; for 3B models, 256 is minimum
+      // Floor: 128 for 3B, 256 for 7B/8B (was 512 — lowered for constrained 4 GB GPUs)
       const isSmallModel = modelConfig.model_id.toLowerCase().includes('3b');
-      const minContext = isSmallModel ? 256 : 512;
-      
+      const minContext = isSmallModel ? 128 : 256;
+
       if (contextSize > minContext) {
-        const smallerContext = contextSize > 2048 ? 1024 : contextSize > 512 ? minContext : minContext;
-        console.warn(`[DynamicContext] OOM with ${contextSize}, retrying with ${smallerContext}`);
-        
+        // Halve the context window each OOM retry until we hit the floor
+        const smallerContext = Math.max(minContext, Math.floor(contextSize / 2));
+        if (smallerContext === minContext) {
+          console.warn(
+            `[DynamicContext] OOM — reached minimum context (${minContext} tokens) for ${modelConfig.model_id}. ` +
+            `Response quality will be very limited. Consider switching to a 3B model if this fails.`
+          );
+        } else {
+          console.warn(`[DynamicContext] OOM with context=${contextSize}, retrying at ${smallerContext}`);
+        }
+
         await new Promise(r => setTimeout(r, 500));
         // @ts-ignore
         if (typeof gc !== 'undefined') gc();
@@ -476,9 +524,13 @@ export async function loadModelWithDynamicContext(
         return loadModelWithDynamicContext(modelConfig, smallerContext, onProgress, vramConfig);
       }
 
-      if (vramConfig.kv_cache_quantization === 'none') {
-        console.warn('[DynamicContext] OOM at minimum context, retrying with KV cache quantization');
-        return loadModelWithDynamicContext(modelConfig, minContext, onProgress, { ...vramConfig, kv_cache_quantization: 'int8' });
+      // Already at floor — try forcing int8 KV quantization as the last resort
+      if (vramConfig.kv_cache_quantization === 'none' || vramConfig.kv_cache_quantization === 'auto') {
+        console.warn('[DynamicContext] OOM at minimum context — forcing int8 KV cache quantization and retrying');
+        return loadModelWithDynamicContext(
+          modelConfig, minContext, onProgress,
+          { ...vramConfig, kv_cache_quantization: 'int8' }
+        );
       }
     }
 

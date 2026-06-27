@@ -15,7 +15,8 @@ import { SpeechQueue } from './audio/SpeechQueue'
 import { DEFAULT_IMPROV_SETUPS } from './config/improvSetups'
 import { EngineFactory, type EngineType } from './llm/EngineFactory'
 import { MemoryManager } from './Director/MemoryManager'
-import { getModelDisplayName, VPS_STORAGE_URL } from './config/models'
+import { getModelDisplayName, getRecommendedModel, VPS_STORAGE_URL } from './config/models'
+import { estimateAvailableVRAM } from './utils/dynamicContext'
 
 
 // Log available models on startup
@@ -371,6 +372,39 @@ async function initApp() {
   const updateModelHint = () => { modelHint.textContent = MODEL_HINTS[modelSelectLaunch.value] ?? '' }
   modelSelectLaunch.addEventListener('change', updateModelHint)
   updateModelHint()
+
+  // Probe VRAM asynchronously and auto-select the recommended model + show info
+  const vramInfoEl = document.getElementById('storage-info')!
+  ;(async () => {
+    try {
+      const [recommendedId, availableMB] = await Promise.all([
+        getRecommendedModel(),
+        estimateAvailableVRAM(),
+      ])
+
+      // Show the VRAM reading so the user understands the recommendation
+      const vramLine = `GPU VRAM available (estimated): ~${availableMB} MB`
+      vramInfoEl.textContent = vramLine
+
+      // Auto-select only if the user hasn't already changed from the default
+      const currentVal = modelSelectLaunch.value
+      const defaultVal = 'vicuna-7b-q4f32-webllm-vps'
+      if (currentVal === defaultVal && recommendedId !== defaultVal) {
+        // Check the recommended option exists in the dropdown
+        const optionExists = Array.from(modelSelectLaunch.options).some(o => o.value === recommendedId)
+        if (optionExists) {
+          modelSelectLaunch.value = recommendedId
+          updateModelHint()
+          const banner = document.createElement('p')
+          banner.style.cssText = 'color:#ffd700;font-size:0.78em;margin:4px 0;'
+          banner.textContent = `⚠️ Auto-selected based on available VRAM (~${availableMB} MB). Change above if needed.`
+          modelHint.insertAdjacentElement('afterend', banner)
+        }
+      }
+    } catch {
+      // VRAM probe failed — non-critical, user keeps manual selection
+    }
+  })()
 
   // Wire up advanced VRAM settings sliders (live value display)
   const maxTokensSlider = document.getElementById('max-tokens-slider') as HTMLInputElement

@@ -1,5 +1,6 @@
 import * as webllm from '@mlc-ai/web-llm'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
+import { estimateAvailableVRAM } from '../utils/dynamicContext'
 
 export { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL }
 
@@ -516,38 +517,55 @@ export function getAvailableModels(engine: typeof webllm): string[] {
 }
 
 /**
- * Get recommended model based on device capabilities
+ * VRAM thresholds driving the model recommendation ladder (after APP_OVERHEAD_MB subtraction).
+ * These mirror the vram_required_MB values in VPS_FP32_MODELS.
+ */
+const VRAM_THRESHOLD_ULTRA_LOW = 3400;  // < this → ultra-low 512-ctx Vicuna
+const VRAM_THRESHOLD_3B        = 2800;  // < this → 3B model (7B won't fit at all)
+
+/**
+ * Get recommended model based on device capabilities and probed VRAM.
+ *
+ * Ladder (highest to lowest VRAM requirement):
+ *  ≥ 3400 MB  → Vicuna 7B q4f32 (full)
+ *  ≥ 2800 MB  → Vicuna 7B q4f32 ultra-low (512 ctx + sliding window)
+ *  < 2800 MB  → Hermes-3 3B q4f32 (fallback)
+ *
+ * The thresholds are post-overhead values produced by estimateAvailableVRAM().
  */
 export async function getRecommendedModel(): Promise<string> {
-  // Check for GPU memory (rough estimate)
   const gpu = (navigator as any).gpu;
   if (!gpu) {
     return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
   }
 
-  // Probe adapter for buffer-size heuristic (ultra-low VRAM detection)
+  // Hard buffer-size check — <256 MB maxBufferSize means MLC/WebGPU can't allocate model weights
   try {
     const adapter = await gpu.requestAdapter();
     const maxBufferSize = (adapter as any)?.limits?.maxBufferSize ?? 0;
     if (maxBufferSize > 0 && maxBufferSize < 268_435_456) {
-      // <256MB maxBufferSize strongly suggests a low-VRAM GPU
-      console.log('[ModelConfig] Low buffer-size detected — recommending custom 512-ctx Vicuna');
-      return VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id;
+      console.log('[ModelConfig] maxBufferSize < 256 MB → recommending 3B fallback');
+      return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
     }
   } catch {
-    // Adapter probing failed; fall through to normal logic
+    // Adapter probing failed; continue
   }
 
-  // Check for f16 support
-  const supportsF16 = await checkF16Support();
+  // Probe available VRAM (includes APP_OVERHEAD_MB subtraction)
+  const availableMB = await estimateAvailableVRAM();
+  console.log(`[ModelConfig] Available VRAM (after overhead): ${availableMB} MB`);
 
-  if (!supportsF16) {
-    console.log('[ModelConfig] GPU does not support shader-f16, using Vicuna 7B q4f32');
-    return VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
+  if (availableMB < VRAM_THRESHOLD_3B) {
+    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_3B} MB → recommending Hermes-3 3B`);
+    return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
   }
 
-  // Default recommendation: Vicuna 7B q4f32 (universal fp32, self-hosted)
-  console.log('[ModelConfig] Recommending Vicuna 7B q4f32');
+  if (availableMB < VRAM_THRESHOLD_ULTRA_LOW) {
+    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B ultra-low (512 ctx)`);
+    return VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id;
+  }
+
+  console.log(`[ModelConfig] ${availableMB} MB ≥ ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B q4f32`);
   return VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
 }
 

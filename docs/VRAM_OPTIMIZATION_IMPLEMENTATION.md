@@ -1,7 +1,7 @@
 # VRAM Optimization Implementation Guide
 
 > **Synthesized research from agent swarm analysis**  
-> **Last Updated:** April 2026
+> **Last Updated:** June 2026 — see §7 for Dreamhost gzip workaround and June 2026 runtime hardening
 
 ---
 
@@ -1847,3 +1847,85 @@ export function createVRAMWarningUI(recommendation: ModelRecommendation): HTMLEl
 | Combined | **20-40x** | - |
 
 With all techniques applied, a 7B model requiring ~28GB can run in ~3-4GB VRAM.
+
+---
+
+## §7 — June 2026 Hardening: Dreamhost Workaround + Runtime Guards
+
+### 7.1 Client-side gzip decompression (Dreamhost hosting workaround)
+
+Dreamhost shared hosting does not support server Brotli (`mod_brotli`).
+The Dreamhost-compatible approach is **pre-compressed `.gz` shards** served
+alongside the originals, decompressed on the client using the browser's native
+`DecompressionStream('gzip')`.
+
+**Server preparation** (run on a machine with access to the VPS):
+
+```bash
+# Compress every weight shard with gzip -9
+# Run in the model directory on the VPS (or locally and scp up)
+for f in *.bin *.wasm *.gguf; do
+  [ -f "$f" ] && gzip -9 -k "$f" && echo "compressed: ${f}.gz"
+done
+
+# Upload the .gz files alongside the originals at:
+#   https://storage.1ink.us/models/<model-dir>/<shard>.bin.gz
+#   https://storage.1ink.us/wasm-libs/<lib>.wasm.gz
+```
+
+**What changed in the codebase:**
+
+- `src/service-worker.ts`: Added `tryFetchGzCompressed()`.
+  When WebLLM requests a `.bin`, `.wasm`, `.gguf`, or `.safetensors` from
+  `storage.1ink.us`, the SW does a `HEAD <url>.gz`. If the file exists, it
+  downloads the compressed version (in parallel if Range is supported), and
+  decompresses with `new DecompressionStream('gzip')` before returning.
+  Typical savings: 20–35% of download size. Falls back gracefully to the
+  plain URL if the `.gz` is absent.
+
+**Why gzip, not brotli:** `DecompressionStream` in Chrome/Edge supports
+`gzip`, `deflate`, `deflate-raw`. Brotli is NOT available in the browser
+Streams API as of 2026 (it's server-only via `Content-Encoding: br`).
+
+### 7.2 7B OOM path hardening
+
+`src/utils/dynamicContext.ts` — `loadModelWithDynamicContext`:
+
+- **Old floor**: 7B models wouldn't retry below 512 ctx tokens.
+- **New floor**: 256 ctx tokens for 7B, 128 for 3B.
+  Each OOM halves the context window until the floor, then forces
+  `kv_cache_quantization: 'int8'` as a final fallback.
+- Warning logged when floor is hit: user is advised to switch to a 3B model.
+
+### 7.3 VRAM estimator improvement
+
+`estimateAvailableVRAM()` now:
+
+1. **Caches the probe result** — subsequent callers (UI + model loader) pay zero cost.
+2. **Subtracts `APP_OVERHEAD_MB` (900 MB)** — static reservation for Three.js
+   stage, ONNX TTS runtime, and AudioContext overhead.
+3. Probes a wider size range (1–8 GB).
+
+### 7.4 VRAM-driven model auto-selection
+
+`getRecommendedModel()` now calls `estimateAvailableVRAM()` and follows
+this ladder:
+
+| Available (after overhead) | Recommended model |
+|---|---|
+| ≥ 3400 MB | Vicuna 7B q4f32 (full 2048 ctx) |
+| 2800–3400 MB | Vicuna 7B ultra-low (512 ctx + sliding window) |
+| < 2800 MB | Hermes-3 3B q4f32 |
+
+`main.ts` calls `getRecommendedModel()` on page load and pre-selects the
+dropdown entry, showing the probed VRAM reading to the user.
+
+### 7.5 `getContextConfigForVRAM` corrections
+
+- Table reordered to **largest-first** so the loop returns the **largest
+  context that fits within budget** (was returning the smallest).
+- Fallback changed to `modelConfigs[modelConfigs.length - 1]` (smallest/
+  safest) rather than `modelConfigs[0]` (which was previously the smallest
+  but would now be the largest under the new ordering).
+- Safety margin raised from 80% to 85% (overhead is already subtracted by
+  `estimateAvailableVRAM`; double-discounting was too conservative).
