@@ -10,6 +10,9 @@ export const setupDashboard = () => {
     const deltasContainer = document.getElementById('pending-deltas-container');
     const deltasList = document.getElementById('pending-deltas-list');
     const forceMergeBtn = document.getElementById('force-merge-deltas-btn');
+    const viewAnalyticsBtn = document.getElementById('view-analytics-btn');
+    const analyticsContainer = document.getElementById('episode-analytics-container');
+    const analyticsContent = document.getElementById('episode-analytics-content');
 
     if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
 
@@ -72,58 +75,63 @@ export const setupDashboard = () => {
         loadHistory();
     });
 
-    if (checkDeltasBtn && deltasContainer && deltasList && forceMergeBtn) {
-        checkDeltasBtn.addEventListener('click', async () => {
-            deltasList.innerHTML = '<div style="color: #888;">Checking for pending deltas...</div>';
-            deltasContainer.style.display = 'block';
 
-            const getMemMgr = (window as any).getMemoryManager;
-            if (!getMemMgr) {
-                deltasList.innerHTML = '<div style="color: #ff6b6b;">MemoryManager not available.</div>';
-                return;
-            }
+    if (viewAnalyticsBtn && analyticsContainer && analyticsContent) {
+        viewAnalyticsBtn.addEventListener('click', async () => {
 
-            const memoryManager = getMemMgr();
-            const deltas = await memoryManager.getPendingDeltas();
-
-            deltasList.innerHTML = '';
-
-            if (!deltas || deltas.length === 0) {
-                deltasList.innerHTML = '<div style="color: #4ecdc4;">No pending deltas found. All episodes are fully merged!</div>';
-                forceMergeBtn.style.display = 'none';
-                return;
-            }
-
-            forceMergeBtn.style.display = 'block';
-
-            deltas.forEach((delta: any) => {
-                const div = document.createElement('div');
-                div.style.background = 'rgba(0,0,0,0.2)';
-                div.style.padding = '8px';
-                div.style.borderRadius = '4px';
-                div.style.fontSize = '0.9em';
-
-                // Extract episode ID from path (episodes/ID/delta-...)
-                const match = delta.path.match(/episodes\/([^\/]+)\/delta-/);
-                const episodeId = match ? match[1] : 'Unknown';
-
-                div.innerHTML = `<span style="color: #ffd700;">[Episode: ${episodeId}]</span> <span style="color: #ccc;">${delta.path.split('/').pop()}</span>`;
-                deltasList.appendChild(div);
-            });
-        });
-
-        forceMergeBtn.addEventListener('click', async () => {
             const getMemMgr = (window as any).getMemoryManager;
             if (!getMemMgr) return;
+
             const memoryManager = getMemMgr();
 
-            deltasList.innerHTML = '<div style="color: #4ecdc4;">Triggering manual delta consolidation... Check background sync status.</div>';
-            forceMergeBtn.style.display = 'none';
+            // Toggle visibility
+            if (analyticsContainer.style.display === 'block') {
+                analyticsContainer.style.display = 'none';
+                return;
+            }
 
-            // Re-run the delta consolidation task
-            memoryManager.startDeltaConsolidationTask();
+            analyticsContainer.style.display = 'block';
+            analyticsContent.innerHTML = '<div>Loading analytics...</div>';
+
+            try {
+                const analytics = await memoryManager.getEpisodeAnalytics();
+
+                // Format top modes
+                const modesEntries = Object.entries(analytics.commonModes).sort((a: any, b: any) => b[1] - a[1]).slice(0, 3);
+                let modesHtml = modesEntries.map(e => `${e[0]} (${e[1]})`).join(', ') || 'None';
+
+                console.log('Setting innerHTML');
+                analyticsContent.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #4ecdc4; padding-bottom: 5px; margin-bottom: 5px;">
+                        <span>Total Episodes:</span>
+                        <strong style="color: white;">${analytics.totalEpisodes}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #4ecdc4; padding-bottom: 5px; margin-bottom: 5px;">
+                        <span>Total Tokens (Proxy):</span>
+                        <strong style="color: white;">${analytics.totalTokensProxy}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #4ecdc4; padding-bottom: 5px; margin-bottom: 5px;">
+                        <span>Avg Episode Length:</span>
+                        <strong style="color: white;">${analytics.avgEpisodeLength}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Top Modes:</span>
+                        <strong style="color: white;">${modesHtml}</strong>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Failed to load analytics', err);
+                console.log('Error setting innerHTML', err);
+                analyticsContent.innerHTML = '<div style="color: #ff6b6b;">Failed to load analytics.</div>';
+            }
         });
     }
-};
 
-setTimeout(setupDashboard, 1000);
+
+
+    }
+
+(window as any).triggerAnalytics = async () => {
+    const btn = document.getElementById('view-analytics-btn');
+    if (btn) btn.click();
+};

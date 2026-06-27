@@ -307,11 +307,11 @@ tasks_per_run: 2
 ## Storage Manager Integration Next Steps (Cloud Infrastructure)
 
 - **NEW IDEA:** **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
-- **NEW IDEA:** **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+- [x] **NEW IDEA:** **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
 
 ## Dream Phase Additions (Architectural Expansion)
 - **NEW IDEA:** Cloud Persistence: Offline-First Differential Sync Queue. Implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
-- **NEW IDEA:** Episode Analytics Dashboard. Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+- [x] **NEW IDEA:** Episode Analytics Dashboard. Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
 - **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it.
 - **NEW IDEA:** "Bureau of Silly Walks Simulator" - Agents debate the physics and artistic merit of various walks.
 
@@ -325,6 +325,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 - **NEW IDEA:** "Semantic Search for Cloud Memories" - Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
 
+- **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
+- **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
+- **NEW IDEA:** Cloud Persistence: "Peer-to-Peer Sync WebRTC" - Use WebRTC to sync IndexedDB episodes directly between local devices without going through HuggingFace, if on the same network.
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
