@@ -63,7 +63,7 @@ WLLAMA_WASM = [
     ("multi-thread.wasm", "https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm/multi-thread/wllama.wasm"),
 ]
 
-# TTS ONNX models and configs from 1ink.us
+# TTS ONNX models required by SupertonicPipeline (src/audio/SupertonicPipeline.ts)
 TTS_FILES = [
     "tts.json",
     "unicode_indexer.json",
@@ -71,17 +71,18 @@ TTS_FILES = [
     "text_encoder.onnx",
     "vector_estimator.onnx",
     "vocoder.onnx",
-    "latent_denoiser.onnx",
-    "latent_denoiser.onnx_data",
-    "text_encoder.onnx_data",
-    "voice_decoder.onnx",
-    "voice_decoder.onnx_data",
 ]
-TTS_BASE_URL = "https://test.1ink.us/the-jokesters/tts/onnx"
+TTS_BASE_URL = os.environ.get(
+    "TTS_BASE_URL",
+    "https://storage.1ink.us/models/tts/onnx",
+)
 
-# Voice styles from 1ink.us
+# Voice styles
 VOICE_STYLES = ["M1.json", "M2.json", "F1.json", "F2.json"]
-VOICE_BASE_URL = "https://test.1ink.us/the-jokesters/tts/voice_styles"
+VOICE_BASE_URL = os.environ.get(
+    "VOICE_BASE_URL",
+    "https://storage.1ink.us/models/tts/voice_styles",
+)
 
 
 def download_file(url: str, dest: Path):
