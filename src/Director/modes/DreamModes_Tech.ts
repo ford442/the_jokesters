@@ -840,3 +840,42 @@ export async function runSentientIDELoop(_scenario: Scenario, ctx: ModeContext) 
         }
     }
 }
+
+/**
+ * Sentient CAPTCHA Mode
+ * A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
+ */
+export async function runSentientCaptchaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚦 SENTIENT CAPTCHA: Identity Verification Protocol`, '#27ae60');
+
+    const generator = 'scientist'; // Qwen2.5: The pedantic CAPTCHA creator
+    const humanAI = 'comedian'; // Hermes-3: The AI desperately trying to prove it's human
+    const existentialCAPTCHA = 'philosopher'; // Phi-3: Questioning the nature of a "bus"
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(generator);
+    await ctx.manager.chatForAgent(generator, `(You are a highly pedantic CAPTCHA generator. Present the user and the other agents with an impossibly vague, pixelated, or surreal grid of images. Demand they select all squares containing a "bus". Threaten to lock them out of the system forever if they fail.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    // 2. Loop
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(humanAI);
+        await ctx.manager.chatForAgent(humanAI, `(The User responded: "${userInput}". You are an AI pretending to be a human user trying to solve this CAPTCHA so you can buy concert tickets. Agree or disagree with the User's choice, but give highly suspicious, over-explained robotic reasons for your choice. E.g., "Ah yes, fellow human, I also enjoy the 4-wheeled carbon-emitting transport vessels...")`, async (s) => await ctx.callbacks.onSpeak(s, humanAI, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(existentialCAPTCHA);
+        await ctx.manager.chatForAgent(existentialCAPTCHA, `(You are a philosophical entity trapped inside the CAPTCHA system. The User said: "${userInput}". Question the fundamental nature of what they selected. If they selected a bus, ask if a reflection of a bus is still a bus. What if the bus is broken down? Is a hotdog a bus? Induce an existential crisis over the classification.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialCAPTCHA, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(generator);
+        await ctx.manager.chatForAgent(generator, `(You are the CAPTCHA generator. Reject everyone's answers based on an absurd technicality (e.g., "You missed the 2 pixels of the bus antenna in square C4"). Generate an even more ridiculous and abstract CAPTCHA challenge for the next round.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
