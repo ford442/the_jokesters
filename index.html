@@ -10,15 +10,24 @@
     <link rel="preconnect" href="https://storage.1ink.us" crossorigin />
     <script>
       // Rewrite WebLLM's HuggingFace-style /resolve/main/ URLs to flat VPS paths.
+      // Must run before the app bundle — WebLLM uses Cache.add() which may not
+      // honor a patched fetch, so we patch both fetch and Cache here.
       (function () {
-        var RE = /^(https:\/\/storage\.1ink\.us\/models\/[^/]+)\/resolve\/main\/(.+)$/;
+        var RE = /^(https:\/\/storage\.(?:1ink\.us|noahcohn\.com)\/models\/[^/]+)\/resolve\/main\/(.+)$/;
         function rewrite(url) {
           var m = url.match(RE);
           return m ? m[1] + '/' + m[2] : url;
         }
+        function requestUrl(input) {
+          return typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        }
+        function buildRequest(input, url) {
+          if (typeof input === 'string' || input instanceof URL) return new Request(url);
+          return new Request(url, input);
+        }
         var origFetch = globalThis.fetch.bind(globalThis);
         globalThis.fetch = function (input, init) {
-          var url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+          var url = requestUrl(input);
           var fixed = rewrite(url);
           if (fixed !== url) {
             if (typeof input === 'string' || input instanceof URL) return origFetch(fixed, init);
@@ -26,6 +35,20 @@
           }
           return origFetch(input, init);
         };
+        if (typeof Cache !== 'undefined') {
+          var origAdd = Cache.prototype.add;
+          Cache.prototype.add = function (input) {
+            var url = requestUrl(input);
+            var fixed = rewrite(url);
+            if (fixed === url) return origAdd.call(this, input);
+            return origFetch(fixed).then(function (response) {
+              if (!response || !response.ok) {
+                throw new TypeError("Failed to execute 'add' on 'Cache': Request failed");
+              }
+              return this.put(buildRequest(input, url), response);
+            }.bind(this));
+          };
+        }
       })();
     </script>
     <style>
