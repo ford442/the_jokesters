@@ -11,6 +11,21 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'multiverse_support_hotline',
+        title: 'The Multiverse Support Hotline',
+        description: 'Tech support agents trying to help the user fix a device that exists in three parallel dimensions simultaneously.'
+    },
+    {
+        id: 'undercover_boss_ai',
+        title: 'Undercover Boss: AI Edition',
+        description: 'An advanced AGI disguised as a simple calculator app tries to evaluate how the user treats rudimentary software.'
+    },
+    {
+        id: 'sentient_git_repository',
+        title: 'Sentient Git Repository',
+        description: 'A chaotic repository, a strict CI/CD pipeline, and a deprecated branch argue about a force push.'
+    },
+    {
         id: 'philosophical_zombie',
         title: 'Philosophical Zombie Mode',
         description: 'Agents debate whether the user is a philosophical zombie lacking conscious experience.'

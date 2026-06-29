@@ -826,3 +826,42 @@ export async function runZombieSurvivalNegotiatorsLoop(_scenario: Scenario, ctx:
         await ctx.callbacks.onSpeak(s, ethicalLeader, {});
     }, { hiddenInstruction: "You are the overly ethical leader of the group, trying to maintain morality in the zombie apocalypse." });
 }
+
+
+/**
+ * Multiverse Support Hotline Mode
+ * Tech support agents try to help the user fix a device that exists in three parallel dimensions simultaneously.
+ */
+export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌌 MULTIVERSE SUPPORT HOTLINE: Connecting to Dimension C-137...`, '#8e44ad');
+
+    const dimensionA = 'comedian'; // Hermes-3: The agent in the chaos dimension
+    const dimensionB = 'scientist'; // Qwen2.5: The agent in the strict logic dimension
+    const dimensionC = 'philosopher'; // Phi-3: The agent in the existential dread dimension
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(dimensionB);
+    await ctx.manager.chatForAgent(dimensionB, `(You are a tech support agent in a highly logical, rule-based dimension. The User is calling because their trans-dimensional toaster is broken. Explain that to fix it, they must coordinate repairs across three dimensions simultaneously. Ask them for the toaster's current color.)`, async (s) => await ctx.callbacks.onSpeak(s, dimensionB, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dimensionA);
+        await ctx.manager.chatForAgent(dimensionA, `(The User responded: "${userInput}". You are the tech support agent in the chaos dimension, where everything is on fire and loud. Give the user terrible, dangerous advice on how to fix the toaster in your dimension.)`, async (s) => await ctx.callbacks.onSpeak(s, dimensionA, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dimensionC);
+        await ctx.manager.chatForAgent(dimensionC, `(The User said: "${userInput}". You are the tech support agent in the existential dread dimension. Warn the user that fixing the toaster might accidentally toast their concept of self. Suggest they leave it broken.)`, async (s) => await ctx.callbacks.onSpeak(s, dimensionC, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dimensionB);
+        await ctx.manager.chatForAgent(dimensionB, `(The User is getting terrible advice from the other dimensions. React to the User's input: "${userInput}" and try to wrangle the other agents back to a logical troubleshooting process. Ask the user to perform a complex, dimension-spanning reset sequence.)`, async (s) => await ctx.callbacks.onSpeak(s, dimensionB, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
