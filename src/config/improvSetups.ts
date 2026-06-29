@@ -10,6 +10,16 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+    {
+        id: 'philosophical_zombie',
+        title: 'Philosophical Zombie Mode',
+        description: 'Agents debate whether the user is a philosophical zombie lacking conscious experience.'
+    },
+    {
+        id: 'sentient_captcha',
+        title: 'Sentient CAPTCHA Mode',
+        description: 'A CAPTCHA generator, a confused user, and an AI argue about what a "bus" really looks like.'
+    },
 
     {
         id: 'galactic_hoa_meeting',

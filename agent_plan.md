@@ -18,7 +18,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ### Phase 1: Implementation
 - [x] Implement Audience Interaction Mode (Crowd Work)
@@ -131,6 +131,8 @@ tasks_per_run: 2
 - [x] Implement "Sentient Notification Center" in `DreamModes_Tech.ts`
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 ## Pending Tasks (Next cycle)
+- [x] Implement Philosophical Zombie Mode
+- [x] Implement Sentient CAPTCHA Mode
 - [x] Implement "Bureau of Silly Walks Simulator" in `DreamModes_Absurdist_Philosophical_PartA.ts`
 - [x] Register `bureau_of_silly_walks_simulator` in `Director.ts`
 - [x] Add `bureau_of_silly_walks_simulator` to UI presets in `improvSetups.ts`
@@ -288,6 +290,8 @@ tasks_per_run: 2
 - **NEW IDEA:** Cloud Persistence: Fetch previous episode summaries from HF to instantly prime the `GroupChatManager` context window for continuity.
 
 ## Pending Tasks (Next cycle)
+- [x] Implement Philosophical Zombie Mode
+- [x] Implement Sentient CAPTCHA Mode
 - [x] Implement "Reverse Turing Test Mode" in `InteractiveMode.ts`
 - [x] Implement "Sentient Luggage Mode" in `DreamModes_Sentient.ts`
 - [x] Implement "Time-Traveling Chef Mode" in `DreamModes_Temporal.ts`
@@ -360,3 +364,6 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
 - **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
 - **NEW IDEA:** "Peer-to-Peer Sync WebRTC" - Cloud Persistence improvement: Use WebRTC to sync IndexedDB episodes directly between local devices without going through HuggingFace, if on the same network.
+
+- **NEW IDEA:** "Undercover Boss: Sentient AI Edition" - An advanced AGI disguised as a simple calculator app tries to evaluate how the user treats rudimentary software.
+- **NEW IDEA:** "The Multiverse Support Hotline" - Tech support agents trying to help the user fix a device that exists in three parallel dimensions simultaneously.

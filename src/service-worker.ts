@@ -169,7 +169,7 @@ async function tryFetchGzCompressed(url: string): Promise<Response | null> {
       // Write all compressed bytes then close; collect decompressed chunks
       (async () => {
         try {
-          await writer.write(compressedBytes);
+          await writer.write(compressedBytes as any);
           await writer.close();
         } catch { /* reader will see the error */ }
       })();

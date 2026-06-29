@@ -1,6 +1,6 @@
 # Smoke Test Passed ✓
 
-**Test Date:** 2026-06-27T11:58:08.421398
+**Test Date:** 2026-06-29T02:14:20.978199
 
 ## Test Summary
 
@@ -17,11 +17,11 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
-| Build Time | 34.3s |
-| Load Time | 1.1s |
+| Build Time | 35.8s |
+| Load Time | 1.9s |
 | JS Heap Memory | 51.0 MB |
 | Console Errors | 1 |
-| Console Warnings | 1 |
+| Console Warnings | 4 |
 
 ## Agents Tested
 
@@ -57,7 +57,9 @@ The following 5 personas are configured:
 **Errors (1):**
 - WebGPU adapter not available...
 
-**Warnings (1):**
+**Warnings (4):**
+- No available adapters....
+- No available adapters....
 - No available adapters....
 
 ## Notes

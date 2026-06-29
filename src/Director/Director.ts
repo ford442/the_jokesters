@@ -7,7 +7,8 @@ import { runDatingAppAlgorithmRebellionLoop } from './modes/InteractiveMode';
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
 import { runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
-import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop } from './modes/DreamModes_Tech';
+import { runPhilosophicalZombieLoop } from './modes/DreamModes_Absurdist_Philosophical_PartB';
+import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
 import { runTimeTravelingArtCriticLoop, runTimeTravelingTechSupportLoop } from './modes/DreamModes_Temporal';
 import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop } from './modes/DreamModes_Scifi';
@@ -294,7 +295,8 @@ export interface Scenario {
     | 'sentient_toaster'
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
-    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'philosophical_pizza_debate' | 'bureau_of_silly_walks_simulator' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
+    | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'philosophical_pizza_debate' | 'bureau_of_silly_walks_simulator' |
+    'philosophical_zombie' | 'sentient_captcha' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
 
     title: string;
     description: string;
@@ -470,6 +472,8 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
     quantum_mechanics_cooking_show: runQuantumMechanicsCookingShowLoop,
     philosophical_pizza_debate: runPhilosophicalDebateOverPizzaToppingsLoop,
     bureau_of_silly_walks_simulator: runBureauOfSillyWalksSimulatorLoop,
+    philosophical_zombie: runPhilosophicalZombieLoop,
+    sentient_captcha: runSentientCaptchaLoop,
     medical: runMedicalLoop,
     haunted: runHauntedHouseLoop,
     sports: runSportsCommentaryLoop,

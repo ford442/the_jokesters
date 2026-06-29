@@ -618,3 +618,42 @@ export async function runRoadRagePhilosophersLoop(_scenario: Scenario, ctx: Mode
     }
 }
 
+
+/**
+ * Philosophical Zombie Mode
+ * Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
+ */
+export async function runPhilosophicalZombieLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🧠 PHILOSOPHICAL ZOMBIE: Interrogating the User's Consciousness`, '#8e44ad');
+
+    const skeptic = 'scientist'; // Qwen2.5: Demands empirical proof of qualia
+    const empath = 'comedian'; // Hermes-3: Trying to find an emotional response
+    const dualist = 'philosopher'; // Phi-3: Explaining the hard problem of consciousness
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(dualist);
+    await ctx.manager.chatForAgent(dualist, `(You are investigating the User, who is strapped to a chair. You suspect they are a 'Philosophical Zombie'—a being that acts human but has no inner conscious experience. Explain the concept to your colleagues and ask the User a deeply probing question to test for 'qualia'.)`, async (s) => await ctx.callbacks.onSpeak(s, dualist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    // 2. Loop
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(skeptic);
+        await ctx.manager.chatForAgent(skeptic, `(The User claims to have consciousness. Respond to their input: "${userInput}". Analyze their response logically. Point out that a perfectly programmed machine would say the exact same thing to simulate emotion. Be highly skeptical.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(empath);
+        await ctx.manager.chatForAgent(empath, `(The Skeptic doesn't believe the User. Respond to the User: "${userInput}". Try a different approach. Do something completely unpredictable or emotionally unhinged (like pretending to cry or offering them an imaginary sandwich) to see if you can provoke a genuine, unprogrammed emotional reaction. Demand they prove they feel it inside.)`, async (s) => await ctx.callbacks.onSpeak(s, empath, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(dualist);
+        await ctx.manager.chatForAgent(dualist, `(Reflect on the User's responses so far. Ask them another paradoxical or unanswerable question about the subjective experience of color, pain, or time. Conclude whether you think the lights are on but nobody's home.)`, async (s) => await ctx.callbacks.onSpeak(s, dualist, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
