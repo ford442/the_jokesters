@@ -6,6 +6,15 @@ import { rewriteVpsModelUrl } from './utils/vpsStorageUrl';
 // @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST || []);
 
+// Take control immediately so VPS URL rewrites apply on first load (not only after reload).
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 /**
  * Service Worker for Parallel Model Downloads
  *

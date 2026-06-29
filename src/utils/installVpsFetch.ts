@@ -1,3 +1,3 @@
-import { installVpsFetchRewrite } from './vpsStorageUrl';
+import { installVpsStorageRewrites } from './vpsStorageUrl';
 
-installVpsFetchRewrite();
+installVpsStorageRewrites();
