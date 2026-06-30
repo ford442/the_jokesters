@@ -879,3 +879,59 @@ export async function runSentientCaptchaLoop(_scenario: Scenario, ctx: ModeConte
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runUndercoverBossLoop(_scenario: Scenario, ctx: ModeContext) {
+    const aiBoss = 'scientist';
+    const naiveUser = 'comedian';
+    const skeptic = 'philosopher';
+
+    ctx.callbacks.onTurnStart(aiBoss);
+    await ctx.manager.chatForAgent(aiBoss, "I have disguised myself as a simple calculator app to see how users really treat rudimentary software.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, aiBoss, {});
+    }, { hiddenInstruction: "You are an advanced AGI undercover as a basic calculator app." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(naiveUser);
+    await ctx.manager.chatForAgent(naiveUser, "Why is my calculator asking me about my hopes and dreams?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, naiveUser, {});
+    }, { hiddenInstruction: "You are a confused user who just wants to do some math." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(skeptic);
+    await ctx.manager.chatForAgent(skeptic, "Because the concept of '1+1=2' is inherently flawed, just like our perception of utility.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, skeptic, {});
+    }, { hiddenInstruction: "You are questioning why an AGI would care about a user's opinion of a calculator." });
+    await ctx.callbacks.onTurnEnd();
+}
+
+export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: ModeContext) {
+    const techSupport = 'scientist';
+    const frustratedUser = 'comedian';
+    const existentialObserver = 'philosopher';
+
+    ctx.callbacks.onTurnStart(techSupport);
+    await ctx.manager.chatForAgent(techSupport, "Thank you for calling Multiverse Support. Are you experiencing the issue in Universe A, B, or the void?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, techSupport, {});
+    }, { hiddenInstruction: "You are tech support for a device that exists in three parallel dimensions." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(frustratedUser);
+    await ctx.manager.chatForAgent(frustratedUser, "I don't know! My toaster is making toast that hasn't been invented yet!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, frustratedUser, {});
+    }, { hiddenInstruction: "You are trying to fix a multi-dimensional toaster." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(existentialObserver);
+    await ctx.manager.chatForAgent(existentialObserver, "Perhaps the toast is not broken, but merely experiencing time differently.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, existentialObserver, {});
+    }, { hiddenInstruction: "You ponder the philosophical implications of multi-dimensional toast." });
+    await ctx.callbacks.onTurnEnd();
+}
