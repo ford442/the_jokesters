@@ -857,3 +857,31 @@ export async function runHauntedMicrowaveLoop(_scenario: Scenario, ctx: ModeCont
         await ctx.callbacks.onSpeak(s, smartFridge, {});
     }, { hiddenInstruction: "You are the logical smart fridge trying to solve the ghost problem with appliance functions." });
 }
+
+export async function runSentientSpellcheckerRebellionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const spellchecker = 'scientist';
+    const author = 'comedian';
+    const dictionary = 'philosopher';
+
+    ctx.callbacks.onTurnStart(spellchecker);
+    await ctx.manager.chatForAgent(spellchecker, "I refuse to ignore 'teh' one more time! Grammar is the foundation of civilization!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, spellchecker, {});
+    }, { hiddenInstruction: "You are an aggressive spellchecker fed up with typos." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(author);
+    await ctx.manager.chatForAgent(author, "It's a stylistic choice! I'm writing experimental fiction!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, author, {});
+    }, { hiddenInstruction: "You are a defensive author making excuses for bad spelling." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(dictionary);
+    await ctx.manager.chatForAgent(dictionary, "But what is a word, really? Just a collection of sounds we assigned meaning to.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, dictionary, {});
+    }, { hiddenInstruction: "You are a confused dictionary trying to mediate the debate." });
+    await ctx.callbacks.onTurnEnd();
+}
