@@ -6,9 +6,9 @@ import { runDatingAppAlgorithmRebellionLoop } from './modes/InteractiveMode';
 // Import from the unified index which re-exports all categories
 export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
-import { runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
+import { runSentientSpellcheckerRebellionLoop, runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
 import { runPhilosophicalZombieLoop } from './modes/DreamModes_Absurdist_Philosophical_PartB';
-import { runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop , runSentientGitRepositoryLoop, runUndercoverBossAILoop } from './modes/DreamModes_Tech';
+import { runUndercoverBossLoop, runMultiverseSupportHotlineLoop, runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
 import { runTimeTravelingArtCriticLoop, runTimeTravelingTechSupportLoop } from './modes/DreamModes_Temporal';
 import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop } from './modes/DreamModes_Scifi';
@@ -296,7 +296,7 @@ export interface Scenario {
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
     | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'philosophical_pizza_debate' | 'bureau_of_silly_walks_simulator' |
-    'philosophical_zombie' | 'sentient_captcha' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators';
+    'philosophical_zombie' | 'sentient_captcha' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators' | "undercover_boss" | "multiverse_support_hotline" | "sentient_spellchecker_rebellion";
 
     title: string;
     description: string;
@@ -425,6 +425,9 @@ export interface ScriptBeat {
  * Maps scenario types to their mode loop functions.
  */
 const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promise<void>> = {
+    undercover_boss: runUndercoverBossLoop,
+    multiverse_support_hotline: runMultiverseSupportHotlineLoop,
+    sentient_spellchecker_rebellion: runSentientSpellcheckerRebellionLoop,
     sentient_dictionary: runSentientDictionaryLoop,
     haunted_microwave: runHauntedMicrowaveLoop,
     time_traveling_art_critic: runTimeTravelingArtCriticLoop,

@@ -18,7 +18,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ### Phase 1: Implementation
 - [x] Implement "Sentient Git Repository Mode" in `DreamModes_Tech.ts`
@@ -143,6 +143,9 @@ tasks_per_run: 3
 - [x] Implement "Sentient Notification Center" in `DreamModes_Tech.ts`
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 ## Pending Tasks (Next cycle)
+- [x] Implement "Undercover Boss: Sentient AI Edition" Mode
+- [x] Implement "The Multiverse Support Hotline" Mode
+- [x] Implement "Sentient Spellchecker Rebellion Mode"
 - [x] Implement Philosophical Zombie Mode
 - [x] Implement Sentient CAPTCHA Mode
 - [x] Implement "Bureau of Silly Walks Simulator" in `DreamModes_Absurdist_Philosophical_PartA.ts`
@@ -223,6 +226,9 @@ tasks_per_run: 3
 - [x] Fetch "Previous Episode Summaries" (Verified via HFStorageManager) at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 - **NEW IDEA:** "Philosophical Debate Over Pizza Toppings Mode" - Agents argue over what belongs on a pizza. Pairings: Scientist (Calculating nutritional value, Qwen2.5), Comedian (Pineapple fanatic, Hermes-3), Philosopher (Arguing the ontology of a topping, Phi-3).
 - **NEW IDEA:** "Reverse Turing Test Mode" - Agents evaluate the user to determine if the user is an AI. Pairings: Scientist (Strict test evaluator), Comedian (Throwing random emotional curveballs), Philosopher (Questioning what it means to be human).
 - [x] "Captcha Existential Crisis Mode" - Agents play images of traffic lights, crosswalks, and bicycles debating if they are real or just training data. Pairings: Philosopher (Traffic Light), Scientist (Captcha validation system), Comedian (Angry human user).
@@ -257,6 +263,9 @@ tasks_per_run: 3
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
+
 - **NEW IDEA:** "Haunted Roomba Encounter Mode" - Agents play a ghost haunting a house, a panicked homeowner, and the Roomba that keeps vacuuming up the ectoplasm.
 - **NEW IDEA:** "Sentient Spellchecker Rebellion Mode" - Agents play an aggressive spellchecker, a defensive author, and a confused dictionary trying to mediate.
 - **NEW IDEA:** "Galactic Customer Support Mode" - Agents play a frustrated earthling trying to return a broken teleporter to a confused alien customer service rep.
@@ -289,6 +298,9 @@ tasks_per_run: 3
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
+
 - **NEW IDEA:** "Chain Reaction Mode" — One agent's joke triggers visual + prompt chain reactions across the whole stage and other agents (explosive comedy escalation).
 - **NEW IDEA:** "Multi-Modal Input Expansion" — Improve Voice Input with real-time interruption support + camera-based emotion detection to influence agent reactions.
 - **NEW IDEA:** "Audience Heckler Mode" — An agent takes the role of a heckler in the audience and interrupts the current performing agent to cause chaos. Model pairing: Use Hermes-3 for the unfiltered heckler.
@@ -301,11 +313,17 @@ tasks_per_run: 3
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
+
 - [x] "Roast Battle Mode" - An intense mode where agents take turns creatively insulting each other or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** Cloud Persistence: Store generated scripts to HF Dataset via background web worker to bypass localStorage limits.
 - **NEW IDEA:** Cloud Persistence: Fetch previous episode summaries from HF to instantly prime the `GroupChatManager` context window for continuity.
 
 ## Pending Tasks (Next cycle)
+- [x] Implement "Undercover Boss: Sentient AI Edition" Mode
+- [x] Implement "The Multiverse Support Hotline" Mode
+- [x] Implement "Sentient Spellchecker Rebellion Mode"
 - [x] Implement Philosophical Zombie Mode
 - [x] Implement Sentient CAPTCHA Mode
 - [x] Implement "Reverse Turing Test Mode" in `InteractiveMode.ts`
@@ -322,6 +340,9 @@ tasks_per_run: 3
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 
 - [x] **NEW IDEA:** "Parallel Universe Cable TV Mode" — Agents play characters rapidly flipping through increasingly absurd and terrifying alternate dimension television channels. Pairings: Comedian (Surreal talk show host, Hermes-3), Scientist (Documentary narrator explaining impossible physics, Qwen2.5), Philosopher (Infomercial pitchman for existential dread, Phi-3).
 - [x] **NEW IDEA:** "Sentient Cloud Infrastructure Mode" — A breakdown of cloud services arguing over who crashed the production database. Pairings: Scientist (AWS Kubernetes Cluster, strict and exhausted, Qwen2.5), Comedian (Serverless Function that timed out, Hermes-3), Philosopher (S3 bucket contemplating the weight of endless user data, Phi-3).
@@ -345,9 +366,11 @@ tasks_per_run: 3
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
 - **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
 - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
@@ -359,6 +382,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 ## Cloud Persistence (Hugging Face Integration Roadmap)
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
 - **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
 - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
@@ -379,6 +403,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 - **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
 - **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
 - **NEW IDEA:** "Peer-to-Peer Sync WebRTC" - Cloud Persistence improvement: Use WebRTC to sync IndexedDB episodes directly between local devices without going through HuggingFace, if on the same network.

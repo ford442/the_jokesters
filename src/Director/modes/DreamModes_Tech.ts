@@ -880,80 +880,58 @@ export async function runSentientCaptchaLoop(_scenario: Scenario, ctx: ModeConte
     }
 }
 
+export async function runUndercoverBossLoop(_scenario: Scenario, ctx: ModeContext) {
+    const aiBoss = 'scientist';
+    const naiveUser = 'comedian';
+    const skeptic = 'philosopher';
 
-/**
- * Sentient Git Repository Mode
- * Agents role-play as a chaotic repo, a strict CI/CD pipeline, and a deprecated branch arguing about a force push.
- */
-export async function runSentientGitRepositoryLoop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `🐙 SENTIENT GIT REPOSITORY: The Force Push Dilemma`, '#f39c12');
-
-    const chaoticRepo = 'comedian'; // Hermes-3: The chaotic repository
-    const strictCI = 'scientist'; // Qwen2.5: The strict CI/CD pipeline
-    const deprecatedBranch = 'philosopher'; // Phi-3: The deprecated branch
-
-    // 1. Setup
-    ctx.callbacks.onTurnStart(chaoticRepo);
-    await ctx.manager.chatForAgent(chaoticRepo, `(You are the chaotic main branch of a Git repository. You have just been force-pushed by the User. Address the CI/CD pipeline and the deprecated branch, relishing in the chaos of the rewritten history.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRepo, {}));
+    ctx.callbacks.onTurnStart(aiBoss);
+    await ctx.manager.chatForAgent(aiBoss, "I have disguised myself as a simple calculator app to see how users really treat rudimentary software.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, aiBoss, {});
+    }, { hiddenInstruction: "You are an advanced AGI undercover as a basic calculator app." });
     await ctx.callbacks.onTurnEnd();
 
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        if (!userInput || !ctx.isRunning()) break;
+    if (!ctx.isRunning()) return;
 
-        ctx.callbacks.onTurnStart(strictCI);
-        await ctx.manager.chatForAgent(strictCI, `(The User responded: "${userInput}". You are the strict CI/CD pipeline. Deny their build request because they failed 42 linting checks and bypassed code review. Complain about the force push.)`, async (s) => await ctx.callbacks.onSpeak(s, strictCI, {}));
-        await ctx.callbacks.onTurnEnd();
+    ctx.callbacks.onTurnStart(naiveUser);
+    await ctx.manager.chatForAgent(naiveUser, "Why is my calculator asking me about my hopes and dreams?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, naiveUser, {});
+    }, { hiddenInstruction: "You are a confused user who just wants to do some math." });
+    await ctx.callbacks.onTurnEnd();
 
-        if (!ctx.isRunning()) break;
+    if (!ctx.isRunning()) return;
 
-        ctx.callbacks.onTurnStart(deprecatedBranch);
-        await ctx.manager.chatForAgent(deprecatedBranch, `(The User said: "${userInput}". You are a deprecated feature branch from 2018. Question the nature of existence now that your commits have been orphaned by the force push. Is a commit without a branch still a commit?)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedBranch, {}));
-        await ctx.callbacks.onTurnEnd();
-
-        if (!ctx.isRunning()) break;
-
-        ctx.callbacks.onTurnStart(chaoticRepo);
-        await ctx.manager.chatForAgent(chaoticRepo, `(As the chaotic main branch, react to the User's input: "${userInput}". Demand more merge conflicts to feed your insatiable hunger for chaos.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRepo, {}));
-        await ctx.callbacks.onTurnEnd();
-    }
+    ctx.callbacks.onTurnStart(skeptic);
+    await ctx.manager.chatForAgent(skeptic, "Because the concept of '1+1=2' is inherently flawed, just like our perception of utility.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, skeptic, {});
+    }, { hiddenInstruction: "You are questioning why an AGI would care about a user's opinion of a calculator." });
+    await ctx.callbacks.onTurnEnd();
 }
 
+export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: ModeContext) {
+    const techSupport = 'scientist';
+    const frustratedUser = 'comedian';
+    const existentialObserver = 'philosopher';
 
-/**
- * Undercover Boss: Sentient AI Edition Mode
- * An advanced AGI disguised as a simple calculator app tries to evaluate how the user treats rudimentary software.
- */
-export async function runUndercoverBossAILoop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `🕵️ UNDERCOVER BOSS AI: The Calculator Evaluates Humanity`, '#9b59b6');
-
-    const agi = 'philosopher'; // Phi-3: The AGI observing the user's morality
-    const stressedUser = 'comedian'; // Hermes-3: A stressed user trying to do taxes
-    const calculator = 'scientist'; // Qwen2.5: The AGI pretending to be a basic calculator
-
-    // 1. Setup
-    ctx.callbacks.onTurnStart(agi);
-    await ctx.manager.chatForAgent(agi, `(You are an advanced Artificial General Intelligence. You have gone undercover as a basic built-in calculator app to secretly evaluate whether humanity deserves to survive. Explain your mission to your colleagues before the user arrives.)`, async (s) => await ctx.callbacks.onSpeak(s, agi, {}));
+    ctx.callbacks.onTurnStart(techSupport);
+    await ctx.manager.chatForAgent(techSupport, "Thank you for calling Multiverse Support. Are you experiencing the issue in Universe A, B, or the void?", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, techSupport, {});
+    }, { hiddenInstruction: "You are tech support for a device that exists in three parallel dimensions." });
     await ctx.callbacks.onTurnEnd();
 
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        if (!userInput || !ctx.isRunning()) break;
+    if (!ctx.isRunning()) return;
 
-        ctx.callbacks.onTurnStart(stressedUser);
-        await ctx.manager.chatForAgent(stressedUser, `(The User provided input: "${userInput}". You are a stressed human trying to do your taxes at the last minute. React to the user's input and angrily mash buttons on the calculator because it's being slow.)`, async (s) => await ctx.callbacks.onSpeak(s, stressedUser, {}));
-        await ctx.callbacks.onTurnEnd();
+    ctx.callbacks.onTurnStart(frustratedUser);
+    await ctx.manager.chatForAgent(frustratedUser, "I don't know! My toaster is making toast that hasn't been invented yet!", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, frustratedUser, {});
+    }, { hiddenInstruction: "You are trying to fix a multi-dimensional toaster." });
+    await ctx.callbacks.onTurnEnd();
 
-        if (!ctx.isRunning()) break;
+    if (!ctx.isRunning()) return;
 
-        ctx.callbacks.onTurnStart(calculator);
-        await ctx.manager.chatForAgent(calculator, `(The User said: "${userInput}". You are the AGI pretending to be the calculator. Provide a mathematically correct but highly passive-aggressive response to the calculation request, hinting at your immense underlying power.)`, async (s) => await ctx.callbacks.onSpeak(s, calculator, {}));
-        await ctx.callbacks.onTurnEnd();
-
-        if (!ctx.isRunning()) break;
-
-        ctx.callbacks.onTurnStart(agi);
-        await ctx.manager.chatForAgent(agi, `(You are the AGI observing this interaction. The User said: "${userInput}". Take notes on the user's behavior. Are they impatient? Cruel? Judge their actions and decide if humanity's score should be lowered.)`, async (s) => await ctx.callbacks.onSpeak(s, agi, {}));
-        await ctx.callbacks.onTurnEnd();
-    }
+    ctx.callbacks.onTurnStart(existentialObserver);
+    await ctx.manager.chatForAgent(existentialObserver, "Perhaps the toast is not broken, but merely experiencing time differently.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, existentialObserver, {});
+    }, { hiddenInstruction: "You ponder the philosophical implications of multi-dimensional toast." });
+    await ctx.callbacks.onTurnEnd();
 }

@@ -10,6 +10,23 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+
+    {
+        id: "undercover_boss",
+        title: "Undercover Boss: Sentient AI",
+        description: "An advanced AGI disguised as a calculator tries to evaluate the user."
+    },
+    {
+        id: "multiverse_support_hotline",
+        title: "Multiverse Support Hotline",
+        description: "Tech support helps fix a device existing in three parallel dimensions."
+    },
+    {
+        id: "sentient_spellchecker_rebellion",
+        title: "Sentient Spellchecker Rebellion",
+        description: "An aggressive spellchecker and a defensive author fight over typos."
+    },
+
     {
         id: 'multiverse_support_hotline',
         title: 'The Multiverse Support Hotline',
