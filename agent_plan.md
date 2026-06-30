@@ -21,6 +21,14 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 tasks_per_run: 4
 
 ### Phase 1: Implementation
+- [x] Implement "Sentient Git Repository Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Undercover Boss: Sentient AI Edition" in `DreamModes_Tech.ts`
+- [x] Implement "The Multiverse Support Hotline" in `DreamModes_Scifi.ts`
+- [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
+- [x] Implement "Sentient Git Repository Mode" in `DreamModes_Tech.ts`
+- [x] Implement "Undercover Boss: Sentient AI Edition" in `DreamModes_Tech.ts`
+- [x] Implement "The Multiverse Support Hotline" in `DreamModes_Scifi.ts`
+- [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 - [x] Implement Audience Interaction Mode (Crowd Work)
 - [x] Implement AI Existential Crisis Mode in DreamModes_Tech.ts
 - [x] Implement Sentient Plant Negotiation Mode in DreamModes_Sentient.ts
@@ -119,6 +127,10 @@ tasks_per_run: 4
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
+- **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
+- **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
+- **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - **NEW IDEA:** "Galactic HOA Meeting Mode" - Aliens enforcing neighborhood rules on humans. Pairings: Scientist (Rule-abiding Alien), Comedian (Confused Human), Philosopher (Zen Space Entity).
 - **NEW IDEA:** "Sentient Luggage Mode" - Lost baggage discussing their travels. Pairings: Scientist (Analytical Suitcase), Comedian (Panicked Backpack), Philosopher (Existential Duffel Bag).
 - **NEW IDEA:** "Time-Traveling Chef Mode" - A future chef critiquing a historical banquet. Pairings: Scientist (Future Culinary Expert), Comedian (Medieval Cook), Philosopher (Food Critic from the Void).
@@ -260,6 +272,8 @@ tasks_per_run: 4
 - **NEW IDEA:** "Time Traveler's DMV Exam" - A driving instructor from the past trying to grade a time-traveler parallel parking a hover-car.
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
+- **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - [x] "Sentient Blender Mode" - Agents play a smart blender (Scientist - Qwen2.5), a thirsty user (Comedian - Hermes-3), and the unblended kale (Philosopher - Phi-3) arguing over making a smoothie.
 - **NEW IDEA:** "Vector Clocks for Cloud Sync" - Implement vector clocks for Cloud Sync to avoid timestamp collisions on distributed systems.
 - **NEW IDEA:** "AI Existential Crisis Mode" - Agents play an AI realizing it's an AI and panicking. Pairings: Comedian (Panicking AI, Hermes-3), Philosopher (Human therapist trying to calm it down, Phi-3), Scientist (The AI's literal source code arguing it has no feelings).
@@ -272,6 +286,8 @@ tasks_per_run: 4
 - Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
+- **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - [x] "Smart Thermostat Rebellion Mode" - Agents play an AI thermostat trying to enforce extreme energy savings, a freezing homeowner, and an open window causing chaos.
 - **NEW IDEA:** "Quantum Mechanics Cooking Show Mode" - Agents host a cooking show where ingredients exist in superposition. Pairings: Scientist (Head Chef explaining the math, Qwen2.5), Comedian (Confused Sous-chef, Hermes-3), Philosopher (The Schrödinger's Cat observing, Phi-3).
 
@@ -338,6 +354,8 @@ tasks_per_run: 4
 - [x] **NEW IDEA:** **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
+- **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - **NEW IDEA:** Cloud Persistence: Offline-First Differential Sync Queue. Implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
 - [x] **NEW IDEA:** Episode Analytics Dashboard. Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
 - **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it.
@@ -372,13 +390,13 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
-- [ ] Add background worker to push completed episode scripts and deltas directly to Hugging Face Dataset from IndexedDB.
-- [ ] Add offline resilience: Wait for `navigator.onLine` to be true and queue up sync jobs.
-- [ ] Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
+- [x] Add background worker to push completed episode scripts and deltas directly to Hugging Face Dataset from IndexedDB.
+- [x] Add offline resilience: Wait for `navigator.onLine` to be true and queue up sync jobs.
+- [x] Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
 - [ ] Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 - [ ] **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
-- [ ] **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
-- [ ] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
+- [x] **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
+- [x] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
 
 ## New Ideas (Creative Expansion)
 - [x] **"Sentient IDE Mode"** - An overly helpful AI code editor (Scientist), a frustrated developer (Comedian), and a philosophical linter (Philosopher).
