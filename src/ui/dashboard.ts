@@ -1,3 +1,37 @@
+
+function generateVisualDiff(localObj: any, cloudObj: any) {
+  let diffHtml = '<div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 4px;">';
+  const allKeys = new Set([...Object.keys(localObj || {}), ...Object.keys(cloudObj || {})]);
+
+  let diffsFound = 0;
+  allKeys.forEach(key => {
+    const localVal = localObj[key];
+    const cloudVal = cloudObj[key];
+
+    if (JSON.stringify(localVal) === JSON.stringify(cloudVal)) {
+      return;
+    }
+
+    diffsFound++;
+
+    if (localVal === undefined) {
+      diffHtml += `<div style="color: #ff6b6b; padding: 4px; background: rgba(255,107,107,0.1);"><strong>${key}:</strong> Removed (was ${JSON.stringify(cloudVal)})</div>`;
+    } else if (cloudVal === undefined) {
+      diffHtml += `<div style="color: #4ecdc4; padding: 4px; background: rgba(78,205,196,0.1);"><strong>${key}:</strong> Added (${JSON.stringify(localVal)})</div>`;
+    } else if (Array.isArray(localVal) && Array.isArray(cloudVal)) {
+      diffHtml += `<div style="color: #ffd700; padding: 4px; background: rgba(255,215,0,0.1);"><strong>${key}:</strong> Array length ${localVal.length} (local) vs ${cloudVal.length} (cloud)</div>`;
+    } else {
+      diffHtml += `<div style="color: #ffd700; padding: 4px; background: rgba(255,215,0,0.1);"><strong>${key}:</strong> Changed</div>`;
+    }
+  });
+
+  if (diffsFound === 0) {
+    return '<div style="color: #888; font-size: 0.85em; margin-top: 5px;">No differences found.</div>';
+  }
+
+  return diffHtml + '</div>';
+}
+
 export const setupDashboard = () => {
     const dashboardBtn = document.getElementById('cloud-dashboard-btn');
     const dashboardModal = document.getElementById('cloud-dashboard-modal');
@@ -74,6 +108,74 @@ export const setupDashboard = () => {
     refreshBtn.addEventListener('click', () => {
         loadHistory();
     });
+
+    if (checkDeltasBtn && deltasContainer && deltasList) {
+        checkDeltasBtn.addEventListener('click', async () => {
+            const getMemMgr = (window as any).getMemoryManager;
+            if (!getMemMgr) return;
+            const memoryManager = getMemMgr();
+
+            if (deltasContainer.style.display === 'block') {
+                deltasContainer.style.display = 'none';
+                return;
+            }
+
+            deltasContainer.style.display = 'block';
+            deltasList.innerHTML = '<div>Loading pending deltas...</div>';
+
+            try {
+                const pendingDeltas = await memoryManager.getPendingDeltas();
+                deltasList.innerHTML = '';
+
+                if (!pendingDeltas || pendingDeltas.length === 0) {
+                    deltasList.innerHTML = '<div style="color: #888;">No pending deltas found.</div>';
+                    return;
+                }
+
+                pendingDeltas.forEach((delta: any) => {
+                    const div = document.createElement('div');
+                    div.style.background = 'rgba(255,255,255,0.05)';
+                    div.style.padding = '10px';
+                    div.style.borderRadius = '4px';
+
+                    const localState = delta.localState || {};
+                    const cloudState = delta.cloudState || {};
+                    const diffHtml = generateVisualDiff(localState, cloudState);
+
+                    div.innerHTML = `<div style="font-weight: bold; color: #ffd700;">${delta.id || 'Delta'}</div>
+                                     <div style="font-size: 0.85em; color: #ccc;">Action: ${delta.action || 'Unknown'}</div>
+                                     ${diffHtml}`;
+                    deltasList.appendChild(div);
+                });
+
+            } catch(e) {
+                console.error(e);
+                deltasList.innerHTML = '<div style="color: #ff6b6b;">Error loading deltas.</div>';
+            }
+        });
+    }
+
+    if (forceMergeBtn) {
+        forceMergeBtn.addEventListener('click', async () => {
+            const getMemMgr = (window as any).getMemoryManager;
+            if (!getMemMgr) return;
+            const memoryManager = getMemMgr();
+
+            try {
+                forceMergeBtn.textContent = 'Merging...';
+                await memoryManager.processSyncQueue();
+                forceMergeBtn.textContent = 'Force Merge All Deltas';
+
+                // Refresh lists
+                if (checkDeltasBtn) checkDeltasBtn.click();
+                loadHistory();
+            } catch(e) {
+                console.error(e);
+                forceMergeBtn.textContent = 'Error (Retry)';
+            }
+        });
+    }
+
 
 
     if (viewAnalyticsBtn && analyticsContainer && analyticsContent) {

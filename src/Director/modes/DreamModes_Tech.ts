@@ -908,30 +908,3 @@ export async function runUndercoverBossLoop(_scenario: Scenario, ctx: ModeContex
     await ctx.callbacks.onTurnEnd();
 }
 
-export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: ModeContext) {
-    const techSupport = 'scientist';
-    const frustratedUser = 'comedian';
-    const existentialObserver = 'philosopher';
-
-    ctx.callbacks.onTurnStart(techSupport);
-    await ctx.manager.chatForAgent(techSupport, "Thank you for calling Multiverse Support. Are you experiencing the issue in Universe A, B, or the void?", async (s: string) => {
-        await ctx.callbacks.onSpeak(s, techSupport, {});
-    }, { hiddenInstruction: "You are tech support for a device that exists in three parallel dimensions." });
-    await ctx.callbacks.onTurnEnd();
-
-    if (!ctx.isRunning()) return;
-
-    ctx.callbacks.onTurnStart(frustratedUser);
-    await ctx.manager.chatForAgent(frustratedUser, "I don't know! My toaster is making toast that hasn't been invented yet!", async (s: string) => {
-        await ctx.callbacks.onSpeak(s, frustratedUser, {});
-    }, { hiddenInstruction: "You are trying to fix a multi-dimensional toaster." });
-    await ctx.callbacks.onTurnEnd();
-
-    if (!ctx.isRunning()) return;
-
-    ctx.callbacks.onTurnStart(existentialObserver);
-    await ctx.manager.chatForAgent(existentialObserver, "Perhaps the toast is not broken, but merely experiencing time differently.", async (s: string) => {
-        await ctx.callbacks.onSpeak(s, existentialObserver, {});
-    }, { hiddenInstruction: "You ponder the philosophical implications of multi-dimensional toast." });
-    await ctx.callbacks.onTurnEnd();
-}

@@ -800,7 +800,15 @@ export class MemoryManager {
             const history = await this.getCloudHistory();
             if (history && history.length > 0 && !history[0].commit && !history[0].oid) {
                 // Return files that contain "delta-"
-                return history.filter((item: any) => item.path && item.path.includes('delta-'));
+                return history.filter((item: any) => item.path && item.path.includes('delta-')).map((file: any) => {
+                    return {
+                        ...file,
+                        id: file.path,
+                        action: 'delta_merge',
+                        cloudState: { fileInfo: file.path, size: file.size }, // Placeholder for now, real implementation would download it
+                        localState: {} // Placeholder
+                    };
+                });
             }
             return [];
         } catch (e) {
