@@ -18,7 +18,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 2
 
 ### Phase 1: Implementation
 - [x] Implement "Sentient Git Repository Mode" in `DreamModes_Tech.ts`
@@ -393,8 +393,8 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Add background worker to push completed episode scripts and deltas directly to Hugging Face Dataset from IndexedDB.
 - [x] Add offline resilience: Wait for `navigator.onLine` to be true and queue up sync jobs.
 - [x] Implement chronological delta merging for "last-writer-wins" conflict resolution to handle multi-device sync.
-- [ ] Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
-- [ ] **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
+- [x] Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
+- [x] **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
 - [x] **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
 - [x] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
 
@@ -412,3 +412,6 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 - **NEW IDEA:** "Undercover Boss: Sentient AI Edition" - An advanced AGI disguised as a simple calculator app tries to evaluate how the user treats rudimentary software.
 - **NEW IDEA:** "The Multiverse Support Hotline" - Tech support agents trying to help the user fix a device that exists in three parallel dimensions simultaneously.
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
+- **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it. Pairings: Scientist (Reverse-psychology logician, Qwen2.5), Comedian (Aggressively telling you not to, Hermes-3), Philosopher (Questioning why we do anything, Phi-3).
+- **NEW IDEA:** "Bureau of Silly Walks Simulator" - Agents debate the physics and artistic merit of various walks. Pairings: Scientist (Calculating the physics of the silly walk, Qwen2.5), Comedian (Performing and defending the walk, Hermes-3), Philosopher (Pondering the meaning of the walk, Phi-3).
