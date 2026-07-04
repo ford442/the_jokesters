@@ -1,3 +1,5 @@
+import { runOfficeSuppliesExistentialCrisisModeLoop } from './modes/DreamModes_Sentient';
+import { runSupervillainBrainstormingSessionLoop } from './modes/DreamModes_Fantasy';
 import { runAlienAnthropologistLoop, runZombieSurvivalNegotiatorsLoop } from './modes/DreamModes_Scifi';
 import { runSentientDictionaryLoop, runHauntedMicrowaveLoop } from './modes/DreamModes_Sentient';
 import { runCaptchaExistentialCrisisLoop, runIntergalacticSpacePlumberLoop, runSmartFridgeFoodShameLoop } from './modes/ExpandedRealityModes';
@@ -296,7 +298,7 @@ export interface Scenario {
     | 'intergalactic_space_plumber'
     | 'time_traveling_dmv'
     | 'sentient_left_sock' | 'quantum_mechanics_cooking_show' | 'philosophical_pizza_debate' | 'bureau_of_silly_walks_simulator' |
-    'philosophical_zombie' | 'sentient_captcha' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators' | "undercover_boss" | "multiverse_support_hotline" | "sentient_spellchecker_rebellion";
+    'philosophical_zombie' | 'sentient_captcha' | 'sentient_dictionary' | 'haunted_microwave' | 'time_traveling_art_critic' | 'alien_anthropologist' | 'zombie_survival_negotiators' | 'supervillain_brainstorming_session' | 'office_supplies_existential_crisis' | "undercover_boss" | "multiverse_support_hotline" | "sentient_spellchecker_rebellion";
 
     title: string;
     description: string;
@@ -426,6 +428,8 @@ export interface ScriptBeat {
  */
 const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promise<void>> = {
     undercover_boss: runUndercoverBossLoop,
+    office_supplies_existential_crisis: runOfficeSuppliesExistentialCrisisModeLoop,
+    supervillain_brainstorming_session: runSupervillainBrainstormingSessionLoop,
     sentient_spellchecker_rebellion: runSentientSpellcheckerRebellionLoop,
     sentient_dictionary: runSentientDictionaryLoop,
     haunted_microwave: runHauntedMicrowaveLoop,
