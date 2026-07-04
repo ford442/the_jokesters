@@ -701,3 +701,15 @@ export async function runTimeTravelingTechSupportLoop(_scenario: Scenario, ctx: 
         }
     }
 }
+
+export async function runTimeTravelingBaristaLoop(_scenario: Scenario, ctx: ModeContext) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  const philosopher = 'philosopher';
+
+  await ctx.manager.chatForAgent(scientist, "According to the timeline, this customer ordered an iced latte tomorrow, but they need the caffeine today to invent the time machine.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await ctx.manager.chatForAgent(comedian, "I already made it yesterday! But now it's stale. Do I charge them past prices or future prices?", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await ctx.manager.chatForAgent(philosopher, "Does the coffee brew the timeline, or does the timeline brew the coffee? Pouring the milk is an irreversible act of entropy.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await ctx.waitForInput();
+}

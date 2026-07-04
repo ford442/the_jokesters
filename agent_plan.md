@@ -18,9 +18,17 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ### Phase 1: Implementation
+
+## Pending Tasks (Current Cycle)
+- [x] Implement "Office Supplies Existential Crisis Mode"
+- [x] Implement "Supervillain Brainstorming Session Mode"
+- [x] Implement "Sentient Paint Colors Mode"
+- [x] Implement "Time-Traveling Barista Mode"
+- [x] Implement "Parallel Universe HR Mode"
+
 - [x] Implement "Sentient Git Repository Mode" in `DreamModes_Tech.ts`
 - [x] Implement "Undercover Boss: Sentient AI Edition" in `DreamModes_Tech.ts`
 - [x] Implement "The Multiverse Support Hotline" in `DreamModes_Scifi.ts`
@@ -414,3 +422,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - **NEW IDEA:** "The Multiverse Support Hotline" - Tech support agents trying to help the user fix a device that exists in three parallel dimensions simultaneously.
 - **NEW IDEA:** "Office Supplies Existential Crisis Mode" - Agents play office supplies that are realizing they are becoming obsolete. Pairings: Scientist (Calculator), Comedian (Stapler), Philosopher (Typewriter).
 - **NEW IDEA:** "Supervillain Brainstorming Session" - Agents play incompetent supervillains trying to come up with a new evil plan. Pairings: Scientist (Mad Scientist), Comedian (Henchman), Philosopher (Evil Mastermind).
+
+- **NEW IDEA:** "Musical Improv Mode" - Agents perform a musical improv session based on user prompts. Pairings: Comedian (Lead Singer, Hermes-3), Scientist (Rhythm/Beatbox, Qwen2.5), Philosopher (Backup Vocals with deep lyrics, Phi-3).
+- **NEW IDEA:** Cloud Persistence Integration:
+  - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+  - **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
+  - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.

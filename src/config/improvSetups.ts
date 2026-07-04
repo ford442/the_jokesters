@@ -10,6 +10,31 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+    {
+        id: "office_supplies_existential_crisis",
+        title: "Office Supplies Existential Crisis",
+        description: "A calculator, a stapler, and a typewriter realize they are becoming obsolete."
+    },
+    {
+        id: "supervillain_brainstorming_session",
+        title: "Supervillain Brainstorming",
+        description: "Incompetent supervillains coming up with a new evil plan involving cheese."
+    },
+    {
+        id: "sentient_paint_colors",
+        title: "Sentient Paint Colors",
+        description: "Eggshell White, Neon Pink, and a philosophical color argue over repainting a wall."
+    },
+    {
+        id: "time_traveling_barista",
+        title: "Time-Traveling Barista",
+        description: "A barista and customer navigate the temporal paradox of ordering coffee tomorrow for today."
+    },
+    {
+        id: "parallel_universe_hr",
+        title: "Parallel Universe HR",
+        description: "HR agents from different dimensions review a candidate's cross-dimensional resume."
+    },
 
     {
         id: "undercover_boss",
