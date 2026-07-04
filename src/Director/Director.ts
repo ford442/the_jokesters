@@ -11,7 +11,7 @@ import { runPhilosophicalZombieLoop } from './modes/DreamModes_Absurdist_Philoso
 import { runUndercoverBossLoop, runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
 import { runTimeTravelingArtCriticLoop, runTimeTravelingTechSupportLoop } from './modes/DreamModes_Temporal';
-import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop } from './modes/DreamModes_Scifi';
+import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop, runMultiverseSupportHotlineLoop } from './modes/DreamModes_Scifi';
 
 import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
@@ -106,7 +106,7 @@ const {
   runWizardsFamiliarLoop,
   runMagicalDetentionLoop,
   runForbiddenSpellbookLoop,
-  runIntergalacticBakeOffLoop, runMultiverseSupportHotlineLoop,
+  runIntergalacticBakeOffLoop,
   runInfiniteEscapeRoomLoop,
   runReverseAuctionLoop,
   runSupervillainTempAgencyLoop,
