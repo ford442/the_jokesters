@@ -420,6 +420,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 - **NEW IDEA:** "Undercover Boss: Sentient AI Edition" - An advanced AGI disguised as a simple calculator app tries to evaluate how the user treats rudimentary software.
 - **NEW IDEA:** "The Multiverse Support Hotline" - Tech support agents trying to help the user fix a device that exists in three parallel dimensions simultaneously.
+- **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
+- **NEW IDEA:** "Reverse Psychology Mode" - Agents tell the user *not* to do something, trying to trick them into doing it. Pairings: Scientist (Reverse-psychology logician, Qwen2.5), Comedian (Aggressively telling you not to, Hermes-3), Philosopher (Questioning why we do anything, Phi-3).
+- **NEW IDEA:** "Bureau of Silly Walks Simulator" - Agents debate the physics and artistic merit of various walks. Pairings: Scientist (Calculating the physics of the silly walk, Qwen2.5), Comedian (Performing and defending the walk, Hermes-3), Philosopher (Pondering the meaning of the walk, Phi-3).
 - **NEW IDEA:** "Office Supplies Existential Crisis Mode" - Agents play office supplies that are realizing they are becoming obsolete. Pairings: Scientist (Calculator), Comedian (Stapler), Philosopher (Typewriter).
 - **NEW IDEA:** "Supervillain Brainstorming Session" - Agents play incompetent supervillains trying to come up with a new evil plan. Pairings: Scientist (Mad Scientist), Comedian (Henchman), Philosopher (Evil Mastermind).
 

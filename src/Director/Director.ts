@@ -11,7 +11,7 @@ export * from './modes/DreamModes_index';
 import * as DreamModesIndex from './modes/DreamModes_index';
 import { runSentientSpellcheckerRebellionLoop, runHauntedRoombaEncounterLoop, runSentientVendingMachineRestockerLoop, runPassiveAggressiveSmartHomeLoop, runSentientWiFiRouterLoop, runSentientCoffeeMachineLoop, runSentientShoppingCartLoop, runSentientToasterLoop, runSentientLeftSockLoop, runSentientPlantNegotiationModeLoop, runSentientBlenderLoop, runSentientGymEquipmentLoop, runSentientAlarmClockLoop, runSentientLuggageLoop } from './modes/DreamModes_Sentient';
 import { runPhilosophicalZombieLoop } from './modes/DreamModes_Absurdist_Philosophical_PartB';
-import { runUndercoverBossLoop,  runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop } from './modes/DreamModes_Tech';
+import { runUndercoverBossLoop, runSentientSpellcheckerLoop, runTimeTravelingQAEngineerLoop, runSentientAPIEndpointSupportGroupLoop, runAIHallucinationAnonymousLoop, runInternetExplorerSupportGroupLoop, runQuantumComputingSupportGroupLoop, runAIExistentialCrisisModeLoop, runSmartThermostatRebellionLoop, runSentientCloudInfrastructureLoop, runSentientIDELoop, runSentientCaptchaLoop } from './modes/DreamModes_Tech';
 import { runTimeTravelingDMVLoop, runTimeTravelersDMVExamLoop, runHistoricalFiguresEscapeRoomModeLoop, runTimeTravelingHealthInspectorLoop, runTimeTravelingChefLoop , runTimeTravelingIRSAuditLoop } from './modes/DreamModes_Temporal';
 import { runTimeTravelingArtCriticLoop, runTimeTravelingTechSupportLoop } from './modes/DreamModes_Temporal';
 import { runMarsColonyHOALoop, runGalacticCustomerSupportLoop, runGalacticHOAMeetingLoop , runParallelUniverseCableTVLoop, runMultiverseSupportHotlineLoop } from './modes/DreamModes_Scifi';
@@ -632,6 +632,9 @@ const MODE_LOOPS: Record<string, (scenario: Scenario, ctx: ModeContext) => Promi
         sentient_spellchecker: runSentientSpellcheckerLoop,
     sentient_ide: runSentientIDELoop,
     time_traveling_tech_support: runTimeTravelingTechSupportLoop,
+    sentient_git_repository: runSentientCodebaseLoop,
+    multiverse_support_hotline: runMultiverseSupportHotlineLoop,
+    undercover_boss_ai: runUndercoverBossLoop,
         galactic_customer_support: runGalacticCustomerSupportLoop,
         time_travelers_dmv_exam: runTimeTravelersDMVExamLoop,
     ai_existential_crisis: runAIExistentialCrisisModeLoop,
