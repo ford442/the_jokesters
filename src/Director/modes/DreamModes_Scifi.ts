@@ -865,3 +865,27 @@ export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: 
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runSupervillainBrainstormingSessionLoop(_scenario: Scenario, ctx: ModeContext) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  const philosopher = 'philosopher';
+
+  await ctx.manager.chatForAgent(scientist, "My new laser is complete! It will turn all the world's cheese into plastic! We just need a delivery mechanism.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await ctx.manager.chatForAgent(comedian, "Boss, I already bought a giant catapult. We just put the laser in the catapult, right?", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await ctx.manager.chatForAgent(philosopher, "But why cheese? Is our grand vision truly to inconvenience sandwich makers? Perhaps true villainy is found in minor administrative errors.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await ctx.waitForInput();
+}
+
+export async function runParallelUniverseHRLoop(_scenario: Scenario, ctx: ModeContext) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  const philosopher = 'philosopher';
+
+  await ctx.manager.chatForAgent(scientist, "This candidate's resume says they have 10 years of experience, but in Dimension C-137, they haven't even been born yet. How do we calculate their PTO?", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await ctx.manager.chatForAgent(comedian, "I don't care about their birth date! They brought donuts to the interview! Hire them in all dimensions immediately!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await ctx.manager.chatForAgent(philosopher, "If we hire them in one universe, do we fire their alternate self in another to maintain cosmic balance? Or is employment merely a construct of the multiverse?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await ctx.waitForInput();
+}
