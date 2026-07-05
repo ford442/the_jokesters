@@ -1009,6 +1009,17 @@ export const PHASE_68_SETUPS: ImprovSetup[] = [
     title: 'Bureau of Silly Walks Simulator',
     description: 'Agents debate the physics and artistic merit of various silly walks.'
   }
+,
+  {
+    id: 'supervillain_brainstorming_session',
+    title: 'Supervillain Brainstorming Session',
+    description: 'Agents play incompetent supervillains trying to come up with a new evil plan.'
+  },
+  {
+    id: 'office_supplies_existential_crisis',
+    title: 'Office Supplies Existential Crisis Mode',
+    description: 'Agents play office supplies that are realizing they are becoming obsolete.'
+  }
 ];
 
 DEFAULT_IMPROV_SETUPS.push(...PHASE_68_SETUPS);

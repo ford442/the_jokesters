@@ -323,3 +323,30 @@ export async function runPotionTastingPanelLoop(_scenario: Scenario, ctx: ModeCo
     }
 }
 
+
+/**
+ * Supervillain Brainstorming Session
+ * Agents play incompetent supervillains trying to come up with a new evil plan.
+ * Pairings: Scientist (Mad Scientist), Comedian (Henchman), Philosopher (Evil Mastermind).
+ */
+export async function runSupervillainBrainstormingSessionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const scientist = 'scientist';
+    const comedian = 'comedian';
+    const philosopher = 'philosopher';
+
+    ctx.callbacks.onMessage('Director', `🦹‍♂️ SUPERVILLAIN LAIR: Brainstorming Session Commencing...`, '#8e44ad');
+
+    await ctx.manager.chatForAgent(philosopher, `(You are the Evil Mastermind. We need a new evil plan to take over the world. Our last plan involving laser-sharks failed miserably. Ask the Mad Scientist for their latest invention.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(scientist, `(You are the Mad Scientist. Respond to the Mastermind. Your new invention is highly convoluted, scientifically questionable, and probably violates the laws of thermodynamics. Pitch it.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, `(You are the Henchman. Respond to the Scientist's pitch. Point out a glaringly obvious, practical flaw in the plan that a 5-year-old would notice, or ask a stupid question about logistics like parking.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, `(You are the Evil Mastermind. Overreact to the Henchman's incompetence, then dramatically spin the flaw into a "brilliant" new direction for the evil plan.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+}

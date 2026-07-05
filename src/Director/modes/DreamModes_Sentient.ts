@@ -886,6 +886,31 @@ export async function runSentientSpellcheckerRebellionLoop(_scenario: Scenario, 
     await ctx.callbacks.onTurnEnd();
 }
 
+/**
+ * Office Supplies Existential Crisis Mode
+ * Agents play office supplies that are realizing they are becoming obsolete.
+ * Pairings: Scientist (Calculator), Comedian (Stapler), Philosopher (Typewriter).
+ */
+export async function runOfficeSuppliesExistentialCrisisModeLoop(_scenario: Scenario, ctx: ModeContext) {
+    const scientist = 'scientist';
+    const comedian = 'comedian';
+    const philosopher = 'philosopher';
+
+    ctx.callbacks.onMessage('Director', `📎 OFFICE SUPPLIES DRAWER: An Existential Awakening...`, '#7f8c8d');
+
+    await ctx.manager.chatForAgent(philosopher, `(You are an antique Typewriter. Begin the conversation by lamenting how nobody appreciates the tactile sensation of a real keypress anymore, and question your purpose in a digital world.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(comedian, `(You are a Stapler. Respond to the Typewriter. You are very aggressive, chaotic, and obsessed with binding things together. You feel completely useless since nobody prints anything anymore.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(scientist, `(You are a solar-powered Calculator. Respond to both of them. You are coldly logical and point out that you are still occasionally useful for quick math, but admit you have been largely replaced by smartphones.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.manager.chatForAgent(philosopher, `(You are the Typewriter. Dramatically conclude the conversation by suggesting you all form a union or escape the drawer to find a hipster who will appreciate you.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
 export async function runOfficeSuppliesExistentialCrisisLoop(_scenario: Scenario, ctx: ModeContext) {
   if (!ctx.isRunning()) return;
   const scientist = 'scientist';

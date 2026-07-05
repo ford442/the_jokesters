@@ -10,14 +10,19 @@
 ## Cloud Persistence (Hugging Face) Next Steps
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
-- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
-- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset (targeting `/api/datasets/.../commits` or similar HF commit endpoints) using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot (via `/api/datasets/.../resolve/...`) to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
-- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
-- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset (targeting `/api/datasets/.../commits` or similar HF commit endpoints) using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot (via `/api/datasets/.../resolve/...`) to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 # Implementation Roadmap
 
 ## Project Velocity
+tasks_per_run: 3
+
+### Phase 1: Implementation
+- [x] Implement "Supervillain Brainstorming Session" in DreamModes_Fantasy.ts
+- [x] Implement "Office Supplies Existential Crisis Mode" in DreamModes_Sentient.ts
 tasks_per_run: 6
 
 ### Phase 1: Implementation
@@ -235,6 +240,9 @@ tasks_per_run: 6
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
+
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 - **NEW IDEA:** "Philosophical Debate Over Pizza Toppings Mode" - Agents argue over what belongs on a pizza. Pairings: Scientist (Calculating nutritional value, Qwen2.5), Comedian (Pineapple fanatic, Hermes-3), Philosopher (Arguing the ontology of a topping, Phi-3).
@@ -271,6 +279,9 @@ tasks_per_run: 6
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
+
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 
@@ -306,6 +317,9 @@ tasks_per_run: 6
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
+
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 
@@ -320,6 +334,9 @@ tasks_per_run: 6
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
@@ -349,6 +366,9 @@ tasks_per_run: 6
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
+
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
 
@@ -376,8 +396,8 @@ tasks_per_run: 6
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
 
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
-- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
-- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset (targeting `/api/datasets/.../commits` or similar HF commit endpoints) using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot (via `/api/datasets/.../resolve/...`) to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
@@ -392,8 +412,8 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
 
 - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
-- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
-- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset (targeting `/api/datasets/.../commits` or similar HF commit endpoints) using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot (via `/api/datasets/.../resolve/...`) to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
@@ -411,6 +431,9 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
+- **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
 - **NEW IDEA:** "Roast Battle Mode" - Agents engage in an aggressive, high-energy roast battle against each nother or the user. Pairings: Comedian (Unfiltered roasting, Hermes-3), Philosopher (Existential insults, Phi-3), Scientist (Fact-based insults, Qwen2.5).
 - **NEW IDEA:** "Collaborative Storytelling Mode" - Agents take turns continuing a story dynamically based on user prompts. Pairings: Scientist (World-builder, Qwen2.5), Philosopher (Narrative themes, Phi-3), Comedian (Plot twists, Hermes-3).
