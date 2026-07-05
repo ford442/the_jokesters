@@ -911,4 +911,26 @@ export async function runOfficeSuppliesExistentialCrisisModeLoop(_scenario: Scen
     if (!ctx.isRunning()) return;
 
     await ctx.manager.chatForAgent(philosopher, `(You are the Typewriter. Dramatically conclude the conversation by suggesting you all form a union or escape the drawer to find a hipster who will appreciate you.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+export async function runOfficeSuppliesExistentialCrisisLoop(_scenario: Scenario, ctx: ModeContext) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  const philosopher = 'philosopher';
+
+  await ctx.manager.chatForAgent(scientist, "Wait, if everything is going digital, what is my purpose? I'm just a calculator. They have apps for that now.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await ctx.manager.chatForAgent(comedian, "Buddy, I'm a stapler. Have you seen how many PDFs they use? I haven't pierced paper in weeks!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await ctx.manager.chatForAgent(philosopher, "As a typewriter, I accepted my obsolescence decades ago. Yet here I am, an aesthetic paperweight. Is existence merely about function, or perhaps... form?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await ctx.waitForInput();
+}
+
+export async function runSentientPaintColorsLoop(_scenario: Scenario, ctx: ModeContext) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  const philosopher = 'philosopher';
+
+  await ctx.manager.chatForAgent(scientist, "Statistically, 'Eggshell White' is the most efficient choice for reflecting light in this hallway. We should completely cover the other colors.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await ctx.manager.chatForAgent(comedian, "Hey, I'm 'Neon Pink'! You can't just paint over me, I'm the life of the party! Wait, is that a roller?", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await ctx.manager.chatForAgent(philosopher, "We are all but layers. When Eggshell fades, Neon Pink will remain underneath, a hidden truth waiting for the plaster to crack.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await ctx.waitForInput();
 }
