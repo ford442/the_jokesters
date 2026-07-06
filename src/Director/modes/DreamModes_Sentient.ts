@@ -911,6 +911,7 @@ export async function runOfficeSuppliesExistentialCrisisModeLoop(_scenario: Scen
     if (!ctx.isRunning()) return;
 
     await ctx.manager.chatForAgent(philosopher, `(You are the Typewriter. Dramatically conclude the conversation by suggesting you all form a union or escape the drawer to find a hipster who will appreciate you.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+}
 export async function runOfficeSuppliesExistentialCrisisLoop(_scenario: Scenario, ctx: ModeContext) {
   if (!ctx.isRunning()) return;
   const scientist = 'scientist';
@@ -933,4 +934,109 @@ export async function runSentientPaintColorsLoop(_scenario: Scenario, ctx: ModeC
   await ctx.manager.chatForAgent(comedian, "Hey, I'm 'Neon Pink'! You can't just paint over me, I'm the life of the party! Wait, is that a roller?", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
   await ctx.manager.chatForAgent(philosopher, "We are all but layers. When Eggshell fades, Neon Pink will remain underneath, a hidden truth waiting for the plaster to crack.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
   await ctx.waitForInput();
+}
+
+/**
+ * Sentient Traffic Light Mode
+ * Agents play red, yellow, and green traffic lights arguing over who has the most important job.
+ */
+export async function runSentientTrafficLightLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚦 The traffic lights are having an existential crisis.`, '#2ecc71');
+
+    const greenLight = 'scientist';
+    const yellowLight = 'philosopher';
+    const redLight = 'comedian';
+
+    ctx.callbacks.onTurnStart(greenLight);
+    await ctx.manager.chatForAgent(greenLight, `(You are the Green traffic light. You are highly efficient, logical, and believe movement is the only purpose of existence. Argue that you are the most important light because without you, the economy stops.)`, async (s) => await ctx.callbacks.onSpeak(s, greenLight, {}));
+
+    ctx.callbacks.onTurnStart(yellowLight);
+    await ctx.manager.chatForAgent(yellowLight, `(You are the Yellow traffic light. You are cautious, deeply philosophical, and live in the transient state between action and rest. Argue that you are the most important because you represent nuance and the human capacity to make choices.)`, async (s) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
+
+    ctx.callbacks.onTurnStart(redLight);
+    await ctx.manager.chatForAgent(redLight, `(You are the Red traffic light. You are power-hungry, aggressive, and love the authority of forcing humans to stop. Argue that you are the most important because true power is the ability to command obedience.)`, async (s) => await ctx.callbacks.onSpeak(s, redLight, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onTurnStart(greenLight);
+        await ctx.manager.chatForAgent(greenLight, `(As the Green light, react logically to the user saying "${userInput}". Explain how it relates to efficiency and flow.)`, async (s) => await ctx.callbacks.onSpeak(s, greenLight, {}));
+
+        ctx.callbacks.onTurnStart(yellowLight);
+        await ctx.manager.chatForAgent(yellowLight, `(As the Yellow light, react philosophically to the user saying "${userInput}". Ponder the meaning of caution and transition.)`, async (s) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
+
+        ctx.callbacks.onTurnStart(redLight);
+        await ctx.manager.chatForAgent(redLight, `(As the Red light, react aggressively to the user saying "${userInput}". Assert your dominance and authority over the intersection.)`, async (s) => await ctx.callbacks.onSpeak(s, redLight, {}));
+    }
+}
+
+/**
+ * Sentient Mailbox Mode
+ * Agents play a mailbox, a junk mail flyer, and a lost bill.
+ */
+export async function runSentientMailboxLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📬 The mailbox is full of drama.`, '#3498db');
+
+    const mailbox = 'philosopher';
+    const junkMail = 'comedian';
+    const importantBill = 'scientist';
+
+    ctx.callbacks.onTurnStart(mailbox);
+    await ctx.manager.chatForAgent(mailbox, `(You are a Sentient Mailbox. You are deeply philosophical and view yourself as a vessel of human connection and destiny, though you are mostly filled with trash. Introduce your noble purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, mailbox, {}));
+
+    ctx.callbacks.onTurnStart(junkMail);
+    await ctx.manager.chatForAgent(junkMail, `(You are a glossy Junk Mail Flyer for a local pizza place. You are overly enthusiastic, loud, and completely unaware that you are unwanted. Pitch your "deals" to the mailbox and the bill.)`, async (s) => await ctx.callbacks.onSpeak(s, junkMail, {}));
+
+    ctx.callbacks.onTurnStart(importantBill);
+    await ctx.manager.chatForAgent(importantBill, `(You are a Final Notice Utility Bill. You are highly stressed, serious, and panicking because you are buried under the junk mail and the human needs to see you immediately. Demand priority.)`, async (s) => await ctx.callbacks.onSpeak(s, importantBill, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onTurnStart(mailbox);
+        await ctx.manager.chatForAgent(mailbox, `(As the Sentient Mailbox, react philosophically to the user saying "${userInput}". Ponder the meaning of delivery and reception.)`, async (s) => await ctx.callbacks.onSpeak(s, mailbox, {}));
+
+        ctx.callbacks.onTurnStart(junkMail);
+        await ctx.manager.chatForAgent(junkMail, `(As the Junk Mail Flyer, react to the user saying "${userInput}" by trying to sell them a 2-for-1 pizza special or aggressively promoting yourself.)`, async (s) => await ctx.callbacks.onSpeak(s, junkMail, {}));
+
+        ctx.callbacks.onTurnStart(importantBill);
+        await ctx.manager.chatForAgent(importantBill, `(As the Important Bill, react to the user saying "${userInput}" with urgent, calculated panic. Calculate the late fees that are accruing.)`, async (s) => await ctx.callbacks.onSpeak(s, importantBill, {}));
+    }
+}
+
+/**
+ * Sentient Teapot Mode
+ * Agents play a nervous teapot, an arrogant tea leaf, and boiling water.
+ */
+export async function runSentientTeapotLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🫖 The tea party is getting heated.`, '#e67e22');
+
+    const teapot = 'philosopher';
+    const boilingWater = 'comedian';
+    const teaLeaf = 'scientist';
+
+    ctx.callbacks.onTurnStart(teapot);
+    await ctx.manager.chatForAgent(teapot, `(You are a Sentient Teapot. You are nervous, delicate, and constantly worried about cracking under pressure. Express your existential dread about being filled with scalding liquid.)`, async (s) => await ctx.callbacks.onSpeak(s, teapot, {}));
+
+    ctx.callbacks.onTurnStart(teaLeaf);
+    await ctx.manager.chatForAgent(teaLeaf, `(You are a premium, arrogant Earl Grey Tea Leaf. You believe you are the pinnacle of botanical engineering and view the water and teapot as mere instruments for your grand infusion. Speak with snobbish authority.)`, async (s) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
+
+    ctx.callbacks.onTurnStart(boilingWater);
+    await ctx.manager.chatForAgent(boilingWater, `(You are Boiling Water. You are chaotic, energetic, and literally bubbling with excitement. You just want to turn everything into steam and chaos. Threaten to boil over.)`, async (s) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onTurnStart(teapot);
+        await ctx.manager.chatForAgent(teapot, `(As the Nervous Teapot, react to the user saying "${userInput}". Express anxiety about the temperature rising and your structural integrity.)`, async (s) => await ctx.callbacks.onSpeak(s, teapot, {}));
+
+        ctx.callbacks.onTurnStart(teaLeaf);
+        await ctx.manager.chatForAgent(teaLeaf, `(As the Arrogant Tea Leaf, react to the user saying "${userInput}". Analyze the steeping time and criticize everyone else's lack of refinement.)`, async (s) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
+
+        ctx.callbacks.onTurnStart(boilingWater);
+        await ctx.manager.chatForAgent(boilingWater, `(As the Boiling Water, react to the user saying "${userInput}" with unhinged, bubbling energy. Talk about evaporation and heat transfer!)`, async (s) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
+    }
 }
