@@ -866,7 +866,7 @@ export async function runMultiverseSupportHotlineLoop(_scenario: Scenario, ctx: 
     }
 }
 
-export async function runSupervillainBrainstormingSessionLoop(_scenario: Scenario, ctx: ModeContext) {
+export async function runScifiSupervillainBrainstormingSessionLoop(_scenario: Scenario, ctx: ModeContext) {
   if (!ctx.isRunning()) return;
   const scientist = 'scientist';
   const comedian = 'comedian';

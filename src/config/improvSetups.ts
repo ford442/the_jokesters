@@ -10,6 +10,23 @@ export interface ImprovSetup {
 }
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
+
+  {
+    id: 'sentient_traffic_light',
+    title: 'Sentient Traffic Light',
+    description: 'Agents play red, yellow, and green traffic lights arguing over who has the most important job.'
+  },
+  {
+    id: 'sentient_mailbox',
+    title: 'Sentient Mailbox',
+    description: 'Agents play a philosophical mailbox, an enthusiastic junk mail flyer, and an important, panicked bill.'
+  },
+  {
+    id: 'sentient_teapot',
+    title: 'Sentient Teapot',
+    description: 'Agents play a nervous teapot, an arrogant tea leaf, and chaotic boiling water.'
+  },
+
     {
         id: "office_supplies_existential_crisis",
         title: "Office Supplies Existential Crisis",
