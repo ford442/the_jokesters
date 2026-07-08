@@ -476,6 +476,11 @@ class QualityGate {
 | **Total** | **~4.8 GB** |
 | **Headroom** | **~3.2 GB** |
 
+> **Rendering vs. inference split:** LLM inference always runs on WebGPU, while
+> the Three.js avatar/stage rendering defaults to **WebGL2** (universal, easy to
+> debug, no VRAM contention) with an **opt-in WebGPU** renderer. See
+> [`docs/RENDERING.md`](./RENDERING.md) for the toggle and rationale.
+
 ### Optimizations
 
 1. **KV-Cache Reuse**: WebLLM automatically caches context between turns

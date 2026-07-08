@@ -177,3 +177,23 @@ declare module 'three' {
         constructor(size?: number, divisions?: number, colorCenterLine?: number, colorGrid?: number);
     }
 }
+
+// WebGPU renderer lives in a separate entry point (three/webgpu). The `three`
+// package ships no types, so we declare the minimal surface we use here.
+// This is an OPT-IN rendering path — see src/visuals/rendererMode.ts.
+declare module 'three/webgpu' {
+    import { Scene, Camera } from 'three';
+
+    export class WebGPURenderer {
+        constructor(parameters?: any);
+        domElement: HTMLCanvasElement;
+        shadowMap: { enabled: boolean; type?: any };
+        /** Must be awaited before the first render. */
+        init(): Promise<void>;
+        setSize(width: number, height: number): void;
+        setPixelRatio(value: number): void;
+        render(scene: Scene, camera: Camera): Promise<void>;
+        renderAsync(scene: Scene, camera: Camera): Promise<void>;
+        dispose(): void;
+    }
+}
