@@ -2,11 +2,41 @@
 import * as THREE from 'three';
 import { Actor } from './Actor';
 import { LipSync } from './LipSync';
+import type { RendererMode } from './rendererMode';
+
+/**
+ * Minimal renderer surface shared by THREE.WebGLRenderer and the WebGPURenderer
+ * from three/webgpu. Both expose these members; render() is sync on WebGL and a
+ * Promise on WebGPU, which the render loop handles.
+ */
+interface SceneRenderer {
+    shadowMap: { enabled: boolean };
+    setSize(width: number, height: number): void;
+    render(scene: THREE.Scene, camera: THREE.Camera): void | Promise<void>;
+    renderAsync?(scene: THREE.Scene, camera: THREE.Camera): Promise<void>;
+}
+
+/** Options for constructing a Stage. */
+export interface StageOptions {
+    /**
+     * Pre-acquired WebGL2 context (WebGL mode only). Omit for WebGPU mode — a
+     * canvas can bind only one context type, so WebGPU must acquire its own.
+     */
+    context?: WebGLRenderingContext;
+    /** Requested renderer for the 3D scene. Defaults to 'webgl'. */
+    rendererMode?: RendererMode;
+}
 
 export class Stage {
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
-    private renderer: THREE.WebGLRenderer;
+    private canvas: HTMLCanvasElement;
+    private glContext?: WebGLRenderingContext;
+    private requestedMode: RendererMode;
+    /** The renderer actually in use once initRenderer() resolves. */
+    private activeMode: RendererMode = 'webgl';
+    private renderer: SceneRenderer | null = null;
+    private renderingAsync = false; // guards against overlapping WebGPU frames
     private actors: Map<string, Actor> = new Map();
     private activeActorId: string | null = null;
     private lipSync: LipSync | null = null;
@@ -15,23 +45,81 @@ export class Stage {
     private audienceReactionState: 'neutral' | 'cheer' | 'groan' = 'neutral';
     private crowdLight: THREE.PointLight | null = null;
 
-    constructor(canvas: HTMLCanvasElement, context?: WebGLRenderingContext) {
+    constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
+        this.canvas = canvas;
+        this.glContext = options.context;
+        this.requestedMode = options.rendererMode ?? 'webgl';
+
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x1a1a2e); // Dark blueish
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(0, 2, 5);
 
-        this.renderer = new THREE.WebGLRenderer({ canvas, context, antialias: true, alpha: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
-
+        // Scene graph does not depend on the renderer, so it is built eagerly.
+        // The renderer is created in initRenderer() because WebGPU needs async init.
         this.setupLights();
         this.setupGround();
         this.initActors();
         this.setupAudience();
 
         window.addEventListener('resize', () => this.onWindowResize());
+    }
+
+    /**
+     * Create the 3D renderer. Must be called (and awaited) before render().
+     *
+     * WebGPU rendering is opt-in and falls back to WebGL2 if it is unavailable
+     * or fails to initialize. This only affects how the scene is drawn — LLM
+     * inference always runs on WebGPU independently.
+     *
+     * @returns the renderer mode actually in use.
+     */
+    public async initRenderer(): Promise<RendererMode> {
+        if (this.requestedMode === 'webgpu') {
+            try {
+                const { WebGPURenderer } = await import('three/webgpu');
+                const renderer = new WebGPURenderer({
+                    canvas: this.canvas,
+                    antialias: true,
+                    alpha: true,
+                });
+                await renderer.init();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.shadowMap.enabled = true;
+                this.renderer = renderer;
+                this.activeMode = 'webgpu';
+                console.log('[Stage] Renderer: WebGPU (opt-in). Note: shares the GPU with LLM inference.');
+                return this.activeMode;
+            } catch (err) {
+                console.warn(
+                    '[Stage] WebGPU renderer init failed — falling back to WebGL2:',
+                    (err as Error)?.message ?? err,
+                );
+                // Fall through to WebGL. The canvas has no usable context yet, so
+                // let three acquire its own WebGL2 context (do not reuse glContext,
+                // which may be undefined in the WebGPU path).
+                this.glContext = undefined;
+            }
+        }
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: this.canvas,
+            context: this.glContext,
+            antialias: true,
+            alpha: true,
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        this.renderer = renderer;
+        this.activeMode = 'webgl';
+        console.log('[Stage] Renderer: WebGL2 (default).');
+        return this.activeMode;
+    }
+
+    /** The renderer mode actually in use (valid after initRenderer resolves). */
+    public getActiveRendererMode(): RendererMode {
+        return this.activeMode;
     }
 
     private setupLights() {
@@ -223,6 +311,9 @@ export class Stage {
     public render() {
         requestAnimationFrame(() => this.render());
 
+        // Renderer may still be initializing (WebGPU init is async).
+        if (!this.renderer) return;
+
         let volume = 0;
         if (this.lipSync) {
             volume = this.lipSync.getVolume();
@@ -248,12 +339,28 @@ export class Stage {
         });
 
 
-        this.renderer.render(this.scene, this.camera);
+        if (this.activeMode === 'webgpu') {
+            // WebGPU render is async; skip the frame if the previous one is still
+            // in flight so we never overlap GPU submissions.
+            if (!this.renderingAsync) {
+                this.renderingAsync = true;
+                const draw = this.renderer.renderAsync
+                    ? this.renderer.renderAsync(this.scene, this.camera)
+                    : Promise.resolve(this.renderer.render(this.scene, this.camera));
+                draw.catch((err: unknown) => {
+                    console.warn('[Stage] WebGPU frame render failed:', (err as Error)?.message ?? err);
+                }).finally(() => {
+                    this.renderingAsync = false;
+                });
+            }
+        } else {
+            this.renderer.render(this.scene, this.camera);
+        }
     }
 
     private onWindowResize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer?.setSize(window.innerWidth, window.innerHeight);
     }
 }

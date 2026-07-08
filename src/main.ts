@@ -6,6 +6,8 @@ import type { Agent, ProfanityLevel } from './GroupChatManager'
 import type { VRAMOptimizationConfig } from './utils/dynamicContext'
 import { ImprovSceneManager } from './ImprovSceneManager'
 import { Stage } from './visuals/Stage'
+import { getRequestedRendererMode, setRendererModePreference, isWebGPUAvailable } from './visuals/rendererMode'
+import type { RendererMode } from './visuals/rendererMode'
 import { LipSync } from './visuals/LipSync'
 // import { SceneManager } from './SceneManager'
 import * as webllm from '@mlc-ai/web-llm'
@@ -235,9 +237,21 @@ async function initApp() {
                 <input type="range" id="gpu-mem-slider" min="50" max="95" value="85" step="5">
                 <span id="gpu-mem-val" class="vram-setting-value">85%</span>
               </div>
+              <div class="vram-setting-row">
+                <label>3D Renderer</label>
+                <select id="renderer-mode-select">
+                  <option value="webgl" selected>WebGL2 (default, recommended)</option>
+                  <option value="webgpu">WebGPU (experimental)</option>
+                </select>
+              </div>
               <p class="vram-settings-note">
-                <strong>Sliding Window:</strong> Reduces VRAM by only keeping recent tokens in attention. 
+                <strong>Sliding Window:</strong> Reduces VRAM by only keeping recent tokens in attention.
                 "Auto" uses half your context window. Attention sinks keep first N tokens for coherence.
+              </p>
+              <p class="vram-settings-note">
+                <strong>3D Renderer:</strong> Only affects avatar/stage drawing — LLM inference always uses WebGPU.
+                WebGL2 is universal and easiest to debug. WebGPU rendering is opt-in and shares GPU memory with the
+                model, so avoid it on ~4 GB cards. Applies on next "Load Model &amp; Start".
               </p>
             </div>
           </details>
@@ -422,6 +436,22 @@ async function initApp() {
   }
   if (attentionSinkSlider && attentionSinkVal) {
     attentionSinkSlider.oninput = () => { attentionSinkVal.textContent = attentionSinkSlider.value }
+  }
+
+  // Wire up the 3D renderer toggle. It persists to localStorage and is read by
+  // getRequestedRendererMode() when the Stage is built at launch — no reload
+  // needed. A ?renderer= URL param overrides this and is reflected here.
+  const rendererModeSelect = document.getElementById('renderer-mode-select') as HTMLSelectElement | null
+  if (rendererModeSelect) {
+    rendererModeSelect.value = getRequestedRendererMode()
+    const webgpuOption = rendererModeSelect.querySelector('option[value="webgpu"]') as HTMLOptionElement | null
+    if (webgpuOption && !isWebGPUAvailable()) {
+      webgpuOption.disabled = true
+      webgpuOption.textContent = 'WebGPU (unavailable on this device)'
+    }
+    rendererModeSelect.addEventListener('change', () => {
+      setRendererModePreference(rendererModeSelect.value as RendererMode)
+    })
   }
 
   // Update capability display
@@ -640,14 +670,31 @@ async function initApp() {
     const audioEngine = new AudioEngine()
     const speechQueue = new SpeechQueue(audioEngine)
 
-    // Check for WebGL 2 support explicitly before initializing Three.js
-    // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality
-    const gl = canvas.getContext('webgl2', { alpha: true, antialias: true });
-    if (!gl) {
-      throw new Error('WebGL 2 is not supported or is disabled in this environment.');
+    // Choose the 3D renderer for the avatar/stage. WebGL2 is the default and
+    // universal fallback; WebGPU rendering is opt-in (?renderer=webgpu or the
+    // settings toggle) and shares the GPU with LLM inference. This is entirely
+    // separate from the LLM path, which always runs on WebGPU.
+    const requestedRenderer = getRequestedRendererMode()
+    let stage: Stage
+    if (requestedRenderer === 'webgpu' && isWebGPUAvailable()) {
+      console.log('[Renderer] WebGPU scene rendering requested (opt-in). WebLLM shares the GPU — prefer high-VRAM devices.')
+      // Do NOT acquire a webgl2 context: WebGPURenderer needs the canvas free to
+      // bind its own WebGPU context. Stage falls back to WebGL2 if init fails.
+      stage = new Stage(canvas, { rendererMode: 'webgpu' })
+    } else {
+      if (requestedRenderer === 'webgpu') {
+        console.warn('[Renderer] WebGPU rendering requested but navigator.gpu is unavailable — using WebGL2.')
+      }
+      // Check for WebGL 2 support explicitly before initializing Three.js.
+      // Must specify attributes here to match Stage requirements, otherwise we get a mismatch or poor quality.
+      const gl = canvas.getContext('webgl2', { alpha: true, antialias: true })
+      if (!gl) {
+        throw new Error('WebGL 2 is not supported or is disabled in this environment.')
+      }
+      stage = new Stage(canvas, { context: gl as WebGLRenderingContext, rendererMode: 'webgl' })
     }
-
-    const stage = new Stage(canvas, gl as WebGLRenderingContext)
+    const activeRenderer = await stage.initRenderer()
+    console.log(`[Renderer] Active 3D renderer: ${activeRenderer.toUpperCase()} · LLM inference: WebGPU (independent)`)
     window.addEventListener('audienceReaction', (e: any) => {
         stage.triggerAudienceReaction(e.detail.reaction);
     });
