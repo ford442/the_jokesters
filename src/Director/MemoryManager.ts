@@ -1,3 +1,4 @@
+import { SemanticSearch, MemorySnippet } from '../utils/SemanticSearch';
 import { HFStorageManager } from './HFStorageManager';
 
 export class MemoryManager {
@@ -702,6 +703,34 @@ export class MemoryManager {
             }
         }
         return score;
+    }
+
+
+    /**
+     * Utilizes SemanticSearch (TF-IDF vector cosine similarity) to find relevant cloud memories mid-conversation.
+     * Extracts summaries from cloudSummaryCache and uses the new algorithm.
+     */
+    public async searchCloudMemories(query: string, topK: number = 3): Promise<MemorySnippet[]> {
+        await this.ensureCloudSummaryCache();
+        if (!this.cloudSummaryCache || !this.cloudSummaryCache.history) {
+            return [];
+        }
+
+        const summariesToSearch: { episodeId: string; summary: string }[] = [];
+
+        // Convert history messages into summaries we can search over
+        for (const msg of this.cloudSummaryCache.history) {
+            if (msg.content && typeof msg.content === 'string') {
+                // Here episodeId might not strictly be an episode ID for every message,
+                // but we map it as a context slice.
+                summariesToSearch.push({
+                    episodeId: 'latest-cloud',
+                    summary: `[${msg.role}]: ${msg.content}`
+                });
+            }
+        }
+
+        return SemanticSearch.searchMemories(query, summariesToSearch, topK);
     }
 
     public async searchFetchedSummaries(query: string): Promise<{ episodeId: string, snippet: string }[]> {
