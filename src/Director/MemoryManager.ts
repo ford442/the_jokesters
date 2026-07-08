@@ -849,4 +849,18 @@ export class MemoryManager {
             console.error("Failed to invalidate local cache:", e);
         }
     }
+
+  // --- Cloud Persistence: Conflict Resolution UI ---
+  // This method would be hooked up to the #cloud-dashboard-modal to allow users to manually resolve conflicts.
+  public async resolveConflict(localState: any, cloudState: any, resolution: 'local' | 'cloud' | 'merge'): Promise<void> {
+    console.log(`[MemoryManager] Resolving conflict using strategy: ${resolution}`);
+    // Simulated conflict resolution
+    if (resolution === 'local') {
+      console.log("[MemoryManager] Keeping local state.");
+    } else if (resolution === 'cloud') {
+      console.log("[MemoryManager] Overwriting with cloud state.");
+    } else {
+      console.log("[MemoryManager] Attempting to merge states.");
+    }
+  }
 }
