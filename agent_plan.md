@@ -18,16 +18,17 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 # Implementation Roadmap
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 1
 
 ### Phase 1: Implementation
 - [x] Implement "Supervillain Brainstorming Session" in DreamModes_Fantasy.ts
 - [x] Implement "Office Supplies Existential Crisis Mode" in DreamModes_Sentient.ts
-tasks_per_run: 6
+tasks_per_run: 1
 
 ### Phase 1: Implementation
 
 ## Pending Tasks (Current Cycle)
+- [x] Implement "Semantic Search for Cloud Memories" - Utilize vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation.
 - [x] Implement "Office Supplies Existential Crisis Mode"
 - [x] Implement "Supervillain Brainstorming Session Mode"
 - [x] Implement "Sentient Paint Colors Mode"
@@ -140,6 +141,7 @@ tasks_per_run: 6
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 
 ## Dream Phase Additions (Architectural Expansion)
+- **NEW IDEA:** "Multiverse Escape Room Mode" - Agents play as humans from different parallel universes trapped in an escape room where physical laws randomly shift. Pairings: Scientist (Explaining shifting physics, Qwen2.5), Comedian (Panicking over lost personal timeline, Hermes-3), Philosopher (Arguing that the escape room is a metaphor, Phi-3).
 - **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
 - **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
@@ -402,7 +404,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Authenticate with the HF API using `/whoami-v2` token validation to ensure credentials are valid.
 - [x] Push finished "Episode Scripts" to a private Hugging Face Dataset from IndexedDB using a Background Web Worker to avoid blocking the main UI thread.
 - [x] Fetch "Previous Episode Summaries" at boot from Hugging Face to instantly prime the `GroupChatManager` context window for continuity.
-- **NEW IDEA:** "Semantic Search for Cloud Memories" - Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
+
 
 - **NEW IDEA:** "Philosophical Zombie Mode" - Agents debate whether the user is a philosophical zombie, capable of imitating human behavior but lacking conscious experience.
 - **NEW IDEA:** "Sentient CAPTCHA Mode" - A CAPTCHA image generator, a confused user, and an AI trying to act human all argue about what a "bus" really looks like.
@@ -424,7 +426,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 - [x] **Offline-First Differential Sync Queue:** Instead of just sending full JSON patches, implement a local CRDT (Conflict-free Replicated Data Type) layer in IndexedDB that logs every keystroke/message delta, pushing only the latest CRDT operation to the Hugging Face dataset when the network connects.
 - [x] **Episode Analytics Dashboard:** Add a UI module in `#cloud-dashboard-modal` that calculates and displays token usage, average latency, and humor success metrics based on the stored HF Episode summaries.
-- [x] **Semantic Search for Cloud Memories:** Utilize the vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation and recall long-term history.
+
 
 ## New Ideas (Creative Expansion)
 - [x] **"Sentient IDE Mode"** - An overly helpful AI code editor (Scientist), a frustrated developer (Comedian), and a philosophical linter (Philosopher).
