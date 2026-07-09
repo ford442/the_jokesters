@@ -889,3 +889,42 @@ export async function runParallelUniverseHRLoop(_scenario: Scenario, ctx: ModeCo
   await ctx.manager.chatForAgent(philosopher, "If we hire them in one universe, do we fire their alternate self in another to maintain cosmic balance? Or is employment merely a construct of the multiverse?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
   await ctx.waitForInput();
 }
+
+/**
+ * Multiverse Escape Room Mode
+ * Agents play as humans from different parallel universes trapped in an escape room where physical laws randomly shift.
+ */
+export async function runMultiverseEscapeRoomLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚪 MULTIVERSE ESCAPE ROOM: The physical laws are shifting!`, '#8e44ad');
+
+    const scientist = 'scientist'; // Explaining shifting physics, Qwen2.5
+    const comedian = 'comedian'; // Panicking over lost personal timeline, Hermes-3
+    const philosopher = 'philosopher'; // Arguing that the escape room is a metaphor, Phi-3
+
+    ctx.callbacks.onTurnStart(scientist);
+    await ctx.manager.chatForAgent(scientist, `(MULTIVERSE ESCAPE ROOM: You are trapped in a mysterious escape room with the User and two others. You are from a universe where gravity is optional. Explain the current bizarre physics of the room to everyone and try to find a logical solution.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('You (The Captive)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(comedian);
+            await ctx.manager.chatForAgent(comedian, `(MULTIVERSE ESCAPE ROOM: The user just said: "${userInput}". You are from a universe where humans evolved from golden retrievers. Panic about the shifting physics, misinterpret the user's suggestion, and mourn the loss of your home timeline.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(philosopher);
+            await ctx.manager.chatForAgent(philosopher, `(MULTIVERSE ESCAPE ROOM: The user just said: "${userInput}". You are from a universe where thought creates reality. Argue that the escape room isn't real, it's just a metaphor for the human condition, and refuse to help solve the puzzle.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(scientist);
+            await ctx.manager.chatForAgent(scientist, `(MULTIVERSE ESCAPE ROOM: The user just said: "${userInput}". The physical laws just shifted randomly (e.g., time is flowing backwards, or sound has a physical weight). Explain the new physics and try to adapt the user's plan to these impossible conditions.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
