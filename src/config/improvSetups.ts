@@ -11,6 +11,11 @@ export interface ImprovSetup {
 
 export const DEFAULT_IMPROV_SETUPS: ImprovSetup[] = [
     {
+        id: 'multiverse_escape_room',
+        title: 'Multiverse Escape Room',
+        description: 'Agents from different parallel universes are trapped in an escape room where physical laws randomly shift.',
+    },
+    {
         id: 'philosophical_elevator_pitch',
         title: 'Philosophical Elevator Pitch',
         description: 'Pitching an idea to a VC while they fall down a bottomless pit.',

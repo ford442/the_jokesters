@@ -1,5 +1,6 @@
 
 ## Completed Tasks (This Cycle)
+- [x] Implement "Multiverse Escape Room Mode" in `DreamModes_Scifi.ts`
 - [x] Implement "Sentient Dictionary Mode" in `DreamModes_Sentient.ts`
 - [x] Implement "Time-Traveling Art Critic Mode" in `DreamModes_Temporal.ts`
 - [x] Implement "Alien Anthropologist Mode" in `DreamModes_Scifi.ts`
@@ -141,7 +142,7 @@ tasks_per_run: 1
 - [x] Register new modes in `Director.ts` and add to UI presets in `improvSetups.ts`
 
 ## Dream Phase Additions (Architectural Expansion)
-- **NEW IDEA:** "Multiverse Escape Room Mode" - Agents play as humans from different parallel universes trapped in an escape room where physical laws randomly shift. Pairings: Scientist (Explaining shifting physics, Qwen2.5), Comedian (Panicking over lost personal timeline, Hermes-3), Philosopher (Arguing that the escape room is a metaphor, Phi-3).
+- [x] **NEW IDEA:** "Multiverse Escape Room Mode" - Agents play as humans from different parallel universes trapped in an escape room where physical laws randomly shift. Pairings: Scientist (Explaining shifting physics, Qwen2.5), Comedian (Panicking over lost personal timeline, Hermes-3), Philosopher (Arguing that the escape room is a metaphor, Phi-3).
 - **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
 - **NEW IDEA:** PDF Export for Episode History. Add a UI button to download the entire episode transcript formatted beautifully in a PDF file for easy sharing.
 - **NEW IDEA:** Cloud Persistence: WebRTC Fallback. Implement a peer-to-peer WebRTC connection to sync IndexedDB episodes directly between local devices without going through Hugging Face, if on the same network.
@@ -242,6 +243,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
@@ -281,6 +283,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
@@ -319,6 +322,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
@@ -336,6 +340,7 @@ tasks_per_run: 1
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
@@ -367,6 +372,7 @@ tasks_per_run: 1
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
@@ -434,6 +440,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 ## New Ideas (Dream Phase)
 
+
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
 
@@ -456,3 +463,5 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
   - **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
   - **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset using a Background Web Worker to prevent UI blocking.
   - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
+
+- **NEW IDEA:** "Sentient Linting Tool Mode" - Agents play a strict linter, a messy developer, and an apathetic compiler reacting to a user's code submission. Pairings: Scientist (Linter, strict and pedantic), Comedian (Messy Developer, frantic), Philosopher (Compiler, apathetic to rules as long as it builds).
