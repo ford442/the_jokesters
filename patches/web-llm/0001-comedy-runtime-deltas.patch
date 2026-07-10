@@ -1,0 +1,417 @@
+diff --git a/src/comedy/ComedyLogitProcessor.ts b/src/comedy/ComedyLogitProcessor.ts
+new file mode 100644
+index 0000000..8d3a29a
+--- /dev/null
++++ b/src/comedy/ComedyLogitProcessor.ts
+@@ -0,0 +1,70 @@
++import type { LogitProcessor } from "../types";
++
++export interface ComedyLogitProcessorOptions {
++  /** Penalize logits for tokens that would repeat recent n-grams. */
++  ngramSize?: number;
++  /** Strength of the anti-duplicate penalty (higher = stronger). */
++  ngramPenalty?: number;
++  /** Token ids to down-weight (e.g. cliché openers). */
++  clichéTokenIds?: number[];
++  /** Logit penalty applied to cliché tokens. */
++  clichéPenalty?: number;
++}
++
++/**
++ * Optional comedy-oriented logit processor: reduces near-duplicate n-grams and
++ * down-weights configured cliché token ids between decode steps.
++ */
++export class ComedyLogitProcessor implements LogitProcessor {
++  private readonly ngramSize: number;
++  private readonly ngramPenalty: number;
++  private readonly clichéTokenIds: Set<number>;
++  private readonly clichéPenalty: number;
++  private recentTokens: number[] = [];
++
++  constructor(options: ComedyLogitProcessorOptions = {}) {
++    this.ngramSize = Math.max(2, options.ngramSize ?? 4);
++    this.ngramPenalty = options.ngramPenalty ?? 2.5;
++    this.clichéTokenIds = new Set(options.clichéTokenIds ?? []);
++    this.clichéPenalty = options.clichéPenalty ?? 1.5;
++  }
++
++  processLogits(logits: Float32Array): Float32Array {
++    const out = new Float32Array(logits);
++
++    for (const tokenId of this.clichéTokenIds) {
++      if (tokenId >= 0 && tokenId < out.length) {
++        out[tokenId] -= this.clichéPenalty;
++      }
++    }
++
++    if (this.recentTokens.length >= this.ngramSize - 1) {
++      const prefix = this.recentTokens.slice(-(this.ngramSize - 1));
++      const seen = new Set<string>();
++      for (let i = 0; i <= this.recentTokens.length - this.ngramSize; i++) {
++        seen.add(this.recentTokens.slice(i, i + this.ngramSize).join(","));
++      }
++      const prefixKey = prefix.join(",");
++      for (let token = 0; token < out.length; token++) {
++        const candidate = prefixKey.length > 0 ? `${prefixKey},${token}` : String(token);
++        if (seen.has(candidate)) {
++          out[token] -= this.ngramPenalty;
++        }
++      }
++    }
++
++    return out;
++  }
++
++  processSampledToken(token: number): void {
++    this.recentTokens.push(token);
++    const maxHistory = this.ngramSize * 8;
++    if (this.recentTokens.length > maxHistory) {
++      this.recentTokens = this.recentTokens.slice(-maxHistory);
++    }
++  }
++
++  resetState(): void {
++    this.recentTokens = [];
++  }
++}
+diff --git a/src/comedy/index.ts b/src/comedy/index.ts
+new file mode 100644
+index 0000000..c7c7629
+--- /dev/null
++++ b/src/comedy/index.ts
+@@ -0,0 +1,15 @@
++export {
++  ComedyLogitProcessor,
++  type ComedyLogitProcessorOptions,
++} from "./ComedyLogitProcessor";
++export {
++  isSentenceBoundaryDelta,
++  extractNewSentences,
++} from "./streaming";
++export {
++  classifyInitError,
++  getInitErrorHint,
++  toInitError,
++  WebLLMInitError,
++  type InitErrorCategory,
++} from "./initErrors";
+diff --git a/src/comedy/initErrors.ts b/src/comedy/initErrors.ts
+new file mode 100644
+index 0000000..fe13fa6
+--- /dev/null
++++ b/src/comedy/initErrors.ts
+@@ -0,0 +1,93 @@
++import {
++  DeviceLostError,
++  ShaderF16SupportError,
++  WebGPUNotAvailableError,
++  WebGPUNotFoundError,
++} from "../error";
++
++export type InitErrorCategory = "webgpu" | "oom" | "network" | "unknown";
++
++export class WebLLMInitError extends Error {
++  readonly category: InitErrorCategory;
++
++  constructor(category: InitErrorCategory, message: string, options?: { cause?: unknown }) {
++    super(message, options);
++    this.name = "WebLLMInitError";
++    this.category = category;
++  }
++}
++
++/**
++ * Classify initialization failures for user-facing error UI.
++ */
++export function classifyInitError(error: unknown): InitErrorCategory {
++  if (error instanceof WebLLMInitError) return error.category;
++  if (
++    error instanceof WebGPUNotAvailableError ||
++    error instanceof WebGPUNotFoundError ||
++    error instanceof ShaderF16SupportError
++  ) {
++    return "webgpu";
++  }
++  if (error instanceof DeviceLostError) return "oom";
++
++  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
++
++  if (
++    msg.includes("webgpu") ||
++    (msg.includes("gpu") && msg.includes("not supported")) ||
++    msg.includes("shader-f16")
++  ) {
++    return "webgpu";
++  }
++
++  if (
++    msg.includes("oom") ||
++    msg.includes("out of memory") ||
++    msg.includes("createbuffer") ||
++    msg.includes("allocation") ||
++    msg.includes("mapasync") ||
++    msg.includes("device is lost") ||
++    msg.includes("device lost")
++  ) {
++    return "oom";
++  }
++
++  if (
++    msg.includes("fetch") ||
++    msg.includes("network") ||
++    msg.includes("failed to load") ||
++    msg.includes("err_") ||
++    msg.includes("cache.add") ||
++    msg.includes("cdn") ||
++    msg.includes("timeout") ||
++    msg.includes("aborterror")
++  ) {
++    return "network";
++  }
++
++  return "unknown";
++}
++
++const INIT_ERROR_HINTS: Record<InitErrorCategory, string> = {
++  webgpu:
++    "Use Chrome 113+ or Edge 113+ with hardware acceleration enabled.",
++  oom: "Close other GPU-heavy tabs and reload, or try a lower-VRAM model.",
++  network: "Check your connection and reload. Model weights download from the configured CDN.",
++  unknown: "Reload the page and try again. Copy the error details if the problem persists.",
++};
++
++export function getInitErrorHint(category: InitErrorCategory): string {
++  return INIT_ERROR_HINTS[category];
++}
++
++/**
++ * Wrap low-level init errors with a stable category + hint for callers.
++ */
++export function toInitError(error: unknown): WebLLMInitError {
++  if (error instanceof WebLLMInitError) return error;
++  const category = classifyInitError(error);
++  const raw = error instanceof Error ? error.message : String(error);
++  const hint = getInitErrorHint(category);
++  return new WebLLMInitError(category, `${raw}\n\n${hint}`, { cause: error });
++}
+diff --git a/src/comedy/streaming.ts b/src/comedy/streaming.ts
+new file mode 100644
+index 0000000..87860f5
+--- /dev/null
++++ b/src/comedy/streaming.ts
+@@ -0,0 +1,40 @@
++/**
++ * Streaming helpers for sentence-level TTS handoff in real-time comedy apps.
++ */
++
++const SENTENCE_END_RE = /[.!?…]["')\]]*\s*$/;
++const SENTENCE_END_WITH_NEWLINE_RE = /\n\s*$/;
++
++/**
++ * Returns true when `delta` ends on a sentence boundary suitable for TTS handoff.
++ */
++export function isSentenceBoundaryDelta(delta: string): boolean {
++  if (!delta) return false;
++  return SENTENCE_END_RE.test(delta) || SENTENCE_END_WITH_NEWLINE_RE.test(delta);
++}
++
++/**
++ * Scan cumulative assistant text and return newly completed sentences since `prevLength`.
++ */
++export function extractNewSentences(
++  fullText: string,
++  prevLength: number,
++): { sentences: string[]; newLength: number } {
++  const slice = fullText.slice(prevLength);
++  if (!slice.trim()) {
++    return { sentences: [], newLength: prevLength };
++  }
++
++  const sentences: string[] = [];
++  let cursor = 0;
++  const boundary = /[.!?…]["')\]]*(\s+|\n+)/g;
++  let match: RegExpExecArray | null;
++  while ((match = boundary.exec(slice)) !== null) {
++    const end = match.index + match[0].length;
++    const sentence = slice.slice(cursor, end).trim();
++    if (sentence) sentences.push(sentence);
++    cursor = end;
++  }
++
++  return { sentences, newLength: prevLength + cursor };
++}
+diff --git a/src/conversation.ts b/src/conversation.ts
+index 122e933..0de7324 100644
+--- a/src/conversation.ts
++++ b/src/conversation.ts
+@@ -358,6 +358,23 @@ export class Conversation {
+     this.messages[this.messages.length - 1][2] = message;
+     this.isLastMessageEmptyThinkingReplyHeader = false;
+   }
++
++  /**
++   * Remove an in-progress assistant reply header (content still undefined).
++   * Used after a clean generation abort so the next turn can re-prefill.
++   */
++  popUnfinishedAssistantReply(): boolean {
++    if (this.isTextCompletion || this.messages.length === 0) {
++      return false;
++    }
++    const last = this.messages[this.messages.length - 1];
++    if (last[2] !== undefined) {
++      return false;
++    }
++    this.messages.pop();
++    this.isLastMessageEmptyThinkingReplyHeader = false;
++    return true;
++  }
+ }
+ 
+ export function getConversation(
+diff --git a/src/engine.ts b/src/engine.ts
+index 4628a34..8d53a9f 100644
+--- a/src/engine.ts
++++ b/src/engine.ts
+@@ -49,6 +49,8 @@ import {
+   getConversation,
+   getConversationFromChatCompletionRequest,
+ } from "./conversation";
++import { isSentenceBoundaryDelta } from "./comedy/streaming";
++import { toInitError } from "./comedy/initErrors";
+ import {
+   cleanModelUrl,
+   CustomLock,
+@@ -232,7 +234,7 @@ export class MLCEngine implements MLCEngineInterface {
+         log.warn("Reload() is aborted.", error.message);
+         return;
+       }
+-      throw error;
++      throw toInitError(error);
+     } finally {
+       this.reloadController = undefined;
+     }
+@@ -464,7 +466,7 @@ export class MLCEngine implements MLCEngineInterface {
+ 
+     while (!pipeline.stopped()) {
+       if (this.interruptSignal) {
+-        pipeline.triggerStop();
++        pipeline.abortGenerationClean();
+         break;
+       }
+       await this.decode(pipeline, genConfig);
+@@ -569,7 +571,11 @@ export class MLCEngine implements MLCEngineInterface {
+           id: id,
+           choices: [
+             {
+-              delta: { content: deltaMessage, role: "assistant" },
++              delta: {
++                content: deltaMessage,
++                role: "assistant",
++                sentence_boundary: isSentenceBoundaryDelta(deltaMessage),
++              },
+               finish_reason: null, // not finished yet
+               index: 0,
+               logprobs: logprobs,
+@@ -614,9 +620,7 @@ export class MLCEngine implements MLCEngineInterface {
+ 
+     while (!pipeline.stopped()) {
+       if (this.interruptSignal) {
+-        // TODO: should we directly release lock here and return the async
+-        // generator? Though no issue observed as of now with interruptGenerate()
+-        pipeline.triggerStop();
++        pipeline.abortGenerationClean();
+         break;
+       }
+       try {
+@@ -853,7 +857,7 @@ export class MLCEngine implements MLCEngineInterface {
+         let outputMessage: string;
+         if (this.interruptSignal) {
+           // A single interrupt signal should stop all choices' generations
+-          selectedPipeline.triggerStop();
++          selectedPipeline.abortGenerationClean();
+           outputMessage = "";
+         } else {
+           outputMessage = await this._generate(
+@@ -1031,7 +1035,7 @@ export class MLCEngine implements MLCEngineInterface {
+         let outputMessage: string;
+         if (this.interruptSignal) {
+           // A single interrupt signal should stop all choices' generations
+-          selectedPipeline.triggerStop();
++          selectedPipeline.abortGenerationClean();
+           outputMessage = "";
+         } else {
+           outputMessage = await this._generate(
+diff --git a/src/index.ts b/src/index.ts
+index c4fe96c..c8d0689 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -31,6 +31,18 @@ export {
+ 
+ export { MLCEngine, CreateMLCEngine } from "./engine";
+ 
++export {
++  ComedyLogitProcessor,
++  type ComedyLogitProcessorOptions,
++  isSentenceBoundaryDelta,
++  extractNewSentences,
++  classifyInitError,
++  getInitErrorHint,
++  toInitError,
++  WebLLMInitError,
++  type InitErrorCategory,
++} from "./comedy/index";
++
+ export {
+   hasModelInCache,
+   deleteChatConfigInCache,
+diff --git a/src/llm_chat.ts b/src/llm_chat.ts
+index 616cff4..4bcd5e6 100644
+--- a/src/llm_chat.ts
++++ b/src/llm_chat.ts
+@@ -949,6 +949,29 @@ export class LLMChatPipeline {
+     }
+   }
+ 
++  /**
++   * Abort an in-flight generation without committing partial assistant text or
++   * leaving decode tokens in the KV cache. The next prefill replays from history.
++   */
++  abortGenerationClean(): void {
++    if (this.stopTriggered) {
++      return;
++    }
++    this.stopTriggered = true;
++    this.finishReason = "abort";
++    this.outputIds = [];
++    this.outputMessage = "";
++    this.tokenLogprobArray = [];
++    this.conversation.popUnfinishedAssistantReply();
++    this.resetKVCache();
++    this.filledKVCacheLength = 0;
++    this.logitProcessor?.resetState();
++  }
++
++  getFilledKVCacheLength(): number {
++    return this.filledKVCacheLength;
++  }
++
+   /**
+    * Add a generated token and check for stop.
+    *
+diff --git a/src/openai_api_protocols/chat_completion.ts b/src/openai_api_protocols/chat_completion.ts
+index 0ec5040..8422821 100644
+--- a/src/openai_api_protocols/chat_completion.ts
++++ b/src/openai_api_protocols/chat_completion.ts
+@@ -1120,6 +1120,12 @@ export namespace ChatCompletionChunk {
+       role?: "system" | "user" | "assistant" | "tool";
+ 
+       tool_calls?: Array<Delta.ToolCall>;
++
++      /**
++       * Jokesters extension: true when this delta ends a sentence boundary
++       * (useful for sentence-level TTS handoff before the full reply completes).
++       */
++      sentence_boundary?: boolean;
+     }
+ 
+     export namespace Delta {

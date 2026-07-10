@@ -1,0 +1,61 @@
+name: Build custom web-llm
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '3rd_party/web-llm/**'
+      - 'patches/web-llm/**'
+      - 'scripts/build-webllm.sh'
+      - 'scripts/verify-webllm-dist.sh'
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            3rd_party/web-llm/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build custom web-llm dist
+        run: ./scripts/build-webllm.sh
+
+      - name: Smoke import dist
+        run: ./scripts/verify-webllm-dist.sh
+
+      - name: Production build with custom web-llm
+        run: USE_CUSTOM_WEBLLM=1 npm run build
+
+      - name: Bundle size guard (webllm-engine chunk)
+        run: |
+          WEBLLM_CHUNK=$(find dist/assets -name 'webllm-engine-*.js' | head -1)
+          if [ -z "$WEBLLM_CHUNK" ]; then
+            echo "webllm-engine chunk not found"
+            exit 1
+          fi
+          SIZE=$(wc -c < "$WEBLLM_CHUNK")
+          echo "webllm-engine chunk bytes: $SIZE"
+          # npm @mlc-ai/web-llm@0.2.84 baseline (~6022609 bytes minified); allow 100 KiB fork overhead
+          NPM_BASELINE=6022609
+          MAX=$((NPM_BASELINE + 102400))
+          if [ "$SIZE" -gt "$MAX" ]; then
+            echo "webllm-engine chunk regressed more than 100 KiB vs npm baseline (${NPM_BASELINE})"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-llm-dist
+          path: 3rd_party/web-llm-dist/
+          retention-days: 7
