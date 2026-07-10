@@ -1,0 +1,123 @@
+import type { Agent, ProfanityLevel } from '../GroupChatManager'
+import type { GroupChatManager } from '../GroupChatManager'
+import type { ImprovSceneManager } from '../ImprovSceneManager'
+import type { AudioEngine } from '../audio/AudioEngine'
+import type { SpeechQueue } from '../audio/SpeechQueue'
+import type { Stage } from '../visuals/Stage'
+import { createChatLog } from './chatLog'
+import { createAudioHelpers, wireChatController } from './chatController'
+import { wireImprovController } from './improvController'
+import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
+import { getDOM } from '../ui/uiHelpers'
+
+export interface SceneControllerDeps {
+  agents: Agent[]
+  groupChatManager: GroupChatManager
+  improvSceneManager: ImprovSceneManager
+  audioEngine: AudioEngine
+  speechQueue: SpeechQueue
+  stage: Stage
+}
+
+/** Wire chat/improv handlers and post-ready settings UI after model load succeeds. */
+export function wireSceneController(deps: SceneControllerDeps): void {
+  const {
+    agents,
+    groupChatManager,
+    improvSceneManager,
+    audioEngine,
+    speechQueue,
+    stage,
+  } = deps
+
+  const dom = getDOM()
+  const chatLog = createChatLog(dom.chatLog, groupChatManager)
+  const { speakAndVisualize, prerenderAhead } = createAudioHelpers(audioEngine, speechQueue, stage)
+
+  dom.ttsStepsSlider.oninput = () => { dom.ttsStepsVal.textContent = dom.ttsStepsSlider.value }
+  dom.chaosSlider.oninput = () => { dom.chaosVal.textContent = dom.chaosSlider.value + '%' }
+
+  const profanityLevels: { level: ProfanityLevel; label: string; color: string }[] = [
+    { level: 'PG', label: '👼 PG', color: '#4ecdc4' },
+    { level: 'CASUAL', label: '😏 Casual', color: '#45b7d1' },
+    { level: 'GRITTY', label: '🔥 Gritty', color: '#ffd700' },
+    { level: 'UNCENSORED', label: '💀 Uncensored', color: '#ff6b6b' },
+  ]
+  dom.profanitySlider.oninput = () => {
+    const idx = parseInt(dom.profanitySlider.value)
+    const { level, label, color } = profanityLevels[idx]
+    dom.profanityVal.textContent = label
+    dom.profanityVal.style.color = color
+    groupChatManager.setProfanityLevel(level)
+  }
+
+  dom.switchProfileBtn.addEventListener('click', () => {
+    const newProfile = dom.userProfileInput.value.trim() || 'default'
+
+    if ((window as any).getDirector) {
+      const director = (window as any).getDirector()
+      if (director && director.memoryManager) {
+        director.memoryManager.switchProfile(newProfile)
+        chatLog.addMessage('System', `Switched to profile: ${newProfile}`, '#4ecdc4')
+      }
+    } else {
+      chatLog.addMessage('System', 'Profile switching requires Director to be running', '#ff6b6b')
+    }
+  })
+
+  updateNextAgentUI(groupChatManager)
+  updateVRAMInfoBar(groupChatManager)
+
+  wireChatController({
+    agents,
+    groupChatManager,
+    audioEngine,
+    speechQueue,
+    stage,
+    chatLog,
+    userInput: dom.userInput,
+    sendBtn: dom.sendBtn,
+    ttsStepsSlider: dom.ttsStepsSlider,
+    seedInput: dom.seedInput,
+  })
+
+  const chatModeBtn = document.getElementById('chat-mode-btn')!
+  const improvModeBtn = document.getElementById('improv-mode-btn')!
+  const chatModeControls = document.getElementById('chat-mode-controls')!
+  const improvModeControls = document.getElementById('improv-mode-controls')!
+
+  chatModeBtn.addEventListener('click', () => {
+    chatModeBtn.classList.add('active')
+    improvModeBtn.classList.remove('active')
+    chatModeControls.style.display = 'flex'
+    improvModeControls.style.display = 'none'
+
+    if (improvSceneManager.isSceneRunning()) {
+      improvSceneManager.stop()
+    }
+
+    updateNextAgentUI(groupChatManager)
+  })
+
+  improvModeBtn.addEventListener('click', () => {
+    improvModeBtn.classList.add('active')
+    chatModeBtn.classList.remove('active')
+    chatModeControls.style.display = 'none'
+    improvModeControls.style.display = 'block'
+  })
+
+  wireImprovController({
+    agents,
+    groupChatManager,
+    improvSceneManager,
+    speechQueue,
+    stage,
+    chatLog,
+    chaosSlider: dom.chaosSlider,
+    seedInput: dom.seedInput,
+    speakAndVisualize,
+    prerenderAhead,
+  })
+
+  dom.userInput.focus()
+}
