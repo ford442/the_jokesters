@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:webllm": "bash scripts/build-webllm.sh",
+    "verify:webllm": "bash scripts/verify-webllm-dist.sh",
     "typecheck": "tsc --noEmit",
+    "typecheck:webllm": "npm run build:webllm && tsc --noEmit -p tsconfig.webllm.json",
+    "build:custom-webllm": "npm run build:webllm && USE_CUSTOM_WEBLLM=1 npm run build",
     "preview": "vite preview",
     "perf": "tsx tests/perf/ci-runner.ts",
     "perf:quick": "tsx tests/perf/ci-runner.ts --duration=quick",

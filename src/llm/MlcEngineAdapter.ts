@@ -111,10 +111,13 @@ export class MlcEngineAdapter implements LLMEngine {
     })
 
     for await (const chunk of completion) {
-      const content = chunk.choices[0]?.delta?.content || ''
+      const delta = chunk.choices[0]?.delta
+      const content = delta?.content || ''
       if (content) {
         yield content
       }
+      // Custom fork: sentence_boundary on delta enables earlier TTS handoff (see comedy/streaming)
+      void (delta as { sentence_boundary?: boolean } | undefined)?.sentence_boundary
     }
   }
 
@@ -149,7 +152,7 @@ export class MlcEngineAdapter implements LLMEngine {
 
   async interrupt(): Promise<void> {
     if (this.engine) {
-      // @ts-ignore - interruptGenerate might not be in type definitions
+      // Custom fork: interruptGenerate aborts without committing partial KV / assistant text
       await this.engine.interruptGenerate?.()
     }
   }

@@ -4,6 +4,7 @@ declare module '@mlc-ai/web-llm' {
         setInitProgressCallback(callback: (report: InitProgressReport) => void): void;
         unload(): Promise<void>;
         reload(modelId: string, chatOpts?: any): Promise<void>;
+        interruptGenerate?(): Promise<void>;
         chat: {
             completions: {
                 create(options: any): Promise<any>;

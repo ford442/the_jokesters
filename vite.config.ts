@@ -2,76 +2,74 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import compression from 'vite-plugin-compression2';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+
+const repoRoot = path.dirname(fileURLToPath(new URL('.', import.meta.url)));
+
+function useCustomWebLLM(): boolean {
+  return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
+}
+
+function webllmResolveAlias(): Record<string, string> {
+  if (!useCustomWebLLM()) return {};
+  const distEntry = path.resolve(repoRoot, '3rd_party/web-llm-dist/lib/index.js');
+  if (!fs.existsSync(distEntry)) {
+    console.warn(
+      '[vite] USE_CUSTOM_WEBLLM is set but 3rd_party/web-llm-dist/lib/index.js is missing.\n' +
+        '       Run ./scripts/build-webllm.sh first.',
+    );
+  }
+  return { '@mlc-ai/web-llm': distEntry };
+}
+
+const webllmAlias = webllmResolveAlias();
+const webllmChunkId = useCustomWebLLM()
+  ? path.resolve(repoRoot, '3rd_party/web-llm-dist/lib/index.js')
+  : '@mlc-ai/web-llm';
 
 export default defineConfig({
   base: './',
+  resolve: {
+    alias: webllmAlias,
+  },
   server: {
-    // headers: {
-    //   'Cross-Origin-Opener-Policy': 'same-origin',
-    //   'Cross-Origin-Embedder-Policy': 'credentialless',
-    // },
     fs: {
-      allow: ['..']
-    }
+      allow: ['..'],
+    },
   },
   build: {
-    // Target modern browsers for smaller bundles
     target: 'es2022',
-    // CSS optimization
     cssCodeSplit: true,
-    // Minification settings
     minify: 'esbuild',
-    // Source maps for debugging (can be disabled for production)
     sourcemap: false,
-    // Rollup options for chunking
     rollupOptions: {
       input: {
         main: './index.html',
         sw: './src/service-worker.ts',
       },
       output: {
-        // Manual chunks for code splitting
         manualChunks: {
-          // WebLLM engine - loaded on demand when user selects a model
-          'webllm-engine': ['@mlc-ai/web-llm'],
-          // llama.cpp WASM engine - loaded for GGUF models
+          'webllm-engine': [webllmChunkId],
           'llamacpp-engine': ['@wllama/wllama'],
-          // Transformers.js engine - loaded for ONNX/WebGPU models
           'transformers-engine': ['@huggingface/transformers'],
-          // Three.js core - split into smaller chunks
           'three-core': ['three'],
-          // ONNX Runtime - loaded when TTS is needed
           'onnx-runtime': ['onnxruntime-web'],
         },
-        // Ensure chunks are properly named for caching
-        chunkFileNames: (chunkInfo) => {
-          const name = chunkInfo.name;
-          // Add content hash for cache busting
-          return `assets/${name}-[hash].js`;
-        },
-        // Entry file naming - service worker gets stable name, others are hashed
+        chunkFileNames: (chunkInfo) => `assets/${chunkInfo.name}-[hash].js`,
         entryFileNames: (chunkInfo) => {
-          // Service worker must have a stable name for reliable registration
-          if (chunkInfo.name === 'sw') {
-            return 'service-worker.js';
-          }
-          // Hash main and other entries for cache busting
+          if (chunkInfo.name === 'sw') return 'service-worker.js';
           return 'assets/[name]-[hash].js';
         },
-        // Asset file naming (for images, fonts, etc.)
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name || '';
-          if (info.endsWith('.css')) {
-            return 'assets/[name]-[hash][extname]';
-          }
-          if (info.endsWith('.wasm')) {
-            return 'assets/[name][extname]';
-          }
+          if (info.endsWith('.css')) return 'assets/[name]-[hash][extname]';
+          if (info.endsWith('.wasm')) return 'assets/[name][extname]';
           return 'assets/[name]-[hash][extname]';
         },
       },
     },
-    // Reduce chunk size warning threshold (500KB is default)
     chunkSizeWarningLimit: 600,
   },
   plugins: [
@@ -94,47 +92,38 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'any',
         start_url: '/',
-        icons: [
-          { src: '/vite.svg', sizes: 'any', type: 'image/svg+xml' }
-        ]
+        icons: [{ src: '/vite.svg', sizes: 'any', type: 'image/svg+xml' }],
       },
-      devOptions: {
-        enabled: true,
-      },
+      devOptions: { enabled: true },
     }),
     viteStaticCopy({
       targets: [
         {
-          // Copy both .wasm and .mjs files
           src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
-          dest: 'assets/ort'
-        }
-        // TTS model files are hosted at storage.1ink.us/models/tts/onnx/
-        // Voice styles at storage.1ink.us/models/tts/voice_styles/
-      ]
+          dest: 'assets/ort',
+        },
+      ],
     }),
     compression({
       algorithm: 'brotliCompress',
       ext: '.br',
       threshold: 512,
       deleteOriginalAssets: false,
-      verbose: true
+      verbose: true,
     }),
     compression({
       algorithm: 'gzip',
       ext: '.gz',
       threshold: 512,
       deleteOriginalAssets: false,
-      verbose: true
-    })
+      verbose: true,
+    }),
   ],
   optimizeDeps: {
-    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web', '@wllama/wllama', '@huggingface/transformers']
+    exclude: ['@mlc-ai/web-llm', 'onnxruntime-web', '@wllama/wllama', '@huggingface/transformers'],
   },
   worker: {
     format: 'es',
-    plugins: () => [
-      // If we needed specific worker plugins
-    ]
-  }
+    plugins: () => [],
+  },
 });

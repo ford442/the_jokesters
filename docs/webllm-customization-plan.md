@@ -320,7 +320,7 @@ VPS_VICUNA_7B_CTX512: {
 2. **Size targets:** Current webllm-engine chunk + transitive cost? What is the acceptable delta if we vendor a pruned fork?
 3. **Worker migration:** Do we want the Mlc path to *always* run in a worker going forward? (Impacts Three.js/Director/TTS scheduling.)
 4. **Patching vs fork merging:** Do we prefer a thin fork that we rebase, or a set of small maintained `.patch` files applied by the build script against upstream tags?
-5. **CI integration:** Should `npm run build` (and the perf CI) always run `scripts/build-webllm.sh`, or is it opt-in via `USE_CUSTOM_WEBLLM=1`?
+5. **CI integration:** `USE_CUSTOM_WEBLLM=1` is opt-in via env flag; see `.github/workflows/build-webllm.yml` and `npm run build:custom-webllm`. Default `npm run build` keeps the npm package.
 6. **New model needs:** Are we planning any non-Llama/Hermes architectures soon, or only quant/context variants of existing ones?
 7. **JSON mode / function calling / vision:** How heavily will future "Expanded Reality", "Script", or "Watcher" modes rely on these web-llm features? (Directly affects safe pruning.)
 8. **TVM runtime vendoring:** Do we also want to fork/patch `@mlc-ai/web-runtime` (the tvmjs glue) or is that out of scope?

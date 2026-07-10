@@ -140,6 +140,19 @@ export class GroupChatManager {
     const msg = error instanceof Error ? error.message : String(error)
     const msgLower = msg.toLowerCase()
 
+    // Custom web-llm fork (USE_CUSTOM_WEBLLM=1) surfaces WebLLMInitError with category
+    if (
+      error instanceof Error &&
+      error.name === 'WebLLMInitError' &&
+      'category' in error &&
+      typeof (error as { category?: string }).category === 'string'
+    ) {
+      const cat = (error as { category: string }).category
+      if (cat === 'webgpu' || cat === 'oom' || cat === 'network') {
+        return cat
+      }
+    }
+
     // WebGPU not available
     if (msgLower.includes('webgpu') || msgLower.includes('gpu') && msgLower.includes('not supported')) {
       return 'webgpu'

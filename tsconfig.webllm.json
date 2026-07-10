@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@mlc-ai/web-llm": ["./3rd_party/web-llm-dist/lib/index.d.ts"],
+      "@mlc-ai/web-llm/*": ["./3rd_party/web-llm-dist/lib/*"]
+    }
+  }
+}

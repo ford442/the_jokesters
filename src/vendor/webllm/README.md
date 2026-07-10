@@ -37,6 +37,19 @@ For reproducible builds / CI:
 
 The build script also produces `BUILD_INFO.txt` for provenance.
 
+**Enabled in this repo (Pattern B via env flag):**
+
+```bash
+./scripts/build-webllm.sh
+USE_CUSTOM_WEBLLM=1 npm run dev
+# or: npm run build:custom-webllm
+```
+
+Vite reads `USE_CUSTOM_WEBLLM=1` and aliases to `3rd_party/web-llm-dist/lib/index.js`.
+Typecheck against the custom dist: `npm run typecheck:webllm` (uses `tsconfig.webllm.json`).
+
+Rebase procedure: `docs/webllm-rebase.md`
+
 ## Why not just change the import paths everywhere?
 
 We keep the canonical import name `@mlc-ai/web-llm` so that:
