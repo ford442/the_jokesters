@@ -19,6 +19,8 @@ import { EngineFactory, type EngineType } from './llm/EngineFactory'
 import { MemoryManager } from './Director/MemoryManager'
 import { getModelDisplayName, getRecommendedModel, VPS_STORAGE_URL } from './config/models'
 import { estimateAvailableVRAM } from './utils/dynamicContext'
+import { createCallbackBadge, tagMessageWithAgent, attachCallbackBadgeToLastAgentMessage } from './ui/callbackBadge'
+import type { ComedyCallbackStatus } from './comedy/ComedySession'
 
 
 // Log available models on startup
@@ -838,13 +840,20 @@ async function initApp() {
     updateNextAgentUI()
 
     // Add message to chat log
-    const addMessage = (sender: string, message: string, color: string, agentId?: string) => {
+    const addMessage = (
+      sender: string,
+      message: string,
+      color: string,
+      agentId?: string,
+      callbackBadge?: { status: ComedyCallbackStatus; count: number },
+    ) => {
       const messageDiv = document.createElement('div')
       messageDiv.className = 'message'
       messageDiv.innerHTML = `
         <strong style="color: ${color}">${sender}:</strong> ${message}
       `
       if (agentId) {
+          tagMessageWithAgent(messageDiv, agentId);
           const feedbackDiv = document.createElement('div');
           feedbackDiv.className = 'feedback-controls';
           feedbackDiv.style.cssText = 'display: inline-block; margin-left: 10px; font-size: 0.8em; opacity: 0.5; cursor: pointer;';
@@ -860,9 +869,23 @@ async function initApp() {
           });
 
           messageDiv.appendChild(feedbackDiv);
+
+          if (callbackBadge) {
+            messageDiv.appendChild(createCallbackBadge({ ...callbackBadge, agentId }));
+          }
       }
       chatLog.appendChild(messageDiv)
       chatLog.scrollTop = chatLog.scrollHeight
+    }
+
+    /** Wire Director callback visuals when Director is instantiated elsewhere. */
+    ;(window as any).attachComedyCallbackBadge = (
+      agentId: string,
+      _jokeId: string,
+      count: number,
+      status: ComedyCallbackStatus,
+    ) => {
+      attachCallbackBadgeToLastAgentMessage(chatLog, agentId, status, count);
     }
 
     // Prerender state for audio

@@ -25,6 +25,8 @@ import { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
 import { MemoryManager } from './MemoryManager';
 import type { ModeContext } from './modes/ModeContext';
+import { ComedySession } from '../comedy/ComedySession';
+import { isComedyEnabled } from './modeConfig';
 import { runImprovLoop, runAutonomousLoop } from './modes/ImprovMode';
 import { runReactionLoop, runVisionLoop } from './modes/MediaMode';
 import { runReporterLoop, runMeltdownLoop, runNewsroomLoop } from './modes/ReporterMode';
@@ -421,6 +423,8 @@ export interface Scenario {
         infractionTopic?: string;
         chapterTopic?: string;
         era?: string;
+        /** When set, overrides mode-family default for CallbackEngine / quality hooks. */
+        comedyEnabled?: boolean;
     };
 }
 
@@ -771,6 +775,7 @@ export class Director {
     private inputPromise: { resolve: (text: string) => void, reject: (reason?: any) => void } | null = null;
     private memoryManager: MemoryManager | null = null;
     private broadcastChannel: BroadcastChannel | null = null;
+    private comedySession: ComedySession | null = null;
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks, memoryManager?: MemoryManager) {
         this.manager = manager;
@@ -830,12 +835,29 @@ export class Director {
             waitForInput: () => this.waitForInput(),
             searchAndRecall: (topic: string) => this.searchAndRecall(topic),
             memoryManager: this.memoryManager,
+            comedy: this.comedySession,
             recordCallbackVisual: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => {
                 if (this.callbacks.onCallbackRecorded) {
                     this.callbacks.onCallbackRecorded(agentId, jokeId, count, status);
                 }
             },
         };
+    }
+
+    private initComedySession(scenario: Scenario): void {
+        if (!isComedyEnabled(scenario.type, scenario.config)) {
+            this.comedySession = null;
+            return;
+        }
+
+        this.comedySession = new ComedySession({
+            onCallbackVisual: (agentId, jokeId, count, status) => {
+                if (this.callbacks.onCallbackRecorded) {
+                    this.callbacks.onCallbackRecorded(agentId, jokeId, count, status);
+                }
+            },
+        });
+        this.comedySession.reset();
     }
 
     public async playScenario(scenario: Scenario) {
@@ -855,6 +877,8 @@ export class Director {
         if (scenario.config?.chaosLevel !== undefined) {
             this.chaosLevel = scenario.config.chaosLevel;
         }
+
+        this.initComedySession(scenario);
 
         try {
             const modeLoop = MODE_LOOPS[scenario.type];
@@ -920,6 +944,9 @@ export class Director {
             if (this.callbacks.onMusicControl) {
                 this.callbacks.onMusicControl('stop');
             }
+
+            this.comedySession?.reset();
+            this.comedySession = null;
         }
     }
 
@@ -1027,6 +1054,13 @@ export class Director {
 
             effectivePrompt += pacing.promptSuffix + ' ###';
 
+            if (this.comedySession) {
+                const callbackPrompt = this.comedySession.maybeInjectCallbackPrompt(0.3);
+                if (callbackPrompt) {
+                    effectivePrompt += ` ${callbackPrompt}`;
+                }
+            }
+
             const characterSpeeds: Record<string, number> = {
                 'comedian': 1.5,
                 'philosopher': 0.6,
@@ -1036,13 +1070,19 @@ export class Director {
             const userSeed = this.callbacks.getSeed ? this.callbacks.getSeed() : undefined;
             const turnSeed = userSeed !== undefined ? userSeed + this.manager.getHistoryLength() : undefined;
 
+            let responseText = '';
             await this.manager.chat(effectivePrompt, async (sentence) => {
+                responseText += `${sentence} `;
                 await this.callbacks.onSpeak(sentence, currentAgent.id, {
                     steps: pacing.ttsSteps,
                     speed: characterSpeeds[currentAgent.id] || 1.0,
                     seed: turnSeed
                 });
             }, { maxTokens: pacing.maxTokens, seed: turnSeed });
+
+            if (this.comedySession && responseText.trim()) {
+                this.comedySession.handleAgentResponse(responseText.trim(), currentAgent.id);
+            }
 
             await this.callbacks.onTurnEnd();
 

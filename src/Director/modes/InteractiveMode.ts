@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runRPGVendorLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🛒 RPG SHOP: Selling items for your "real life" quest.`, '#f1c40f');
@@ -176,23 +177,32 @@ export async function runTrialLoop(scenario: Scenario, ctx: ModeContext) {
     const defense = 'comedian';
 
     // 1. Judge Intro
-    ctx.callbacks.onTurnStart(judge);
-    await ctx.manager.chatForAgent(judge, `(You are the JUDGE in a courtroom. The defendant (User) is accused of: "${crime}". Call the court to order, demand silence, and ask the Prosecutor for the opening statement. Be extremely formal and pompous.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        judge,
+        `(You are the JUDGE in a courtroom. The defendant (User) is accused of: "${crime}". Call the court to order, demand silence, and ask the Prosecutor for the opening statement. Be extremely formal and pompous.)`,
+        async (s) => await ctx.callbacks.onSpeak(s, judge, {}),
+    );
 
     if (!ctx.isRunning()) return;
 
     // 2. Prosecutor Opening
-    ctx.callbacks.onTurnStart(prosecutor);
-    await ctx.manager.chatForAgent(prosecutor, `(You are the PROSECUTOR. Present the charges against the defendant (User) regarding "${crime}". Use made-up evidence and sound very clinical and harsh.)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        prosecutor,
+        `(You are the PROSECUTOR. Present the charges against the defendant (User) regarding "${crime}". Use made-up evidence and sound very clinical and harsh.)`,
+        async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}),
+    );
 
     if (!ctx.isRunning()) return;
 
     // 3. Defense Opening (Incompetent)
-    ctx.callbacks.onTurnStart(defense);
-    await ctx.manager.chatForAgent(defense, `(You are the PUBLIC DEFENDER for the User. Make an opening statement but be totally incompetent, distracted, or admit you lost the paperwork. Try to defend them but fail hilariously.)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        defense,
+        `(You are the PUBLIC DEFENDER for the User. Make an opening statement but be totally incompetent, distracted, or admit you lost the paperwork. Try to defend them but fail hilariously.)`,
+        async (s) => await ctx.callbacks.onSpeak(s, defense, {}),
+    );
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -200,15 +210,15 @@ export async function runTrialLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(prosecutor, `(PROSECUTOR: The defendant just said: "${userInput}". Twist their words, shout "OBJECTION!", and make them look guilty based on this statement.)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
+        await chatForAgentWithComedy(ctx, prosecutor, `(PROSECUTOR: The defendant just said: "${userInput}". Twist their words, shout "OBJECTION!", and make them look guilty based on this statement.)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
 
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(judge, `(JUDGE: React to the testimony. Maintain order. Ask the Defense if they have anything to add.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+        await chatForAgentWithComedy(ctx, judge, `(JUDGE: React to the testimony. Maintain order. Ask the Defense if they have anything to add.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
 
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(defense, `(DEFENSE ATTORNEY: Try to help your client but make it worse. Maybe bring up an irrelevant witness or legal precedent involving ducks.)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
+        await chatForAgentWithComedy(ctx, defense, `(DEFENSE ATTORNEY: Try to help your client but make it worse. Maybe bring up an irrelevant witness or legal precedent involving ducks.)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
     }
 }
 
@@ -274,9 +284,12 @@ export async function runTriviaLoop(scenario: Scenario, ctx: ModeContext) {
     const host = 'scientist';
     ctx.callbacks.onMessage('Director', `❓ TRIVIA NIGHT: Topic - ${topic}`, '#f1c40f');
 
-    ctx.callbacks.onTurnStart(host);
-    await ctx.manager.chatForAgent(host, `(You are hosting a Trivia Night. The topic is "${topic}". Welcome the player (User) and explain the rules. Keep it brief.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        host,
+        `(You are hosting a Trivia Night. The topic is "${topic}". Welcome the player (User) and explain the rules. Keep it brief.)`,
+        async (s) => await ctx.callbacks.onSpeak(s, host, {}),
+    );
 
     let round = 1;
     while (ctx.isRunning()) {
@@ -284,17 +297,32 @@ export async function runTriviaLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(host, `(TRIVIA HOST: Ask a challenging trivia question about "${topic}". Do not reveal the answer yet. Wait for the user to guess.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+        await chatForAgentWithComedy(
+            ctx,
+            host,
+            `(TRIVIA HOST: Ask a challenging trivia question about "${topic}". Do not reveal the answer yet. Wait for the user to guess.)`,
+            async (s) => await ctx.callbacks.onSpeak(s, host, {}),
+        );
 
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('You', userInput, '#ffffff');
 
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(host, `(TRIVIA HOST: The user answered: "${userInput}". Reveal the correct answer and tell them if they were right or wrong. Be strict but fair. Then ask if they are ready for the next question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+        await chatForAgentWithComedy(
+            ctx,
+            host,
+            `(TRIVIA HOST: The user answered: "${userInput}". Reveal the correct answer and tell them if they were right or wrong. Be strict but fair. Then ask if they are ready for the next question.)`,
+            async (s) => await ctx.callbacks.onSpeak(s, host, {}),
+        );
 
         if (Math.random() > 0.5 && ctx.isRunning()) {
-            await ctx.manager.chatForAgent('comedian', `(React to the user's answer or the host's strictness. Make a joke about it.)`, async (s) => await ctx.callbacks.onSpeak(s, 'comedian', {}));
+            await chatForAgentWithComedy(
+                ctx,
+                'comedian',
+                `(React to the user's answer or the host's strictness. Make a joke about it.)`,
+                async (s) => await ctx.callbacks.onSpeak(s, 'comedian', {}),
+            );
         }
 
         round++;

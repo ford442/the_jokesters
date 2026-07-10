@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
     const target = scenario.config?.roastTarget || 'The Audience';
@@ -111,23 +112,31 @@ export async function runStandupLoop(scenario: Scenario, ctx: ModeContext) {
 
     ctx.callbacks.onMessage('Director', `🎤 STAND-UP COMEDY: ${topic}`, '#f1c40f');
 
-    ctx.callbacks.onTurnStart(comedian);
-    await ctx.manager.chatForAgent(comedian, `(You are doing a stand-up comedy routine about "${topic}". Walk on stage, grab the mic, and deliver your opening joke. Be confident and punchy!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        comedian,
+        `(You are doing a stand-up comedy routine about "${topic}". Walk on stage, grab the mic, and deliver your opening joke. Be confident and punchy!)`,
+        async (s) => await ctx.callbacks.onSpeak(s, comedian, {}),
+    );
 
     let round = 1;
     while (ctx.isRunning()) {
         if (ctx.interruptQueue.length > 0) {
             const heckle = ctx.interruptQueue.shift()!;
             ctx.callbacks.onMessage('Audience', `"${heckle}"`, '#ff6b6b');
-            await ctx.manager.chatForAgent(comedian, `(Someone in the audience just yelled: "${heckle}". Destroy them with a comeback!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+            await chatForAgentWithComedy(ctx, comedian, `(Someone in the audience just yelled: "${heckle}". Destroy them with a comeback!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
             continue;
         }
 
         if (!ctx.isRunning()) break;
 
         // Comedian tells a joke
-        await ctx.manager.chatForAgent(comedian, `(STAND-UP ROUTINE: Deliver your next joke about "${topic}". Wait for the laugh.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await chatForAgentWithComedy(
+            ctx,
+            comedian,
+            `(STAND-UP ROUTINE: Deliver your next joke about "${topic}". Wait for the laugh.)`,
+            async (s) => await ctx.callbacks.onSpeak(s, comedian, {}),
+        );
 
         if (!ctx.isRunning()) break;
 
@@ -232,11 +241,12 @@ export async function runDebateLoop(scenario: Scenario, ctx: ModeContext) {
     const pro = 'comedian';
     const con = 'philosopher';
 
-    ctx.callbacks.onTurnStart(moderator);
-    await ctx.manager.chatForAgent(moderator, `(You are the MODERATOR for the debate topic: "${topic}". Introduce the topic and the debaters (Comedian and Philosopher). Keep it professional but slightly annoyed.)`, async (sentence) => {
-        await ctx.callbacks.onSpeak(sentence, moderator, {});
-    });
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(
+        ctx,
+        moderator,
+        `(You are the MODERATOR for the debate topic: "${topic}". Introduce the topic and the debaters (Comedian and Philosopher). Keep it professional but slightly annoyed.)`,
+        async (sentence) => await ctx.callbacks.onSpeak(sentence, moderator, {}),
+    );
 
     let round = 1;
     while (ctx.isRunning()) {
@@ -250,12 +260,12 @@ export async function runDebateLoop(scenario: Scenario, ctx: ModeContext) {
         ctx.callbacks.onMessage('Director', `🔔 Round ${round}`, '#888');
 
         if (!ctx.isRunning()) break;
-        await ctx.manager.chatForAgent(pro, `(DEBATE ROUND ${round}: Argue FOR the topic: "${topic}". Be passionate and use absurd logic.)`, async (s) => await ctx.callbacks.onSpeak(s, pro, {}));
+        await chatForAgentWithComedy(ctx, pro, `(DEBATE ROUND ${round}: Argue FOR the topic: "${topic}". Be passionate and use absurd logic.)`, async (s) => await ctx.callbacks.onSpeak(s, pro, {}));
 
         if (ctx.interruptQueue.length > 0) continue;
 
         if (!ctx.isRunning()) break;
-        await ctx.manager.chatForAgent(con, `(DEBATE ROUND ${round}: Argue AGAINST the topic: "${topic}" and refute the previous point. Be philosophical and condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, con, {}));
+        await chatForAgentWithComedy(ctx, con, `(DEBATE ROUND ${round}: Argue AGAINST the topic: "${topic}" and refute the previous point. Be philosophical and condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, con, {}));
 
         if (round % 2 === 0 && ctx.isRunning()) {
             await ctx.manager.chatForAgent(moderator, `(Briefly summarize the points so far and issue a point deduction to one of them for a fallacy.)`, async (s) => await ctx.callbacks.onSpeak(s, moderator, {}));
