@@ -40,6 +40,13 @@ export { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
 export { TransformersEngineAdapter } from './TransformersEngineAdapter'
 export { ApiEngineAdapter } from './ApiEngineAdapter'
 
+export {
+  WLLAMA_WASM_PATHS,
+  WllamaRuntimeMismatchError,
+  isWllamaRuntimeMismatch,
+  rethrowWllamaRuntimeError,
+} from './wllamaRuntime'
+
 // Factory and utilities
 export {
   EngineFactory,
@@ -48,6 +55,7 @@ export {
   detectShaderF16Support,
   getCompatibleEngines,
   getModelEngineSupport,
+  getEngineFallbackOrder,
   type EngineType,
   type EngineCapabilities,
   type ModelEngineSupport,

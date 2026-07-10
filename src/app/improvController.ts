@@ -312,6 +312,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         oom: '⚠️ GPU ran out of memory. Close other GPU-heavy tabs and reload.',
         network: '⚠️ Network error during scene. Check your connection and try again.',
         webgpu: '⚠️ WebGPU error. Try reloading the page.',
+        llamacpp_mismatch: '⚠️ llama.cpp runtime mismatch. Reload or switch to MLC in the engine selector.',
         unknown: '⚠️ Error running improv scene — see console for details.',
       } as const
       chatLog.addMessage('System', msgs[cat] ?? msgs.unknown, '#ff6b6b')

@@ -704,9 +704,10 @@ The notes below capture non-obvious gotchas discovered when running this app in 
 - Models stream from `storage.1ink.us` (reachable). The HuggingFace xet CDN
   (`us.aws.cdn.hf.co`) **times out** from this VM, so HF-hosted models (e.g. `TinyLlama-1.1B-Chat-GGUF`)
   fail to download. Prefer the VPS-hosted MLC/GGUF models.
-- The **llama.cpp (wllama)** engine loads VPS-hosted wasm that mismatches the installed
-  `@wllama/wllama` JS glue and fails to instantiate (`function import requires a callable`). Use the
-  **MLC** engine.
+- **llama.cpp (wllama)** ships WASM bundled with the app (`src/llm/wllamaRuntime.ts` via Vite
+  `?url` imports) so it always matches the pinned `@wllama/wllama` package. Run `npm run verify:wllama`
+  after version bumps. On SwiftShader / software WebGPU VMs, prefer **MLC** with q4f32 models (no
+  shader-f16); llama.cpp is for true no-WebGPU browsers.
 - WebLLM caches weights via the **Cache API** using HF-style `…/resolve/main/…` URLs. The
   `index.html` `fetch` wrapper cannot rewrite those (`Cache.add()` bypasses it); the service worker
   (`src/service-worker.ts`) does the rewrite but only controls the page **after a reload** (it never

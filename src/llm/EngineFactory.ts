@@ -192,6 +192,31 @@ export function getModelEngineSupport(
 }
 
 /**
+ * Ordered fallback engines when llama.cpp WASM fails (glue mismatch, etc.).
+ * Excludes engines already attempted via `exclude`.
+ */
+export function getEngineFallbackOrder(
+  modelConfig: UnifiedModelConfig,
+  capabilities: EngineCapabilities,
+  exclude: Array<'mlc' | 'transformers' | 'api' | 'llamacpp'> = []
+): Array<'mlc' | 'transformers' | 'api'> {
+  const support = getModelEngineSupport(modelConfig, capabilities)
+  const order: Array<'mlc' | 'transformers' | 'api'> = []
+
+  if (support.mlc && capabilities.webgpu && !exclude.includes('mlc')) {
+    order.push('mlc')
+  }
+  if (support.transformers && !exclude.includes('transformers')) {
+    order.push('transformers')
+  }
+  if (support.api && !exclude.includes('api')) {
+    order.push('api')
+  }
+
+  return order
+}
+
+/**
  * Select and create the appropriate engine for a model.
  */
 export async function selectEngine(

@@ -15,13 +15,7 @@ import type {
   LLMEngine,
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
-import { VPS_STORAGE_URL } from '../config/models'
-
-// WASM binary URLs for wllama — self-hosted on VPS
-const WASM_FROM_VPS = {
-  'single-thread/wllama.wasm': `${VPS_STORAGE_URL}/wllama-wasm/single-thread.wasm`,
-  'multi-thread/wllama.wasm': `${VPS_STORAGE_URL}/wllama-wasm/multi-thread.wasm`,
-}
+import { WLLAMA_WASM_PATHS, rethrowWllamaRuntimeError } from './wllamaRuntime'
 
 export class LlamaCppEngineAdapter implements LLMEngine {
   readonly id = 'llamacpp'
@@ -46,8 +40,8 @@ export class LlamaCppEngineAdapter implements LLMEngine {
                        modelConfig.id.toLowerCase().includes('hermes') ? 'hermes' :
                        modelConfig.id.toLowerCase().includes('llama-3') ? 'llama3' : 'llama2'
 
-    // Create wllama instance with VPS-hosted WASM
-    this.wllama = new Wllama(WASM_FROM_VPS)
+    // Bundled WASM from @wllama/wllama (via Vite ?url) — always matches JS glue version
+    this.wllama = new Wllama(WLLAMA_WASM_PATHS)
     this.abortController = new AbortController()
 
     // Determine GGUF URL
@@ -125,11 +119,11 @@ export class LlamaCppEngineAdapter implements LLMEngine {
       this.initialized = false
       this.wllama = null
       this.abortController = null
-      
+
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Model loading was cancelled')
       }
-      throw error
+      rethrowWllamaRuntimeError(error)
     }
   }
 
