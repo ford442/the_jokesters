@@ -1,8 +1,4 @@
-/**
- * Unit tests for token budget / context truncation edge cases.
- * Run: npx tsx tests/unit/tokenBudget.test.ts
- */
-
+import { describe, expect, it } from 'vitest';
 import {
   DynamicContextManager,
   type ChatMessage,
@@ -15,19 +11,6 @@ import {
   MODEL_FAMILY_CHARS_PER_TOKEN,
 } from '../../src/utils/tokenEstimator';
 
-let passed = 0;
-let failed = 0;
-
-function assert(condition: boolean, message: string): void {
-  if (condition) {
-    passed += 1;
-    console.log(`  ✓ ${message}`);
-  } else {
-    failed += 1;
-    console.error(`  ✗ ${message}`);
-  }
-}
-
 function makeHistory(count: number): ChatMessage[] {
   const history: ChatMessage[] = [];
   for (let i = 0; i < count; i++) {
@@ -39,111 +22,101 @@ function makeHistory(count: number): ChatMessage[] {
   return history;
 }
 
-console.log('\n=== Token estimator accuracy (Hermes/Llama samples) ===');
-for (const sample of REFERENCE_SAMPLE_COUNTS) {
-  const ratio = MODEL_FAMILY_CHARS_PER_TOKEN[sample.family] ?? MODEL_FAMILY_CHARS_PER_TOKEN.default;
-  const estimator = new CachedRatioTokenEstimator(sample.family, ratio);
-  const estimate = estimator.estimateText(sample.text);
-  assert(
-    isWithinTolerance(estimate, sample.tokens, 0.11),
-    `${sample.family} sample within ~10% (est=${estimate}, ref=${sample.tokens})`,
-  );
-}
+describe('Token estimator accuracy', () => {
+  it('matches Hermes/Llama reference samples within tolerance', () => {
+    for (const sample of REFERENCE_SAMPLE_COUNTS) {
+      const ratio = MODEL_FAMILY_CHARS_PER_TOKEN[sample.family] ?? MODEL_FAMILY_CHARS_PER_TOKEN.default;
+      const estimator = new CachedRatioTokenEstimator(sample.family, ratio);
+      const estimate = estimator.estimateText(sample.text);
+      expect(isWithinTolerance(estimate, sample.tokens, 0.11)).toBe(true);
+    }
+  });
 
-console.log('\n=== Mock tokenizer vs calibrated ratio ===');
-{
-  const mockCharsPerToken = 3.65;
-  const mockEstimate = (text: string) => Math.max(1, Math.ceil(text.length / mockCharsPerToken));
-  const estimator = new CachedRatioTokenEstimator('hermes');
-  const calibrationText = REFERENCE_SAMPLE_COUNTS[0].text;
-  estimator.calibrate(calibrationText.length, mockEstimate(calibrationText));
-  for (const sample of REFERENCE_SAMPLE_COUNTS) {
-    const reference = mockEstimate(sample.text);
-    const estimate = estimator.estimateText(sample.text);
-    assert(
-      isWithinTolerance(estimate, reference, 0.1),
-      `calibrated ratio within 10% of mock tokenizer (est=${estimate}, ref=${reference})`,
-    );
-  }
-}
+  it('calibrates against a mock tokenizer', () => {
+    const mockCharsPerToken = 3.65;
+    const mockEstimate = (text: string) => Math.max(1, Math.ceil(text.length / mockCharsPerToken));
+    const estimator = new CachedRatioTokenEstimator('hermes');
+    const calibrationText = REFERENCE_SAMPLE_COUNTS[0].text;
+    estimator.calibrate(calibrationText.length, mockEstimate(calibrationText));
 
-console.log('\n=== Tiny context window ===');
-{
-  const estimator = new HeuristicTokenEstimator(4);
-  const mgr = new DynamicContextManager(64, estimator);
-  const system = 'You are The Comedian.';
-  const history = makeHistory(6);
-  const { messages, info } = mgr.truncate(system, history, 16);
+    for (const sample of REFERENCE_SAMPLE_COUNTS) {
+      const reference = mockEstimate(sample.text);
+      const estimate = estimator.estimateText(sample.text);
+      expect(isWithinTolerance(estimate, reference, 0.1)).toBe(true);
+    }
+  });
+});
 
-  assert(messages[0].role === 'system', 'system prompt always first');
-  assert(messages[0].content === system, 'system prompt content preserved');
-  assert(info.droppedMessages > 0, 'drops messages when window is tiny');
-  assert(info.usedTokens + info.reserveTokens <= info.maxTokens, 'used + reserve fits max');
-  assert(
-    messages.some(m => m.content.includes('NEWEST')) || info.droppedMessages >= 0,
-    'newest turns prioritized when space allows',
-  );
-}
+describe('DynamicContextManager.truncate', () => {
+  it('preserves system prompt in tiny context windows', () => {
+    const estimator = new HeuristicTokenEstimator(4);
+    const mgr = new DynamicContextManager(64, estimator);
+    const system = 'You are The Comedian.';
+    const history = makeHistory(6);
+    const { messages, info } = mgr.truncate(system, history, 16);
 
-console.log('\n=== Huge system prompt ===');
-{
-  const estimator = new HeuristicTokenEstimator(4);
-  const mgr = new DynamicContextManager(128, estimator);
-  const hugeSystem = 'SYSTEM RULES: ' + 'Be funny. '.repeat(200);
-  const history = makeHistory(4);
-  const { messages, info } = mgr.truncate(hugeSystem, history, 32);
+    expect(messages[0].role).toBe('system');
+    expect(messages[0].content).toBe(system);
+    expect(info.droppedMessages).toBeGreaterThan(0);
+    expect(info.usedTokens + info.reserveTokens).toBeLessThanOrEqual(info.maxTokens);
+  });
 
-  assert(messages.length === 1, 'only system prompt when budget exhausted');
-  assert(messages[0].content === hugeSystem, 'full system prompt retained');
-  assert(info.droppedMessages === history.length, 'all history dropped');
-  assert(info.hasSummary === false, 'no summary when nothing kept');
-}
+  it('keeps only system prompt when budget is exhausted by huge system text', () => {
+    const estimator = new HeuristicTokenEstimator(4);
+    const mgr = new DynamicContextManager(128, estimator);
+    const hugeSystem = 'SYSTEM RULES: ' + 'Be funny. '.repeat(200);
+    const history = makeHistory(4);
+    const { messages, info } = mgr.truncate(hugeSystem, history, 32);
 
-console.log('\n=== reserveTokens aligns with maxTokensPerTurn ===');
-{
-  const estimator = new HeuristicTokenEstimator(4);
-  const mgr = new DynamicContextManager(512, estimator);
-  const system = 'Agent persona ' + 'x'.repeat(40);
-  const history = makeHistory(8);
-  const reserve = 150;
-  const { info } = mgr.truncate(system, history, reserve);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].content).toBe(hugeSystem);
+    expect(info.droppedMessages).toBe(history.length);
+    expect(info.hasSummary).toBe(false);
+  });
 
-  assert(info.reserveTokens === reserve, 'reserveTokens echoed in ContextWindowInfo');
-  assert(info.usedTokens <= info.maxTokens - reserve, 'prompt budget respects generation reserve');
-}
+  it('respects reserveTokens / maxTokensPerTurn budget', () => {
+    const estimator = new HeuristicTokenEstimator(4);
+    const mgr = new DynamicContextManager(512, estimator);
+    const system = 'Agent persona ' + 'x'.repeat(40);
+    const history = makeHistory(8);
+    const reserve = 150;
+    const { info } = mgr.truncate(system, history, reserve);
 
-console.log('\n=== Truncation keeps newest turns ===');
-{
-  const estimator = new HeuristicTokenEstimator(4);
-  const mgr = new DynamicContextManager(115, estimator);
-  const system = 'System';
-  const history: ChatMessage[] = [
-    { role: 'user', content: 'OLD MESSAGE ONE ' + 'x'.repeat(80) },
-    { role: 'assistant', content: 'OLD REPLY ONE ' + 'x'.repeat(80) },
-    { role: 'user', content: 'OLD MESSAGE TWO ' + 'x'.repeat(80) },
-    { role: 'assistant', content: 'OLD REPLY TWO ' + 'x'.repeat(80) },
-    { role: 'user', content: 'NEWEST USER LINE' },
-    { role: 'assistant', content: 'NEWEST ASSISTANT LINE' },
-  ];
-  const { messages, info } = mgr.truncate(system, history, 20);
-  const keptContents = messages.filter(m => m.role !== 'system').map(m => m.content);
+    expect(info.reserveTokens).toBe(reserve);
+    expect(info.usedTokens).toBeLessThanOrEqual(info.maxTokens - reserve);
+  });
 
-  assert(info.hasSummary === true, 'summary stub added when older turns dropped');
-  assert(keptContents.includes('NEWEST USER LINE'), 'newest user turn kept');
-  assert(keptContents.includes('NEWEST ASSISTANT LINE'), 'newest assistant turn kept');
-  assert(!keptContents.includes('OLD MESSAGE ONE'), 'oldest turn dropped');
-}
+  it('keeps newest turns and adds summary stub when dropping older history', () => {
+    const estimator = new HeuristicTokenEstimator(4);
+    const mgr = new DynamicContextManager(115, estimator);
+    const system = 'System';
+    const history: ChatMessage[] = [
+      { role: 'user', content: 'OLD MESSAGE ONE ' + 'x'.repeat(80) },
+      { role: 'assistant', content: 'OLD REPLY ONE ' + 'x'.repeat(80) },
+      { role: 'user', content: 'OLD MESSAGE TWO ' + 'x'.repeat(80) },
+      { role: 'assistant', content: 'OLD REPLY TWO ' + 'x'.repeat(80) },
+      { role: 'user', content: 'NEWEST USER LINE' },
+      { role: 'assistant', content: 'NEWEST ASSISTANT LINE' },
+    ];
+    const { messages, info } = mgr.truncate(system, history, 20);
+    const keptContents = messages.filter((m) => m.role !== 'system').map((m) => m.content);
 
-console.log('\n=== Cached ratio calibration ===');
-{
-  const estimator = new CachedRatioTokenEstimator('llama3');
-  const text = 'Hello world from Llama tokenizer calibration sample text.';
-  const trueTokens = 12;
-  estimator.calibrate(text.length, trueTokens);
-  const estimate = estimator.estimateText(text);
-  assert(isWithinTolerance(estimate, trueTokens, 0.05), 'calibrated estimator matches reference');
-  assert(estimator.getSource() === 'cached-ratio', 'reports cached-ratio source');
-}
+    expect(info.hasSummary).toBe(true);
+    expect(keptContents).toContain('NEWEST USER LINE');
+    expect(keptContents).toContain('NEWEST ASSISTANT LINE');
+    expect(keptContents).not.toContain('OLD MESSAGE ONE');
+  });
+});
 
-console.log(`\n${passed} passed, ${failed} failed\n`);
-process.exit(failed > 0 ? 1 : 0);
+describe('Cached ratio calibration', () => {
+  it('matches reference after calibrate()', () => {
+    const estimator = new CachedRatioTokenEstimator('llama3');
+    const text = 'Hello world from Llama tokenizer calibration sample text.';
+    const trueTokens = 12;
+    estimator.calibrate(text.length, trueTokens);
+    const estimate = estimator.estimateText(text);
+
+    expect(isWithinTolerance(estimate, trueTokens, 0.05)).toBe(true);
+    expect(estimator.getSource()).toBe('cached-ratio');
+  });
+});

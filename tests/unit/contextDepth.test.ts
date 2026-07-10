@@ -1,8 +1,4 @@
-/**
- * Unit tests for configurable memory depth and director hints.
- * Run: npx tsx tests/unit/contextDepth.test.ts
- */
-
+import { describe, expect, it } from 'vitest';
 import {
   applyMemoryHint,
   clampMemoryDepth,
@@ -14,43 +10,45 @@ import {
   MAX_MEMORY_DEPTH,
 } from '../../src/config/contextDepth';
 
-let passed = 0;
-let failed = 0;
+describe('clampMemoryDepth', () => {
+  it('clamps below minimum and above maximum', () => {
+    expect(clampMemoryDepth(2)).toBe(MIN_MEMORY_DEPTH);
+    expect(clampMemoryDepth(99)).toBe(MAX_MEMORY_DEPTH);
+    expect(clampMemoryDepth(15)).toBe(15);
+  });
+});
 
-function assert(condition: boolean, message: string): void {
-  if (condition) {
-    passed += 1;
-    console.log(`  ✓ ${message}`);
-  } else {
-    failed += 1;
-    console.error(`  ✗ ${message}`);
-  }
-}
+describe('applyMemoryHint', () => {
+  it('adjusts depth for zoom and recall hints', () => {
+    expect(applyMemoryHint(16, 'zoom_in')).toBe(8);
+    expect(applyMemoryHint(10, 'zoom_out')).toBe(15);
+    expect(applyMemoryHint(20, 'recall:pickles')).toBe(30);
+  });
+});
 
-console.log('\n=== clampMemoryDepth ===');
-assert(clampMemoryDepth(2) === MIN_MEMORY_DEPTH, 'clamps below minimum');
-assert(clampMemoryDepth(99) === MAX_MEMORY_DEPTH, 'clamps above maximum');
-assert(clampMemoryDepth(15) === 15, 'preserves in-range value');
+describe('parseMemoryHint', () => {
+  it('parses known hints and rejects unknown ones', () => {
+    expect(parseMemoryHint('zoom_in')).toBe('zoom_in');
+    expect(parseMemoryHint('recall:hotdogs')).toBe('recall:hotdogs');
+    expect(parseMemoryHint('nonsense')).toBeNull();
+  });
+});
 
-console.log('\n=== applyMemoryHint ===');
-assert(applyMemoryHint(16, 'zoom_in') === 8, 'zoom_in halves depth');
-assert(applyMemoryHint(10, 'zoom_out') === 15, 'zoom_out expands depth');
-assert(applyMemoryHint(20, 'recall:pickles') === 30, 'recall zooms out (capped)');
+describe('category defaults', () => {
+  it('keeps every category default within allowed range', () => {
+    for (const category of Object.keys(CATEGORY_CONTEXT_DEPTH_DEFAULTS) as Array<
+      keyof typeof CATEGORY_CONTEXT_DEPTH_DEFAULTS
+    >) {
+      const depth = getDefaultContextDepthForCategory(category);
+      expect(depth).toBeGreaterThanOrEqual(MIN_MEMORY_DEPTH);
+      expect(depth).toBeLessThanOrEqual(MAX_MEMORY_DEPTH);
+    }
+  });
+});
 
-console.log('\n=== parseMemoryHint ===');
-assert(parseMemoryHint('zoom_in') === 'zoom_in', 'parses zoom_in');
-assert(parseMemoryHint('recall:hotdogs') === 'recall:hotdogs', 'parses recall theme');
-assert(parseMemoryHint('nonsense') === null, 'rejects unknown hint');
-
-console.log('\n=== category defaults documented ===');
-for (const category of Object.keys(CATEGORY_CONTEXT_DEPTH_DEFAULTS) as Array<keyof typeof CATEGORY_CONTEXT_DEPTH_DEFAULTS>) {
-  const depth = getDefaultContextDepthForCategory(category);
-  assert(depth >= MIN_MEMORY_DEPTH && depth <= MAX_MEMORY_DEPTH, `${category} default in range (${depth})`);
-}
-
-console.log('\n=== director critique depth scales ===');
-assert(getDirectorCritiqueDepth(15) === 6, '15 -> 6 critique messages');
-assert(getDirectorCritiqueDepth(4) === 4, 'minimum critique depth is 4');
-
-console.log(`\n${passed} passed, ${failed} failed\n`);
-process.exit(failed > 0 ? 1 : 0);
+describe('getDirectorCritiqueDepth', () => {
+  it('scales critique depth with memory depth', () => {
+    expect(getDirectorCritiqueDepth(15)).toBe(6);
+    expect(getDirectorCritiqueDepth(4)).toBe(4);
+  });
+});
