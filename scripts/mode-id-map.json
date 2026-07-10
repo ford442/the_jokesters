@@ -1287,4 +1287,5 @@
     "id": "visual_stage_destruction",
     "handler": "runVisualStageDestructionLoop"
   }
+  ,{"id": "debugging_therapy", "handler": "runDebuggingTherapyModeLoop"}
 ]
