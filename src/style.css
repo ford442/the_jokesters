@@ -153,6 +153,49 @@ button:focus-visible {
   line-height: 1.4;
 }
 
+.callback-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: 600;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+.callback-badge--fresh {
+  background: rgba(78, 205, 196, 0.2);
+  color: #4ecdc4;
+  border: 1px solid rgba(78, 205, 196, 0.45);
+}
+
+.callback-badge--building {
+  background: rgba(241, 196, 15, 0.15);
+  color: #f1c40f;
+  border: 1px solid rgba(241, 196, 15, 0.4);
+}
+
+.callback-badge--peak {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+  box-shadow: 0 0 8px rgba(255, 107, 107, 0.35);
+}
+
+.callback-badge--declining {
+  background: rgba(149, 165, 166, 0.15);
+  color: #95a5a6;
+  border: 1px solid rgba(149, 165, 166, 0.35);
+}
+
+.callback-badge--dead {
+  background: rgba(44, 62, 80, 0.5);
+  color: #7f8c8d;
+  border: 1px solid rgba(127, 140, 141, 0.35);
+  opacity: 0.75;
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
