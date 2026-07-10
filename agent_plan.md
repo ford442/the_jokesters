@@ -29,6 +29,7 @@ tasks_per_run: 1
 ### Phase 1: Implementation
 
 ## Pending Tasks (Current Cycle)
+- [x] Implement "Sentient Linting Tool Mode" in `DreamModes_Tech.ts`
 - [x] Implement "Semantic Search for Cloud Memories" - Utilize vector approximations of stored HF summaries to allow agents to search past episodes mid-conversation.
 - [x] Implement "Office Supplies Existential Crisis Mode"
 - [x] Implement "Supervillain Brainstorming Session Mode"
@@ -243,6 +244,10 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
+
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
@@ -283,6 +288,10 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
+
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
@@ -322,6 +331,10 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
+
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
 - **NEW IDEA:** "Galactic Real Estate Agent Mode" - Agents play real estate brokers trying to sell uninhabitable planets to aliens.
@@ -340,6 +353,10 @@ tasks_per_run: 1
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
 
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
@@ -372,6 +389,10 @@ tasks_per_run: 1
 - **NEW IDEA:** Visual Diff Dashboard: Enhance the `#cloud-dashboard-modal` to preview JSON property diffs (e.g. `history` array lengths) between local and cloud states before confirming a merge.
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
 
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
@@ -439,6 +460,10 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 - [x] **"Time-Traveling Tech Support Mode"** - A medieval peasant trying to get help with their broken waterwheel from a modern tech support agent. Pairings: Comedian (Peasant), Scientist (Tech Support), Philosopher (Town Crier wondering about this "magic").
 
 ## New Ideas (Dream Phase)
+
+- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
+
 
 
 - **NEW IDEA:** "Sentient Traffic Light Mode" - Agents play red, yellow, and green traffic lights arguing over who has the most important job. Pairings: Scientist (Green, efficient), Philosopher (Yellow, cautious), Comedian (Red, power-hungry).
