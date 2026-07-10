@@ -883,5 +883,10 @@
     "id": "office_supplies_existential_crisis",
     "title": "Office Supplies Existential Crisis Mode",
     "description": "Agents play office supplies that are realizing they are becoming obsolete."
+  },
+  {
+    "id": "debugging_therapy",
+    "title": "Debugging Therapy Mode",
+    "description": "Agents play developers attending therapy for a codebase they cannot fix."
   }
 ]

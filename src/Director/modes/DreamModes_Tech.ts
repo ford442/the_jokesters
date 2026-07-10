@@ -1017,3 +1017,29 @@ export async function runSentientLintingToolLoop(_scenario: Scenario, ctx: ModeC
         ctx.callbacks.onMessage('Director', 'The CI pipeline times out, ending the argument.', '#e74c3c');
     }
 }
+
+export async function runDebuggingTherapyModeLoop(_scenario: Scenario, ctx: ModeContext) {
+  const therapist = 'scientist';
+  const developer = 'comedian';
+  const rubberDuck = 'philosopher';
+  const topic = (_scenario as any).topic || "a massive legacy codebase";
+
+  await ctx.manager.chatForAgent(therapist, `Welcome to therapy. We are here to discuss your ongoing trauma regarding ${topic}. Please, take a deep breath. How does the code make you feel today?`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { hiddenInstruction: 'You are a calm, analytical, somewhat clinical AI therapist.' });
+  if (!ctx.isRunning()) return;
+
+  await ctx.manager.chatForAgent(developer, "How does it make me feel?! THERE ARE NO COMMENTS! The original developer left 5 years ago and EVERYTHING IS UNDEFINED! I CAN'T SLEEP!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { hiddenInstruction: 'You are a frantic, burned-out developer who is losing their mind.' });
+  if (!ctx.isRunning()) return;
+
+  await ctx.manager.chatForAgent(rubberDuck, "*Squeak.* But consider this... is the bug in the repository, or is it deeply nested within your soul?", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { hiddenInstruction: 'You are a sentient rubber duck. You must start every message with a duck noise (like Quack or Squeak), then say something deeply philosophical.' });
+  if (!ctx.isRunning()) return;
+
+  for (let i = 0; i < 3; i++) {
+    if (!ctx.isRunning()) break;
+    await ctx.manager.chatForAgent(developer, "I just want it to compile! Why won't it compile?!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { hiddenInstruction: 'Rant frantically about a specific bizarre programming error or impossible deadline.' });
+    if (!ctx.isRunning()) break;
+    await ctx.manager.chatForAgent(therapist, "Let's unpack that. Why do you feel the need to control the compiler? Have you tried validating its feelings?", async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { hiddenInstruction: 'Respond with typical therapy speak incorrectly applied to coding and software engineering.' });
+    if (!ctx.isRunning()) break;
+    await ctx.manager.chatForAgent(rubberDuck, "Quack. We are all just functions waiting to be garbage collected in the runtime of the universe.", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { hiddenInstruction: 'Say a duck sound, then something extremely philosophical about software engineering.' });
+    if (!ctx.isRunning()) break;
+  }
+}

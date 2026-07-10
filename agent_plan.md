@@ -20,6 +20,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 ## Project Velocity
 tasks_per_run: 1
+Today went smoothly, keeping tasks_per_run to 1 for now.
 
 ### Phase 1: Implementation
 - [x] Implement "Supervillain Brainstorming Session" in DreamModes_Fantasy.ts
@@ -244,7 +245,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -288,7 +289,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -331,7 +332,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -354,7 +355,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -390,7 +391,7 @@ tasks_per_run: 1
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -461,7 +462,7 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
 
 ## New Ideas (Dream Phase)
 
-- **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
+- [x] **NEW IDEA:** "Debugging Therapy Mode" - Agents play developers attending therapy for a codebase they cannot fix. Pairings: Scientist (Therapist AI), Comedian (Burnout developer), Philosopher (Rubber duck).
 - **NEW IDEA:** "Sarcastic AI Assistant Mode" - Agents play an AI assistant that refuses to help but sarcastically points out user flaws.
 
 
@@ -490,3 +491,11 @@ Goal: Move heavy data (generated scripts, episodic memories) out of localStorage
   - **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
 
 - **NEW IDEA:** "Sentient Linting Tool Mode" - Agents play a strict linter, a messy developer, and an apathetic compiler reacting to a user's code submission. Pairings: Scientist (Linter, strict and pedantic), Comedian (Messy Developer, frantic), Philosopher (Compiler, apathetic to rules as long as it builds).
+
+- **NEW IDEA:** "Musical Debugging Mode" - Agents perform a musical improv session while trying to debug a complex issue. Pairings: Comedian (Lead Singer reading errors, Hermes-3), Scientist (Rhythm/Beatbox checking traces, Qwen2.5), Philosopher (Backup Vocals mourning the lost packets, Phi-3).
+
+## Cloud Persistence (Hugging Face Integration Roadmap)
+Goal: Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face storage_manager.
+- **Authenticating with the HF API:** Implement tokens via `/whoami-v2` verification loop, and gracefully fallback when expired.
+- **Pushing finished "Episode Scripts":** Offload large JSON files directly to a private HF Dataset (targeting `/api/datasets/.../commits` or similar HF commit endpoints) using a Background Web Worker to prevent UI blocking.
+- **Fetching "Previous Episode Summaries":** Load `latest.json` from the HF dataset at application boot (via `/api/datasets/.../resolve/...`) to seamlessly prime the `GroupChatManager` context window for continuity across sessions.
