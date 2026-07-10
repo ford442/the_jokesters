@@ -146,4 +146,26 @@ export class TransformersEngineAdapter implements LLMEngine {
   
   isInitialized(): boolean { return this.generator !== null }
   getLoadedModelId(): string | null { return this.config?.id || null }
+
+  countTokens(text: string): number | null {
+    if (!this.generator?.tokenizer || !text) return null;
+    try {
+      const tokenizer = this.generator.tokenizer;
+      if (typeof tokenizer.encode === 'function') {
+        const encoded = tokenizer.encode(text, { add_special_tokens: false });
+        if (Array.isArray(encoded)) return encoded.length;
+        if (encoded?.input_ids) return encoded.input_ids.length;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  getModelFamily(): string {
+    const id = (this.config?.id ?? '').toLowerCase();
+    if (id.includes('llama-3') || id.includes('llama3')) return 'llama3';
+    if (id.includes('hermes')) return 'hermes';
+    return 'default';
+  }
 }

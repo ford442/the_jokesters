@@ -180,4 +180,29 @@ export class MlcEngineAdapter implements LLMEngine {
   getEngine(): webllm.MLCEngine | null {
     return this.engine
   }
+
+  countTokens(text: string): number | null {
+    if (!this.engine || !text) return null;
+    try {
+      const pipelineMap = (this.engine as unknown as {
+        loadedModelIdToPipeline?: Map<string, { tokenizer?: { encode: (s: string) => { length: number } } }>;
+      }).loadedModelIdToPipeline;
+      const pipeline = pipelineMap?.values().next().value;
+      const encoded = pipeline?.tokenizer?.encode(text);
+      if (encoded && encoded.length > 0) {
+        return encoded.length;
+      }
+    } catch {
+      // Fall through to null — caller uses cached-ratio/heuristic
+    }
+    return null;
+  }
+
+  getModelFamily(): string {
+    const id = (this.config?.id ?? '').toLowerCase();
+    if (id.includes('hermes')) return 'hermes';
+    if (id.includes('llama-3') || id.includes('llama3')) return 'llama3';
+    if (id.includes('llama-2') || id.includes('llama2')) return 'llama2';
+    return 'default';
+  }
 }

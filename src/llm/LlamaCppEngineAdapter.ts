@@ -262,4 +262,15 @@ export class LlamaCppEngineAdapter implements LLMEngine {
   getWllama(): Wllama | null {
     return this.wllama
   }
+
+  countTokens(_text: string): number | null {
+    // wllama tokenize is async — use countTokensAsync instead
+    return null;
+  }
+
+  async countTokensAsync(text: string): Promise<number> {
+    if (!this.wllama || !this.initialized || !text) return 0;
+    const tokens = await this.wllama.tokenize(text);
+    return tokens.length;
+  }
 }

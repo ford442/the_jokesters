@@ -1,3 +1,5 @@
+import type { TokenEstimator, TokenEstimationSource } from './tokenEstimator';
+import { HeuristicTokenEstimator } from './tokenEstimator';
 import * as webllm from '@mlc-ai/web-llm';
 
 export interface ContextConfig {
@@ -47,9 +49,12 @@ export interface ChatMessage {
 export interface ContextWindowInfo {
   maxTokens: number;
   usedTokens: number;
+  reserveTokens: number;
   messageCount: number;
   droppedMessages: number;
   hasSummary: boolean;
+  summaryStub?: string;
+  estimationSource: TokenEstimationSource;
 }
 
 /**
@@ -62,9 +67,20 @@ export interface ContextWindowInfo {
 export class DynamicContextManager {
   private maxContextTokens: number;
   private summaryStub: string | null = null;
+  private tokenEstimator: TokenEstimator;
 
-  constructor(maxContextTokens: number) {
+  constructor(maxContextTokens: number, tokenEstimator?: TokenEstimator) {
     this.maxContextTokens = maxContextTokens;
+    this.tokenEstimator = tokenEstimator ?? new HeuristicTokenEstimator();
+  }
+
+  /** Replace the token estimator (e.g. after model load exposes a real tokenizer). */
+  setTokenEstimator(estimator: TokenEstimator): void {
+    this.tokenEstimator = estimator;
+  }
+
+  getTokenEstimator(): TokenEstimator {
+    return this.tokenEstimator;
   }
 
   /** Update context window budget (e.g. after model reload with different context) */
@@ -77,11 +93,15 @@ export class DynamicContextManager {
   }
 
   /**
-   * Estimate token count for a string.
-   * Uses the common ~4 chars/token heuristic used throughout the codebase.
+   * Estimate token count for a string using the active estimator chain.
    */
+  estimateTokens(text: string): number {
+    return this.tokenEstimator.estimateText(text);
+  }
+
+  /** @deprecated Use instance estimateTokens() — kept for tests and legacy callers. */
   static estimateTokens(text: string): number {
-    return Math.ceil(text.length / 4);
+    return new HeuristicTokenEstimator().estimateText(text);
   }
 
   /**
@@ -102,46 +122,71 @@ export class DynamicContextManager {
     history: ChatMessage[],
     reserveTokens = 128,
   ): { messages: ChatMessage[]; info: ContextWindowInfo } {
-    const systemTokens = DynamicContextManager.estimateTokens(systemMessage);
+    const systemTokens = this.estimateTokens(systemMessage);
     const budget = this.maxContextTokens - systemTokens - reserveTokens;
+    const estimationSource = this.tokenEstimator.getSource();
 
-    // If the budget is too small even for a single message, return system only
     if (budget <= 0) {
       return {
         messages: [{ role: 'system', content: systemMessage }],
         info: {
           maxTokens: this.maxContextTokens,
           usedTokens: systemTokens,
+          reserveTokens,
           messageCount: 1,
           droppedMessages: history.length,
           hasSummary: false,
+          estimationSource,
         },
       };
     }
 
-    // Walk history from newest to oldest, accumulating tokens
     let usedTokens = 0;
     const kept: ChatMessage[] = [];
 
     for (let i = history.length - 1; i >= 0; i--) {
-      const msgTokens = DynamicContextManager.estimateTokens(history[i].content);
+      const msgTokens = this.estimateTokens(history[i].content);
       if (usedTokens + msgTokens > budget) break;
       usedTokens += msgTokens;
       kept.unshift(history[i]);
     }
 
     const droppedCount = history.length - kept.length;
-
-    // Build summary stub for discarded messages so the model keeps continuity
     const result: ChatMessage[] = [{ role: 'system', content: systemMessage }];
     let hasSummary = false;
+    let summaryStubText: string | undefined;
 
     if (droppedCount > 0) {
-      const stub = this.buildSummaryStub(history.slice(0, droppedCount));
+      let stub = this.buildSummaryStub(history.slice(0, droppedCount));
+      let stubTokens = this.estimateTokens(stub);
+
+      // Ensure summary stub fits — drop oldest kept turns if needed
+      while (kept.length > 0 && usedTokens + stubTokens > budget) {
+        const removed = kept.shift();
+        if (removed) {
+          usedTokens -= this.estimateTokens(removed.content);
+        }
+      }
+
+      // Recompute drop count if we evicted additional kept messages for the stub
+      const finalDropped = history.length - kept.length;
+      if (finalDropped > droppedCount) {
+        stub = this.buildSummaryStub(history.slice(0, finalDropped));
+        stubTokens = this.estimateTokens(stub);
+      }
+
+      if (stubTokens > budget) {
+        stub = `[Earlier conversation: ${finalDropped} messages omitted to fit context window.]`;
+        stubTokens = this.estimateTokens(stub);
+      }
+
       result.push({ role: 'system', content: stub });
-      usedTokens += DynamicContextManager.estimateTokens(stub);
+      usedTokens += stubTokens;
       hasSummary = true;
+      summaryStubText = stub;
       this.summaryStub = stub;
+    } else {
+      this.summaryStub = null;
     }
 
     result.push(...kept);
@@ -151,9 +196,12 @@ export class DynamicContextManager {
       info: {
         maxTokens: this.maxContextTokens,
         usedTokens: systemTokens + usedTokens,
+        reserveTokens,
         messageCount: result.length,
-        droppedMessages: droppedCount,
+        droppedMessages: history.length - kept.length,
         hasSummary,
+        summaryStub: summaryStubText,
+        estimationSource,
       },
     };
   }
