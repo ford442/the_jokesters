@@ -183,6 +183,22 @@ export interface LLMEngine {
    * Get the ID of the currently loaded model
    */
   getLoadedModelId(): string | null
+
+  /**
+   * Count tokens in text using the engine tokenizer when available.
+   * Returns null when the engine cannot tokenize synchronously.
+   */
+  countTokens?(text: string): number | null
+
+  /**
+   * Async token count for engines with lazy tokenizers (e.g. wllama).
+   */
+  countTokensAsync?(text: string): Promise<number>
+
+  /**
+   * Model family hint for cached-ratio fallback (llama3, hermes, etc.).
+   */
+  getModelFamily?(): string
 }
 
 /** Alias for backward compatibility */

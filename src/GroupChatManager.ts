@@ -6,6 +6,10 @@ import {
   type ContextWindowInfo,
   DEFAULT_VRAM_CONFIG,
 } from './utils/dynamicContext'
+import {
+  createTokenEstimatorForEngine,
+  calibrateTokenEstimator,
+} from './utils/tokenEstimator'
 import { 
   appConfig, 
   checkF16Support,
@@ -202,6 +206,18 @@ export class GroupChatManager {
     return this.contextManager
   }
 
+  /** Attach engine-backed token estimator after model load. */
+  private async attachTokenEstimator(): Promise<void> {
+    if (!this.engine) return;
+    const estimator = createTokenEstimatorForEngine(this.engine, this.loadedModelId ?? undefined);
+    this.contextManager.setTokenEstimator(estimator);
+    await calibrateTokenEstimator(this.engine, estimator);
+    console.log(
+      `[TokenBudget] Estimator: ${estimator.getSource()} ` +
+      `(~${estimator.getCharsPerToken?.()?.toFixed(2) ?? '?'} chars/token)`
+    );
+  }
+
   async initialize(
     onProgress?: (progress: webllm.InitProgressReport) => void,
     preferredModelId?: string,
@@ -313,6 +329,8 @@ export class GroupChatManager {
         console.log(`[ModelLoader] Using model default context window: ${contextSize} tokens`)
       }
       this.contextManager.setMaxContextTokens(contextSize)
+
+      await this.attachTokenEstimator()
 
       // Log when ultra-low VRAM preset is active
       const overrides = (modelConfig as any).overrides || (modelConfig as any).mlc?.overrides || {};
@@ -431,6 +449,8 @@ export class GroupChatManager {
         if (typeof actualContext === 'number') {
           this.contextManager.setMaxContextTokens(actualContext);
         }
+
+        await this.attachTokenEstimator();
 
         // Log when ultra-low VRAM preset is active
         const loadedOverrides = (mlcEngine as any).chatOpts || {};

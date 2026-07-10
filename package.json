@@ -11,7 +11,8 @@
     "perf:quick": "tsx tests/perf/ci-runner.ts --duration=quick",
     "perf:full": "tsx tests/perf/ci-runner.ts --duration=full",
     "perf:ci": "tsx tests/perf/ci-runner.ts --duration=ci --format=json",
-    "perf:browser": "vite tests/perf/browser-runner.html"
+    "perf:browser": "vite tests/perf/browser-runner.html",
+    "test:unit": "tsx tests/unit/tokenBudget.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

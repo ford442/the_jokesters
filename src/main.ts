@@ -771,10 +771,19 @@ async function initApp() {
       if (ctxInfoText) {
         if (ctxInfo) {
           const pct = Math.round((ctxInfo.usedTokens / ctxInfo.maxTokens) * 100)
-          ctxInfoText.textContent = `Context: ${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens (${pct}%)`
+          let label = `Context: ${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens (${pct}%)`
+          label += ` · reserve ${ctxInfo.reserveTokens}`
           if (ctxInfo.droppedMessages > 0) {
-            ctxInfoText.textContent += ` · ${ctxInfo.droppedMessages} msgs dropped`
+            label += ` · ${ctxInfo.droppedMessages} dropped`
           }
+          if (ctxInfo.hasSummary) {
+            label += ' · summary'
+          }
+          if (ctxInfo.estimationSource !== 'heuristic') {
+            label += ` · ${ctxInfo.estimationSource}`
+          }
+          ctxInfoText.textContent = label
+          ctxInfoText.title = ctxInfo.summaryStub ?? ''
         } else {
           const maxCtx = groupChatManager.getContextManager().getMaxContextTokens()
           ctxInfoText.textContent = `Context window: ${maxCtx} tokens`
