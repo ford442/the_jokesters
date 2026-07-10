@@ -17,11 +17,6 @@ declare module '*.txt?raw' {
 
 // Declare JSON imports
 declare module '*.json' {
-    const value: any
+    const value: unknown
     export default value
-}
-/// <reference types="vite-plugin-pwa/client" />
-
-declare module 'virtual:pwa-register' {
-  export function registerSW(options?: any): (reloadPage?: boolean) => Promise<void>
 }
