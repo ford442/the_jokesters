@@ -28,6 +28,8 @@ CHECKS = [
     ("WASM: Llama-2", "/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm"),
     ("WASM: Llama-3.2 q4f32", "/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm"),
     ("WASM: Llama-3.1 q4f16", "/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm"),
+    ("WASM: Vicuna ctx512", "/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm"),
+    ("WASM: Vicuna ctx1024", "/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm"),
     # GGUF
     ("GGUF: Hermes-3-8B", "/gguf/Hermes-3-Llama-3.1-8B.Q4_K_M.gguf"),
     ("GGUF: Vicuna-7B", "/gguf/vicuna-7b-v1.5.Q4_K_M.gguf"),

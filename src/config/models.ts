@@ -24,9 +24,29 @@ export { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL }
 // WebLLM's cleanModelUrl() appends /resolve/main/ (HuggingFace layout). Our VPS serves
 // flat paths (no /resolve/main/). src/utils/vpsStorageUrl.ts rewrites those URLs at fetch time.
 
+/** Shared WASM model_lib URLs — naming: `{arch}-q{quant}_ctx{N}_cs1k-webgpu.wasm` */
+export const WASM_LIBS = {
+  /** Generic Llama-2 7B 4K plan — used for Vicuna weights until custom .wasm is hosted */
+  LLAMA2_7B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+  /** Custom Vicuna 7B with 512-token TVM memory plan (scripts/build-vicuna-wasm.sh) */
+  VICUNA_7B_CTX512: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+  /** Custom Vicuna 7B with 1024-token TVM memory plan */
+  VICUNA_7B_CTX1024: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm`,
+  LLAMA3_2_3B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+  LLAMA3_1_8B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
+} as const;
+
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)
  * Order matters for fallback chain: Vicuna 7B q4f32 first, then smaller models.
+ *
+ * WASM ↔ override coupling:
+ * - `model_lib` sets the compiled TVM memory plan (peak allocation at CreateMLCEngine).
+ * - `overrides.context_window_size` must be ≤ the compiled max (parsed from filename or
+ *   enforced by loadModelWithDynamicContext).
+ * - Runtime-only overrides on a generic ctx4k .wasm reduce KV usage during chat but
+ *   cannot shrink peak buffers allocated at engine init — use custom ctx512/ctx1024 .wasm
+ *   for ≤4 GB GPUs. See docs/WASM_CONTEXT_GUIDE.md.
  */
 export const VPS_FP32_MODELS = {
   /**
@@ -39,7 +59,7 @@ export const VPS_FP32_MODELS = {
   VPS_VICUNA_7B_Q4F32: {
     model_id: "vicuna-7b-q4f32-webllm-vps",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA2_7B_CTX4K,
     overrides: {
       context_window_size: 2048,
       prefill_chunk_size: 1024,
@@ -64,7 +84,7 @@ export const VPS_FP32_MODELS = {
   VPS_VICUNA_7B_ULTRA_LOW: {
     model_id: "vicuna-7b-q4f32-webllm-ultra-low",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA2_7B_CTX4K,
     overrides: {
       context_window_size: 512,
       prefill_chunk_size: 512,
@@ -75,54 +95,56 @@ export const VPS_FP32_MODELS = {
     vram_required_MB: 3500,
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
     source: "vps",
-    notes: "Fallback ultra-low preset — uses generic 4K .wasm + runtime overrides. Prefer VPS_VICUNA_7B_CTX512 if available.",
+    notes: "JS-only ultra-low preset — generic ctx4k .wasm + sliding window. Prefer VPS_VICUNA_7B_CTX512 when custom .wasm is hosted.",
   },
 
   /**
-   * Vicuna-7B with 512-context runtime override
-   * - Same q4f32_1 weights as the other Vicuna entries
-   * - Uses the generic Llama-2 4K .wasm (custom 512-ctx .wasm not yet deployed)
-   * - Runtime overrides still cut the context window to 512 tokens
-   * - VRAM: ~3.5GB (slightly higher than a custom .wasm would be)
-   * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
+   * Vicuna-7B with custom 512-context model_lib
+   * - model_lib: vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm (TVM plan baked for 512)
+   * - overrides.context_window_size: 512 (must match compiled max)
+   * - model_lib_fallback: generic Llama-2 ctx4k .wasm until VPS hosts custom artifact
+   * - VRAM: ~3.2 GB peak (vs ~3.5 GB with JS-only overrides on generic .wasm)
+   * - Build: CONTEXT_SIZE=512 ./scripts/build-vicuna-wasm.sh
    */
   VPS_VICUNA_7B_CTX512: {
     model_id: "vicuna-7b-q4f32-webllm-ctx512",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.VICUNA_7B_CTX512,
+    model_lib_fallback: WASM_LIBS.LLAMA2_7B_CTX4K,
+    compiled_max_context: 512,
     overrides: {
       context_window_size: 512,
       prefill_chunk_size: 512,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
-    vram_required_MB: 3500,
-    recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
+    vram_required_MB: 3200,
+    recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
-    notes: "512-ctx runtime override using generic 4K .wasm — custom 512-ctx .wasm pending build. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
+    notes: "Custom 512-ctx .wasm — lowest peak VRAM for Vicuna 7B on 4 GB GPUs.",
   },
 
   /**
-   * Vicuna-7B with 1024-context runtime override
-   * - Same q4f32_1 weights as the other Vicuna entries
-   * - Uses the generic Llama-2 4K .wasm (custom 1024-ctx .wasm not yet deployed)
-   * - Runtime overrides still cut the context window to 1024 tokens
-   * - VRAM: ~3.8GB (slightly higher than a custom .wasm would be)
-   * - Good for GPUs with 4-5GB VRAM
-   * - See scripts/build-vicuna-wasm.sh and docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4
+   * Vicuna-7B with custom 1024-context model_lib
+   * - model_lib: vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm
+   * - overrides.context_window_size: 1024 (must match compiled max)
+   * - VRAM: ~3.6 GB peak
+   * - Build: CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
    */
   VPS_VICUNA_7B_CTX1024: {
     model_id: "vicuna-7b-q4f32-webllm-ctx1024",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.VICUNA_7B_CTX1024,
+    model_lib_fallback: WASM_LIBS.LLAMA2_7B_CTX4K,
+    compiled_max_context: 1024,
     overrides: {
       context_window_size: 1024,
       prefill_chunk_size: 1024,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
-    vram_required_MB: 3800,
-    recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32"],
+    vram_required_MB: 3600,
+    recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
-    notes: "1024-ctx runtime override using generic 4K .wasm — custom 1024-ctx .wasm pending build. See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.4",
+    notes: "Custom 1024-ctx .wasm — more history than ctx512, still below generic 4K peak.",
   },
 
   /**
@@ -134,7 +156,7 @@ export const VPS_FP32_MODELS = {
   VPS_HERMES_3_3B_Q4F32: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.2-3B-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA3_2_3B_CTX4K,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -153,7 +175,7 @@ export const VPS_FP32_MODELS = {
   VPS_LLAMA_3_2_3B_Q4F32: {
     model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Llama-3.2-3B-Instruct-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA3_2_3B_CTX4K,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -172,7 +194,7 @@ export const VPS_FP32_MODELS = {
   VPS_LLAMA_2_7B_Q4F32: {
     model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
     model: `${VPS_STORAGE_URL}/Llama-2-7b-chat-hf-q4f32_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA2_7B_CTX4K,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -201,7 +223,7 @@ export const FP16_MODELS = {
   LLAMA_3_1_8B_Q4F16: {
     model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC",
     model: `${VPS_STORAGE_URL}/Llama-3.1-8B-Instruct-q4f16_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA3_1_8B_CTX4K,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -220,7 +242,7 @@ export const FP16_MODELS = {
   LLAMA_3_1_8B_Q4F16_1K: {
     model_id: "Llama-3.1-8B-Instruct-q4f16_1-MLC-1k",
     model: `${VPS_STORAGE_URL}/Llama-3.1-8B-Instruct-q4f16_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA3_1_8B_CTX4K,
     overrides: {
       context_window_size: 1024,
       prefill_chunk_size: 1024,
@@ -239,7 +261,7 @@ export const FP16_MODELS = {
   HERMES_3_8B_Q4F16: {
     model_id: "Hermes-3-Llama-3.1-8B-q4f16_1-MLC",
     model: `${VPS_STORAGE_URL}/Hermes-3-Llama-3.1-8B-q4f16_1-MLC/`,
-    model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: WASM_LIBS.LLAMA3_1_8B_CTX4K,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -429,6 +451,8 @@ function buildModelList(): any[] {
       model: config.model,
       model_id: config.model_id,
       model_lib: config.model_lib,
+      model_lib_fallback: config.model_lib_fallback,
+      compiled_max_context: config.compiled_max_context,
       overrides: config.overrides,
       vram_required_MB: config.vram_required_MB,
       source: config.source,
@@ -528,8 +552,8 @@ const VRAM_THRESHOLD_3B        = 2800;  // < this → 3B model (7B won't fit at 
  *
  * Ladder (highest to lowest VRAM requirement):
  *  ≥ 3400 MB  → Vicuna 7B q4f32 (full)
- *  ≥ 2800 MB  → Vicuna 7B q4f32 ultra-low (512 ctx + sliding window)
- *  < 2800 MB  → Hermes-3 3B q4f32 (fallback)
+ *  ≥ 2800 MB  → Vicuna 7B ctx512 (custom .wasm when hosted; else generic fallback)
+ *  < 2800 MB  → Hermes-3 3B q4f32
  *
  * The thresholds are post-overhead values produced by estimateAvailableVRAM().
  */
@@ -561,8 +585,8 @@ export async function getRecommendedModel(): Promise<string> {
   }
 
   if (availableMB < VRAM_THRESHOLD_ULTRA_LOW) {
-    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B ultra-low (512 ctx)`);
-    return VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id;
+    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B ctx512 (custom .wasm)`);
+    return VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id;
   }
 
   console.log(`[ModelConfig] ${availableMB} MB ≥ ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B q4f32`);
@@ -645,31 +669,42 @@ export function populateModelSelect(engine: typeof webllm) {
 }
 
 /**
+ * Ordered fallback chain — smaller / lower-VRAM models before heavy 7B variants.
+ * Custom ctx512/ctx1024 .wasm presets are tried before JS-only ultra-low.
+ */
+const VPS_FALLBACK_ORDER: string[] = [
+  VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id,
+  VPS_FP32_MODELS.VPS_VICUNA_7B_CTX1024.model_id,
+  VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id,
+  VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id,
+  VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id,
+  VPS_FP32_MODELS.VPS_LLAMA_3_2_3B_Q4F32.model_id,
+  VPS_FP32_MODELS.VPS_LLAMA_2_7B_Q4F32.model_id,
+];
+
+/**
  * Get fallback model chain for a given preferred model
  * Returns list of models to try in order
  */
 export function getModelFallbackChain(preferredModelId?: string): string[] {
   const chain: string[] = [];
-  
-  // Add preferred model first
+
   if (preferredModelId) {
     chain.push(preferredModelId);
   }
-  
-  // Add VPS FP32 models (primary fallbacks)
-  Object.values(VPS_FP32_MODELS).forEach((config: any) => {
-    if (!chain.includes(config.model_id)) {
-      chain.push(config.model_id);
+
+  for (const modelId of VPS_FALLBACK_ORDER) {
+    if (!chain.includes(modelId)) {
+      chain.push(modelId);
     }
-  });
-  
-  // Add HF FP32 models (secondary fallbacks)
+  }
+
   Object.values(HF_FP32_MODELS).forEach((config: any) => {
     if (!chain.includes(config.model_id)) {
       chain.push(config.model_id);
     }
   });
-  
+
   return chain;
 }
 
