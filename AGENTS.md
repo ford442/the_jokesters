@@ -259,6 +259,14 @@ npm run build
 - Copies ONNX WASM files to `dist/assets/ort/`
 - Produces a stable `service-worker.js` filename (required for SW registration)
 
+### Typecheck
+```bash
+npm run typecheck
+```
+- Runs `tsc --noEmit` (same gate as `npx tsc --noEmit` in `CLAUDE.md`)
+- CI workflow `.github/workflows/typecheck.yml` runs this on every PR touching `src/`, `tests/`, or TypeScript config
+- Requires a full `npm ci` install — PWA client types come from the `vite-plugin-pwa` devDependency via `src/vite-env.d.ts`
+
 ### Preview Production Build
 ```bash
 npm run preview
@@ -448,6 +456,17 @@ Parallel model download optimization:
 - Uses 4 parallel connections with HTTP Range requests
 - Exponential backoff retry (max 3 retries, 500ms base delay)
 - Temporary in-memory caching
+
+### PWA (Progressive Web App)
+**Files**: `vite.config.ts`, `src/main.ts`, `src/vite-env.d.ts`, `src/service-worker.ts`
+
+Offline install and service-worker registration via `vite-plugin-pwa`:
+- **Strategy**: `injectManifest` — the custom `src/service-worker.ts` is the SW source; the plugin injects the web manifest at build time
+- **Registration**: `registerSW()` from `virtual:pwa-register` in `main.ts` (auto-update, `onNeedRefresh` / `onOfflineReady` callbacks)
+- **Dev**: `devOptions.enabled: true` so the SW is active during `npm run dev`
+- **Build output**: stable `service-worker.js` filename (see `vite.config.ts` `entryFileNames`)
+- **Types**: `/// <reference types="vite-plugin-pwa/client" />` in `src/vite-env.d.ts` — do **not** add `"types": ["vite-plugin-pwa/client"]` to `tsconfig.json` (that restricts the whole program to one type package and breaks typecheck when `node_modules` is incomplete)
+- **Dependencies**: `vite-plugin-pwa` and `workbox-window` are devDependencies; run `npm ci` before `npm run typecheck`
 
 ---
 
@@ -656,8 +675,8 @@ The notes below capture non-obvious gotchas discovered when running this app in 
 (headless Linux, **no GPU**).
 
 ### Lint / test / build (what actually runs here)
-- **Lint / typecheck:** there is no ESLint; the project's check is `npx tsc --noEmit` (must be clean
-  before committing — see `CLAUDE.md`).
+- **Lint / typecheck:** there is no ESLint; the project's check is `npm run typecheck` (`tsc --noEmit`, must be clean
+  before committing — see `CLAUDE.md`). GitHub Actions workflow `typecheck.yml` enforces this on PRs.
 - **Tests:** `npm run perf` runs `tests/perf/ci-runner.ts`. Only the **memory-leak** test runs in
   Node and passes; the FPS / TTS / LLM benchmarks need a real browser/GPU and are reported as
   `Violations` (`gl.getExtension is not a function`, `Worker timeout`, `Invalid URL`). This is
