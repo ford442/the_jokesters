@@ -511,6 +511,30 @@ const agents = [
 
 ## Testing
 
+### Unit Tests (Vitest)
+Fast, GPU-free unit tests live in `tests/unit/` and run via Vitest:
+
+```bash
+npm test              # run once (CI)
+npm run test:watch    # watch mode during development
+npm run test:coverage # coverage report for comedy + context utilities
+```
+
+**CI:** `.github/workflows/test.yml` runs `npm test` on every PR touching `src/` or `tests/`.
+TypeScript (`npm run typecheck`) remains a separate hard gate.
+
+**How to add a test:**
+1. Create `tests/unit/<feature>.test.ts` (or add a `describe` block to an existing file).
+2. Import the pure function or class under test from `src/` using a relative path.
+3. Use Vitest's `describe` / `it` / `expect` — no custom assert helpers or `process.exit`.
+4. Keep tests deterministic: mock `console.log` if the code under test logs, stub randomness when needed.
+5. Run `npm test` locally before pushing.
+
+**Current high-ROI targets:** `GroupChatManager.getErrorCategory`, `DynamicContextManager.truncate`,
+`CallbackEngine` status decay, `qualityFilter.rateJoke`, `buildVRAMOverrides`, `MODE_REGISTRY` integrity.
+
+Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests.
+
 ### Performance Testing
 The application includes comprehensive performance benchmarks defined in `perf-budget.json`:
 
@@ -677,7 +701,8 @@ The notes below capture non-obvious gotchas discovered when running this app in 
 ### Lint / test / build (what actually runs here)
 - **Lint / typecheck:** there is no ESLint; the project's check is `npm run typecheck` (`tsc --noEmit`, must be clean
   before committing — see `CLAUDE.md`). GitHub Actions workflow `typecheck.yml` enforces this on PRs.
-- **Tests:** `npm run perf` runs `tests/perf/ci-runner.ts`. Only the **memory-leak** test runs in
+- **Unit tests:** `npm test` runs Vitest on pure TS modules (comedy, context, mode registry) in <2s without GPU.
+- **Perf tests:** `npm run perf` runs `tests/perf/ci-runner.ts`. Only the **memory-leak** test runs in
   Node and passes; the FPS / TTS / LLM benchmarks need a real browser/GPU and are reported as
   `Violations` (`gl.getExtension is not a function`, `Worker timeout`, `Invalid URL`). This is
   expected — the run still exits `0` ("All performance benchmarks passed").
