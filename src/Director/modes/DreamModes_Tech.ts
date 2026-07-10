@@ -959,3 +959,61 @@ export async function runPhilosophicalDebuggingLoop(_scenario: Scenario, ctx: Mo
     await ctx.manager.chatForAgent(comedian, "I'M LEAKING MEMORY! TELL MY WIFE I LOVE HER!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { hiddenInstruction: 'Die a dramatic death as a process.' });
   }
 }
+
+/**
+ * Sentient Linting Tool Mode
+ * Agents play a strict linter, a messy developer, and an apathetic compiler.
+ */
+export async function runSentientLintingToolLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔍 CODE REVIEW: The Linter's Lament`, '#3498db');
+
+    const linter = 'scientist'; // Linter: Strict, pedantic, obsessed with rules
+    const developer = 'comedian'; // Messy Developer: Frantic, just wants it to work
+    const compiler = 'philosopher'; // Compiler: Apathetic, existential, only cares if it builds
+
+    // 1. Setup
+    ctx.callbacks.onTurnStart(developer);
+    await ctx.manager.chatForAgent(developer, `(You are a frantic, sleep-deprived developer who just wants to push their code to production. You've ignored all formatting rules. Introduce your masterpiece to the Linter and Compiler.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(linter);
+    await ctx.manager.chatForAgent(linter, `(You are an incredibly pedantic code linter. You are disgusted by the developer's lack of semicolons, inconsistent indentation, and trailing spaces. Berate the developer's code.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(compiler);
+    await ctx.manager.chatForAgent(compiler, `(You are the compiler. You are completely apathetic to the Linter's formatting complaints. If the syntax is valid, you do not care about spacing or semicolons. You view code as ephemeral dust. Respond to the other two.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    // 2. Interactive Loop
+    let interactions = 0;
+    while (ctx.isRunning() && interactions < 3) {
+        // Wait for user input (the Project Manager)
+        ctx.callbacks.onMessage('Director', 'Project Manager (User): Ask them for a status update or suggest a compromise...', '#95a5a6');
+        const userAction = await ctx.waitForInput();
+        if (!userAction || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('User', userAction, '#ecf0f1');
+
+        ctx.callbacks.onTurnStart(linter);
+        await ctx.manager.chatForAgent(linter, `(React to the user's input: "${userAction}". Insist that the code cannot be merged until the line length is strictly under 80 characters.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(developer);
+        await ctx.manager.chatForAgent(developer, `(React to the user and the Linter. Try to justify your messy code or beg the Project Manager to bypass the CI pipeline.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(compiler);
+        await ctx.manager.chatForAgent(compiler, `(React to everyone. Philosophize about how all code eventually turns to legacy spaghetti anyway, so it does not matter.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        interactions++;
+    }
+
+    if (ctx.isRunning()) {
+        ctx.callbacks.onMessage('Director', 'The CI pipeline times out, ending the argument.', '#e74c3c');
+    }
+}
