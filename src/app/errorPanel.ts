@@ -23,6 +23,11 @@ export function renderInitErrorPanel(error: unknown, onRetry: () => void): void 
       title: 'Network Error',
       suggestion: 'Check your connection and reload. Models download from storage.1ink.us.',
     },
+    llamacpp_mismatch: {
+      title: 'llama.cpp Runtime Mismatch',
+      suggestion:
+        'The llama.cpp WASM runtime does not match the app bundle. Reload the page, or switch to MLC (WebGPU) in the engine selector.',
+    },
     unknown: {
       title: 'Initialization Failed',
       suggestion: 'Check the browser console for more details.',

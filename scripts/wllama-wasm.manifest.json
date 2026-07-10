@@ -1,0 +1,7 @@
+{
+  "version": "2.4.0",
+  "hashes": {
+    "single-thread/wllama.wasm": "aced0c759f668e17d618114b8688bf55b32289dbdbd08b6e3254b0bc75838ad5",
+    "multi-thread/wllama.wasm": "f69f292f06d9c5c63ac447aac768c3d508fe7a56f0a7926bd12cc33370bc627d"
+  }
+}

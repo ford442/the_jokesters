@@ -12,6 +12,7 @@ Usage (on the VPS):
     python3 scripts/download_models_on_vps.py
 """
 
+import json
 import os
 import sys
 import shutil
@@ -57,10 +58,21 @@ GGUF_FILES = [
     ("Hermes-3-Llama-3.2-3B.Q4_K_M.gguf", "NousResearch/Hermes-3-Llama-3.2-3B-GGUF", "Hermes-3-Llama-3.2-3B.Q4_K_M.gguf"),
 ]
 
-# wllama WASM binaries
+# wllama WASM binaries — version pinned to package-lock.json (not @latest)
+def _wllama_version() -> str:
+    lock_path = Path(__file__).resolve().parent.parent / "package-lock.json"
+    with open(lock_path, encoding="utf-8") as f:
+        lock = json.load(f)
+    version = lock.get("packages", {}).get("node_modules/@wllama/wllama", {}).get("version")
+    if not version:
+        raise RuntimeError("Could not read @wllama/wllama version from package-lock.json")
+    return version
+
+
+WLLAMA_VERSION = _wllama_version()
 WLLAMA_WASM = [
-    ("single-thread.wasm", "https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm/single-thread/wllama.wasm"),
-    ("multi-thread.wasm", "https://cdn.jsdelivr.net/npm/@wllama/wllama@latest/esm/multi-thread/wllama.wasm"),
+    ("single-thread.wasm", f"https://cdn.jsdelivr.net/npm/@wllama/wllama@{WLLAMA_VERSION}/esm/single-thread/wllama.wasm"),
+    ("multi-thread.wasm", f"https://cdn.jsdelivr.net/npm/@wllama/wllama@{WLLAMA_VERSION}/esm/multi-thread/wllama.wasm"),
 ]
 
 # TTS ONNX models required by SupertonicPipeline (src/audio/SupertonicPipeline.ts)

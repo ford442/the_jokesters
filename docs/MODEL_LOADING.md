@@ -79,7 +79,7 @@ These are wins available regardless of which model is selected. Some are already
 ### Already in the codebase ✅
 
 - Service worker registration (`main.ts`) — for parallel shard download
-- Self-hosted WASM for wllama (`storage.noahcohn.com/models/wllama-wasm/`)
+- Bundled WASM for wllama (Vite `?url` from `@wllama/wllama`; verified via `npm run verify:wllama`)
 - Self-hosted Transformers.js mirror via `env.remoteHost`
 - Storage quota check before loading large models, with proactive cache-clear UI
 - Corrupted-cache recovery in `LlamaCppEngineAdapter` (re-download with `useCache: false`)
@@ -201,7 +201,19 @@ The Jokesters loads LLM weights at runtime in the user's browser. Three engines 
 
 1. **MLC WebLLM (preferred)** — WebGPU-accelerated, ~80% of native performance. Used for any model with an `mlc` config block.
 2. **Transformers.js** — WebGPU via ONNX Runtime Web. Used as a fallback for HuggingFace ONNX models.
-3. **wllama (llama.cpp/WASM)** — CPU-only, GGUF format. Last resort for browsers without WebGPU.
+3. **wllama (llama.cpp/WASM)** — CPU-only, GGUF format. Last resort for browsers without WebGPU. WASM is bundled with the app (not fetched from VPS) so it always matches the JS glue.
+
+### Engine selection by environment
+
+| Environment | Recommended engine | Notes |
+|-------------|-------------------|-------|
+| Desktop Chrome/Edge with discrete GPU | **MLC** | Default; q4f16 models if `shader-f16` available |
+| Integrated GPU / no shader-f16 | **MLC** (q4f32) | Use FP32-quant MLC models |
+| Software WebGPU (SwiftShader, CI VMs) | **MLC** (q4f32 only) | Shader compile is slow; skip f16 models |
+| No WebGPU at all | **llama.cpp** or **Transformers.js** | TinyLlama GGUF for CPU; 7B GGUF is very slow |
+| WASM glue mismatch (stale cache/CDN) | Auto-fallback → **MLC** / Transformers / API | See `WllamaRuntimeMismatchError` in `src/llm/wllamaRuntime.ts` |
+
+After bumping `@wllama/wllama`, run `npm run verify:wllama` and update `scripts/wllama-wasm.manifest.json`. VPS-hosted wllama WASM (`wllama-wasm/`) is optional legacy mirror for `download_models_on_vps.py`; the app uses bundled WASM.
 
 Model weights are hosted on `storage.noahcohn.com` (self-hosted mirror) with HuggingFace as a fallback. Self-hosting gives us control over CORS, MIME types, cache headers, and uptime; HF gives us geo-distributed CDN reach. Both paths use the same MLC-compiled q4f32 weights for Vicuna 7B and the same Llama-2 model library `.wasm`.
 

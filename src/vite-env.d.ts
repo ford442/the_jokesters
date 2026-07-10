@@ -20,3 +20,9 @@ declare module '*.json' {
     const value: unknown
     export default value
 }
+
+// Vite ?url imports for WASM assets (wllama runtime)
+declare module '*.wasm?url' {
+    const url: string
+    export default url
+}

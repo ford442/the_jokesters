@@ -21,8 +21,9 @@ import {
 import { parallelDownloadManager } from './services/ParallelDownloadManager'
 import type { LLMEngine, ChatMessage } from './llm/LLMEngine'
 import type { EngineType } from './llm/EngineFactory'
-import { EngineFactory } from './llm/EngineFactory'
+import { EngineFactory, getEngineFallbackOrder } from './llm/EngineFactory'
 import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
+import { isWllamaRuntimeMismatch } from './llm/wllamaRuntime'
 
 import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
 import { PROFANITY_LEVEL, PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_MAX_TOKENS } from './config/chatConfig'
@@ -135,6 +136,13 @@ export class GroupChatManager {
         msgLower.includes('err_') || msgLower.includes('cache') ||
         msgLower.includes('cdn') || msgLower.includes('timeout')) {
       return 'network'
+    }
+
+    // llama.cpp WASM / JS glue mismatch
+    if (msgLower.includes('llama.cpp runtime mismatch') ||
+        msgLower.includes('function import requires a callable') ||
+        isWllamaRuntimeMismatch(error)) {
+      return 'llamacpp_mismatch'
     }
 
     return 'unknown'
@@ -344,6 +352,29 @@ export class GroupChatManager {
       console.log(`GroupChatManager initialized successfully with unified model: ${modelConfig.id} (${this.engineType})`)
     } catch (error) {
       this.engine = null
+
+      // Auto-fallback when bundled/hosted wllama WASM does not match JS glue
+      if (isWllamaRuntimeMismatch(error)) {
+        const caps = EngineFactory.detectCapabilities()
+        const fallbacks = getEngineFallbackOrder(modelConfig, caps, ['llamacpp'])
+        for (const nextEngine of fallbacks) {
+          console.warn(
+            `[ModelLoader] llama.cpp runtime mismatch — falling back to ${nextEngine}`
+          )
+          onProgress?.({
+            progress: 0,
+            timeElapsed: 0,
+            text: `llama.cpp runtime mismatch. Trying ${nextEngine}…`,
+          })
+          try {
+            await this.initializeUnified(modelConfig, onProgress, preferredContext, nextEngine)
+            return
+          } catch (fallbackError) {
+            console.warn(`[ModelLoader] Fallback to ${nextEngine} failed:`, fallbackError)
+          }
+        }
+      }
+
       throw error
     }
   }

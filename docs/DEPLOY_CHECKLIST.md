@@ -4,6 +4,7 @@
 
 ### 1. Build Verification
 - [ ] Run `npm run build` successfully (no TypeScript errors)
+- [ ] Run `npm run verify:wllama` (WASM hashes match pinned `@wllama/wllama` version)
 - [ ] Verify `dist/` directory contains:
   - [ ] `index.html` (entry point)
   - [ ] `assets/` directory with:

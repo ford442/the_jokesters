@@ -13,7 +13,8 @@
     "perf:full": "tsx tests/perf/ci-runner.ts --duration=full",
     "perf:ci": "tsx tests/perf/ci-runner.ts --duration=ci --format=json",
     "perf:browser": "vite tests/perf/browser-runner.html",
-    "test:unit": "tsx tests/unit/tokenBudget.test.ts && tsx tests/unit/modeRegistry.test.ts"
+    "test:unit": "tsx tests/unit/tokenBudget.test.ts && tsx tests/unit/modeRegistry.test.ts",
+    "verify:wllama": "bash scripts/verify_wllama_wasm.sh"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
@@ -29,7 +30,7 @@
   "dependencies": {
     "@huggingface/transformers": "^4.0.1",
     "@mlc-ai/web-llm": "^0.2.8",
-    "@wllama/wllama": "^2.3.7",
+    "@wllama/wllama": "2.4.0",
     "onnxruntime-web": "^1.17.0",
     "three": "0.170.0",
     "vite-plugin-static-copy": "^3.1.4"
