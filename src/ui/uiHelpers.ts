@@ -15,6 +15,8 @@ export function getDOM() {
     seedInput: document.getElementById('global-seed') as HTMLInputElement,
     profanitySlider: document.getElementById('profanity-level') as HTMLInputElement,
     profanityVal: document.getElementById('profanity-val')!,
+    memoryDepthSlider: document.getElementById('memory-depth-slider') as HTMLInputElement,
+    memoryDepthVal: document.getElementById('memory-depth-val')!,
     userProfileInput: document.getElementById('user-profile-input') as HTMLInputElement,
     switchProfileBtn: document.getElementById('switch-profile-btn') as HTMLButtonElement,
   }

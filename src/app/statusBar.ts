@@ -6,8 +6,18 @@ export function updateVRAMInfoBar(groupChatManager: GroupChatManager): void {
   const ctxInfoText = document.getElementById('ctx-info-text')
   const tokenBudgetText = document.getElementById('token-budget-text')
   const kvText = document.getElementById('vram-kv-text')
+  const memoryDepthText = document.getElementById('memory-depth-text')
 
+  const depthLimit = groupChatManager.getEffectiveMemoryDepth()
   const ctxInfo = groupChatManager.getContextWindowInfo()
+  if (memoryDepthText) {
+    const inWindow = ctxInfo?.messagesInWindow
+    const depthLabel = inWindow != null
+      ? `Depth: ${inWindow}/${depthLimit} msgs`
+      : `Depth: ${depthLimit} msgs`
+    const hint = ctxInfo?.memoryHintApplied
+    memoryDepthText.textContent = hint ? `${depthLabel} · ${hint}` : depthLabel
+  }
   if (ctxInfoText) {
     if (ctxInfo) {
       const pct = Math.round((ctxInfo.usedTokens / ctxInfo.maxTokens) * 100)
