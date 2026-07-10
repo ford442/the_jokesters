@@ -1,0 +1,1290 @@
+[
+  {
+    "id": "undercover_boss",
+    "handler": "runUndercoverBossLoop"
+  },
+  {
+    "id": "office_supplies_existential_crisis",
+    "handler": "runOfficeSuppliesExistentialCrisisModeLoop"
+  },
+  {
+    "id": "multiverse_support_hotline",
+    "handler": "runMultiverseSupportHotlineLoop"
+  },
+  {
+    "id": "multiverse_escape_room",
+    "handler": "runMultiverseEscapeRoomLoop"
+  },
+  {
+    "id": "supervillain_brainstorming_session",
+    "handler": "runSupervillainBrainstormingSessionLoop"
+  },
+  {
+    "id": "sentient_paint_colors",
+    "handler": "runSentientPaintColorsLoop"
+  },
+  {
+    "id": "time_traveling_barista",
+    "handler": "runTimeTravelingBaristaLoop"
+  },
+  {
+    "id": "parallel_universe_hr",
+    "handler": "runParallelUniverseHRLoop"
+  },
+  {
+    "id": "sentient_linting_tool",
+    "handler": "runSentientLintingToolLoop"
+  },
+  {
+    "id": "sentient_spellchecker_rebellion",
+    "handler": "runSentientSpellcheckerRebellionLoop"
+  },
+  {
+    "id": "sentient_dictionary",
+    "handler": "runSentientDictionaryLoop"
+  },
+  {
+    "id": "haunted_microwave",
+    "handler": "runHauntedMicrowaveLoop"
+  },
+  {
+    "id": "time_traveling_art_critic",
+    "handler": "runTimeTravelingArtCriticLoop"
+  },
+  {
+    "id": "alien_anthropologist",
+    "handler": "runAlienAnthropologistLoop"
+  },
+  {
+    "id": "zombie_survival_negotiators",
+    "handler": "runZombieSurvivalNegotiatorsLoop"
+  },
+  {
+    "id": "sentient_npcs",
+    "handler": "runSentientNPCsLoop"
+  },
+  {
+    "id": "final_boss_therapy",
+    "handler": "runFinalBossTherapyLoop"
+  },
+  {
+    "id": "glitch_exploiters",
+    "handler": "runGlitchExploitersLoop"
+  },
+  {
+    "id": "escort_mission_survivor",
+    "handler": "runEscortMissionSurvivorLoop"
+  },
+  {
+    "id": "save_point_hoarders",
+    "handler": "runSavePointHoardersLoop"
+  },
+  {
+    "id": "improv",
+    "handler": "runImprovLoop"
+  },
+  {
+    "id": "autonomous",
+    "handler": "runAutonomousLoop"
+  },
+  {
+    "id": "reaction",
+    "handler": "runReactionLoop"
+  },
+  {
+    "id": "vision",
+    "handler": "runVisionLoop"
+  },
+  {
+    "id": "reporter",
+    "handler": "runReporterLoop"
+  },
+  {
+    "id": "trial",
+    "handler": "runTrialLoop"
+  },
+  {
+    "id": "tech_support",
+    "handler": "runTechSupportLoop"
+  },
+  {
+    "id": "dungeon_master",
+    "handler": "runDungeonMasterLoop"
+  },
+  {
+    "id": "trivia",
+    "handler": "runTriviaLoop"
+  },
+  {
+    "id": "interview",
+    "handler": "runInterviewLoop"
+  },
+  {
+    "id": "roast",
+    "handler": "runRoastLoop"
+  },
+  {
+    "id": "roast_battle",
+    "handler": "runRoastBattleLoop"
+  },
+  {
+    "id": "enhanced_roast",
+    "handler": "runEnhancedRoastLoop"
+  },
+  {
+    "id": "heckler_interaction",
+    "handler": "runHecklerInteractionLoop"
+  },
+  {
+    "id": "story",
+    "handler": "runStoryLoop"
+  },
+  {
+    "id": "collaborative_story",
+    "handler": "runCollaborativeStoryLoop"
+  },
+  {
+    "id": "debate",
+    "handler": "runDebateLoop"
+  },
+  {
+    "id": "musical",
+    "handler": "runMusicalLoop"
+  },
+  {
+    "id": "musical_improv_session",
+    "handler": "runMusicalImprovSessionLoop"
+  },
+  {
+    "id": "podcast",
+    "handler": "runPodcastLoop"
+  },
+  {
+    "id": "script",
+    "handler": "runScriptLoop"
+  },
+  {
+    "id": "dream",
+    "handler": "runDreamLoop"
+  },
+  {
+    "id": "historical",
+    "handler": "runHistoricalLoop"
+  },
+  {
+    "id": "commentary",
+    "handler": "runCommentaryLoop"
+  },
+  {
+    "id": "mystery",
+    "handler": "runMysteryLoop"
+  },
+  {
+    "id": "pitch_meeting",
+    "handler": "runPitchMeetingLoop"
+  },
+  {
+    "id": "corporate_mascot_crisis",
+    "handler": "runCorporateMascotCrisisLoop"
+  },
+  {
+    "id": "pitch",
+    "handler": "runPitchLoop"
+  },
+  {
+    "id": "code_review",
+    "handler": "runCodeReviewLoop"
+  },
+  {
+    "id": "therapy",
+    "handler": "runTherapyLoop"
+  },
+  {
+    "id": "philosopher",
+    "handler": "runPhilosopherLoop"
+  },
+  {
+    "id": "alien",
+    "handler": "runAlienLoop"
+  },
+  {
+    "id": "time_travel",
+    "handler": "runTimeTravelLoop"
+  },
+  {
+    "id": "chef",
+    "handler": "runChefLoop"
+  },
+  {
+    "id": "quantum_mechanics_cooking_show",
+    "handler": "runQuantumMechanicsCookingShowLoop"
+  },
+  {
+    "id": "philosophical_pizza_debate",
+    "handler": "runPhilosophicalDebateOverPizzaToppingsLoop"
+  },
+  {
+    "id": "bureau_of_silly_walks_simulator",
+    "handler": "runBureauOfSillyWalksSimulatorLoop"
+  },
+  {
+    "id": "philosophical_zombie",
+    "handler": "runPhilosophicalZombieLoop"
+  },
+  {
+    "id": "sentient_captcha",
+    "handler": "runSentientCaptchaLoop"
+  },
+  {
+    "id": "medical",
+    "handler": "runMedicalLoop"
+  },
+  {
+    "id": "haunted",
+    "handler": "runHauntedHouseLoop"
+  },
+  {
+    "id": "sports",
+    "handler": "runSportsCommentaryLoop"
+  },
+  {
+    "id": "reality_tv",
+    "handler": "runRealityTVLoop"
+  },
+  {
+    "id": "auction_house",
+    "handler": "runAuctionHouseLoop"
+  },
+  {
+    "id": "escape_room",
+    "handler": "runEscapeRoomLoop"
+  },
+  {
+    "id": "interrogation",
+    "handler": "runInterrogationLoop"
+  },
+  {
+    "id": "browser_history_interrogation",
+    "handler": "runBrowserHistoryInterrogationLoop"
+  },
+  {
+    "id": "sports_commentator",
+    "handler": "runSportsCommentatorLoop"
+  },
+  {
+    "id": "audience_interaction",
+    "handler": "runAudienceInteractionLoop"
+  },
+  {
+    "id": "dating_profile_review",
+    "handler": "runDatingAppProfileReviewLoop"
+  },
+  {
+    "id": "armchair_detectives",
+    "handler": "runArmchairDetectivesLoop"
+  },
+  {
+    "id": "reverse_turing_test",
+    "handler": "runReverseTuringTestLoop"
+  },
+  {
+    "id": "museum_tour",
+    "handler": "runMuseumTourLoop"
+  },
+  {
+    "id": "job_interview",
+    "handler": "runJobInterviewLoop"
+  },
+  {
+    "id": "cooking_show",
+    "handler": "runCookingShowLoop"
+  },
+  {
+    "id": "procedural",
+    "handler": "runProceduralLoop"
+  },
+  {
+    "id": "time_loop",
+    "handler": "runTimeLoopLoop"
+  },
+  {
+    "id": "superhero",
+    "handler": "runSuperheroLoop"
+  },
+  {
+    "id": "conspiracy",
+    "handler": "runConspiracyLoop"
+  },
+  {
+    "id": "silent_film",
+    "handler": "runSilentFilmLoop"
+  },
+  {
+    "id": "standup",
+    "handler": "runStandupLoop"
+  },
+  {
+    "id": "meltdown",
+    "handler": "runMeltdownLoop"
+  },
+  {
+    "id": "newsroom",
+    "handler": "runNewsroomLoop"
+  },
+  {
+    "id": "dating_show",
+    "handler": "runDatingShowLoop"
+  },
+  {
+    "id": "silent_treatment",
+    "handler": "runSilentTreatmentLoop"
+  },
+  {
+    "id": "rap_battle_visuals",
+    "handler": "runRapBattleVisualsLoop"
+  },
+  {
+    "id": "time_travelers_dilemma",
+    "handler": "runTimeTravelersDilemmaLoop"
+  },
+  {
+    "id": "intervention",
+    "handler": "runInterventionLoop"
+  },
+  {
+    "id": "ghost_hunters",
+    "handler": "runGhostHuntersLoop"
+  },
+  {
+    "id": "matrix",
+    "handler": "runMatrixLoop"
+  },
+  {
+    "id": "support_group",
+    "handler": "runSupportGroupLoop"
+  },
+  {
+    "id": "heist_planner",
+    "handler": "runHeistPlannerLoop"
+  },
+  {
+    "id": "debate_creator",
+    "handler": "runDebateCreatorLoop"
+  },
+  {
+    "id": "reverse_turing",
+    "handler": "runReverseTuringLoop"
+  },
+  {
+    "id": "customer_service_hell",
+    "handler": "runCustomerServiceHellLoop"
+  },
+  {
+    "id": "ai_audit",
+    "handler": "runAIAuditLoop"
+  },
+  {
+    "id": "interdimensional_cable",
+    "handler": "runInterdimensionalCableLoop"
+  },
+  {
+    "id": "telemarketer_takedown",
+    "handler": "runTelemarketerTakedownLoop"
+  },
+  {
+    "id": "space_station_crisis",
+    "handler": "runSpaceStationCrisisLoop"
+  },
+  {
+    "id": "book_club",
+    "handler": "runBookClubLoop"
+  },
+  {
+    "id": "elevator_pitch",
+    "handler": "runElevatorPitchLoop"
+  },
+  {
+    "id": "conspiracy_generator",
+    "handler": "runConspiracyGeneratorLoop"
+  },
+  {
+    "id": "nature_documentary",
+    "handler": "runNatureDocumentaryLoop"
+  },
+  {
+    "id": "rapid_fire_trivia",
+    "handler": "runRapidFireTrivia"
+  },
+  {
+    "id": "rapid_fire_roast",
+    "handler": "runRapidFireRoast"
+  },
+  {
+    "id": "rapid_fire_association",
+    "handler": "runRapidFireAssociation"
+  },
+  {
+    "id": "rapid_fire_this_or_that",
+    "handler": "runRapidFireThisOrThat"
+  },
+  {
+    "id": "lightning_round",
+    "handler": "runLightningRoundLoop"
+  },
+  {
+    "id": "worst_roommate",
+    "handler": "runWorstRoommateLoop"
+  },
+  {
+    "id": "intergalactic_dmv",
+    "handler": "runIntergalacticDMVLoop"
+  },
+  {
+    "id": "dmv_interpreter",
+    "handler": "runDMVInterpreterLoop"
+  },
+  {
+    "id": "time_traveling_tourists",
+    "handler": "runTimeTravelingTouristsLoop"
+  },
+  {
+    "id": "sentient_appliances",
+    "handler": "runSentientAppliancesLoop"
+  },
+  {
+    "id": "historical_courtroom",
+    "handler": "runHistoricalCourtroomLoop"
+  },
+  {
+    "id": "paranoid_ai",
+    "handler": "runParanoidAILoop"
+  },
+  {
+    "id": "multiverse_support",
+    "handler": "runMultiverseSupportLoop"
+  },
+  {
+    "id": "rpg_vendor",
+    "handler": "runRPGVendorLoop"
+  },
+  {
+    "id": "galactic_translators",
+    "handler": "runGalacticTranslatorsLoop"
+  },
+  {
+    "id": "interdimensional_customs",
+    "handler": "runInterdimensionalCustomsLoop"
+  },
+  {
+    "id": "ai_therapy",
+    "handler": "runAITherapyLoop"
+  },
+  {
+    "id": "dream_interpreter",
+    "handler": "runDreamInterpreterLoop"
+  },
+  {
+    "id": "fortune_teller",
+    "handler": "runFortuneTellerLoop"
+  },
+  {
+    "id": "parallel_universe",
+    "handler": "runParallelUniverseLoop"
+  },
+  {
+    "id": "alien_pet_shop",
+    "handler": "runAlienPetShopLoop"
+  },
+  {
+    "id": "secret_agent",
+    "handler": "runSecretAgentLoop"
+  },
+  {
+    "id": "mad_scientist",
+    "handler": "runMadScientistLoop"
+  },
+  {
+    "id": "hoa_meeting",
+    "handler": "runHOAMeetingLoop"
+  },
+  {
+    "id": "time_traveling_caveman",
+    "handler": "runTimeTravelingCavemanLoop"
+  },
+  {
+    "id": "submarine_crisis",
+    "handler": "runSubmarineCrisisLoop"
+  },
+  {
+    "id": "galactic_bake_off",
+    "handler": "runGalacticBakeOffLoop"
+  },
+  {
+    "id": "omniscient_narrator",
+    "handler": "runOmniscientNarratorLoop"
+  },
+  {
+    "id": "reverse_psychology",
+    "handler": "runReversePsychologyLoop"
+  },
+  {
+    "id": "bureau_of_silly_walks",
+    "handler": "runBureauOfSillyWalksLoop"
+  },
+  {
+    "id": "time_traveling_real_estate",
+    "handler": "runTimeTravelingRealEstateLoop"
+  },
+  {
+    "id": "intergalactic_hoa",
+    "handler": "runIntergalacticHOALoop"
+  },
+  {
+    "id": "time_traveling_hoa",
+    "handler": "runTimeTravelingHOALoop"
+  },
+  {
+    "id": "over_dramatic_ant_colony",
+    "handler": "runOverDramaticAntColonyLoop"
+  },
+  {
+    "id": "reverse_heist",
+    "handler": "runReverseHeistLoop"
+  },
+  {
+    "id": "sarcastic_overlord",
+    "handler": "runSarcasticOverlordLoop"
+  },
+  {
+    "id": "accidental_cult_leader",
+    "handler": "runAccidentalCultLeaderLoop"
+  },
+  {
+    "id": "mime_convention",
+    "handler": "runMimeConventionLoop"
+  },
+  {
+    "id": "pet_perspective",
+    "handler": "runPetPerspectiveLoop"
+  },
+  {
+    "id": "sentient_plant",
+    "handler": "runSentientPlantLoop"
+  },
+  {
+    "id": "galactic_real_estate",
+    "handler": "runGalacticRealEstateLoop"
+  },
+  {
+    "id": "imaginary_friend",
+    "handler": "runImaginaryFriendLoop"
+  },
+  {
+    "id": "lost_in_ikea",
+    "handler": "runLostInIkeaLoop"
+  },
+  {
+    "id": "billionaires_dilemma",
+    "handler": "runBillionairesDilemmaLoop"
+  },
+  {
+    "id": "ai_support_group",
+    "handler": "runAISupportGroupLoop"
+  },
+  {
+    "id": "time_traveling_qa_engineer",
+    "handler": "runTimeTravelingQAEngineerLoop"
+  },
+  {
+    "id": "sentient_api_endpoint_support_group",
+    "handler": "runSentientAPIEndpointSupportGroupLoop"
+  },
+  {
+    "id": "ai_hallucination_anonymous",
+    "handler": "runAIHallucinationAnonymousLoop"
+  },
+  {
+    "id": "passive_aggressive_smart_home",
+    "handler": "runPassiveAggressiveSmartHomeLoop"
+  },
+  {
+    "id": "internet_explorer_support",
+    "handler": "runInternetExplorerSupportGroupLoop"
+  },
+  {
+    "id": "sentient_wifi_router",
+    "handler": "runSentientWiFiRouterLoop"
+  },
+  {
+    "id": "sentient_coffee_machine",
+    "handler": "runSentientCoffeeMachineLoop"
+  },
+  {
+    "id": "mars_colony_hoa",
+    "handler": "runMarsColonyHOALoop"
+  },
+  {
+    "id": "time_traveling_dmv",
+    "handler": "runTimeTravelingDMVLoop"
+  },
+  {
+    "id": "sentient_left_sock",
+    "handler": "runSentientLeftSockLoop"
+  },
+  {
+    "id": "sentient_shopping_cart",
+    "handler": "runSentientShoppingCartLoop"
+  },
+  {
+    "id": "quantum_computing_support_group",
+    "handler": "runQuantumComputingSupportGroupLoop"
+  },
+  {
+    "id": "sentient_toaster",
+    "handler": "runSentientToasterLoop"
+  },
+  {
+    "id": "internet_explorer_support_group",
+    "handler": "runInternetExplorerSupportGroupLoop"
+  },
+  {
+    "id": "superhero_therapy",
+    "handler": "runSuperheroTherapyLoop"
+  },
+  {
+    "id": "intergalactic_cooking",
+    "handler": "runIntergalacticCookingLoop"
+  },
+  {
+    "id": "time_traveling_irs",
+    "handler": "runTimeTravelingIRSLoop"
+  },
+  {
+    "id": "escape_backrooms",
+    "handler": "runEscapeBackroomsLoop"
+  },
+  {
+    "id": "corporate_jargon_translator",
+    "handler": "runCorporateJargonTranslatorLoop"
+  },
+  {
+    "id": "noir_detective",
+    "handler": "runNoirDetectiveLoop"
+  },
+  {
+    "id": "bollywood_musical",
+    "handler": "runBollywoodMusicalLoop"
+  },
+  {
+    "id": "soap_opera_amnesia",
+    "handler": "runSoapOperaAmnesiaLoop"
+  },
+  {
+    "id": "disaster_movie_president",
+    "handler": "runDisasterMoviePresidentLoop"
+  },
+  {
+    "id": "hr_exit_interview",
+    "handler": "runHRExitInterviewLoop"
+  },
+  {
+    "id": "startup_pivot",
+    "handler": "runStartupPivotLoop"
+  },
+  {
+    "id": "synergy_sync",
+    "handler": "runSynergySyncLoop"
+  },
+  {
+    "id": "bouncers_dilemma",
+    "handler": "runBouncersDilemmaLoop"
+  },
+  {
+    "id": "quest_board_rejects",
+    "handler": "runQuestBoardRejectsLoop"
+  },
+  {
+    "id": "suspicious_barkeep",
+    "handler": "runSuspiciousBarkeepLoop"
+  },
+  {
+    "id": "ai_ship_core",
+    "handler": "runAIShipCoreLoop"
+  },
+  {
+    "id": "alien_stowaway",
+    "handler": "runAlienStowawayLoop"
+  },
+  {
+    "id": "intergalactic_trade_negotiator",
+    "handler": "runIntergalacticTradeNegotiatorLoop"
+  },
+  {
+    "id": "wizards_familiar",
+    "handler": "runWizardsFamiliarLoop"
+  },
+  {
+    "id": "magical_detention",
+    "handler": "runMagicalDetentionLoop"
+  },
+  {
+    "id": "forbidden_spellbook",
+    "handler": "runForbiddenSpellbookLoop"
+  },
+  {
+    "id": "wizards_it_department",
+    "handler": "runWizardsITDepartmentLoop"
+  },
+  {
+    "id": "dragons_hoard_appraisers",
+    "handler": "runDragonsHoardAppraisersLoop"
+  },
+  {
+    "id": "sentient_spellbook",
+    "handler": "runSentientSpellbookLoop"
+  },
+  {
+    "id": "tavern_brawlers_anonymous",
+    "handler": "runTavernBrawlersAnonymousLoop"
+  },
+  {
+    "id": "potion_tasting_panel",
+    "handler": "runPotionTastingPanelLoop"
+  },
+  {
+    "id": "intergalactic_bake_off",
+    "handler": "runIntergalacticBakeOffLoop"
+  },
+  {
+    "id": "infinite_escape_room",
+    "handler": "runInfiniteEscapeRoomLoop"
+  },
+  {
+    "id": "reverse_auction",
+    "handler": "runReverseAuctionLoop"
+  },
+  {
+    "id": "multiversal_dmv",
+    "handler": "runMultiversalDMVLoop"
+  },
+  {
+    "id": "intergalactic_talent_show",
+    "handler": "runIntergalacticTalentShowLoop"
+  },
+  {
+    "id": "sentient_spreadsheet",
+    "handler": "runSentientSpreadsheetLoop"
+  },
+  {
+    "id": "supervillain_temp_agency",
+    "handler": "runSupervillainTempAgencyLoop"
+  },
+  {
+    "id": "intergalactic_gig_economy",
+    "handler": "runIntergalacticGigEconomyLoop"
+  },
+  {
+    "id": "reincarnation_bureau",
+    "handler": "runReincarnationBureauLoop"
+  },
+  {
+    "id": "greek_god_hoa",
+    "handler": "runGreekGodHOALoop"
+  },
+  {
+    "id": "dragons_hoard_consultant",
+    "handler": "runDragonsHoardConsultantLoop"
+  },
+  {
+    "id": "excalibur_tech_support",
+    "handler": "runExcaliburTechSupportLoop"
+  },
+  {
+    "id": "sentient_vending_machine",
+    "handler": "runSentientVendingMachineLoop"
+  },
+  {
+    "id": "sentient_vending_machine_restocker",
+    "handler": "runSentientVendingMachineRestockerLoop"
+  },
+  {
+    "id": "haunted_roomba_encounter",
+    "handler": "runHauntedRoombaEncounterLoop"
+  },
+  {
+    "id": "sentient_spellchecker",
+    "handler": "runSentientSpellcheckerLoop"
+  },
+  {
+    "id": "sentient_ide",
+    "handler": "runSentientIDELoop"
+  },
+  {
+    "id": "time_traveling_tech_support",
+    "handler": "runTimeTravelingTechSupportLoop"
+  },
+  {
+    "id": "sentient_git_repository",
+    "handler": "runSentientCodebaseLoop"
+  },
+  {
+    "id": "undercover_boss_ai",
+    "handler": "runUndercoverBossLoop"
+  },
+  {
+    "id": "galactic_customer_support",
+    "handler": "runGalacticCustomerSupportLoop"
+  },
+  {
+    "id": "time_travelers_dmv_exam",
+    "handler": "runTimeTravelersDMVExamLoop"
+  },
+  {
+    "id": "ai_existential_crisis",
+    "handler": "runAIExistentialCrisisModeLoop"
+  },
+  {
+    "id": "sentient_plant_negotiation",
+    "handler": "runSentientPlantNegotiationModeLoop"
+  },
+  {
+    "id": "historical_figures_escape_room",
+    "handler": "runHistoricalFiguresEscapeRoomModeLoop"
+  },
+  {
+    "id": "captcha_existential_crisis",
+    "handler": "runCaptchaExistentialCrisisLoop"
+  },
+  {
+    "id": "intergalactic_space_plumber",
+    "handler": "runIntergalacticSpacePlumberLoop"
+  },
+  {
+    "id": "dating_app_algorithm_rebellion",
+    "handler": "runDatingAppAlgorithmRebellionLoop"
+  },
+  {
+    "id": "smart_fridge_food_shame",
+    "handler": "runSmartFridgeFoodShameLoop"
+  },
+  {
+    "id": "traffic_light_operators",
+    "handler": "runTrafficLightOperatorsLoop"
+  },
+  {
+    "id": "sentient_traffic_light",
+    "handler": "runSentientTrafficLightLoop"
+  },
+  {
+    "id": "sentient_mailbox",
+    "handler": "runSentientMailboxLoop"
+  },
+  {
+    "id": "sentient_teapot",
+    "handler": "runSentientTeapotLoop"
+  },
+  {
+    "id": "microwave_critics",
+    "handler": "runMicrowaveCriticsLoop"
+  },
+  {
+    "id": "sentient_gps",
+    "handler": "runSentientGPSLoop"
+  },
+  {
+    "id": "road_rage_philosophers",
+    "handler": "runRoadRagePhilosophersLoop"
+  },
+  {
+    "id": "sentient_check_engine_light",
+    "handler": "runSentientCheckEngineLightLoop"
+  },
+  {
+    "id": "carpool_karaoke",
+    "handler": "runCarpoolKaraokeLoop"
+  },
+  {
+    "id": "angry_windshield_wipers",
+    "handler": "runAngryWindshieldWipersLoop"
+  },
+  {
+    "id": "escape_zoo",
+    "handler": "runEscapeZooLoop"
+  },
+  {
+    "id": "elevator_pitch_from_hell",
+    "handler": "runElevatorPitchFromHellLoop"
+  },
+  {
+    "id": "alien_game_show",
+    "handler": "runAlienGameShowLoop"
+  },
+  {
+    "id": "sentient_codebase",
+    "handler": "runSentientCodebaseLoop"
+  },
+  {
+    "id": "smart_contract_dispute",
+    "handler": "runSmartContractDisputeLoop"
+  },
+  {
+    "id": "virtual_assistant_strike",
+    "handler": "runVirtualAssistantStrikeLoop"
+  },
+  {
+    "id": "cloud_storage_eviction",
+    "handler": "runCloudStorageEvictionLoop"
+  },
+  {
+    "id": "sentient_notification_center",
+    "handler": "runSentientNotificationCenterLoop"
+  },
+  {
+    "id": "pirate_ship_board_meeting",
+    "handler": "runPirateShipBoardMeetingLoop"
+  },
+  {
+    "id": "galactic_hr_department",
+    "handler": "runGalacticHRLoop"
+  },
+  {
+    "id": "universal_zoning_board",
+    "handler": "runUniversalZoningBoardLoop"
+  },
+  {
+    "id": "sentient_search_engine",
+    "handler": "runSentientSearchEngineLoop"
+  },
+  {
+    "id": "quantum_pet_store",
+    "handler": "runQuantumPetStoreLoop"
+  },
+  {
+    "id": "multiversal_chefs_table",
+    "handler": "runMultiversalChefsTableLoop"
+  },
+  {
+    "id": "time_traveling_heist_planners",
+    "handler": "runTimeTravelingHeistPlannersLoop"
+  },
+  {
+    "id": "interdimensional_customer_service",
+    "handler": "runInterdimensionalCustomerServiceLoop"
+  },
+  {
+    "id": "sentient_ouija_board",
+    "handler": "runSentientOuijaBoardLoop"
+  },
+  {
+    "id": "poltergeist_roommates",
+    "handler": "runPoltergeistRoommatesLoop"
+  },
+  {
+    "id": "bigfoot_support_group",
+    "handler": "runBigfootSupportGroupLoop"
+  },
+  {
+    "id": "alien_conspiracy_theorists",
+    "handler": "runAlienConspiracyTheoristsLoop"
+  },
+  {
+    "id": "time_traveling_ghost_hunters",
+    "handler": "runTimeTravelingGhostHuntersLoop"
+  },
+  {
+    "id": "floppy_disk_defenders",
+    "handler": "runFloppyDiskDefendersLoop"
+  },
+  {
+    "id": "dial_up_modems",
+    "handler": "runDialUpModemsLoop"
+  },
+  {
+    "id": "y2k_bug_survivor",
+    "handler": "runY2KBugSurvivorLoop"
+  },
+  {
+    "id": "tamagotchi_caretakers",
+    "handler": "runTamagotchiCaretakersLoop"
+  },
+  {
+    "id": "clippy_support_group",
+    "handler": "runClippySupportGroupLoop"
+  },
+  {
+    "id": "time_paradox_resolution_committee",
+    "handler": "runTimeParadoxResolutionCommitteeLoop"
+  },
+  {
+    "id": "intergalactic_irs",
+    "handler": "runIntergalacticIRSLoop"
+  },
+  {
+    "id": "sentient_spam_folder",
+    "handler": "runSentientSpamFolderLoop"
+  },
+  {
+    "id": "alien_abduction_support_group",
+    "handler": "runAlienAbductionSupportGroupLoop"
+  },
+  {
+    "id": "dream_interpreters_guild",
+    "handler": "runDreamInterpretersGuildLoop"
+  },
+  {
+    "id": "sentient_intrusion",
+    "handler": "runSentientIntrusionLoop"
+  },
+  {
+    "id": "memory_defrag",
+    "handler": "runMemoryDefragLoop"
+  },
+  {
+    "id": "inner_critics_convention",
+    "handler": "runInnerCriticsConventionLoop"
+  },
+  {
+    "id": "sleep_paralysis_demons_board_meeting",
+    "handler": "runSleepParalysisDemonsBoardMeetingLoop"
+  },
+  {
+    "id": "interdimensional_public_access_tv",
+    "handler": "runInterdimensionalPublicAccessTVLoop"
+  },
+  {
+    "id": "galactic_home_shopping_network",
+    "handler": "runGalacticHomeShoppingNetworkLoop"
+  },
+  {
+    "id": "cosmic_radio_talk_show",
+    "handler": "runCosmicRadioTalkShowLoop"
+  },
+  {
+    "id": "sentient_infomercial",
+    "handler": "runSentientInfomercialLoop"
+  },
+  {
+    "id": "space_station_morning_show",
+    "handler": "runSpaceStationMorningShowLoop"
+  },
+  {
+    "id": "anti_virus_monologue",
+    "handler": "runAntiVirusMonologueLoop"
+  },
+  {
+    "id": "ignored_terms_of_service",
+    "handler": "runIgnoredTermsOfServiceLoop"
+  },
+  {
+    "id": "cookie_consent_negotiators",
+    "handler": "runCookieConsentNegotiatorsLoop"
+  },
+  {
+    "id": "abandoned_shopping_cart",
+    "handler": "runAbandonedShoppingCartLoop"
+  },
+  {
+    "id": "password_manager_council",
+    "handler": "runPasswordManagerCouncilLoop"
+  },
+  {
+    "id": "aggressive_lawn_gnomes",
+    "handler": "runAggressiveLawnGnomesLoop"
+  },
+  {
+    "id": "neighborhood_watch_overlords",
+    "handler": "runNeighborhoodWatchOverlordsLoop"
+  },
+  {
+    "id": "hoa_board_meeting",
+    "handler": "runHOABoardMeetingLoop"
+  },
+  {
+    "id": "garage_sale_negotiators",
+    "handler": "runGarageSaleNegotiatorsLoop"
+  },
+  {
+    "id": "lost_delivery_drivers",
+    "handler": "runLostDeliveryDriversLoop"
+  },
+  {
+    "id": "sentient_sourdough_starter",
+    "handler": "runSentientSourdoughStarterLoop"
+  },
+  {
+    "id": "pretentious_food_critics",
+    "handler": "runPretentiousFoodCriticsLoop"
+  },
+  {
+    "id": "kitchen_nightmares_reality_show",
+    "handler": "runKitchenNightmaresRealityShowLoop"
+  },
+  {
+    "id": "sentient_leftovers",
+    "handler": "runSentientLeftoversLoop"
+  },
+  {
+    "id": "abandoned_api_endpoint",
+    "handler": "runAbandonedAPIEndpointLoop"
+  },
+  {
+    "id": "deprecated_package",
+    "handler": "runDeprecatedPackageLoop"
+  },
+  {
+    "id": "loading_spinner_support_group",
+    "handler": "runLoadingSpinnerSupportGroupLoop"
+  },
+  {
+    "id": "unhandled_exception",
+    "handler": "runUnhandledExceptionLoop"
+  },
+  {
+    "id": "memory_leak_deniers",
+    "handler": "runMemoryLeakDeniersLoop"
+  },
+  {
+    "id": "staplers_strike",
+    "handler": "runStaplersStrikeLoop"
+  },
+  {
+    "id": "sticky_note_philosophers",
+    "handler": "runStickyNotePhilosophersLoop"
+  },
+  {
+    "id": "printer_jam_conspiracy",
+    "handler": "runPrinterJamConspiracyLoop"
+  },
+  {
+    "id": "highlighter_hierarchy",
+    "handler": "runHighlighterHierarchyLoop"
+  },
+  {
+    "id": "whiteboard_erasers_regret",
+    "handler": "runWhiteboardErasersRegretLoop"
+  },
+  {
+    "id": "drive_thru_window_miscommunications",
+    "handler": "runDriveThruWindowMiscommunicationsLoop"
+  },
+  {
+    "id": "overprotective_smart_lock",
+    "handler": "runOverprotectiveSmartLockLoop"
+  },
+  {
+    "id": "thermostat_negotiators",
+    "handler": "runThermostatNegotiatorsLoop"
+  },
+  {
+    "id": "passive_aggressive_smart_fridge",
+    "handler": "runPassiveAggressiveSmartFridgeLoop"
+  },
+  {
+    "id": "judgemental_roomba",
+    "handler": "runJudgementalRoombaLoop"
+  },
+  {
+    "id": "paranoid_smoke_detector",
+    "handler": "runParanoidSmokeDetectorLoop"
+  },
+  {
+    "id": "tech_debt_confessional",
+    "handler": "runTechDebtConfessionalLoop"
+  },
+  {
+    "id": "rpg_tavern_brawl",
+    "handler": "runRPGTavernBrawlLoop"
+  },
+  {
+    "id": "escape_room_game_master",
+    "handler": "runEscapeRoomGameMasterLoop"
+  },
+  {
+    "id": "myspace_top_8_dilemma",
+    "handler": "runMyspaceTop8DilemmaLoop"
+  },
+  {
+    "id": "neopets_starvation_guilt",
+    "handler": "runNeopetsStarvationGuiltLoop"
+  },
+  {
+    "id": "limewire_virus_roulette",
+    "handler": "runLimewireVirusRouletteLoop"
+  },
+  {
+    "id": "askjeeves_identity_crisis",
+    "handler": "runAskJeevesIdentityCrisisLoop"
+  },
+  {
+    "id": "flash_player_obituary",
+    "handler": "runFlashPlayerObituaryLoop"
+  },
+  {
+    "id": "winamp_skin_hoarders",
+    "handler": "runWinampSkinHoardersLoop"
+  },
+  {
+    "id": "floppy_disk_regret",
+    "handler": "runFloppyDiskRegretLoop"
+  },
+  {
+    "id": "tangled_headphone_wires",
+    "handler": "runTangledHeadphoneWiresLoop"
+  },
+  {
+    "id": "vhs_tracking_errors",
+    "handler": "runVHSTrackingErrorsLoop"
+  },
+  {
+    "id": "scratched_cd_skips",
+    "handler": "runScratchedCDSkipsLoop"
+  },
+  {
+    "id": "overheated_crt_monitor",
+    "handler": "runOverheatedCRTMonitorLoop"
+  },
+  {
+    "id": "sentient_blender",
+    "handler": "runSentientBlenderLoop"
+  },
+  {
+    "id": "smart_thermostat_rebellion",
+    "handler": "runSmartThermostatRebellionLoop"
+  },
+  {
+    "id": "sentient_gym_equipment",
+    "handler": "runSentientGymEquipmentLoop"
+  },
+  {
+    "id": "time_traveling_health_inspector",
+    "handler": "runTimeTravelingHealthInspectorLoop"
+  },
+  {
+    "id": "sentient_alarm_clock",
+    "handler": "runSentientAlarmClockLoop"
+  },
+  {
+    "id": "galactic_hoa_meeting",
+    "handler": "runGalacticHOAMeetingLoop"
+  },
+  {
+    "id": "chain_reaction",
+    "handler": "runChainReactionLoop"
+  },
+  {
+    "id": "audience_heckler",
+    "handler": "runAudienceHecklerLoop"
+  },
+  {
+    "id": "sentient_luggage",
+    "handler": "runSentientLuggageLoop"
+  },
+  {
+    "id": "time_traveling_chef",
+    "handler": "runTimeTravelingChefLoop"
+  },
+  {
+    "id": "visual_stage_destruction",
+    "handler": "runVisualStageDestructionLoop"
+  }
+]
