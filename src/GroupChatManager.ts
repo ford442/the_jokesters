@@ -31,6 +31,22 @@ export type { ProfanityLevel, Agent, Message, ErrorCategory }
 export { PROFANITY_LEVEL }
 
 import { buildSystemMessage } from './llm/helpers/PromptCompiler'
+import {
+  applyMemoryHint,
+  clampMemoryDepth,
+  getDirectorCritiqueDepth,
+  loadMemoryDepthPreference,
+  parseMemoryHint,
+  saveMemoryDepthPreference,
+  type MemoryHint,
+} from './config/contextDepth'
+
+export interface DirectorCritiqueResult {
+  instruction: string;
+  status: 'flowing' | 'stagnant' | 'unknown';
+  memoryHint: MemoryHint | null;
+  raw: string;
+}
 export class GroupChatManager {
   private engine: LLMEngine | null = null
   private engineType: EngineType = 'mlc'
@@ -49,6 +65,12 @@ export class GroupChatManager {
 
   // VRAM optimization config
   private vramConfig: VRAMOptimizationConfig = { ...DEFAULT_VRAM_CONFIG }
+
+  // Conversation memory depth (message-count soft limit)
+  private userMemoryDepth: number = loadMemoryDepthPreference()
+  private sceneMemoryDepth: number | null = null
+  private pendingMemoryHint: MemoryHint | null = null
+  private recallThemeForTurn: string | null = null
 
   // Style instruction - can be changed at runtime via setProfanityLevel()
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
@@ -198,6 +220,121 @@ export class GroupChatManager {
 
   getVRAMConfig(): VRAMOptimizationConfig {
     return { ...this.vramConfig }
+  }
+
+  // =========================================================================
+  // Memory Depth (message-count context window)
+  // =========================================================================
+
+  /** User preference from the Memory Depth slider (persisted). */
+  setMemoryDepth(messages: number): void {
+    this.userMemoryDepth = clampMemoryDepth(messages)
+    saveMemoryDepthPreference(this.userMemoryDepth)
+    console.log(`[MemoryDepth] User depth: ${this.userMemoryDepth} messages`)
+  }
+
+  getMemoryDepth(): number {
+    return this.userMemoryDepth
+  }
+
+  /** Scene override from scenario config or mode category default. */
+  setSceneMemoryDepth(depth: number | null): void {
+    this.sceneMemoryDepth = depth == null ? null : clampMemoryDepth(depth)
+    if (this.sceneMemoryDepth != null) {
+      console.log(`[MemoryDepth] Scene depth: ${this.sceneMemoryDepth} messages`)
+    }
+  }
+
+  clearSceneMemoryDepth(): void {
+    this.sceneMemoryDepth = null
+  }
+
+  getEffectiveMemoryDepth(): number {
+    return this.sceneMemoryDepth ?? this.userMemoryDepth
+  }
+
+  /** Director one-turn override — consumed on the next chat() call. */
+  applyMemoryHint(hint: MemoryHint): void {
+    this.pendingMemoryHint = hint
+    console.log(`[MemoryDepth] Pending hint: ${hint}`)
+  }
+
+  private consumeMemoryHint(): MemoryHint | null {
+    const hint = this.pendingMemoryHint
+    this.pendingMemoryHint = null
+    return hint
+  }
+
+  private resolveTurnMemoryDepth(): { depth: number; hintLabel?: string; recallTheme?: string } {
+    const base = this.getEffectiveMemoryDepth()
+    const hint = this.consumeMemoryHint()
+    if (!hint) {
+      return { depth: base }
+    }
+
+    const depth = applyMemoryHint(base, hint)
+    if (hint.startsWith('recall:')) {
+      const theme = hint.slice('recall:'.length)
+      this.recallThemeForTurn = theme
+      return { depth, hintLabel: hint, recallTheme: theme }
+    }
+
+    return { depth, hintLabel: hint }
+  }
+
+  private sliceHistoryByDepth(
+    history: Message[],
+    depthLimit: number,
+    recallTheme?: string,
+  ): Message[] {
+    if (history.length <= depthLimit) {
+      return history
+    }
+
+    const recent = history.slice(-depthLimit)
+
+    if (!recallTheme) {
+      return recent
+    }
+
+    const theme = recallTheme.toLowerCase()
+    const older = history.slice(0, -depthLimit)
+    const recalled = older.filter(m => m.content.toLowerCase().includes(theme)).slice(-2)
+    if (recalled.length === 0) {
+      return recent
+    }
+
+    const combined = [...recalled, ...recent]
+    const overflow = combined.length - depthLimit
+    if (overflow <= 0) {
+      return combined
+    }
+
+    return combined.slice(overflow)
+  }
+
+  private prepareHistoryForContext(
+    includePendingUser = false,
+    pendingUserContent?: string,
+  ): { history: Message[]; depthLimit: number; hintLabel?: string } {
+    const { depth, hintLabel, recallTheme } = this.resolveTurnMemoryDepth()
+    if (recallTheme) {
+      this.recallThemeForTurn = recallTheme
+    }
+
+    let history = [...this.conversationHistory]
+    if (includePendingUser && pendingUserContent) {
+      history.push({ role: 'user', content: pendingUserContent })
+    }
+
+    const sliced = this.sliceHistoryByDepth(
+      history,
+      depth,
+      this.recallThemeForTurn ?? recallTheme,
+    )
+    this.recallThemeForTurn = null
+
+    return { history: sliced, depthLimit: depth, hintLabel }
   }
 
   // =========================================================================
@@ -587,8 +724,11 @@ export class GroupChatManager {
       fullSystemPrompt += `\n\n### DIRECTOR\'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
     }
 
+    const { history: depthSlicedHistory, depthLimit, hintLabel } =
+      this.prepareHistoryForContext(false)
+
     // Create messages array with single merged system prompt
-    // Token-level truncation via DynamicContextManager (replaces old message-count cap)
+    // Token-level truncation via DynamicContextManager (after message-depth slice)
     const effectiveMaxTokens = Math.min(
       options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
       this.maxTokensPerTurn,
@@ -596,10 +736,15 @@ export class GroupChatManager {
     )
     const { messages, info: ctxInfo } = this.contextManager.truncate(
       fullSystemPrompt,
-      this.conversationHistory,
+      depthSlicedHistory,
       effectiveMaxTokens,
     )
-    this.lastContextInfo = ctxInfo
+    this.lastContextInfo = {
+      ...ctxInfo,
+      messageDepthLimit: depthLimit,
+      messagesInWindow: depthSlicedHistory.length,
+      memoryHintApplied: hintLabel,
+    }
 
     if (ctxInfo.droppedMessages > 0) {
       console.log(
@@ -752,28 +897,38 @@ export class GroupChatManager {
 
   /**
    * DIRECTOR BRAIN: Analyzes the scene to see if it's boring or good.
-   * Returns a critique string like "STAGNANT: Explosion!" or "FLOWING: Whisper."
+   * Returns critique text, status, and an optional one-turn memory hint.
    */
-  async getDirectorCritique(): Promise<string> {
-    if (!this.engine || !this.isInitialized) return ""
+  async getDirectorCritique(): Promise<DirectorCritiqueResult> {
+    const empty: DirectorCritiqueResult = {
+      instruction: '',
+      status: 'unknown',
+      memoryHint: null,
+      raw: '',
+    }
+    if (!this.engine || !this.isInitialized) return empty
 
-    // 1. Context: Only look at the last 6 lines to judge current momentum
-    const recentHistory = this.conversationHistory.slice(-6)
-    if (recentHistory.length === 0) return ""
+    const critiqueDepth = getDirectorCritiqueDepth(this.getEffectiveMemoryDepth())
+    const recentHistory = this.conversationHistory.slice(-critiqueDepth)
+    if (recentHistory.length === 0) return empty
 
     const historyText = recentHistory
       .map(m => `${m.role === 'user' ? 'Prompt' : 'Actor'}: ${m.content}`)
       .join('\n')
 
-    // 2. The Judgment Prompt
     const directorSystemPrompt =
       `You are an expert Improv Director. Watch the scene below.\n` +
       `First, judge the scene: is it "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive)?\n` +
       `Then, provide a ONE-SENTENCE direction to the NEXT actor.\n` +
+      `Optionally add a memory hint on its own line when the scene needs tighter focus or callback recall:\n` +
+      `MEMORY: zoom_in | zoom_out | recall:TOPIC\n` +
+      `(Use zoom_in for immediate back-and-forth; zoom_out or recall:TOPIC when earlier context is needed.)\n` +
       `Rules:\n` +
       `- If STAGNANT: Intervene! Raise the stakes, add a disaster, or force a topic change.\n` +
       `- If FLOWING: Coach silently. Give a subtle note (e.g. "Be more suspicious," "Whisper this line").\n` +
-      `Output format: [STATUS]: [INSTRUCTION]`
+      `Output format:\n` +
+      `[STATUS]: [INSTRUCTION]\n` +
+      `MEMORY: [hint] (optional)`
 
     try {
       const stream = await this.engine.chat([
@@ -781,20 +936,46 @@ export class GroupChatManager {
         { role: 'user', content: `RECENT DIALOGUE:\n${historyText}\n\nDIRECTOR DECISION:` }
       ], {
         temperature: 0.6,
-        max_tokens: 60,
+        max_tokens: 80,
         stream: false,
       })
 
-      // For non-streaming, collect the full response
       let response = ''
       for await (const chunk of stream) {
         response += chunk
       }
-      
-      return response.trim() || ""
+
+      const raw = response.trim()
+      if (!raw) return empty
+
+      let memoryHint: MemoryHint | null = null
+      const memoryLine = raw.split('\n').find(line => line.trim().toUpperCase().startsWith('MEMORY:'))
+      if (memoryLine) {
+        memoryHint = parseMemoryHint(memoryLine.split(':').slice(1).join(':'))
+      }
+
+      const critiqueLine = raw.split('\n').find(line => line.includes(':') && !line.trim().toUpperCase().startsWith('MEMORY:')) ?? raw
+      const parts = critiqueLine.split(':')
+      const statusRaw = parts[0].trim().toUpperCase()
+      const instruction = parts.slice(1).join(':').trim()
+
+      let status: DirectorCritiqueResult['status'] = 'unknown'
+      if (statusRaw.includes('FLOWING')) status = 'flowing'
+      else if (statusRaw.includes('STAGNANT')) status = 'stagnant'
+
+      if (memoryHint) {
+        this.applyMemoryHint(memoryHint)
+      }
+
+      return {
+        instruction: instruction || raw,
+        status,
+        memoryHint,
+        raw,
+      }
     } catch (e) {
       console.warn("Director failed to think:", e)
-      return ""
+      return empty
     }
   }
 
@@ -877,14 +1058,17 @@ export class GroupChatManager {
           ABSOLUTE_MAX_TOKENS,
         )
 
-        // Token-level truncation for prerender context
+        const depth = this.getEffectiveMemoryDepth()
         const historyWithPrompt: Message[] = [
           ...this.conversationHistory,
           { role: 'user', content: currentPrompt },
         ]
+        const depthSliced = this.sliceHistoryByDepth(historyWithPrompt, depth)
+
+        // Token-level truncation for prerender context
         const { messages } = this.contextManager.truncate(
           systemMessage,
-          historyWithPrompt,
+          depthSliced,
           effectiveMaxTokens,
         )
 

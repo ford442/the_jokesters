@@ -29,29 +29,18 @@ This document tracks planned enhancements, feature ideas, and technical improvem
 
 ### Configurable Context Window Size
 **Priority:** Medium  
-**Status:** Planned
+**Status:** Implemented (see [docs/CONTEXT_DEPTH.md](./CONTEXT_DEPTH.md))
 
 Allow the context window size to be adjusted dynamically:
 
-1. **Director-controlled window**
-   - Director can request "zoom in" (smaller window, focus on immediate exchange)
-   - Director can request "zoom out" (larger window, recall earlier context)
-   - Example: If scene feels disconnected, Director says "Recall the earlier joke about X"
+1. **Director-controlled window** — `zoom_in` / `zoom_out` / `recall:TOPIC` via `memoryHint` on critique
+2. **Scene setup `contextDepth`** — per-scenario message limit; category defaults when omitted
+3. **UI "Memory Depth" slider** — 4–30 messages, persisted in `localStorage`, live mid-session updates
 
-2. **Scene setup configuration**
-   - Scene description could include a `contextDepth` parameter
-   - Short sketches use smaller windows (fast, punchy)
-   - Long-form improv uses larger windows (callbacks, arcs)
-
-3. **UI slider for context window**
-   - Add a "Memory Depth" slider in the settings panel
-   - Range: 4–30 messages
-   - Affects both agent turns and Director analysis proportionally
-
-**Implementation notes:**
-- Add `contextWindowSize` parameter to `GroupChatManager.chat()` options
-- Director could return a `memoryHint` field alongside critique
-- Store default window size in scene config object
+**Implementation:**
+- `GroupChatManager.setMemoryDepth()` + message-count slice before token truncation
+- `getDirectorCritique()` returns `{ instruction, status, memoryHint }`
+- Status bar shows depth + token usage
 
 ---
 

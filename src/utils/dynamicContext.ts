@@ -66,6 +66,12 @@ export interface ContextWindowInfo {
   hasSummary: boolean;
   summaryStub?: string;
   estimationSource: TokenEstimationSource;
+  /** User/scene message-depth budget (soft limit before token truncation). */
+  messageDepthLimit: number;
+  /** Messages included after depth slicing (excludes system/summary). */
+  messagesInWindow: number;
+  /** One-turn director override label, if any. */
+  memoryHintApplied?: string;
 }
 
 /**
@@ -133,6 +139,10 @@ export class DynamicContextManager {
     history: ChatMessage[],
     reserveTokens = 128,
   ): { messages: ChatMessage[]; info: ContextWindowInfo } {
+    const baseInfo = {
+      messageDepthLimit: history.length,
+      messagesInWindow: history.length,
+    };
     const systemTokens = this.estimateTokens(systemMessage);
     const budget = this.maxContextTokens - systemTokens - reserveTokens;
     const estimationSource = this.tokenEstimator.getSource();
@@ -148,6 +158,8 @@ export class DynamicContextManager {
           droppedMessages: history.length,
           hasSummary: false,
           estimationSource,
+          ...baseInfo,
+          messagesInWindow: 0,
         },
       };
     }
@@ -213,6 +225,8 @@ export class DynamicContextManager {
         hasSummary,
         summaryStub: summaryStubText,
         estimationSource,
+        ...baseInfo,
+        messagesInWindow: kept.length,
       },
     };
   }

@@ -262,23 +262,31 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
           chatLogEl.appendChild(thinkingDiv)
           chatLogEl.scrollTop = chatLogEl.scrollHeight
 
-          const rawCritique = await groupChatManager.getDirectorCritique()
+          const directorResult = await groupChatManager.getDirectorCritique()
 
           chatLogEl.removeChild(thinkingDiv)
 
-          if (rawCritique.includes(':')) {
-            const parts = rawCritique.split(':')
-            const status = parts[0].trim().toUpperCase()
-            critique = parts.slice(1).join(':').trim()
+          if (directorResult.instruction) {
+            critique = directorResult.instruction
 
-            if (status.includes('FLOWING')) {
+            if (directorResult.status === 'flowing') {
               chatLog.addMessage('Director (Note)', `📝 ${critique}`, '#4ecdc4')
-            } else {
+            } else if (directorResult.status === 'stagnant') {
               chatLog.addMessage('Director (Action!)', `🎬 ${critique}`, '#ff6b6b')
+            } else {
+              chatLog.addMessage('Director', `📣 ${critique}`, '#ffd700')
             }
-          } else if (rawCritique) {
-            critique = rawCritique
-            chatLog.addMessage('Director', `📣 ${critique}`, '#ffd700')
+
+            if (directorResult.memoryHint) {
+              const hintLabels: Record<string, string> = {
+                zoom_in: '🔍 Zoom in (tight focus)',
+                zoom_out: '🔭 Zoom out (wider memory)',
+              }
+              const hintLabel = directorResult.memoryHint.startsWith('recall:')
+                ? `🧠 Recall: ${directorResult.memoryHint.slice('recall:'.length)}`
+                : hintLabels[directorResult.memoryHint] ?? directorResult.memoryHint
+              chatLog.addMessage('Director (Memory)', hintLabel, '#9b59b6')
+            }
           }
         }
 

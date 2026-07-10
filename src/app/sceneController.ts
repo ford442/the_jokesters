@@ -8,6 +8,7 @@ import { createChatLog } from './chatLog'
 import { createAudioHelpers, wireChatController } from './chatController'
 import { wireImprovController } from './improvController'
 import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
+import { loadMemoryDepthPreference } from '../config/contextDepth'
 import { getDOM } from '../ui/uiHelpers'
 
 export interface SceneControllerDeps {
@@ -49,6 +50,17 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     dom.profanityVal.textContent = label
     dom.profanityVal.style.color = color
     groupChatManager.setProfanityLevel(level)
+  }
+
+  const savedDepth = loadMemoryDepthPreference()
+  groupChatManager.setMemoryDepth(savedDepth)
+  dom.memoryDepthSlider.value = String(savedDepth)
+  dom.memoryDepthVal.textContent = `${savedDepth} msgs`
+  dom.memoryDepthSlider.oninput = () => {
+    const depth = parseInt(dom.memoryDepthSlider.value, 10)
+    dom.memoryDepthVal.textContent = `${depth} msgs`
+    groupChatManager.setMemoryDepth(depth)
+    updateVRAMInfoBar(groupChatManager)
   }
 
   dom.switchProfileBtn.addEventListener('click', () => {

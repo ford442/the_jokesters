@@ -168,6 +168,12 @@ export function getAppTemplate(): string {
               <span id="profanity-val" style="color: #ffd700; font-size: 0.9em; width: 80px;">🔥 Gritty</span>
             </div>
 
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 5px;">
+              <label style="color: #888; font-size: 0.8em;">Memory Depth</label>
+              <input type="range" id="memory-depth-slider" min="4" max="30" value="15" step="1" style="flex: 1;">
+              <span id="memory-depth-val" style="color: #9b59b6; font-size: 0.8em; width: 52px;">15 msgs</span>
+            </div>
+
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
               <label style="color: #888; font-size: 0.8em;">Profile</label>
               <input type="text" id="user-profile-input" value="default" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.8em; border-radius: 4px;">
@@ -177,6 +183,7 @@ export function getAppTemplate(): string {
 
           <!-- VRAM / Context Info Bar -->
           <div id="vram-info-bar" class="vram-info-bar">
+            <span id="memory-depth-text">Depth: —</span>
             <span id="ctx-info-text">Context: —</span>
             <span id="token-budget-text">Max tokens: 96</span>
             <span id="vram-kv-text"></span>

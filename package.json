@@ -13,7 +13,7 @@
     "perf:full": "tsx tests/perf/ci-runner.ts --duration=full",
     "perf:ci": "tsx tests/perf/ci-runner.ts --duration=ci --format=json",
     "perf:browser": "vite tests/perf/browser-runner.html",
-    "test:unit": "tsx tests/unit/tokenBudget.test.ts && tsx tests/unit/modeRegistry.test.ts",
+    "test:unit": "tsx tests/unit/tokenBudget.test.ts && tsx tests/unit/contextDepth.test.ts && tsx tests/unit/modeRegistry.test.ts",
     "verify:wllama": "bash scripts/verify_wllama_wasm.sh"
   },
   "devDependencies": {

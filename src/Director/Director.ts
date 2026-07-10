@@ -4,8 +4,9 @@ import { MemoryManager } from './MemoryManager';
 import type { ModeContext } from './modes/ModeContext';
 import { ComedySession } from '../comedy/ComedySession';
 import { isComedyEnabled } from './modeConfig';
-import { getModeLoop } from './modes/registry';
+import { getModeLoop, getMode } from './modes/registry';
 import type { RegisteredModeId } from './modes/registry';
+import { getDefaultContextDepthForCategory } from '../config/contextDepth';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -160,6 +161,8 @@ export interface Scenario {
         era?: string;
         /** When set, overrides mode-family default for CallbackEngine / quality hooks. */
         comedyEnabled?: boolean;
+        /** Message-count memory depth for this scene (4–30). Overrides slider default. */
+        contextDepth?: number;
     };
 }
 
@@ -285,6 +288,11 @@ export class Director {
             this.chaosLevel = scenario.config.chaosLevel;
         }
 
+        const modeDef = getMode(scenario.type);
+        const sceneDepth = scenario.config?.contextDepth
+            ?? (modeDef ? getDefaultContextDepthForCategory(modeDef.category) : null);
+        this.manager.setSceneMemoryDepth(sceneDepth);
+
         this.initComedySession(scenario);
 
         try {
@@ -318,6 +326,7 @@ export class Director {
     public stopScene() {
         if (this.isRunning) {
             this.isRunning = false;
+            this.manager.clearSceneMemoryDepth();
 
             // Cancel any pending input
             if (this.inputPromise) {
