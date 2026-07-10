@@ -63,6 +63,8 @@ export class MlcEngineAdapter implements LLMEngine {
       model_id: modelConfig.id,
       model: mlcConfig.model_url,
       model_lib: mlcConfig.model_lib_url,
+      model_lib_fallback: (modelConfig as MlcModelConfig & { model_lib_fallback?: string }).model_lib_fallback
+        ?? (modelConfig.mlc as { model_lib_fallback?: string } | undefined)?.model_lib_fallback,
       overrides: mlcConfig.overrides || {},
       vram_required_MB: modelConfig.vram_required_MB,
     }

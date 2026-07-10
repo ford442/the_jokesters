@@ -27,6 +27,17 @@ export interface VRAMOptimizationConfig {
   attention_sink_size: number;
 }
 
+/** Model config shape used by loadModelWithDynamicContext (legacy + unified MLC path). */
+export interface DynamicModelConfig {
+  model_id: string;
+  model: string;
+  model_lib: string;
+  /** Generic 4K .wasm used when custom model_lib is not yet hosted on VPS */
+  model_lib_fallback?: string;
+  overrides?: Record<string, unknown>;
+  vram_required_MB?: number;
+}
+
 /** Default VRAM optimization settings — safe for non-expert users */
 export const DEFAULT_VRAM_CONFIG: VRAMOptimizationConfig = {
   gpu_memory_utilization: 0.85,
@@ -350,6 +361,88 @@ export function getContextConfigForVRAM(
 }
 
 /**
+ * Parse the baked-in max context from a model_lib filename.
+ * Examples: `…-ctx512_cs1k-…` → 512, `…-ctx4k_cs1k-…` → 4096.
+ */
+export function parseCompiledMaxContextFromModelLib(modelLib: string): number | null {
+  if (!modelLib) return null;
+  const lower = modelLib.toLowerCase();
+  if (/-ctx4k_/.test(lower)) return 4096;
+  const match = lower.match(/-ctx(\d+)_/);
+  if (!match) return null;
+  return parseInt(match[1], 10);
+}
+
+/**
+ * Never request a runtime context larger than the compiled WASM memory plan.
+ */
+export function clampContextToCompiledMax(
+  requestedContext: number,
+  compiledMax: number | null,
+): number {
+  if (compiledMax == null || compiledMax <= 0) return requestedContext;
+  if (requestedContext <= compiledMax) return requestedContext;
+  console.warn(
+    `[DynamicContext] Clamping context ${requestedContext} → ${compiledMax} ` +
+    `(compiled model_lib max)`
+  );
+  return compiledMax;
+}
+
+/** Largest power-of-two ≤ n (minimum 1) — friendly for WebGPU prefill kernels. */
+export function alignPrefillChunkSize(contextSize: number, prefillChunkSize: number): number {
+  const capped = Math.min(prefillChunkSize, contextSize);
+  let p2 = 1;
+  while (p2 * 2 <= capped) p2 *= 2;
+  return Math.max(1, p2);
+}
+
+/**
+ * HEAD-probe model_lib URL; fall back to generic 4K .wasm when custom artifact
+ * is not yet published on the VPS.
+ */
+export async function resolveModelLibUrl(
+  modelLib: string,
+  fallbackModelLib?: string,
+): Promise<{ url: string; usedFallback: boolean; compiledMaxContext: number | null }> {
+  const probe = async (url: string): Promise<boolean> => {
+    try {
+      const resp = await fetch(url, { method: 'HEAD' });
+      return resp.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  if (await probe(modelLib)) {
+    return {
+      url: modelLib,
+      usedFallback: false,
+      compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+    };
+  }
+
+  if (fallbackModelLib && fallbackModelLib !== modelLib && (await probe(fallbackModelLib))) {
+    console.warn(
+      `[DynamicContext] Custom model_lib not hosted (${modelLib}) — ` +
+      `using fallback ${fallbackModelLib}`
+    );
+    return {
+      url: fallbackModelLib,
+      usedFallback: true,
+      compiledMaxContext: parseCompiledMaxContextFromModelLib(fallbackModelLib),
+    };
+  }
+
+  console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
+  return {
+    url: modelLib,
+    usedFallback: false,
+    compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+  };
+}
+
+/**
  * Detect model size from model_id
  */
 export function getModelSize(modelId: string): '3b' | '7b' | '8b' {
@@ -386,21 +479,31 @@ export function buildVRAMOverrides(
   contextSize: number,
   vramConfig: VRAMOptimizationConfig,
   modelId: string,
+  compiledMaxContext: number | null = null,
 ): Record<string, unknown> {
+  const effectiveContext = clampContextToCompiledMax(contextSize, compiledMaxContext);
+  const rawPrefill = vramConfig.prefill_chunk_size > 0
+    ? vramConfig.prefill_chunk_size
+    : Math.min(effectiveContext, 1024);
+  const prefillChunk = alignPrefillChunkSize(effectiveContext, rawPrefill);
+
   const overrides: Record<string, unknown> = {
     ...baseOverrides,
-    context_window_size: contextSize,
-    prefill_chunk_size: vramConfig.prefill_chunk_size > 0
-      ? Math.min(vramConfig.prefill_chunk_size, contextSize)
-      : Math.min(contextSize, 1024),
+    context_window_size: effectiveContext,
+    prefill_chunk_size: prefillChunk,
   };
 
   // Sliding window attention — enable if explicitly set (> 0) or auto-detect for large contexts
   const slidingWindowSize = vramConfig.sliding_window_size === -1
-    ? Math.floor(contextSize / 2)  // Auto: half the context window
+    ? Math.floor(effectiveContext / 2)  // Auto: half the context window
     : vramConfig.sliding_window_size;
-  
-  if (slidingWindowSize > 0) {
+
+  // Sliding window only helps when generic 4K .wasm is paired with a small runtime ctx.
+  // Custom low-ctx .wasm already bakes a tight KV plan — skip sliding window there.
+  const isCustomLowCtxWasm =
+    compiledMaxContext != null && compiledMaxContext <= 1024 && !baseOverrides.sliding_window_size;
+
+  if (slidingWindowSize > 0 && !isCustomLowCtxWasm) {
     overrides['sliding_window_size'] = slidingWindowSize;
     overrides['attention_sink_size'] = vramConfig.attention_sink_size ?? 4;
     console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens)`);
@@ -434,12 +537,23 @@ export function buildVRAMOverrides(
  * Main function: Load model with dynamic context and VRAM optimizations
  */
 export async function loadModelWithDynamicContext(
-  modelConfig: any,
+  modelConfig: DynamicModelConfig,
   preferredContext: number | 'auto' = 'auto',
   onProgress?: (report: webllm.InitProgressReport) => void,
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
 ): Promise<webllm.MLCEngine> {
-  
+
+  const { url: resolvedModelLib, usedFallback, compiledMaxContext } =
+    await resolveModelLibUrl(modelConfig.model_lib, modelConfig.model_lib_fallback);
+
+  if (usedFallback) {
+    onProgress?.({
+      progress: 0,
+      timeElapsed: 0,
+      text: 'Custom WASM not hosted yet — using generic 4K runtime (higher peak VRAM)…',
+    });
+  }
+
   // Determine context size
   let contextSize: number;
   if (preferredContext === 'auto') {
@@ -455,9 +569,11 @@ export async function loadModelWithDynamicContext(
       console.log(`[DynamicContext] Auto-selected ${contextSize} context for ${modelConfig.model_id}`);
     }
   } else {
-    contextSize = preferredContext as number;
+    contextSize = preferredContext;
     console.log(`[DynamicContext] User-selected ${contextSize} context`);
   }
+
+  contextSize = clampContextToCompiledMax(contextSize, compiledMaxContext);
 
   // Build overrides with VRAM optimizations
   const overrides = buildVRAMOverrides(
@@ -465,18 +581,25 @@ export async function loadModelWithDynamicContext(
     contextSize,
     vramConfig,
     modelConfig.model_id,
+    compiledMaxContext,
   );
 
-  const dynamicAppConfig: any = {
+  const effectiveContext = overrides['context_window_size'] as number;
+  const effectivePrefill = overrides['prefill_chunk_size'] as number;
+
+  const dynamicAppConfig: {
+    model_list: Array<DynamicModelConfig & { overrides: Record<string, unknown> }>;
+  } = {
     model_list: [{
       ...modelConfig,
+      model_lib: resolvedModelLib,
       overrides,
     }],
   };
 
   const chatOpts: Record<string, unknown> = {
-    context_window_size: contextSize,
-    prefill_chunk_size: overrides['prefill_chunk_size'],
+    context_window_size: effectiveContext,
+    prefill_chunk_size: effectivePrefill,
   };
 
   // ========================================================================
@@ -553,12 +676,16 @@ export async function loadModelWithDynamicContext(
       const isSmallModel = modelConfig.model_id.toLowerCase().includes('3b');
       const minContext = isSmallModel ? 128 : 256;
 
-      if (contextSize > minContext) {
+      const oomFloor = compiledMaxContext != null
+        ? Math.max(minContext, Math.min(compiledMaxContext, contextSize))
+        : minContext;
+
+      if (contextSize > oomFloor) {
         // Halve the context window each OOM retry until we hit the floor
-        const smallerContext = Math.max(minContext, Math.floor(contextSize / 2));
-        if (smallerContext === minContext) {
+        const smallerContext = Math.max(oomFloor, Math.floor(contextSize / 2));
+        if (smallerContext === oomFloor) {
           console.warn(
-            `[DynamicContext] OOM — reached minimum context (${minContext} tokens) for ${modelConfig.model_id}. ` +
+            `[DynamicContext] OOM — reached minimum context (${oomFloor} tokens) for ${modelConfig.model_id}. ` +
             `Response quality will be very limited. Consider switching to a 3B model if this fails.`
           );
         } else {
@@ -576,7 +703,7 @@ export async function loadModelWithDynamicContext(
       if (vramConfig.kv_cache_quantization === 'none' || vramConfig.kv_cache_quantization === 'auto') {
         console.warn('[DynamicContext] OOM at minimum context — forcing int8 KV cache quantization and retrying');
         return loadModelWithDynamicContext(
-          modelConfig, minContext, onProgress,
+          modelConfig, oomFloor, onProgress,
           { ...vramConfig, kv_cache_quantization: 'int8' }
         );
       }

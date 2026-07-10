@@ -254,8 +254,9 @@ CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
 - Keep the generic `.wasm` + override fallback for compatibility if the custom .wasm is not yet hosted
 
 **Caveats:**
-- The build environment is heavy (30–60 min on a clean machine). Use CI or Colab for reproducibility.
+- The build environment is heavy (30–60 min on a clean machine). Use CI (`build-vicuna-wasm.yml`) or Colab for reproducibility.
 - The custom .wasm is *not* a different model — it uses the exact same q4f32_1 weight shards. Only the model_lib changes.
+- `loadModelWithDynamicContext()` HEAD-probes custom URLs and falls back to generic ctx4k until hosted. See `docs/WASM_CONTEXT_GUIDE.md`.
 - If a user still OOMs, the existing `dynamicContext.ts` retry chain will fall back to the 3B Hermes model.
 
 ---

@@ -235,7 +235,7 @@ First-load is ~2–4 GB depending on model size; subsequent loads are instant fr
 | 4 | Relabel two MLC Vicuna options | ✅ Done | `src/main.ts` |
 | 5 | Add `<link rel="preload">` for recommended `.wasm` | ✅ Done | `index.html` |
 | 6 | Show download ETA, not just percent | ✅ Done | `src/main.ts` |
-| 7 | Build & upload custom small-context Vicuna .wasm | 🟡 In Progress | `scripts/build-vicuna-wasm.sh` |
-| 8 | Register ctx512 / ctx1024 variants in model picker | 🟡 In Progress | `src/config/models.ts` |
+| 7 | Build & upload custom small-context Vicuna .wasm | 🟡 CI ready — run `build-vicuna-wasm.yml` | `scripts/build-vicuna-wasm.sh` |
+| 8 | Register ctx512 / ctx1024 variants in model picker | ✅ Done | `src/config/models.ts`, `docs/WASM_CONTEXT_GUIDE.md` |
 
 (1) and (2) are 30 minutes of work for measurable gains. (3) and (4) are picker-text edits. (5) and (6) are nice-to-have polish.
