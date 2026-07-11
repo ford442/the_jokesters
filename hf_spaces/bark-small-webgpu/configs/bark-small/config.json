@@ -1,0 +1,104 @@
+{
+  "architectures": [
+    "BarkModel"
+  ],
+  "coarse_acoustics_config": {
+    "architectures": [
+      "BarkCoarseModel"
+    ],
+    "bias": false,
+    "block_size": 1024,
+    "dropout": 0.0,
+    "dtype": "float32",
+    "hidden_size": 768,
+    "initializer_range": 0.02,
+    "input_vocab_size": 12096,
+    "model_type": "coarse_acoustics",
+    "num_heads": 12,
+    "num_layers": 12,
+    "output_vocab_size": 12096,
+    "use_cache": true
+  },
+  "codec_config": {
+    "_name_or_path": "facebook/encodec_24khz",
+    "architectures": [
+      "EncodecModel"
+    ],
+    "audio_channels": 1,
+    "chunk_length_s": null,
+    "codebook_dim": 128,
+    "codebook_size": 1024,
+    "compress": 2,
+    "dilation_growth_rate": 2,
+    "dtype": "float32",
+    "hidden_size": 128,
+    "kernel_size": 7,
+    "last_kernel_size": 7,
+    "model_type": "encodec",
+    "norm_type": "weight_norm",
+    "normalize": false,
+    "num_filters": 32,
+    "num_lstm_layers": 2,
+    "num_residual_layers": 1,
+    "overlap": null,
+    "pad_mode": "reflect",
+    "residual_kernel_size": 3,
+    "sampling_rate": 24000,
+    "target_bandwidths": [
+      1.5,
+      3.0,
+      6.0,
+      12.0,
+      24.0
+    ],
+    "trim_right_ratio": 1.0,
+    "upsampling_ratios": [
+      8,
+      5,
+      4,
+      2
+    ],
+    "use_causal_conv": true,
+    "use_conv_shortcut": true
+  },
+  "dtype": "float32",
+  "fine_acoustics_config": {
+    "architectures": [
+      "BarkFineModel"
+    ],
+    "bias": false,
+    "block_size": 1024,
+    "dropout": 0.0,
+    "dtype": "float32",
+    "hidden_size": 768,
+    "initializer_range": 0.02,
+    "input_vocab_size": 1056,
+    "model_type": "fine_acoustics",
+    "n_codes_given": 1,
+    "n_codes_total": 8,
+    "num_heads": 12,
+    "num_layers": 12,
+    "output_vocab_size": 1056,
+    "use_cache": true
+  },
+  "initializer_range": 0.02,
+  "model_type": "bark",
+  "semantic_config": {
+    "architectures": [
+      "BarkSemanticModel"
+    ],
+    "bias": false,
+    "block_size": 1024,
+    "dropout": 0.0,
+    "dtype": "float32",
+    "hidden_size": 768,
+    "initializer_range": 0.02,
+    "input_vocab_size": 129600,
+    "model_type": "semantic",
+    "num_heads": 12,
+    "num_layers": 12,
+    "output_vocab_size": 10048,
+    "use_cache": true
+  },
+  "transformers_version": "4.57.3"
+}
