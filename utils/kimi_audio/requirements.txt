@@ -1,9 +1,22 @@
-gradio
-soundfile
-numpy
+# ZeroGPU Gradio Space — Kimi-Audio only
+gradio>=5.0.0,<6.0.0
+spaces>=0.30.0
+
+# Kimi-Audio upstream pins torch 2.6; stay on 2.6.x for wheel compatibility
+torch==2.6.0
+torchaudio==2.6.0
+
+# Must stay <5 — Kimi remote modeling breaks on transformers v5
 transformers==4.44.1
-torch==2.8.0
-torchaudio==2.8.0
-safetensors==0.4.4
-sentencepiece==0.2.0
-librosa==0.10.2.post1
+accelerate>=0.27.0
+huggingface_hub>=0.23.0
+
+soundfile>=0.12.1
+numpy>=1.24.0
+scipy>=1.11.0
+pillow>=10.0.0
+sentencepiece>=0.2.0
+einops>=0.7.0
+omegaconf==2.3.0
+hyperpyyaml>=1.2.0
+librosa>=0.10.0

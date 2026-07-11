@@ -3,7 +3,7 @@
 [![ZeroGPU](https://img.shields.io/badge/ZeroGPU-Enabled-blue)](https://huggingface.co/docs/hub/spaces-gpus#zerogpu)
 [![Gradio](https://img.shields.io/badge/Gradio-5.x-orange)](https://gradio.app/)
 
-Side-by-side inference benchmark for **Kimi-VL-A3B-Thinking** (vision-language) and **Vicuna-7B-q4** (text-only) running on Hugging Face ZeroGPU.
+Side-by-side inference benchmark for **Kimi-VL-A3B** (vision-language, default Instruct) and **Vicuna-7B-q4** (text-only) running on Hugging Face ZeroGPU.
 
 ---
 
@@ -25,7 +25,8 @@ Click **"Load Models on ZeroGPU"** in the app, then type a message and hit **"Ru
 
 | Model | Size | Quantization | VRAM (approx) | Type |
 |-------|------|-------------|---------------|------|
-| **Kimi-VL-A3B-Thinking** | ~3B active | fp16 | ~6 GB | Vision + Text |
+| **Kimi-VL-A3B-Instruct** | ~3B active | fp16 | ~6 GB | Vision + Text (default) |
+| **Kimi-VL-A3B-Thinking-2506** | ~3B active | fp16 | ~6 GB | Vision + reasoning |
 | **Vicuna-7B-v1.5** | 7B | 4-bit (NF4) | ~4 GB | Text only |
 
 > **Note:** Both models share the same ZeroGPU session. Combined peak VRAM is ~10–12 GB, well within the A10G (24 GB) limit.
@@ -100,7 +101,9 @@ git push
 | Tip | Details |
 |-----|---------|
 | **First load is slow** | Models download from Hugging Face Hub on first use (~6 GB + ~4 GB). Subsequent calls are cached. |
+| **Pin transformers** | This Space uses `transformers==4.51.3` (Kimi-VL official). |
 | **Load individually** | If loading both models at once times out, use the **"Load Kimi-VL"** and **"Load Vicuna-7B"** buttons separately. |
+| **Use Instruct first** | `Kimi-VL-A3B-Instruct` is the default — faster and more reliable on ZeroGPU than Thinking. |
 | **Quota awareness** | ZeroGPU gives ~50 GPU-hours/month. Each inference uses a few seconds. Loading models uses ~1–2 min of quota on first run. |
 | **Cold starts** | After ~10 min of inactivity, the Space goes to sleep. The next request will trigger a cold start (re-downloading models into GPU memory). |
 | **Error?** | Check the **Files → Logs** tab in your Space for full stack traces. Most errors are OOM or model-download timeouts. |
@@ -111,7 +114,8 @@ git push
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `KIMI_MODEL_ID` | `moonshotai/Kimi-VL-A3B-Thinking-2506` | Kimi-VL model on HF Hub |
+| `KIMI_MODEL_ID` | `moonshotai/Kimi-VL-A3B-Instruct` | Kimi-VL model on HF Hub |
+| `KIMI_TEMPERATURE` | `0.2` (Instruct) / `0.8` (Thinking) | Sampling temperature |
 | `VICUNA_MODEL_ID` | `lmsys/vicuna-7b-v1.5` | Vicuna model on HF Hub |
 | `MAX_NEW_TOKENS` | `256` | Generation token limit |
 | `VICUNA_4BIT` | `1` | Use 4-bit quantization for Vicuna (`0` = fp16 fallback) |

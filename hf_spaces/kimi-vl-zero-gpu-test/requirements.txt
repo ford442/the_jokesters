@@ -1,15 +1,14 @@
-# Gradio 5.x + Spaces ZeroGPU integration
+# Gradio 5.x + Spaces ZeroGPU
 gradio>=5.0.0,<6.0.0
 spaces>=0.30.0
 
-# PyTorch — HF Spaces ZeroGPU usually provides CUDA 12.1 wheels
-torch>=2.1.0,<2.6.0
-
-# Transformers + acceleration
-transformers>=4.40.0
-accelerate>=0.25.0
+# Kimi-VL official env: python 3.10+, torch 2.5.1+, transformers 4.51.3
+torch>=2.5.0,<2.7.0
+transformers==4.51.3
+accelerate>=0.27.0
 bitsandbytes>=0.41.0
 
-# Image handling
 pillow>=10.0.0
 numpy>=1.24.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
