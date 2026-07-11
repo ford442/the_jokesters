@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bark-small WebGPU Test Bench</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Bark-small WebGPU</h1>
+    <p class="subtitle">
+      Agent-testable bench for <code>suno/bark-small</code> ONNX + Transformers.js.
+      <span class="pill" id="webgpu-pill">checking WebGPU…</span>
+    </p>
+
+    <div class="card">
+      <label for="prompt">Prompt</label>
+      <textarea id="prompt" rows="4">Hello world! [laughter] This is Bark on WebGPU.</textarea>
+      <div class="examples">
+        <button type="button" data-prompt="♪ short comedy sting ♪">Comedy sting</button>
+        <button type="button" data-prompt="[clears throat] Ladies and gentlemen...">Announcer</button>
+        <button type="button" data-prompt="[gasps] I did NOT expect that plot twist.">Reaction</button>
+      </div>
+      <button id="run" type="button" data-testid="generate-btn">Generate audio</button>
+      <div id="status" class="busy" data-testid="status">Initializing…</div>
+      <audio id="player" controls hidden data-testid="audio-player"></audio>
+    </div>
+
+    <div class="card">
+      <strong>Agent checklist</strong>
+      <ul>
+        <li><code>data-testid="status"</code> — must end with <code>Done</code> or explicit error</li>
+        <li>WebGPU pill turns green before generate</li>
+        <li>First load compiles shaders (~30–120s on cold GPU)</li>
+        <li>Models served from <code>/models/bark-small/</code> (ONNX baked in Docker build)</li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+
+    const TRANSFORMERS_VERSION = '3.8.1';
+    const MODEL_ID = 'bark-small';
+    const statusEl = document.getElementById('status');
+    const runBtn = document.getElementById('run');
+    const promptEl = document.getElementById('prompt');
+    const playerEl = document.getElementById('player');
+    const webgpuPill = document.getElementById('webgpu-pill');
+
+    env.allowLocalModels = true;
+    env.allowRemoteModels = false;
+    env.localModelPath = './models/';
+
+    let synth = null;
+
+    function setStatus(text, kind = 'busy') {
+      statusEl.textContent = text;
+      statusEl.className = kind;
+      console.log(`[bark] ${text}`);
+    }
+
+    async function checkWebGPU() {
+      if (!navigator.gpu) {
+        webgpuPill.textContent = 'WebGPU unavailable';
+        webgpuPill.style.background = '#4a2020';
+        setStatus('WebGPU not available. Use Chrome 113+ with hardware acceleration.', 'err');
+        runBtn.disabled = true;
+        return false;
+      }
+      try {
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) throw new Error('No adapter');
+        webgpuPill.textContent = 'WebGPU ready';
+        webgpuPill.style.background = '#1f3d2e';
+        webgpuPill.style.color = '#6bffb0';
+        return true;
+      } catch (err) {
+        webgpuPill.textContent = 'WebGPU error';
+        setStatus(`WebGPU error: ${err}`, 'err');
+        runBtn.disabled = true;
+        return false;
+      }
+    }
+
+    function playOutput(out) {
+      if (!out) throw new Error('Empty model output');
+
+      if (out.url) {
+        playerEl.src = out.url;
+        playerEl.hidden = false;
+        playerEl.play();
+        return;
+      }
+
+      if (typeof out.toBlob === 'function') {
+        const blob = out.toBlob();
+        playerEl.src = URL.createObjectURL(blob);
+        playerEl.hidden = false;
+        playerEl.play();
+        return;
+      }
+
+      const audio = out.audio ?? out.waveform;
+      const rate = out.sampling_rate ?? out.samplingRate ?? 24000;
+      if (!audio) throw new Error('No audio buffer in output');
+
+      const ctx = new AudioContext();
+      const buffer = ctx.createBuffer(1, audio.length, rate);
+      buffer.copyToChannel(audio instanceof Float32Array ? audio : new Float32Array(audio), 0);
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(ctx.destination);
+      src.start();
+
+      // Also expose via media element for agent inspection
+      const wavBlob = encodeWav(audio, rate);
+      playerEl.src = URL.createObjectURL(wavBlob);
+      playerEl.hidden = false;
+    }
+
+    function encodeWav(samples, sampleRate) {
+      const buffer = new ArrayBuffer(44 + samples.length * 2);
+      const view = new DataView(buffer);
+      const write = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+      write(0, 'RIFF');
+      view.setUint32(4, 36 + samples.length * 2, true);
+      write(8, 'WAVE');
+      write(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      write(36, 'data');
+      view.setUint32(40, samples.length * 2, true);
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++, offset += 2) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      }
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    async function ensureModel() {
+      if (synth) return synth;
+      setStatus(`Loading ${MODEL_ID} (Transformers.js ${TRANSFORMERS_VERSION})…`);
+      synth = await pipeline('text-to-speech', MODEL_ID, {
+        device: 'webgpu',
+        dtype: 'q8',
+      });
+      setStatus('Model loaded. Ready to generate.', 'ok');
+      return synth;
+    }
+
+    async function generate() {
+      const text = promptEl.value.trim();
+      if (!text) {
+        setStatus('Enter a prompt first.', 'err');
+        return;
+      }
+
+      runBtn.disabled = true;
+      try {
+        await ensureModel();
+        const t0 = performance.now();
+        setStatus('Generating audio…');
+        const out = await synth(text);
+        playOutput(out);
+        const sec = ((performance.now() - t0) / 1000).toFixed(1);
+        setStatus(`Done in ${sec}s`, 'ok');
+      } catch (err) {
+        console.error(err);
+        setStatus(`Error: ${err?.message || err}`, 'err');
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    document.querySelectorAll('[data-prompt]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        promptEl.value = btn.getAttribute('data-prompt');
+      });
+    });
+
+    runBtn.addEventListener('click', generate);
+
+    const ok = await checkWebGPU();
+    if (ok) setStatus('Ready — click Generate audio.', 'ok');
+  </script>
+</body>
+</html>

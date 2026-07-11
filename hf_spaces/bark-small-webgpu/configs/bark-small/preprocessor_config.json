@@ -1,0 +1,5 @@
+{
+    "processor_class": "BarkProcessor",
+    "sample_rate": 24000,
+    "feature_extractor_type": "BarkFeatureExtractor"
+}
