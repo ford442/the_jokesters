@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
+    "test:chaos": "node src/test/chaosTestRunner.cjs",
     "verify:wllama": "bash scripts/verify_wllama_wasm.sh"
   },
   "devDependencies": {

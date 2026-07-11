@@ -533,7 +533,9 @@ TypeScript (`npm run typecheck`) remains a separate hard gate.
 **Current high-ROI targets:** `GroupChatManager.getErrorCategory`, `DynamicContextManager.truncate`,
 `CallbackEngine` status decay, `qualityFilter.rateJoke`, `buildVRAMOverrides`, `MODE_REGISTRY` integrity.
 
-Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests.
+**Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
+
+Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python smoke_test.py` from repo root).
 
 ### Performance Testing
 The application includes comprehensive performance benchmarks defined in `perf-budget.json`:
