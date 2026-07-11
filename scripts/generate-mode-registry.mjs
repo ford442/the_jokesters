@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Generates src/Director/modes/registryEntries.ts from mode file exports.
- * Reads legacy MODE_LOOPS from Director.ts (if present) or existing registryEntries.ts
- * for id → handler mapping.
+ * Generates mode registry artifacts from mode file exports:
+ *   - registryCatalog.ts  (metadata only — safe for first paint)
+ *   - modeLoaders.ts      (lazy dynamic import() per mode)
  *
  * Run: node scripts/generate-mode-registry.mjs
  */
@@ -22,7 +22,9 @@ function readFile(rel) {
 /** Scan mode files for exported run* handlers */
 function scanModeExports() {
   const handlerToFile = new Map();
-  const files = fs.readdirSync(modesDir).filter((f) => f.endsWith('.ts') && !f.startsWith('registry'));
+  const files = fs.readdirSync(modesDir).filter(
+    (f) => f.endsWith('.ts') && !f.startsWith('registry') && f !== 'modeLoaders.ts',
+  );
 
   for (const file of files) {
     const src = fs.readFileSync(path.join(modesDir, file), 'utf8');
@@ -31,7 +33,6 @@ function scanModeExports() {
     while ((m = re.exec(src)) !== null) {
       handlerToFile.set(m[1], `./${file.replace(/\.ts$/, '')}`);
     }
-    // RapidFire uses export async function without Loop suffix
     const re2 = /export async function (runRapidFire\w+)/g;
     while ((m = re2.exec(src)) !== null) {
       handlerToFile.set(m[1], `./${file.replace(/\.ts$/, '')}`);
@@ -40,11 +41,22 @@ function scanModeExports() {
   return handlerToFile;
 }
 
-/** Parse id → handler from MODE_LOOPS or existing registryEntries */
+/** Parse id → handler from MODE_LOOPS or existing catalog */
 function parseIdHandlerMap(src, label) {
   const entries = [];
-  const start = src.indexOf(label === 'loops' ? 'const MODE_LOOPS' : 'export const REGISTRY_ENTRIES');
-  if (start === -1) return entries;
+  const start = src.indexOf(
+    label === 'loops' ? 'const MODE_LOOPS' : 'export const MODE_CATALOG',
+  );
+  if (start === -1) {
+    const legacy = src.indexOf('export const REGISTRY_ENTRIES');
+    if (legacy === -1) return entries;
+    const re = /id:\s*'([^']+)',\s*[\s\S]*?run:\s*(\w+)/g;
+    let m;
+    while ((m = re.exec(src)) !== null) {
+      entries.push({ id: m[1], handler: m[2] });
+    }
+    return entries;
+  }
 
   if (label === 'loops') {
     const braceStart = src.indexOf('{', start);
@@ -70,10 +82,12 @@ function parseIdHandlerMap(src, label) {
     return entries;
   }
 
-  const re = /id:\s*'([^']+)',\s*[\s\S]*?run:\s*(\w+)/g;
+  const re = /id:\s*'([^']+)'/g;
+  const handlers = [...src.matchAll(/handler:\s*'([^']+)'/g)].map((m) => m[1]);
   let m;
+  let i = 0;
   while ((m = re.exec(src)) !== null) {
-    entries.push({ id: m[1], handler: m[2] });
+    entries.push({ id: m[1], handler: handlers[i++] });
   }
   return entries;
 }
@@ -118,6 +132,11 @@ function inferCategory(id) {
   return 'dream';
 }
 
+function inferTags(id, category) {
+  const tokens = id.split('_').filter((w) => w.length > 2);
+  return [...new Set([category, ...tokens])];
+}
+
 function titleFromId(id) {
   return id.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
@@ -128,7 +147,6 @@ function escapeStr(s) {
 
 const handlerToFile = scanModeExports();
 
-// Primary id→handler map (snapshot from legacy MODE_LOOPS)
 const mapPath = path.join(root, 'scripts/mode-id-map.json');
 let idHandlers = [];
 if (fs.existsSync(mapPath)) {
@@ -137,11 +155,14 @@ if (fs.existsSync(mapPath)) {
   const directorSrc = readFile('src/Director/Director.ts');
   idHandlers = parseIdHandlerMap(directorSrc, 'loops');
   if (idHandlers.length === 0) {
-    idHandlers = parseIdHandlerMap(readFile('src/Director/modes/registryEntries.ts'), 'registry');
+    try {
+      idHandlers = parseIdHandlerMap(readFile('src/Director/modes/registryCatalog.ts'), 'registry');
+    } catch {
+      idHandlers = parseIdHandlerMap(readFile('src/Director/modes/registryEntries.ts'), 'registry');
+    }
   }
 }
 
-// Load presets from backup file if improvSetups was already migrated
 let presetsSrc = '';
 try {
   presetsSrc = readFile('src/config/improvSetups.presets.json');
@@ -152,7 +173,6 @@ const improvPresets = presetsSrc
   ? new Map(JSON.parse(presetsSrc).map((p) => [p.id, p]))
   : parseImprovSetups(readFile('src/config/improvSetups.ts'));
 
-// Deduplicate id → handler (last wins)
 const byId = new Map();
 for (const e of idHandlers) byId.set(e.id, e.handler);
 
@@ -168,49 +188,61 @@ for (const [id, handler] of byId) {
 
 valid.sort((a, b) => a.id.localeCompare(b.id));
 
-// Group imports by file
-const byFile = new Map();
-for (const { handler, file } of valid) {
-  if (!byFile.has(file)) byFile.set(file, new Set());
-  byFile.get(file).add(handler);
-}
-
-const importLines = [...byFile.entries()]
-  .sort(([a], [b]) => a.localeCompare(b))
-  .map(([file, handlers]) => `import { ${[...handlers].sort().join(', ')} } from '${file}';`);
-
-const entryLines = valid.map(({ id, handler }) => {
+const catalogLines = valid.map(({ id }) => {
   const preset = improvPresets.get(id);
   const title = preset?.title ?? titleFromId(id);
   const description = preset?.description ?? `A ${titleFromId(id)} scene.`;
   const category = inferCategory(id);
+  const tags = inferTags(id, category);
   const showInPresets = preset !== undefined;
+  const tagsStr = tags.map((t) => `'${escapeStr(t)}'`).join(', ');
   return `  {
     id: '${id}',
     title: '${escapeStr(title)}',
     category: '${category}',
     description: '${escapeStr(description)}',
-    run: ${handler},
+    tags: [${tagsStr}],
     showInPresets: ${showInPresets},
   }`;
 });
 
-const out = `/**
+const loaderLines = valid.map(({ id, handler, file }) =>
+  `  '${id}': async () => (await import('${file}')).${handler},`,
+);
+
+const catalogOut = `/**
  * AUTO-GENERATED by scripts/generate-mode-registry.mjs — do not edit by hand.
- * Re-run after adding a run* export to a mode file and updating the id→handler map
- * in scripts/mode-id-map.json (or legacy MODE_LOOPS snapshot).
+ * Metadata-only catalog (no mode implementation imports).
  */
-import type { ModeDefinition } from './registry';
+import type { ModeCatalogEntry } from './registry';
 
-${importLines.join('\n')}
-
-export const REGISTRY_ENTRIES: ModeDefinition[] = [
-${entryLines.join(',\n')},
+export const MODE_CATALOG: ModeCatalogEntry[] = [
+${catalogLines.join(',\n')},
 ];
 `;
 
-fs.writeFileSync(path.join(modesDir, 'registryEntries.ts'), out);
-console.log(`Wrote ${valid.length} mode entries (${skipped.length} skipped — no export found)`);
+const loadersOut = `/**
+ * AUTO-GENERATED by scripts/generate-mode-registry.mjs — do not edit by hand.
+ * Lazy loaders — each mode is a separate Vite chunk until playScenario().
+ */
+import type { ModeLoop } from './ModeContext';
+
+export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
+${loaderLines.join('\n')}
+};
+`;
+
+fs.writeFileSync(path.join(modesDir, 'registryCatalog.ts'), catalogOut);
+fs.writeFileSync(path.join(modesDir, 'modeLoaders.ts'), loadersOut);
+
+// Remove legacy eager bundle if present
+const legacy = path.join(modesDir, 'registryEntries.ts');
+if (fs.existsSync(legacy)) {
+  fs.unlinkSync(legacy);
+  console.log('Removed legacy registryEntries.ts (eager imports)');
+}
+
+console.log(`Wrote ${valid.length} catalog entries + lazy loaders (${skipped.length} skipped)`);
 if (skipped.length) {
   console.log('Skipped phantom handlers:', skipped.map((s) => `${s.id}→${s.handler}`).join(', '));
 }

@@ -490,6 +490,98 @@ input:focus, textarea:focus {
     100% { opacity: 0; transform: translate(-50%, -20px); }
 }
 
+/* Guided model onboarding card */
+.model-guide-card {
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+    border: 1px solid #4ecdc4;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 16px rgba(78, 205, 196, 0.12);
+}
+
+.model-guide-probe {
+    color: #aaa;
+    font-size: 0.85em;
+    padding: 4px 0;
+}
+
+.model-guide-device {
+    color: #ffd700;
+    font-size: 0.78em;
+    margin-bottom: 10px;
+}
+
+.model-guide-primary,
+.model-guide-fallback {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+}
+
+.model-guide-badge {
+    display: inline-block;
+    font-size: 0.68em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #4ecdc4;
+    color: #0a0a1a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 6px;
+    font-weight: 700;
+}
+
+.model-guide-badge-safe {
+    background: #45b7d1;
+}
+
+.model-guide-reason {
+    color: #bbb;
+    font-size: 0.8em;
+    margin: 6px 0 8px;
+    line-height: 1.4;
+}
+
+.model-guide-btn {
+    padding: 6px 10px !important;
+    font-size: 0.8em !important;
+    border-radius: 6px !important;
+    border: 1px solid #444 !important;
+    background: #1a1a2e !important;
+    color: #eee !important;
+    cursor: pointer;
+}
+
+.model-guide-btn-primary {
+    background: #4ecdc4 !important;
+    color: #0a0a1a !important;
+    border-color: #4ecdc4 !important;
+    font-weight: 600 !important;
+}
+
+.model-guide-remembered {
+    color: #7df3e8;
+    font-size: 0.78em;
+    margin: 4px 0 0;
+}
+
+.model-download-estimate {
+    line-height: 1.35;
+}
+
+.error-panel .smaller-model-btn {
+    background: #4ecdc4 !important;
+    color: #0a0a1a !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+
+.error-panel .smaller-model-btn:hover {
+    filter: brightness(1.08);
+}
+
 /* Error Panel Styles */
 .error-panel {
     width: 100%;
@@ -687,4 +779,221 @@ input:focus, textarea:focus {
 
 .vram-info-bar span {
     white-space: nowrap;
+}
+
+/* ============================================================================
+   Episode export / import / replay bar
+   ============================================================================ */
+
+.episode-export-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, #1a2a4a 0%, #16213e 100%);
+    border: 1px solid #4ecdc4;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(78, 205, 196, 0.15);
+}
+
+.episode-export-meta {
+    color: #4ecdc4;
+    font-size: 0.85em;
+    flex: 1 1 140px;
+    min-width: 0;
+}
+
+.episode-export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.episode-btn {
+    padding: 4px 10px !important;
+    font-size: 0.8em !important;
+    border-radius: 6px !important;
+    border: 1px solid #444 !important;
+    background: #0f3460 !important;
+    color: #eee !important;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.episode-btn:hover {
+    border-color: #4ecdc4 !important;
+}
+
+.episode-btn-primary {
+    background: #4ecdc4 !important;
+    color: #0a0a1a !important;
+    border-color: #4ecdc4 !important;
+    font-weight: 600 !important;
+}
+
+.episode-btn-danger {
+    background: #5a2030 !important;
+    border-color: #ff6b6b !important;
+    color: #ffb3b3 !important;
+}
+
+.episode-btn-ghost {
+    background: transparent !important;
+    border-color: #333 !important;
+    color: #888 !important;
+}
+
+.episode-always-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+/* Mode browser (categorized discovery) */
+.mode-browser {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: #12122a;
+    border: 1px solid #333;
+    border-radius: 8px;
+    max-height: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mode-browser-toolbar {
+    flex-shrink: 0;
+}
+
+.mode-search-input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #0f3460;
+    color: #fff;
+    font-size: 0.9em;
+    box-sizing: border-box;
+}
+
+.mode-browser-heading {
+    margin: 0 0 6px;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    font-weight: 600;
+}
+
+.mode-browser-section {
+    flex-shrink: 0;
+}
+
+.mode-browser-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mode-browser-grid-featured .mode-card {
+    border-color: #4ecdc4;
+}
+
+.mode-browser-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.mode-category-tab {
+    padding: 4px 8px;
+    font-size: 0.72em;
+    border-radius: 12px;
+    border: 1px solid #444;
+    background: #0f3460;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.mode-category-tab.active {
+    background: #4ecdc4;
+    color: #0a0a1a;
+    border-color: #4ecdc4;
+    font-weight: 600;
+}
+
+.mode-browser-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 80px;
+}
+
+.mode-browser-count {
+    font-size: 0.72em;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.mode-browser-empty {
+    color: #888;
+    font-size: 0.85em;
+    margin: 8px 0;
+}
+
+.mode-card {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 22px 6px 8px;
+    max-width: 100%;
+    text-align: left;
+    border-radius: 6px;
+    border: 1px solid #444;
+    background: #1a1a2e;
+    color: #eee;
+    cursor: pointer;
+    font-size: 0.8em;
+}
+
+.mode-card:hover {
+    border-color: #4ecdc4;
+}
+
+.mode-card-selected {
+    background: #0f3460;
+    border-color: #ffd700;
+    box-shadow: 0 0 0 1px #ffd70044;
+}
+
+.mode-card-title {
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.mode-card-meta {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.mode-card-fav {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1;
+    padding: 2px;
+}
+
+.mode-card-fav-active .mode-card-fav,
+.mode-card:hover .mode-card-fav {
+    color: #ffd700;
 }

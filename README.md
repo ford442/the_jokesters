@@ -1,232 +1,87 @@
 # The Jokesters
 
-A multi-agent chat application powered by Llama-3 and WebGPU, featuring 3D animated agent visualizations built with Three.js.
+A **browser-based multi-agent comedy show**: five AI personas improvise in real time with WebGPU
+(or WASM) LLMs, Supertonic TTS + lip-sync, and Three.js avatars.
 
-## Brotli + Gzip Compression (NEW)
-
-This project now automatically generates **Brotli-compressed** (`.br`) and **Gzip-compressed** (`.gz`) versions of all static assets during the build process. This significantly reduces download sizes for large model files and web assets.
-
-**How it works:**
-- Run `npm run build` to generate compressed `.br` and `.gz` files alongside original assets
-- Deploy both the original and compressed files to your server
-- Configure your web server (nginx, Apache, etc.) to:
-  - Serve `.br` files to browsers that support Brotli (via `Accept-Encoding: br`)
-  - Serve `.gz` files as fallback for older browsers
-  - Serve original files if compression is not supported
-- The browser automatically requests the best format based on `Accept-Encoding` headers
-
-**Server configuration example (nginx):**
-```nginx
-location ~* \.(js|css|json|wasm)$ {
-  gzip on;
-  gzip_types text/plain text/css application/javascript application/json application/wasm;
-  brotli on;
-  brotli_types text/plain text/css application/javascript application/json application/wasm;
-  brotli_static on;
-  gzip_static on;
-}
-```
-
-For detailed deployment instructions, see the [Brotli + Gzip Compression Guide](#).
-
----
-
-## Ultra-Low VRAM Mode (NEW)
-
-Users with GPUs that have 4GB or less VRAM can now select **"vicuna-7b-q4f32-webllm-ultra-low"** from the model selector.
-
-This preset uses aggressive context reduction (512-token window) and sliding-window attention (256-token sliding window + 4 attention sinks) to squeeze Vicuna-7B into <4GB of VRAM without switching to a smaller model. See `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` for the technical details.
-
----
-
-![The Jokesters App](https://github.com/user-attachments/assets/c0474e26-df60-464a-b936-46688ab6b143)
+**Live demo (if deployed):** see project hosting notes — models stream from `storage.1ink.us`.
 
 ## Features
 
-- **Multi-Agent Chat System**: Simulates multiple AI agents with distinct personalities using a single Llama-3.1-8B model
-- **Dynamic Prompt Swapping**: Each agent has its own system prompt and sampling parameters (temperature, top_p)
-- **Enhanced 3D Avatar Visualization**: Agents are rendered as expressive 3D capsules with:
-  - Animated eyes with pupils that glow when speaking
-  - Expressive mouth that opens with speech volume
-  - Decorative accessories (antenna, rings) for personality
-  - Blinking animations and volume-reactive squash/stretch
-  - TV-show-quality stage lighting with colored spotlights
-  - Professional stage setup with grid floor and backdrop
-- **WebGPU-Powered**: Uses @mlc-ai/web-llm for in-browser LLM inference with WebGPU acceleration
-- **Real-time Interaction**: Chat with rotating AI agents, each with unique personalities
-- **Improv Comedy Mode**: Watch agents perform autonomous multi-character improv scenes based on your provided script/subject
-
-## Agents
-
-The application features three distinct agents:
-
-1. **The Comedian** (Red) - Witty and humorous with high creativity (temp: 0.9, top_p: 0.95)
-2. **The Philosopher** (Teal) - Thoughtful and profound (temp: 0.7, top_p: 0.9)
-3. **The Scientist** (Blue) - Logical and precise (temp: 0.3, top_p: 0.85)
+- **5 agents** — Comedian, Philosopher, Scientist, Chad Vanderblock (Tech Bro), Unit-734 (Robot)
+- **Multi-engine LLMs** — MLC WebLLM (WebGPU), llama.cpp WASM (GGUF), Transformers.js (ONNX), optional API
+- **100+ Director modes** — improv, roast, debate, reporter, dream modes, and more
+- **Guided model load** — GPU probe, blessed presets (3–5), download size estimate, remember last success
+- **TTS + SFX** — Supertonic ONNX voices, whitelisted stage SFX (`[sfx:rimshot]`)
+- **3D stage** — lip-sync, idle/think/reaction poses, audience reactions
+- **Episode export** — `.jokesters.json` + Markdown; TTS-only replay
+- **PWA** — service worker via `vite-plugin-pwa` + parallel model download chunks
 
 ## Prerequisites
 
-- Node.js 18+ 
-- A modern browser with WebGPU support (Chrome 113+, Edge 113+)
-- Sufficient GPU memory (recommended: 4GB+ VRAM)
+- Node.js 18+
+- Browser with WebGPU preferred (Chrome/Edge 113+); llama.cpp preset works without it
+- ~2 GB+ free GPU memory for 3B models; ~4 GB for Vicuna 7B
 
-## Installation
-
-```bash
-npm install
-```
-
-## Development
+## Quick start
 
 ```bash
+npm ci
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173/`
-
-## Building
+Open `http://localhost:5173/`. The launch screen probes your GPU and recommends a model **before** download.
 
 ```bash
+npm run typecheck   # required before commit
+npm test
 npm run build
+npm run preview
 ```
 
-## Technical Architecture
+## Architecture (short)
 
-### GroupChatManager
+| Piece | Role |
+|-------|------|
+| `GroupChatManager` | LLM turns, history, `prerenderTurns` |
+| `Director` + `modes/registry` | Mode dispatch (Centralized Director / Stateless Actors) |
+| `EngineFactory` | MLC → Transformers → llama.cpp → API |
+| `PrerenderCoordinator` | Adaptive LLM+TTS prerender for show feel |
+| `VPS_STORAGE_URL` | Canonical model CDN (`src/utils/vpsStorageUrl.ts`) |
 
-The `GroupChatManager` class manages the conversation flow:
+Full agent docs: **[AGENTS.md](./AGENTS.md)**. Contributor quickstart: **[CLAUDE.md](./CLAUDE.md)**.
 
-- Initializes a single Llama-3.1-8B model using @mlc-ai/web-llm
-- Dynamically swaps system prompts between agents
-- Adjusts sampling parameters (temperature, top_p) per agent turn
-- Maintains conversation history for context
+## Model hosting
 
-### SceneManager
+Default CDN: **`https://storage.1ink.us/models`**.
 
-The `SceneManager` handles 3D visualization:
+Override at build time:
 
-- Creates 3D capsule representations for each agent using Three.js
-- Implements jump animations when agents speak
-- Manages lighting, camera, and scene rendering
-
-### ImprovSceneManager
-
-The `ImprovSceneManager` class orchestrates autonomous multi-character improv scenes:
-
-- Takes a scene title and description as input
-- Manages turn-taking between agents without user intervention
-- Injects scene context into each agent's prompt to keep them on theme
-- Allows agents to improvise creatively while staying in character
-- Supports up to 10 conversational turns per scene (configurable)
-- Integrates with audio and visual systems for real-time performance
-
-### Vite Configuration
-
-Critical COOP/COEP headers are configured in `vite.config.ts` to enable WebGPU:
-
-```typescript
-headers: {
-  'Cross-Origin-Opener-Policy': 'same-origin',
-  'Cross-Origin-Embedder-Policy': 'require-corp',
-}
+```bash
+# .env.local
+VITE_VPS_STORAGE_ORIGIN=https://storage.1ink.us
 ```
 
-## How It Works
+Mirror hostname `storage.noahcohn.com` may appear in ops scripts / SW failover — **app code should use `VPS_STORAGE_*` constants**, not hardcode either host in new code.
 
-### Chat Mode
-1. On initialization, the app downloads the Llama-3.1-8B model (~4GB) from HuggingFace
-2. The model is cached in the browser for subsequent runs
-3. When you send a message, the current agent responds with its unique personality
-4. The agent's 3D capsule jumps during its turn
-5. The system automatically rotates to the next agent for the following turn
+## Deployment
 
-### Improv Mode
-1. Click the "Improv Mode" button to switch to autonomous multi-character conversations
-2. Enter a scene title (e.g., "At the Coffee Shop")
-3. Provide a scene description or subject (e.g., "Three friends discuss their latest adventures")
-4. Click "Start Scene" and watch the agents improvise a comedy scene
-5. Agents will converse with each other for up to 10 turns, staying in character while creatively riffing on the theme
-6. Each agent speaks with their unique voice and personality, creating dynamic multi-character comedy
+```bash
+export DEPLOY_USER=...
+export DEPLOY_KEY=~/.ssh/id_ed25519
+npm run deploy:dry    # preview remote actions
+npm run deploy        # build + SFTP upload
+```
 
-## Browser Compatibility
+- **Never commit SFTP passwords or keys** (script rejects `CHANGEME` placeholders).
+- Key auth preferred; password fallback optional. Optional CI: Actions **Deploy dist**.
+- Static hosting: `base: './'` in Vite; ship `dist/` plus runtime model CDN access.
+- Checklist: [docs/DEPLOY_CHECKLIST.md](./docs/DEPLOY_CHECKLIST.md)
+- Scripts inventory: [scripts/README.md](./scripts/README.md)
 
-The application requires WebGPU support:
+## Roadmap
 
-- ✅ Chrome/Edge 113+
-- ✅ Chrome/Edge Android (with flag)
-- ⚠️ Firefox (in development)
-- ⚠️ Safari (in development)
-
-## Notes
-
-- First load requires downloading ~4GB model files (cached after first run)
-- Requires sufficient GPU memory for WebGPU inference
-- Model inference runs entirely in-browser - no server required!
-
-## Recent Improvements
-
-### LLM Dialog Prerendering (Latest)
-The improv mode now prerenders conversation turns to eliminate gaps during performance:
-
-**How It Works:**
-- **Initial Prerender**: When starting a scene, the system generates 3 conversation turns ahead of time
-- **Background Generation**: As turns are played, the system automatically generates more in the background
-- **Instant Playback**: Prerendered dialogue plays immediately with no LLM wait time
-- **Smart Queue Management**: Keeps 2-3 turns prerendered at all times during scenes
-- **Graceful Fallback**: Falls back to live generation if prerendering fails
-
-**Technical Details:**
-- `GroupChatManager.prerenderTurns()` generates multiple turns without affecting actual conversation
-- Prerendered turns maintain character consistency and director critique integration
-- Non-blocking: prerendering happens in background while previous turn plays
-- Memory-efficient: only stores pending turns, not entire conversation
-
-**Bug Fix:**
-- Fixed `SystemMessageOrderError` where system messages were incorrectly ordered after user messages
-- All system prompts (character, style, director notes) now correctly appear first
-
-### Enhanced Avatar Appearance
-The 3D avatars have been significantly upgraded with more expressive and TV-show-quality visuals:
-
-**Avatar Features:**
-- **Expressive Eyes**: Large spherical eyes with pupils that glow when speaking
-- **Animated Mouth**: Curved mouth that opens/scales based on speech volume
-- **Decorative Elements**: 
-  - Metallic ring around the body
-  - Antenna with colored ball on top matching agent color
-- **Dynamic Materials**: Enhanced materials with metalness, roughness, and emissive properties
-- **Blinking Animation**: Occasional realistic blinks when idle
-- **Volume-Reactive**: Squash and stretch animation responds to speech intensity
-
-**Stage Improvements:**
-- **Professional Lighting**: Three colored directional lights (red, blue, teal) plus rim light
-- **TV Studio Aesthetic**: Grid floor pattern, dark backdrop, and golden stage edge strip
-- **Enhanced Shadows**: High-quality shadow mapping for depth
-- **Eye Glow Lighting**: Point lights at eye level when agent speaks
-
-### Comprehensive Scene-Starting Analysis
-The ROADMAP.md now includes extensive documentation on:
-- **Current System Analysis**: Strengths and weaknesses of prompt-driven scene initialization
-- **Alternative Methods**: 
-  - Full script supply
-  - Storyline/adventure mode
-  - Improv game formats
-  - Character relationship pre-definition
-- **Humor Analysis**: What makes the current setup work and what doesn't
-- **TV-Show Improvements**: 
-  - Episode structure with cold opens and tags
-  - Audience simulation with reactions
-  - Scene templates (talk show, courtroom, game show)
-  - Music and sound effects integration
-- **New Interaction Angles**:
-  - Antagonistic pairing with conflict roles
-  - Secret objectives for each agent
-  - Status games and power dynamics
-  - Timed challenges and emotional arcs
-  - Genre shifts mid-scene
-  - Audience voting system
-
-See [ROADMAP.md](ROADMAP.md) for complete details and implementation priorities.
+Product plans live in [docs/ROADMAP.md](./docs/ROADMAP.md) and [docs/plan.md](./docs/plan.md).  
+`agent_plan.md` is intentionally a short pointer — not a mode checklist.
 
 ## License
 

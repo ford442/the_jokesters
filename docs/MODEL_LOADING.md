@@ -177,7 +177,7 @@ Cosmetic but valuable. Track bytes/sec from `progressCallback` and project total
 ### Not worth doing ❌
 
 - **Sharding to a CDN like jsDelivr or Cloudflare R2** — cost/complexity not justified for a personal project; `storage.noahcohn.com` is fine.
-- ~~**Custom-recompiling a smaller Vicuna with MLC's compiler**~~ — **We now do this.** See `scripts/build-vicuna-wasm.sh` and `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4. The payoff is real for 4GB GPU users, even if Hermes-3 3B is still the better default for most people.
+- ~~**Custom-recompiling a smaller Vicuna with MLC's compiler**~~ — **We now do this.** See `scripts/build-vicuna-wasm.sh`, Colab `public/Jokesters_WebLLM_Compile.ipynb`, and `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4. Policy for when to go deeper: [ADR 0001](./adr/0001-native-cpp-boundary.md). The payoff is real for 4GB GPU users, even if Hermes-3 3B is still the better default for most people.
 - **Pruning / distilling Vicuna 7B yourself** — same reason. The community has moved on; Hermes-3 and Llama-3 are the distilled successors.
 - **2-bit / 3-bit quantization (VPTQ, AQLM, QuIP#)** — research-grade, no MLC pipeline support today, quality cliff at <4 bits is real. Reconsider if MLC ships a 3-bit kernel; until then it's a side quest.
 

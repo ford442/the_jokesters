@@ -2,127 +2,104 @@
 
 ## Project Overview
 
-A browser-based multi-agent comedy show powered by WebGPU inference (`@mlc-ai/web-llm`) and
-ONNX TTS. Three AI comedians (The Comedian, The Philosopher, The Scientist) improvise together
-in real time with 3D lip-synced avatars.
+A browser-based multi-agent comedy show powered by in-browser LLMs (MLC WebLLM / llama.cpp WASM /
+Transformers.js / optional API), ONNX Supertonic TTS, and Three.js avatars with lip-sync and
+procedural acting.
+
+**5 agents:** The Comedian, The Philosopher, The Scientist, Chad Vanderblock (Tech Bro), Unit-734 (Robot).
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| LLM inference | `@mlc-ai/web-llm` ^0.2.8 (WebGPU, runs in browser) |
-| TTS | ONNX Runtime Web + Supertonic pipeline (`./tts/onnx/`) |
-| 3D visuals | Three.js 0.170.0 (WebGL2) |
+| LLM | `@mlc-ai/web-llm`, `@wllama/wllama`, `@huggingface/transformers`, optional OpenAI-compatible API |
+| TTS | ONNX Runtime Web + Supertonic (`VPS_STORAGE_URL/tts/onnx`) |
+| 3D | Three.js 0.170 (WebGL2 default; optional WebGPU renderer) |
 | Build | Vite 7, TypeScript 5.9, ES2022 |
 
-## Key Files
+## Key files
 
 ```
 src/
-  main.ts                 Entry point, UI, initialization pipeline
-  GroupChatManager.ts     LLM engine wrapper — model loading & chat
-  AgentModelManager.ts    VRAM-aware model hot-swapping
-  config/models.ts        Model registry — IDs, WASM URLs, VRAM estimates
-  Director/Director.ts    Scene orchestrator (20+ improv modes)
-  audio/AudioEngine.ts    TTS synthesis
-  audio/SpeechQueue.ts    Sentence-by-sentence audio playback
-  visuals/Stage.ts        Three.js stage + animated avatars
+  app/bootstrap.ts          App init, model load, SFX, scene wire-up
+  GroupChatManager.ts       LLM chat, history, prerenderTurns
+  config/models.ts          Model registry (uses VPS_STORAGE_URL)
+  config/blessedPresets.ts  Curated 5-model launch list
+  app/modelGuide.ts         Guided onboarding recommendations
+  Director/Director.ts      Scene orchestrator (100+ modes via registry)
+  prerender/                Adaptive LLM+TTS prerender coordinator
+  audio/SfxManager.ts       Whitelisted SFX
+  utils/vpsStorageUrl.ts    Canonical storage host (+ Vite env override)
+  visuals/Stage.ts          Three.js stage + 5 actors
 ```
 
-## Model Loading Architecture
+## Model hosting
 
-### How it works
+- **Canonical origin:** `https://storage.1ink.us` (`VPS_STORAGE_ORIGIN` in `src/utils/vpsStorageUrl.ts`)
+- **Override:** `VITE_VPS_STORAGE_ORIGIN` (see `.env.example`)
+- **Mirror (ops):** `storage.noahcohn.com` — do not hardcode new app paths to the mirror
+- Weights download at runtime and cache in the browser (Cache API / IndexedDB)
 
-`GroupChatManager.initialize()` in `src/GroupChatManager.ts`:
+## Guided launch UX
 
-1. Pre-checks `navigator.gpu` (WebGPU) — throws a human-readable error if absent
-2. Attempts models in a **fallback chain**:
-   - Primary: `Hermes-3-Llama-3.2-3B-q4f16_1-MLC` (~2 GB VRAM)
-   - Fallback: `Llama-3.2-3B-Instruct-q4f16_1-MLC` (~2.5 GB VRAM)
-3. Passes `appConfig` from `src/config/models.ts` so WebLLM resolves the correct
-   WASM binary URL for each model (critical — missing this caused the original `ExitStatus` crash)
-4. Categorizes failures (WASM OOM vs network) and surfaces them via `onProgress`
-
-### Changing the default model
-
-Edit `src/config/models.ts`:
-
-```typescript
-export const defaultModelId = OPTIMIZED_MODELS.HERMES_3_3B_Q4F16.model_id
-// or swap to:
-// export const defaultModelId = OPTIMIZED_MODELS.LLAMA_3_1_8B_Q4F16.model_id
-```
-
-### Adding a new model
-
-1. Add an entry to `OPTIMIZED_MODELS` in `src/config/models.ts` with `model_id`, `model`,
-   `model_lib`, `overrides`, and `vram_required_MB`
-2. Add it to `appConfig.model_list` in the same file
-3. Optionally add it to the fallback chain in `GroupChatManager.initialize()`
+Cold start probes WebGPU / f16 / VRAM, recommends primary + safe fallback from blessed presets,
+shows download size estimate, persists last successful launch, and OOM panel can step down models.
 
 ## Development
 
 ```bash
-npm run dev        # local dev server (Vite HMR)
-npm run build      # tsc + vite build → dist/
-npm run preview    # preview production build
-npm run perf:quick # run perf benchmarks (quick mode)
-./scripts/build-webllm.sh   # build custom web-llm from 3rd_party/ submodule (see docs/webllm-customization-plan.md)
+npm ci
+npm run dev          # http://localhost:5173
+npm run typecheck    # tsc --noEmit (required before commit)
+npm test             # Vitest unit tests
+npm run build        # tsc + vite → dist/
+npm run perf:quick
+./scripts/build-webllm.sh   # custom web-llm (optional)
 ```
 
-TypeScript must pass `npx tsc --noEmit` with zero errors before committing.
-All strict checks are enabled (`strict: true`, `noUnusedLocals`, `noUnusedParameters`).
+### TypeScript policy
 
-## Common Errors & Fixes
+- `strict: true` is on.
+- `noUnusedLocals` / `noUnusedParameters` are currently **`false`** in `tsconfig.json` (legacy debt).
+  Prefer not introducing new unused symbols; do not claim they are compiler-enforced until flipped on.
+- PWA types: `/// <reference types="vite-plugin-pwa/client" />` in `src/vite-env.d.ts` — requires
+  `npm ci` so `vite-plugin-pwa` is installed. Do **not** put `"types": ["vite-plugin-pwa/client"]`
+  alone in `tsconfig.json`.
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `ExitStatus: exit(1)` | Wrong WASM binary for model, or GPU OOM | Pass `appConfig` to `CreateMLCEngine`; use q4f16 models |
-| `WebGPU not supported` | Browser missing WebGPU | Use Chrome 113+ / Edge 113+ |
-| `ERR_FILE_NOT_FOUND` for chrome-extension CSS | Browser extension conflict | Harmless — ignore |
-| `Unknown CPU vendor` (ONNX warn) | WASM running on non-x86 | Harmless warning |
-| `powerPreference ignored on Windows` | WebLLM limitation | Harmless warning |
+## Common errors
+
+| Error | Fix |
+|-------|-----|
+| `ExitStatus: exit(1)` | Wrong WASM for model / GPU OOM — pass `appConfig`; use q4f16/q4f32 appropriately |
+| `WebGPU not supported` | Chrome/Edge 113+; or use llama.cpp blessed preset |
+| Model 404 `/resolve/main/` | VPS rewrites must be installed (`installVpsStorageRewrites`) |
 
 ## Deployment
 
-Static hosting. All paths are relative (`base: './'` in vite.config.ts).
+```bash
+export DEPLOY_USER=...
+export DEPLOY_KEY=~/.ssh/id_ed25519   # preferred; never commit
+npm run deploy:dry                   # build + dry-run
+npm run deploy                       # build + upload
+```
 
-Required paths at server root:
-- `./tts/onnx/` — Supertonic TTS model files
-- `./assets/ort/*.wasm` — ONNX Runtime WASM (copied from `node_modules` at build time)
-- LLM model weights are downloaded from HuggingFace CDN at runtime and cached in IndexedDB
+See `docs/DEPLOY_CHECKLIST.md` and `scripts/README.md`. Secrets only via env / Actions secrets.
 
----
+## Roadmap
 
-## Next Task Prompt
+Strategic plans: [docs/ROADMAP.md](./docs/ROADMAP.md).  
+`agent_plan.md` is a stub pointing here — not a living mode checklist.
 
-> **Task: Show a user-friendly error UI when model loading fails**
->
-> Currently when `GroupChatManager.initialize()` exhausts all model fallbacks, the app
-> silently fails — the loading screen stays up with no actionable message for the user.
->
-> **What to implement:**
->
-> 1. In `src/main.ts`, catch the error thrown by `groupChatManager.initialize()` in `initApp()`
->    and render a styled error panel inside `#loading` instead of leaving the progress bar frozen.
->    The panel should:
->    - Show the specific error category (WebGPU not supported / GPU out of memory / network error)
->    - Provide a one-sentence fix suggestion per category:
->      - WebGPU: "Use Chrome 113+ or Edge 113+ with hardware acceleration enabled."
->      - OOM: "Close other GPU-heavy tabs and reload, or try a lower-VRAM model."
->      - Network: "Check your connection and reload. Model weights download from HuggingFace CDN."
->    - Include a **Retry** button that calls `initApp()` again
->    - Include a **Copy Error** button that copies the raw error message to clipboard
->
-> 2. Add a `getErrorCategory(error: unknown): 'webgpu' | 'oom' | 'network' | 'unknown'` helper
->    in `GroupChatManager.ts` that classifies errors (reusing the string patterns already in
->    `initialize()`).
->
-> 3. Expose the loaded model ID after successful init so the status bar can display
->    "Ready — Hermes-3 3B" rather than just "Ready!". Add a `getLoadedModelId(): string | null`
->    getter to `GroupChatManager` and wire it up in `main.ts`.
->
-> **Files to change:** `src/main.ts`, `src/GroupChatManager.ts`, `src/style.css`
-> (add `.error-panel`, `.error-panel button` styles)
->
-> **Do not** add a model selector UI in this task — that is a separate feature.
+## Native C++ / compile work
+
+**Default: do not.** This is a TypeScript browser app; C++ only arrives as prebuilt WASM
+(MLC `model_lib`, wllama, onnxruntime-web). See **[docs/adr/0001-native-cpp-boundary.md](./docs/adr/0001-native-cpp-boundary.md)**.
+
+Official compile path when peak VRAM needs a smaller baked context:
+- `scripts/build-vicuna-wasm.sh` / CI `build-vicuna-wasm.yml`
+- Colab: `public/Jokesters_WebLLM_Compile.ipynb`
+
+## New Director modes
+
+**Quality bar (P0):** [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md) — registry + ModeContext/comedy + metadata + non-duplicate premise.  
+Prefer fixing humor on an existing mode. Low-effort mode spam may be closed. See [CONTRIBUTING.md](./CONTRIBUTING.md).

@@ -209,6 +209,10 @@ export class ApiEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
+  getContextWindowSize(): number {
+    return this.config?.context_window_size ?? 4096
+  }
+
   getEngineType(): EngineType {
     return 'api'
   }

@@ -2,6 +2,16 @@
 
 This document tracks planned enhancements, feature ideas, and technical improvements for the project.
 
+**Architecture guardrails:** [ADR 0001 — Native C++ / compile boundary](./adr/0001-native-cpp-boundary.md) (TypeScript-first; when Vicuna WASM compile or wllama/#119 is justified).
+
+**Mode process (P0):** [MODE_QUALITY_BAR.md](./MODE_QUALITY_BAR.md) — new modes must clear the bar; prefer humor quality on existing modes.
+
+**Live show vision (P3):** [LIVE_SHOW_VISION.md](./LIVE_SHOW_VISION.md) — audience mode, multi-human, crowd work, laugh track. **Blocked on foundation** (registry, prerender, export, SFX).
+
+**Mode browser (P2):** [MODE_BROWSER.md](./MODE_BROWSER.md) — categorized discovery, search, favorites, lazy mode chunks.
+
+**GroupChat facade (P1):** [GROUP_CHAT_FACADE.md](./GROUP_CHAT_FACADE.md) — `ConversationStore` + `ModelSession`; standardized engine interrupt/context API.
+
 ---
 
 ## ✅ Implemented Features
@@ -79,7 +89,8 @@ Track high-level scene beats and callbacks:
 ## 💡 Other Ideas
 
 - **Per-agent grittiness** — Some characters swear more than others
-- **Audience reactions** — Simulated laugh track or emoji reactions based on joke quality
+- **Live comedy show** — Audience votes, multi-human slots, crowd work, laugh track — see **[LIVE_SHOW_VISION.md](./LIVE_SHOW_VISION.md)** (P3; MVP = local party mode, no server)
+- **Audience reactions** — Simulated laugh track or emoji reactions based on joke quality *(partial: `Stage.triggerAudienceReaction`, heckler mode; full wiring in live-show MVP)*
 - **Scene templates** — Pre-built scene setups (talk show, courtroom, etc.)
 - **Export scene** — Save completed improv as transcript or video
 - **Character-triggered Sound Effects (SFX)** — Allow characters to trigger sound effects from within their dialogue.

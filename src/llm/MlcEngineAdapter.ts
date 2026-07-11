@@ -174,6 +174,21 @@ export class MlcEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
+  getContextWindowSize(): number {
+    if (this.config?.context_window_size) {
+      return this.config.context_window_size
+    }
+    const engine = this.engine as {
+      chatOpts?: { context_window_size?: number }
+      chatConfig?: { context_window_size?: number }
+    } | null
+    return (
+      engine?.chatOpts?.context_window_size ??
+      engine?.chatConfig?.context_window_size ??
+      4096
+    )
+  }
+
   getEngineType(): EngineType {
     return 'mlc'
   }

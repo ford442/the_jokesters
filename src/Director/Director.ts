@@ -4,9 +4,10 @@ import { MemoryManager } from './MemoryManager';
 import type { ModeContext } from './modes/ModeContext';
 import { ComedySession } from '../comedy/ComedySession';
 import { isComedyEnabled } from './modeConfig';
-import { getModeLoop, getMode } from './modes/registry';
+import { loadModeLoop, getMode } from './modes/registry';
 import type { RegisteredModeId } from './modes/registry';
 import { getDefaultContextDepthForCategory } from '../config/contextDepth';
+import { buildEpisodeFromHistory, setLastEpisode } from '../episode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -18,6 +19,12 @@ export interface DirectorCallbacks {
     onSceneStop: () => void;
     getSeed: () => number | undefined;
     onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
+    /** Avatar thinking pose while LLM generates */
+    onThinking?: (agentId: string, thinking: boolean) => void;
+    /** Map utterance text to avatar reaction clips */
+    onReactToText?: (agentId: string, text: string) => void;
+    /** Play a director-injected SFX cue (e.g. "explosion" from SFX:explosion) without speaking it */
+    onSfx?: (name: string, agentId?: string) => void;
     /** Called when a callback/running gag is recorded for visual feedback */
     onCallbackRecorded?: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
     videoControls?: {
@@ -296,9 +303,12 @@ export class Director {
         this.initComedySession(scenario);
 
         try {
-            const modeLoop = getModeLoop(scenario.type);
+            const modeLoop = await loadModeLoop(scenario.type);
             if (modeLoop) {
                 await modeLoop(scenario, this.createModeContext());
+                if (this.isRunning) {
+                    this.stopScene();
+                }
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
                 this.stopScene();
@@ -334,6 +344,12 @@ export class Director {
                 this.inputPromise = null;
             }
 
+            // Invalidate dialog prerender + TTS cache on scene stop / mode change
+            try {
+                const coord = (window as any).getPrerenderCoordinator?.();
+                coord?.cancel('director stopScene');
+            } catch { /* optional */ }
+
             if (this.callbacks.musicControls) {
                 this.callbacks.musicControls.stopBeat();
             }
@@ -344,13 +360,32 @@ export class Director {
                     const id = new Date().toISOString().replace(/[:.]/g, '-');
                     const history = this.manager.getHistory();
 
+                    // Legacy history blob (cloud / MemoryManager compatibility)
                     this.memoryManager.saveEpisode(id, {
                         timestamp: new Date().toISOString(),
                         history: history,
                         scenario: this.currentScenario
                     });
 
-                    this.callbacks.onMessage('System', `💾 Episode auto-saved (ID: ${id})`, '#4ecdc4');
+                    // Portable transcript for export / Director's Cut replay
+                    const agents = this.manager.getAgents();
+                    const episode = buildEpisodeFromHistory({
+                        history,
+                        agents,
+                        modelId: this.manager.getLoadedModelId(),
+                        episodeId: id,
+                        sceneState: {
+                            title: this.currentScenario?.title,
+                            description: this.currentScenario?.description,
+                            mode: this.currentScenario?.type,
+                            chaosLevel: this.chaosLevel,
+                        },
+                    });
+                    setLastEpisode(episode);
+                    const showBar = (window as any).__jokestersEpisode?.showBar;
+                    if (typeof showBar === 'function') showBar(episode);
+
+                    this.callbacks.onMessage('System', `💾 Episode auto-saved (ID: ${id}) — export ready`, '#4ecdc4');
                 } catch (e) {
                     console.error('Failed to auto-save episode:', e);
                 }
@@ -451,9 +486,20 @@ export class Director {
             const currentAgent = this.manager.getCurrentAgent();
 
             await this.callbacks.onTurnStart(currentAgent.id);
+            this.callbacks.onThinking?.(currentAgent.id, true);
 
             let pacing = this.calculatePacing();
             let effectivePrompt = inputText;
+
+            // Director-only SFX cues embedded as "SFX:name" (not spoken)
+            const directorSfx = effectivePrompt.match(/\bSFX:([a-zA-Z0-9_-]+)\b/gi);
+            if (directorSfx && this.callbacks.onSfx) {
+                for (const token of directorSfx) {
+                    const name = token.replace(/^SFX:/i, '');
+                    this.callbacks.onSfx(name, currentAgent.id);
+                }
+                effectivePrompt = effectivePrompt.replace(/\bSFX:[a-zA-Z0-9_-]+\b/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+            }
 
             if (this.interruptQueue.length > 0) {
                 const heckle = this.interruptQueue.shift();
@@ -487,7 +533,15 @@ export class Director {
             const turnSeed = userSeed !== undefined ? userSeed + this.manager.getHistoryLength() : undefined;
 
             let responseText = '';
+            let reacted = false;
             await this.manager.chat(effectivePrompt, async (sentence) => {
+                if (responseText.length === 0) {
+                    this.callbacks.onThinking?.(currentAgent.id, false);
+                }
+                if (!reacted) {
+                    this.callbacks.onReactToText?.(currentAgent.id, sentence);
+                    reacted = true;
+                }
                 responseText += `${sentence} `;
                 await this.callbacks.onSpeak(sentence, currentAgent.id, {
                     steps: pacing.ttsSteps,
@@ -495,6 +549,11 @@ export class Director {
                     seed: turnSeed
                 });
             }, { maxTokens: pacing.maxTokens, seed: turnSeed });
+
+            this.callbacks.onThinking?.(currentAgent.id, false);
+            if (!reacted && responseText.trim()) {
+                this.callbacks.onReactToText?.(currentAgent.id, responseText);
+            }
 
             if (this.comedySession && responseText.trim()) {
                 this.comedySession.handleAgentResponse(responseText.trim(), currentAgent.id);

@@ -777,7 +777,7 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     vram_required_MB: 0,
     context_window_size: 32768,
     api: {
-      endpoint: 'https://storage.noahcohn.com/v1/chat/completions',
+      endpoint: `${VPS_STORAGE_ORIGIN}/v1/chat/completions`,
       model_id: 'kimi-vl',
     },
   },

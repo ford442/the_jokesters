@@ -1,0 +1,96 @@
+# Manual deploy of dist/ via SFTP.
+# Secrets (repo or environment): never commit these values.
+#
+#   DEPLOY_HOST          optional (default 1ink.us)
+#   DEPLOY_USER          required
+#   DEPLOY_KEY           required (private key PEM contents)  — preferred
+#   DEPLOY_KEY_PASSPHRASE optional
+#   DEPLOY_PASS          optional fallback if no key
+#   DEPLOY_REMOTE_DIR    optional
+#   DEPLOY_PORT          optional
+#
+# Prefer key-based secrets. Password-only is supported but discouraged.
+
+name: Deploy dist
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run (list actions, no remote writes)'
+        type: boolean
+        default: true
+      clean:
+        description: 'Clean remote dir before upload (destructive)'
+        type: boolean
+        default: false
+      verify:
+        description: 'SHA-256 verify sample after upload'
+        type: boolean
+        default: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install paramiko
+        run: pip install paramiko
+
+      - name: Write deploy key (if secret present)
+        env:
+          DEPLOY_KEY_SECRET: ${{ secrets.DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -n "${DEPLOY_KEY_SECRET:-}" ]; then
+            umask 077
+            printf '%s\n' "$DEPLOY_KEY_SECRET" > "$HOME/deploy_key"
+            chmod 600 "$HOME/deploy_key"
+            echo "DEPLOY_KEY=$HOME/deploy_key" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+          DEPLOY_KEY_PASSPHRASE: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_USER:-}" ]; then
+            echo "Secret DEPLOY_USER is required" >&2
+            exit 2
+          fi
+          # Defaults when secrets omitted (host is public; credentials are not)
+          export DEPLOY_HOST="${DEPLOY_HOST:-1ink.us}"
+          export DEPLOY_PORT="${DEPLOY_PORT:-22}"
+          export DEPLOY_REMOTE_DIR="${DEPLOY_REMOTE_DIR:-/var/www/the-jokesters}"
+          # Passphrase unlocks encrypted private keys when using key auth
+          if [ -n "${DEPLOY_KEY_PASSPHRASE:-}" ] && [ -n "${DEPLOY_KEY:-}" ]; then
+            export DEPLOY_PASS="$DEPLOY_KEY_PASSPHRASE"
+          fi
+          ARGS=()
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS+=(--dry-run)
+          fi
+          if [ "${{ inputs.clean }}" = "true" ]; then
+            ARGS+=(--clean)
+          fi
+          if [ "${{ inputs.verify }}" = "true" ] && [ "${{ inputs.dry_run }}" != "true" ]; then
+            ARGS+=(--verify)
+          fi
+          python3 scripts/deploy_dist.py "${ARGS[@]}"

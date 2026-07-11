@@ -31,6 +31,29 @@ The system follows a **Centralized Director / Stateless Actor** model:
 - **AgentModelManager** manages per-agent model assignments and hot-swapping
 - **LLM Engine Factory** (`src/llm/EngineFactory.ts`) selects the best engine (MLC / llama.cpp / Transformers.js / API) based on browser capabilities and model config
 
+### Native C++ / WASM policy
+There is **no first-party C++ tree**. Native code arrives only as prebuilt WASM (MLC `model_lib`, `@wllama/wllama`, onnxruntime-web). Comedy orchestration stays in TypeScript.
+
+- **ADR (read before thrashing toolchains):** [docs/adr/0001-native-cpp-boundary.md](./docs/adr/0001-native-cpp-boundary.md)
+- **Official Vicuna small-context compile:** `scripts/build-vicuna-wasm.sh`, Colab `public/Jokesters_WebLLM_Compile.ipynb`
+- **wllama / llama.cpp deeper work:** GitHub **#119** + `npm run verify:wllama` first
+
+### New Director modes — quality bar (P0 process)
+
+Recent history over-indexed on new Dream/Expanded modes while foundation debt grew. **New modes must meet a quality bar** or maintainers may close the PR with a checklist link.
+
+**Canonical checklist:** [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md) · **Contributing:** [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+1. Registered via **Mode Registry** (`MODE_REGISTRY` / `registryEntries`) — registry already exists; do not add orphan loops  
+2. Uses shared **`ModeContext`**; comedy hooks supported (`src/comedy/comedyModeHelpers.ts`, `ctx.comedy`)  
+3. Short UI **description** + **tags** + **`estimatedTurns`** on the registry entry  
+4. Does **not** duplicate an existing premise without a twist **documented in the PR**  
+5. Prefer improving **one existing mode’s humor** over adding three new ones  
+
+PR template (also in the quality bar doc): premise one-liner, agent roles, why funnier than freeform improv, callback opportunities, token budget notes.
+
+Foundation focus list: [agent_plan.md](./agent_plan.md) (not a mode checklist).
+
 ---
 
 ## Technology Stack
@@ -222,10 +245,12 @@ the_jokesters/
 ├── tsconfig.json                  # TypeScript configuration
 ├── vite.config.ts                 # Vite build configuration
 ├── perf-budget.json               # Performance budget thresholds
-├── deploy.py                      # SFTP deployment script (paramiko-based)
-├── deploy_models.py               # Model deployment script
-├── smoke_test.py                  # Python smoke test (Playwright-based)
-└── upload_hermes.py               # Hermes model upload utility
+├── scripts/
+│   ├── deploy_dist.py             # SFTP deploy of dist/ (credentials via env only)
+│   ├── smoke_test.py              # Playwright-oriented smoke test
+│   └── README.md                  # Script inventory + env vars
+├── .env.example                   # VITE_VPS_STORAGE_ORIGIN sample
+└── docs/ROADMAP.md                # Strategic product roadmap
 ```
 
 ---
@@ -293,19 +318,31 @@ npm run perf:browser
 
 ### Smoke Testing
 ```bash
-python smoke_test.py
+python scripts/smoke_test.py
 ```
 - Validates build, agent configuration, CallbackEngine, QualityFilter, TTS setup
 - Uses Playwright for browser automation testing
 - Writes results to `docs/smoke-test-passed.md`
+- Note: some paths assume Docker/`cwd` layouts — see script header
 
 ### Deployment
 ```bash
-python deploy.py
+export DEPLOY_HOST=1ink.us
+export DEPLOY_USER=...
+export DEPLOY_KEY=~/.ssh/id_ed25519          # preferred (password optional fallback)
+# export DEPLOY_PASS=...                     # only if no key
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+
+npm run deploy:dry      # build + list remote actions (no writes)
+npm run deploy          # build + upload
+npm run deploy:verify   # build + upload + SHA-256 sample check
 ```
-- Uploads `dist/` directory to configured SFTP server
-- Requires `paramiko` Python package
-- **Security Warning**: `deploy.py` currently contains hardcoded credentials and should be moved to environment variables
+- Script: `scripts/deploy_dist.py` (Paramiko SFTP)
+- **Key auth preferred** (`DEPLOY_KEY`); password fallback `DEPLOY_PASS`
+- **Refuses `CHANGEME` placeholders**; no secrets in the repo
+- **`--dry-run`** / `npm run deploy:dry`; optional `--clean` / `DEPLOY_CLEAN=1` (destructive)
+- Optional CI: `.github/workflows/deploy.yml` (`workflow_dispatch` + Actions secrets)
+- See `scripts/README.md` and `docs/DEPLOY_CHECKLIST.md`
 
 ---
 
@@ -315,7 +352,7 @@ python deploy.py
 - **Strict mode enabled**: All strict TypeScript compiler options are on
 - **Explicit types**: Prefer explicit return types on public methods
 - **ES modules**: Uses ES2022 module syntax (`import`/`export`)
-- **No unused variables**: Compiler enforces `noUnusedLocals` and `noUnusedParameters`
+- **Unused locals/params**: `noUnusedLocals` / `noUnusedParameters` are currently **off** in `tsconfig.json` (prefer clean code anyway; do not re-enable casually without a cleanup PR)
 - **No fallthrough**: `noFallthroughCasesInSwitch` is enabled
 - **Erasable syntax only disabled**: `@wllama/wllama` uses non-erasable syntax, so `erasableSyntaxOnly` is explicitly disabled
 - **Verbatim module syntax**: `verbatimModuleSyntax: true` enforces `type` imports for types
@@ -486,8 +523,9 @@ Available models include:
 - **FP16 models** (faster, requires `shader-f16`): Llama-3.1-8B, Hermes-3-8B, Llama-3.2-3B, Hermes-3-3B
 - **Unified models** (triple-engine): configs that work across MLC, Transformers.js, and llama.cpp
 
-Default model: `Hermes-3-Llama-3.2-3B-q4f32_1-MLC` (VPS-hosted, ~2.5GB VRAM)
-Models are self-hosted on `storage.noahcohn.com`.
+Default / blessed launch presets: Hermes-3 3B (f32/f16), Vicuna 7B, Qwen 0.5B, Vicuna GGUF — see `src/config/blessedPresets.ts`.
+**Canonical model host:** `https://storage.1ink.us` via `VPS_STORAGE_URL` (`src/utils/vpsStorageUrl.ts`).  
+Override with `VITE_VPS_STORAGE_ORIGIN`. Mirror `storage.noahcohn.com` is ops/SW failover only.
 
 ### Agent Configuration
 Agents defined in `src/config/agents.ts`:
@@ -600,24 +638,18 @@ Runtime errors are surfaced directly in the page via error handlers in `index.ht
    npm run build
    ```
 
-2. Deploy via SFTP:
+2. Deploy via SFTP (env credentials only — prefer `DEPLOY_KEY`):
    ```bash
-   python deploy.py
+   npm run deploy:dry    # preview
+   npm run deploy        # or: python scripts/deploy_dist.py --verify
    ```
 
 ### External Dependencies (Runtime)
-The application requires these external resources at runtime:
-- **LLM models**: All models are self-hosted on `storage.noahcohn.com` and downloaded on first run
-  - MLC WebLLM models (FP32 + FP16)
-  - GGUF models for llama.cpp WASM
-  - Transformers.js ONNX models
-  - WASM runtime binaries
-- **TTS models**: Self-hosted on `storage.noahcohn.com/models/tts/onnx/`
-  - `tts.json` - Configuration
-  - `unicode_indexer.json` - Text processing
-  - `*.onnx` - Model files (duration_predictor, text_encoder, vector_estimator, vocoder)
-- **Voice styles**: Self-hosted on `storage.noahcohn.com/models/tts/voice_styles/` (M1.json, M2.json, F1.json, F2.json)
-- See `docs/MODEL_HOSTING.md` for the full migration and hosting guide.
+The application requires these external resources at runtime (canonical host `storage.1ink.us`, overridable):
+- **LLM models**: `VPS_STORAGE_URL` — MLC, GGUF, Transformers ONNX, WASM libs
+- **TTS models**: `${VPS_STORAGE_URL}/tts/onnx/`
+- **Voice styles**: `${VPS_STORAGE_URL}/tts/voice_styles/` (M1, M2, F1, F2)
+- See `docs/MODEL_HOSTING.md` and `src/utils/vpsStorageUrl.ts`.
 
 ### Server Configuration
 The application uses a base-relative path (`base: './'` in `vite.config.ts`) for flexible deployment. COOP/COEP headers are commented out but can be enabled in `vite.config.ts` if needed for specific WebGPU scenarios.
@@ -632,14 +664,14 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 - User data (conversations) stored locally by default
 
 ### External Resources
-- **Models**: All LLM and TTS models are self-hosted on the VPS (`storage.noahcohn.com`)
-- **Wikipedia API**: Used for Reporter mode (no API key required)
-- **HuggingFace Hub API**: Optional for cloud sync (user-provided token)
+- **Models**: Self-hosted CDN (`VPS_STORAGE_ORIGIN`, default `storage.1ink.us`)
+- **Wikipedia API**: Reporter mode (no API key)
+- **HuggingFace Hub API**: Optional cloud sync (user-provided token)
 
 ### Known Limitations
-- **Hardcoded credentials** in `deploy.py` — should be moved to environment variables
+- Deploy secrets only via env / Actions secrets / local keys — never in git (`deploy_dist.py` rejects `CHANGEME` and missing auth)
 - No Content Security Policy defined
-- Input sanitization relies on LLM-level filtering
+- Input sanitization relies largely on LLM-level filtering
 
 ---
 
@@ -708,7 +740,7 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   Node and passes; the FPS / TTS / LLM benchmarks need a real browser/GPU and are reported as
   `Violations` (`gl.getExtension is not a function`, `Worker timeout`, `Invalid URL`). This is
   expected — the run still exits `0` ("All performance benchmarks passed").
-- `python smoke_test.py` hardcodes `cwd='/app'` (Docker-oriented) and is not suited to this VM.
+- `python scripts/smoke_test.py` hardcodes `cwd='/app'` (Docker-oriented) and is not suited to this VM.
 
 ### Running the app in a browser (WebGPU is mandatory)
 - `index.html` hard-gates on `navigator.gpu.requestAdapter()`; with no adapter it shows
@@ -728,9 +760,9 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   and the Transformers.js (q4f16) models will not run here.
 
 ### Model hosting / engine caveats
-- Models stream from `storage.1ink.us` (reachable). The HuggingFace xet CDN
+- Models stream from the canonical host `storage.1ink.us` (`VPS_STORAGE_ORIGIN`). The HuggingFace xet CDN
   (`us.aws.cdn.hf.co`) **times out** from this VM, so HF-hosted models (e.g. `TinyLlama-1.1B-Chat-GGUF`)
-  fail to download. Prefer the VPS-hosted MLC/GGUF models.
+  fail to download. Prefer VPS-hosted MLC/GGUF models.
 - **llama.cpp (wllama)** ships WASM bundled with the app (`src/llm/wllamaRuntime.ts` via Vite
   `?url` imports) so it always matches the pinned `@wllama/wllama` package. Run `npm run verify:wllama`
   after version bumps. On SwiftShader / software WebGPU VMs, prefer **MLC** with q4f32 models (no

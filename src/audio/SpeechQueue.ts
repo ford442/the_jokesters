@@ -2,27 +2,50 @@
 import { AudioEngine } from './AudioEngine';
 import type { SynthesisOptions } from './AudioEngine';
 
+function cacheKey(text: string, agentId: string, options: SynthesisOptions): string {
+    const steps = options.steps ?? 10;
+    const seed = options.seed ?? 'r';
+    const speed = options.speed ?? 1.3;
+    return `${agentId}|${steps}|${seed}|${speed}|${text}`;
+}
+
 export class SpeechQueue {
     private queue: Float32Array[] = [];
     private isPlaying = false;
     private audioContext: AudioContext;
     private currentSource: AudioBufferSourceNode | null = null;
+    /** Gain inserted between TTS sources and the external destination (for SFX ducking). */
+    private ttsGain: GainNode;
     private destinationNode: AudioNode;
     private audioEngine: AudioEngine;
-    private prerenderQueue: Promise<Float32Array>[] = [];
+    /** Keyed TTS cache so prerendered sentences are reused (no double synth). */
+    private audioCache = new Map<string, Promise<Float32Array>>();
+    /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
+    private cacheEpoch = 0;
 
     constructor(audioEngine: AudioEngine) {
         this.audioEngine = audioEngine;
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        this.ttsGain = this.audioContext.createGain();
+        this.ttsGain.gain.value = 1;
         this.destinationNode = this.audioContext.destination;
+        this.ttsGain.connect(this.destinationNode);
     }
 
     public getAudioContext(): AudioContext {
         return this.audioContext;
     }
 
+    public getTtsGainNode(): GainNode {
+        return this.ttsGain;
+    }
+
     public setDestination(node: AudioNode) {
+        try {
+            this.ttsGain.disconnect();
+        } catch { /* not connected */ }
         this.destinationNode = node;
+        this.ttsGain.connect(this.destinationNode);
     }
 
     public add(audioData: Float32Array) {
@@ -33,7 +56,6 @@ export class SpeechQueue {
     private async playNext() {
         if (this.isPlaying || this.queue.length === 0) return;
 
-        // Resume context if suspended (browser policy)
         if (this.audioContext.state === 'suspended') {
             await this.audioContext.resume();
         }
@@ -41,12 +63,12 @@ export class SpeechQueue {
         this.isPlaying = true;
         const audioData = this.queue.shift()!;
 
-        const buffer = this.audioContext.createBuffer(1, audioData.length, 44100); // Supertonic often 24khz
+        const buffer = this.audioContext.createBuffer(1, audioData.length, 44100);
         buffer.copyToChannel(audioData as any, 0);
 
         const source = this.audioContext.createBufferSource();
         source.buffer = buffer;
-        source.connect(this.destinationNode);
+        source.connect(this.ttsGain);
 
         source.onended = () => {
             this.isPlaying = false;
@@ -59,7 +81,9 @@ export class SpeechQueue {
 
     public stop() {
         if (this.currentSource) {
-            this.currentSource.stop();
+            try {
+                this.currentSource.stop();
+            } catch { /* already stopped */ }
             this.currentSource = null;
         }
         this.queue = [];
@@ -82,50 +106,74 @@ export class SpeechQueue {
     }
 
     /**
-     * Prerender audio for upcoming sentences to avoid gaps during performance.
-     * This starts synthesis in the background before the audio is needed.
-     * @param texts Array of text strings to prerender
-     * @param agentId Agent ID for voice selection
-     * @param options Synthesis options (steps, seed, speed)
+     * Start synthesizing one sentence into the cache (does not play).
+     */
+    public prerenderOne(
+        text: string,
+        agentId: string,
+        options: SynthesisOptions = {},
+    ): Promise<Float32Array> {
+        const key = cacheKey(text, agentId, options);
+        const existing = this.audioCache.get(key);
+        if (existing) return existing;
+
+        const epoch = this.cacheEpoch;
+        const promise = this.audioEngine
+            .synthesize(text, agentId, options)
+            .then((data) => {
+                if (epoch !== this.cacheEpoch) {
+                    // Stale — still return data to caller of this promise, but don't keep
+                }
+                return data;
+            })
+            .catch((e) => {
+                this.audioCache.delete(key);
+                throw e;
+            });
+
+        this.audioCache.set(key, promise);
+        return promise;
+    }
+
+    /**
+     * Prerender multiple sentences into the keyed cache (background).
      */
     public prerenderSentences(texts: string[], agentId: string, options: SynthesisOptions = {}) {
         console.log(`[SpeechQueue] Prerendering ${texts.length} sentences for ${agentId}`);
-        
-        // Start synthesis for each text asynchronously
         for (const text of texts) {
-            const promise = this.audioEngine.synthesize(text, agentId, options);
-            this.prerenderQueue.push(promise);
+            if (!text.trim()) continue;
+            void this.prerenderOne(text, agentId, options);
         }
     }
 
     /**
-     * Add prerendered audio to the playback queue.
-     * This should be called when you want to actually play the prerendered audio.
+     * Take cached audio or synthesize live. Primary path for playback.
+     */
+    public async synthesizeOrTakeCached(
+        text: string,
+        agentId: string,
+        options: SynthesisOptions = {},
+    ): Promise<Float32Array> {
+        return this.prerenderOne(text, agentId, options);
+    }
+
+    /**
+     * @deprecated Prefer synthesizeOrTakeCached — kept for call sites that push queue FIFO.
      */
     public async addPrerendered() {
-        if (this.prerenderQueue.length === 0) return;
-
-        try {
-            // Wait for the next prerendered audio and add it to queue
-            const audioData = await this.prerenderQueue.shift()!;
-            this.queue.push(audioData);
-            this.playNext();
-        } catch (e) {
-            console.error('[SpeechQueue] Failed to add prerendered audio:', e);
-        }
+        // No-op FIFO path removed; keyed cache is used instead.
+        console.warn('[SpeechQueue] addPrerendered is deprecated; use synthesizeOrTakeCached');
     }
 
     /**
-     * Clear all prerendered audio promises
+     * Invalidate all prerendered / cached TTS (interrupt, mode change, OOM).
      */
     public clearPrerendered() {
-        this.prerenderQueue = [];
+        this.cacheEpoch++;
+        this.audioCache.clear();
     }
 
-    /**
-     * Get count of prerendered items waiting
-     */
     public getPrerenderCount(): number {
-        return this.prerenderQueue.length;
+        return this.audioCache.size;
     }
 }

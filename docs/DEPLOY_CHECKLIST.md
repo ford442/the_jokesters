@@ -58,20 +58,26 @@ The following environment variables should be configured on the deployment serve
 |----------|-------------|----------|
 | `HF_TOKEN` | HuggingFace API token for cloud episode sync | No |
 
-### Note on deploy.py
-The current `deploy.py` script contains hardcoded credentials. **Move these to environment variables:**
-```python
-# BEFORE (hardcoded - SECURITY RISK)
-SFTP_HOST = 'example.com'
-SFTP_USER = 'username'
-SFTP_PASS = 'password'
+### Deploy script (env-only credentials)
+Use `scripts/deploy_dist.py` / `npm run deploy` — **no secrets in the repo**:
 
-# AFTER (environment variables)
-import os
-SFTP_HOST = os.environ.get('JOKESTERS_SFTP_HOST')
-SFTP_USER = os.environ.get('JOKESTERS_SFTP_USER')
-SFTP_PASS = os.environ.get('JOKESTERS_SFTP_PASS')
+```bash
+export DEPLOY_HOST=1ink.us
+export DEPLOY_USER=deploy
+export DEPLOY_KEY=~/.ssh/id_ed25519           # preferred over password
+# export DEPLOY_PASS=...                     # fallback only
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+
+npm run deploy:dry        # build + dry-run (no remote writes)
+npm run deploy            # build + upload
+npm run deploy:verify     # build + upload + checksum sample
+# Destructive clean (default off):
+# DEPLOY_CLEAN=1 npm run deploy
 ```
+
+Guards: refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, optional `--verify`.  
+CI: GitHub Actions **Deploy dist** workflow (`workflow_dispatch`) with secrets `DEPLOY_USER` + `DEPLOY_KEY`.  
+See `scripts/README.md`. **Never commit keys or passwords; rotate anything that was ever committed.**
 
 ---
 
@@ -170,7 +176,7 @@ if (navigator.gpu) {
 
 4. **Deploy Application**
    ```bash
-   python deploy.py
+   python scripts/deploy_dist.py
    # OR manually upload dist/ contents to web server
    ```
 
@@ -209,7 +215,7 @@ if (navigator.gpu) {
 
 ## Security Checklist
 
-- [ ] Move SFTP credentials from `deploy.py` to environment variables
+- [x] SFTP credentials via env only (`scripts/deploy_dist.py` — never commit secrets)
 - [ ] Use HTTPS in production (required for WebGPU)
 - [ ] Set appropriate CORS headers for model hosting
 - [ ] Review Content Security Policy if implementing

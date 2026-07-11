@@ -22,7 +22,10 @@
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run",
     "test:chaos": "node src/test/chaosTestRunner.cjs",
-    "verify:wllama": "bash scripts/verify_wllama_wasm.sh"
+    "verify:wllama": "bash scripts/verify_wllama_wasm.sh",
+    "deploy": "npm run build && python3 scripts/deploy_dist.py",
+    "deploy:dry": "npm run build && python3 scripts/deploy_dist.py --dry-run",
+    "deploy:verify": "npm run build && python3 scripts/deploy_dist.py --verify"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

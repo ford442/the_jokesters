@@ -1,5 +1,6 @@
 import type { ModeLoop } from './ModeContext';
-import { REGISTRY_ENTRIES } from './registryEntries';
+import { MODE_CATALOG } from './registryCatalog';
+import { MODE_LOADER_BY_ID } from './modeLoaders';
 
 export type { ModeLoop } from './ModeContext';
 
@@ -13,39 +14,54 @@ export type ModeCategory =
   | 'dream';
 
 /**
- * Central definition for a playable interaction mode.
- * Add new modes by exporting a run function from a mode file and appending
- * one entry to REGISTRY_ENTRIES (via scripts/generate-mode-registry.mjs).
+ * Metadata for a playable interaction mode (no implementation import).
+ * Handlers load lazily via loadModeLoop().
  */
-export interface ModeDefinition {
+export interface ModeCatalogEntry {
   id: string;
   title: string;
   category: ModeCategory;
   description: string;
-  run: ModeLoop;
   agents?: string[];
   tags?: string[];
-  /** When true, appears in the improv preset dropdown. */
+  estimatedTurns?: 'short' | 'medium' | 'long' | number;
+  /** Legacy: was used for giant preset dropdown; mode browser lists all modes. */
   showInPresets?: boolean;
 }
 
-export const MODE_REGISTRY: ModeDefinition[] = REGISTRY_ENTRIES;
+/** @deprecated Use ModeCatalogEntry — kept for docs/PR templates. */
+export type ModeDefinition = ModeCatalogEntry;
 
-const modeById = new Map<string, ModeDefinition>(
+export const MODE_REGISTRY: ModeCatalogEntry[] = MODE_CATALOG;
+
+const modeById = new Map<string, ModeCatalogEntry>(
   MODE_REGISTRY.map((mode) => [mode.id, mode]),
 );
 
+const loopCache = new Map<string, ModeLoop>();
+
 export type RegisteredModeId = (typeof MODE_REGISTRY)[number]['id'];
 
-export function getMode(id: string): ModeDefinition | undefined {
+export function getMode(id: string): ModeCatalogEntry | undefined {
   return modeById.get(id);
 }
 
+/** Returns cached loop only if already loaded. Prefer loadModeLoop(). */
 export function getModeLoop(id: string): ModeLoop | undefined {
-  return modeById.get(id)?.run;
+  return loopCache.get(id);
 }
 
-export function listModesByCategory(category: ModeCategory): ModeDefinition[] {
+/** Lazy-load mode implementation (code-split chunk). */
+export async function loadModeLoop(id: string): Promise<ModeLoop | undefined> {
+  if (loopCache.has(id)) return loopCache.get(id);
+  const loader = MODE_LOADER_BY_ID[id];
+  if (!loader) return undefined;
+  const fn = await loader();
+  loopCache.set(id, fn);
+  return fn;
+}
+
+export function listModesByCategory(category: ModeCategory): ModeCatalogEntry[] {
   return MODE_REGISTRY.filter((mode) => mode.category === category);
 }
 
@@ -59,7 +75,7 @@ export interface ImprovSetup {
   description: string;
 }
 
-/** UI preset dropdown entries — modes flagged showInPresets or with explicit preset metadata. */
+/** @deprecated Use mode browser / getFeaturedModes. Legacy preset dropdown. */
 export function getUiPresets(): ImprovSetup[] {
   return MODE_REGISTRY.filter((mode) => mode.showInPresets).map((mode) => ({
     id: mode.id,
@@ -78,8 +94,8 @@ export function validateRegistry(): { ok: boolean; errors: string[] } {
     }
     seen.add(mode.id);
 
-    if (typeof mode.run !== 'function') {
-      errors.push(`Mode "${mode.id}" has no run handler`);
+    if (!MODE_LOADER_BY_ID[mode.id]) {
+      errors.push(`Mode "${mode.id}" has no lazy loader`);
     }
   }
 

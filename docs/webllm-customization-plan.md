@@ -3,7 +3,7 @@
 **Status:** Draft for review  
 **Date:** 2026  
 **Owner:** ford442 / The Jokesters team  
-**Related:** [CLAUDE.md](../CLAUDE.md), [MODEL_HOSTING.md](./MODEL_HOSTING.md), [VRAM_OPTIMIZATION_IMPLEMENTATION.md](./VRAM_OPTIMIZATION_IMPLEMENTATION.md), `src/llm/EngineFactory.ts`
+**Related:** [CLAUDE.md](../CLAUDE.md), [MODEL_HOSTING.md](./MODEL_HOSTING.md), [VRAM_OPTIMIZATION_IMPLEMENTATION.md](./VRAM_OPTIMIZATION_IMPLEMENTATION.md), `src/llm/EngineFactory.ts`, **[ADR 0001 — Native C++ boundary](./adr/0001-native-cpp-boundary.md)** (when *not* to fork mlc-llm / TVM)
 
 ---
 

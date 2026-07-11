@@ -1,6 +1,7 @@
 import type { GroupChatManager } from '../GroupChatManager'
 import { getModelDisplayName } from '../config/models'
 import { setProgress } from './loadingUi'
+import type { PrerenderMetricsSnapshot } from '../prerender/PrerenderCoordinator'
 
 export function updateVRAMInfoBar(groupChatManager: GroupChatManager): void {
   const ctxInfoText = document.getElementById('ctx-info-text')
@@ -57,6 +58,30 @@ export function updateNextAgentUI(groupChatManager: GroupChatManager): void {
   const nextAgent = groupChatManager.getCurrentAgent()
   nextAgentSpan.textContent = nextAgent.name
   nextAgentSpan.style.color = nextAgent.color
+}
+
+/** Surface prerender queue health + latency samples in the perf HUD. */
+export function updatePrerenderHud(metrics: PrerenderMetricsSnapshot): void {
+  const el = document.getElementById('prerender-hud-text')
+  if (!el) return
+
+  const gap =
+    metrics.medianInterTurnGapMs != null
+      ? `${Math.round(metrics.medianInterTurnGapMs)}ms gap`
+      : 'gap —'
+  const ttfa =
+    metrics.medianTtfaMs != null ? `${Math.round(metrics.medianTtfaMs)}ms ttfa` : 'ttfa —'
+  const src = metrics.lastSource ? metrics.lastSource : '—'
+  const fill = metrics.filling ? '· filling' : ''
+  el.textContent = `Prerender: q=${metrics.queueDepth} · ${gap} · ${ttfa} · ${src} ${fill}`.trim()
+  el.title = metrics.depth.reason
+
+  // Visual cue when median gap is healthy (<500ms) vs laggy
+  if (metrics.medianInterTurnGapMs != null && metrics.samples >= 2) {
+    el.style.color = metrics.medianInterTurnGapMs < 500 ? '#4ecdc4' : '#ffd700'
+  } else {
+    el.style.color = '#888'
+  }
 }
 
 export function setReadyStatus(groupChatManager: GroupChatManager): void {

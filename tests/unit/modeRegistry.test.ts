@@ -18,9 +18,9 @@ describe('MODE_REGISTRY', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('assigns a run handler to every mode', () => {
-    const missing = MODE_REGISTRY.filter((m) => typeof m.run !== 'function');
-    expect(missing).toHaveLength(0);
+  it('assigns a lazy loader to every mode', () => {
+    const { ok, errors } = validateRegistry();
+    expect(ok, errors.join('\n')).toBe(true);
   });
 
   it('resolves core mode ids via getMode()', () => {

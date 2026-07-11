@@ -2,6 +2,8 @@
 
 Two layers control context and peak VRAM in The Jokesters WebLLM stack. This guide explains when each is sufficient and how they must stay coupled.
 
+**Policy:** Custom compile is allowed only after JS paths are exhausted — see **[ADR 0001 — Native C++ boundary](./adr/0001-native-cpp-boundary.md)**. Official compile entry points: `scripts/build-vicuna-wasm.sh`, Colab `public/Jokesters_WebLLM_Compile.ipynb`.
+
 ## Layer A: JS runtime overrides (`dynamicContext.ts`)
 
 Applied at `CreateMLCEngine` via `appConfig.model_list[].overrides` and `chatOpts`:

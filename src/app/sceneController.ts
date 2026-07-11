@@ -10,6 +10,10 @@ import { wireImprovController } from './improvController'
 import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
 import { loadMemoryDepthPreference } from '../config/contextDepth'
 import { getDOM } from '../ui/uiHelpers'
+import { wireEpisodeUi } from './episodeUi'
+import { wireSfxUi } from './sfxUi'
+import { createDirectorBridge } from './directorBridge'
+import type { Director } from '../Director/Director'
 
 export interface SceneControllerDeps {
   agents: Agent[]
@@ -80,6 +84,24 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   updateNextAgentUI(groupChatManager)
   updateVRAMInfoBar(groupChatManager)
 
+  let directorRef: Director | null = null
+
+  const getDirector = () => directorRef
+
+  directorRef = createDirectorBridge({
+    groupChatManager,
+    speechQueue,
+    stage,
+    chatLog,
+    seedInput: dom.seedInput,
+    ttsStepsSlider: dom.ttsStepsSlider,
+    speakAndVisualize,
+    onSceneStop: () => {
+      updateNextAgentUI(groupChatManager)
+      updateVRAMInfoBar(groupChatManager)
+    },
+  })
+
   wireChatController({
     agents,
     groupChatManager,
@@ -91,6 +113,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     sendBtn: dom.sendBtn,
     ttsStepsSlider: dom.ttsStepsSlider,
     seedInput: dom.seedInput,
+    getDirector,
   })
 
   const chatModeBtn = document.getElementById('chat-mode-btn')!
@@ -122,6 +145,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     agents,
     groupChatManager,
     improvSceneManager,
+    audioEngine,
     speechQueue,
     stage,
     chatLog,
@@ -129,7 +153,19 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     seedInput: dom.seedInput,
     speakAndVisualize,
     prerenderAhead,
+    getDirector,
   })
+
+  wireEpisodeUi({
+    agents,
+    groupChatManager,
+    audioEngine,
+    speechQueue,
+    stage,
+    chatLog,
+  })
+
+  wireSfxUi()
 
   dom.userInput.focus()
 }

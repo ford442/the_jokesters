@@ -1,8 +1,10 @@
 
 import * as THREE from 'three';
 import { Actor } from './Actor';
+import { TechBroActor } from './TechBroActor';
 import { LipSync } from './LipSync';
 import type { RendererMode } from './rendererMode';
+import type { ReactionClip } from './actorAnimations';
 
 /**
  * Minimal renderer surface shared by THREE.WebGLRenderer and the WebGPURenderer
@@ -202,27 +204,13 @@ export class Stage {
     }
 
     private initActors() {
-        // Hardcoded actors for now matching the prompt requirements
-        // "Robot", "Poet" at x=-2 and x=2.
-        // But our agents are Comedian, Philosopher, Scientist.
-        // I will map them: Comedian -> Left, Philosopher -> Right, Scientist -> Center?
-        // Prompt said: Initialize 2 Actors ("Robot", "Poet") at positions x=-2 and x=2.
-        // I should probably stick to the prompt's structural request but use the actual agent IDs if I can, or map them.
-        // Let's create actors for 'comedian' and 'philosopher' as per existing main.ts agents.
-        // Wait, main.ts HAS 3 agents.
-        // I will create 3 actors arranged on stage.
-
-        // Comedian (Red)
-        const comedian = new Actor('comedian', '#ff6b6b', -2);
-        this.addActor('comedian', comedian);
-
-        // Philosopher (Teal)
-        const philosopher = new Actor('philosopher', '#4ecdc4', 2);
-        this.addActor('philosopher', philosopher);
-
-        // Scientist (Blue) - Center
-        const scientist = new Actor('scientist', '#45b7d1', 0);
-        this.addActor('scientist', scientist);
+        // Five agents across the stage — each gets a distinct idle + reaction profile
+        // via actorAnimations.ts (comedian bounce, philosopher slow nod, etc.).
+        this.addActor('comedian', new Actor('comedian', '#ff6b6b', -3.2));
+        this.addActor('philosopher', new Actor('philosopher', '#4ecdc4', -1.6));
+        this.addActor('scientist', new Actor('scientist', '#45b7d1', 0));
+        this.addActor('techBro', new TechBroActor('techBro', 1.6));
+        this.addActor('robot', new Actor('robot', '#C0C0C0', 3.2));
     }
 
 
@@ -300,12 +288,42 @@ export class Stage {
         this.activeActorId = id;
         this.actors.forEach((actor, actorId) => {
             actor.setTalking(actorId === id);
+            // Clear thinking on everyone else when spotlight moves
+            if (actorId !== id) actor.setThinking(false);
         });
     }
 
-    public makeActorJump(_id: string) {
-        // Optional: keep legacy jump capability if needed, or implement via Actor
-        // For now, ignoring or basic impl
+    /** Thinking pose while LLM generates for this agent. */
+    public setThinking(id: string, isThinking: boolean): void {
+        const actor = this.actors.get(id);
+        actor?.setThinking(isThinking);
+        if (isThinking) {
+            // Soft focus: not full talking, but mark as active for volume path
+            this.activeActorId = id;
+            this.actors.forEach((a, agentId) => {
+                if (agentId !== id) {
+                    a.setTalking(false);
+                    a.setThinking(false);
+                }
+            });
+        }
+    }
+
+    /** Play a named reaction clip on an agent. */
+    public playReaction(id: string, clip: ReactionClip, durationSec?: number): void {
+        this.actors.get(id)?.playReaction(clip, durationSec);
+    }
+
+    /**
+     * Map spoken/generated text to a reaction (keywords + [director tags]).
+     * @returns clip name or null
+     */
+    public reactToText(id: string, text: string): ReactionClip | null {
+        return this.actors.get(id)?.reactToText(text) ?? null;
+    }
+
+    public makeActorJump(id: string) {
+        this.actors.get(id)?.playReaction('bounce');
     }
 
     public render() {
@@ -319,13 +337,13 @@ export class Stage {
             volume = this.lipSync.getVolume();
         }
 
-        // Update active actor
-        if (this.activeActorId) {
-            const actor = this.actors.get(this.activeActorId);
-            actor?.update(volume);
-        }
-
-        // Idle animation for others?
+        // Update every actor every frame (cheap procedural idle/think/react).
+        // Only the active speaker gets audio volume for lip-sync squash.
+        const timeSec = performance.now() * 0.001;
+        this.actors.forEach((actor, actorId) => {
+            const v = actorId === this.activeActorId ? volume : 0;
+            actor.update(v, timeSec);
+        });
 
         // Update audience
         const time = Date.now() * 0.001;

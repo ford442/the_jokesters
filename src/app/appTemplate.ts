@@ -7,13 +7,36 @@ export function getAppTemplate(): string {
         <!-- Model picker (shown before loading starts) -->
         <div id="model-picker" style="width:100%;max-width:480px;margin:0 auto;">
           <h3 style="color:#4ecdc4;margin:0 0 6px;font-size:1.1em;">Choose Your AI Model</h3>
-          <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">All models run locally in your browser via WebGPU. Weights are cached after the first download.</p>
+          <p style="color:#aaa;font-size:0.82em;margin:0 0 12px;">Models run in your browser. We'll probe your GPU and recommend a path before any download.</p>
+
+          <!-- Guided recommendation (filled by modelPicker after capability probe) -->
+          <div id="model-guide-card" class="model-guide-card" aria-live="polite">
+            <div class="model-guide-probe" id="model-guide-probe">🔍 Checking GPU…</div>
+            <div id="model-guide-body" style="display:none;">
+              <div class="model-guide-device" id="model-guide-device"></div>
+              <div class="model-guide-primary">
+                <span class="model-guide-badge">Recommended</span>
+                <strong id="model-guide-primary-name"></strong>
+                <p id="model-guide-primary-reason" class="model-guide-reason"></p>
+                <button type="button" id="use-primary-btn" class="model-guide-btn model-guide-btn-primary">Use recommended</button>
+              </div>
+              <div class="model-guide-fallback">
+                <span class="model-guide-badge model-guide-badge-safe">Safe fallback</span>
+                <strong id="model-guide-fallback-name"></strong>
+                <p id="model-guide-fallback-reason" class="model-guide-reason"></p>
+                <button type="button" id="use-fallback-btn" class="model-guide-btn">Use safe fallback</button>
+              </div>
+              <p id="model-guide-remembered" class="model-guide-remembered" style="display:none;"></p>
+            </div>
+          </div>
+
           <!-- Engine selector -->
           <select id="engine-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
             <option value="auto">🤖 Auto (MLC → Transformers.js → llama.cpp)</option>
             <option value="mlc">⚡ MLC WebLLM (Fastest WebGPU)</option>
             <option value="transformers">🤗 Transformers.js (HF Hub Models)</option>
             <option value="llamacpp">🧠 llama.cpp (Any GGUF)</option>
+            <option value="api">🌐 API fallback (OpenAI-compatible)</option>
           </select>
 
           <!-- Engine info display -->
@@ -24,32 +47,13 @@ export function getAppTemplate(): string {
           <!-- Engine capability indicator -->
           <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
 
+          <!-- Blessed presets only (3–5 curated) -->
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <!-- Recommended — Vicuna 7B q4f32 on VPS (universal fp32 WebGPU) -->
-            <option value="vicuna-7b-q4f32-webllm-vps" selected>Vicuna 7B q4f32 · MLC/WebGPU · ~4 GB VRAM ★ Recommended</option>
-
-            <!-- Smaller / faster alternatives -->
-            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC/WebGPU · ~2 GB VRAM (fast, needs f16)</option>
-            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC">Hermes-3 3B q4f32 · MLC/WebGPU · ~2 GB VRAM (no f16 needed)</option>
-
-            <!-- Best quality (f16-capable GPUs) -->
-            <option value="Hermes-3-Llama-3.1-8B-q4f16_1-MLC">Hermes-3 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
-            <option value="Llama-3.1-8B-Instruct-q4f16_1-MLC">Llama-3.1 8B · MLC/WebGPU · ~5.2 GB VRAM (best quality, needs f16)</option>
-
-            <!-- Other 7B fp32 options -->
-            <option value="Llama-2-7b-chat-hf-q4f32_1-MLC">Llama-2 7B q4f32 · MLC/WebGPU · ~4 GB VRAM (no f16 needed)</option>
-
-            <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC">Llama-3.2 3B q4f32 · MLC/WebGPU · ~2.5 GB VRAM (no f16 needed)</option>
-            <option value="Llama-3.2-3B-Instruct-q4f16_1-MLC">Llama-3.2 3B · MLC/WebGPU · ~2.5 GB VRAM</option>
-
-            <!-- Transformers.js Models -->
-            <option value="Qwen2.5-0.5B-Instruct-ONNX">Qwen 2.5 0.5B · Transformers.js/WebGPU · ~1.5 GB VRAM</option>
-            <option value="Qwen2.5-1.5B-Instruct-ONNX">Qwen 2.5 1.5B · Transformers.js/WebGPU · ~2.5 GB VRAM</option>
-            <option value="Phi-3-mini-4k-instruct-ONNX">Phi-3 Mini · Transformers.js/WebGPU · ~3.5 GB VRAM</option>
-            <option value="Llama-3.2-1B-Instruct-ONNX">Llama 3.2 1B · Transformers.js/WebGPU · ~1.8 GB VRAM</option>
-
-            <!-- GGUF Models (llama.cpp / CPU fallback) -->
-            <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B · WASM/CPU fallback · ~4 GB RAM (slow, no WebGPU needed)</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f32_1-MLC" selected>Hermes-3 3B q4f32 · MLC · ~2 GB · no f16 needed ★ Safe</option>
+            <option value="Hermes-3-Llama-3.2-3B-q4f16_1-MLC">Hermes-3 3B · MLC · ~2 GB · needs f16 ★ Fast</option>
+            <option value="vicuna-7b-q4f32-webllm-vps">Vicuna 7B q4f32 · MLC · ~4 GB · richer replies</option>
+            <option value="Qwen2.5-0.5B-Instruct-ONNX">Qwen 2.5 0.5B · Transformers.js · ~1.5 GB · ultra-low</option>
+            <option value="vicuna-7b-v1.5-GGUF">Vicuna 7B · llama.cpp WASM · CPU · no WebGPU</option>
           </select>
           <select id="context-size-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
             <option value="auto">Auto (detect VRAM)</option>
@@ -60,11 +64,12 @@ export function getAppTemplate(): string {
             <option value="256">256 tokens</option>
             <option value="128">128 tokens (minimal VRAM)</option>
           </select>
-          <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:2em;margin:0 0 12px;"></p>
+          <p id="model-launch-hint" style="color:#888;font-size:0.78em;min-height:1.2em;margin:0 0 6px;"></p>
+          <p id="model-download-estimate" class="model-download-estimate" style="color:#ffd700;font-size:0.8em;margin:0 0 12px;min-height:1.4em;"></p>
 
-          <!-- Advanced VRAM Settings (hidden by default) -->
+          <!-- Advanced VRAM Settings (hidden by default — progressive disclosure) -->
           <details id="advanced-vram-settings" class="vram-settings-panel">
-            <summary>⚙️ Advanced VRAM Settings</summary>
+            <summary>⚙️ Advanced VRAM Settings (optional)</summary>
             <div class="vram-settings-content">
               <div class="vram-setting-row">
                 <label>Max Tokens Per Turn</label>
@@ -179,6 +184,24 @@ export function getAppTemplate(): string {
               <input type="text" id="user-profile-input" value="default" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.8em; border-radius: 4px;">
               <button id="switch-profile-btn" style="background: #4ecdc4; color: #0a0a1a; border: none; padding: 3px 8px; border-radius: 4px; font-size: 0.8em; cursor: pointer;">Switch</button>
             </div>
+
+            <!-- Sound effects -->
+            <div class="sfx-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+                <label style="color: #888; font-size: 0.8em; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="sfx-enabled" checked style="cursor: pointer;">
+                  SFX
+                </label>
+                <input type="range" id="sfx-volume" min="0" max="100" value="70" style="flex: 1;" title="SFX volume">
+                <span id="sfx-volume-val" style="color: #4ecdc4; font-size: 0.8em; width: 32px;">70%</span>
+                <select id="sfx-mode" style="background: #0f3460; border: 1px solid #444; color: white; padding: 2px 4px; font-size: 0.75em; border-radius: 4px;" title="Playback mode">
+                  <option value="duck" selected>Duck TTS</option>
+                  <option value="overlay">Overlay</option>
+                  <option value="interrupt">Interrupt</option>
+                </select>
+              </div>
+              <div id="sfx-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+            </div>
           </div>
 
           <!-- VRAM / Context Info Bar -->
@@ -187,6 +210,7 @@ export function getAppTemplate(): string {
             <span id="ctx-info-text">Context: —</span>
             <span id="token-budget-text">Max tokens: 96</span>
             <span id="vram-kv-text"></span>
+            <span id="prerender-hud-text" title="Prerender queue · inter-turn gap · time-to-first-audio">Prerender: —</span>
           </div>
 
           <div class="mode-selector">
@@ -215,11 +239,29 @@ export function getAppTemplate(): string {
           
           <!-- Improv Mode Controls -->
           <div id="improv-mode-controls" class="improv-controls" style="display: none;">
-            <div class="input-group">
-              <select id="improv-preset-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #0f3460; color: white; font-size: 0.95em; margin-bottom: 8px;">
-                <option value="">-- Use a Preset Scenario --</option>
-              </select>
+            <div id="mode-browser" class="mode-browser" role="region" aria-label="Mode browser">
+              <div class="mode-browser-toolbar">
+                <input
+                  type="search"
+                  id="mode-search"
+                  class="mode-search-input"
+                  placeholder="Search modes (title, tags, category)…"
+                  autocomplete="off"
+                  aria-label="Search modes"
+                />
+              </div>
+              <div class="mode-browser-section" id="mode-featured-section">
+                <h4 class="mode-browser-heading">Featured</h4>
+                <div id="mode-featured-grid" class="mode-browser-grid mode-browser-grid-featured"></div>
+              </div>
+              <div class="mode-browser-section" id="mode-recent-section" style="display: none;">
+                <h4 class="mode-browser-heading">Recently used</h4>
+                <div id="mode-recent-grid" class="mode-browser-grid"></div>
+              </div>
+              <div class="mode-browser-categories" id="mode-category-tabs" role="tablist" aria-label="Mode categories"></div>
+              <div id="mode-list" class="mode-browser-list" role="listbox" aria-label="All modes"></div>
             </div>
+            <input type="hidden" id="selected-mode-id" value="improv" />
             <div class="input-group">
               <input
                 type="text"
@@ -240,6 +282,24 @@ export function getAppTemplate(): string {
               <button id="start-improv-btn" class="primary-btn">Start Scene</button>
               <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>
             </div>
+          </div>
+
+          <!-- Episode export / import / replay (shown after scene stop or import) -->
+          <div id="episode-export-bar" class="episode-export-bar" style="display: none;" role="region" aria-label="Episode export">
+            <span class="episode-export-meta">Episode ready</span>
+            <div class="episode-export-actions">
+              <button type="button" id="export-episode-json-btn" class="episode-btn" title="Download .jokesters.json">⬇️ JSON</button>
+              <button type="button" id="export-episode-md-btn" class="episode-btn" title="Download Markdown transcript">⬇️ MD</button>
+              <button type="button" id="export-episode-copy-btn" class="episode-btn" title="Copy plain text">📋 Copy</button>
+              <button type="button" id="replay-episode-btn" class="episode-btn episode-btn-primary" title="Replay with TTS only (no LLM)">▶️ Replay</button>
+              <button type="button" id="stop-replay-btn" class="episode-btn episode-btn-danger" style="display: none;">⏹ Stop Replay</button>
+              <button type="button" id="import-episode-btn" class="episode-btn" title="Import .jokesters.json">📥 Import</button>
+              <button type="button" id="dismiss-episode-bar-btn" class="episode-btn episode-btn-ghost" title="Dismiss">✕</button>
+            </div>
+            <input type="file" id="import-episode-input" accept=".json,.jokesters.json,application/json" style="display:none" />
+          </div>
+          <div class="episode-always-row">
+            <button type="button" id="import-episode-always-btn" class="episode-btn episode-btn-ghost" title="Import episode for TTS-only replay">📥 Import Episode</button>
           </div>
           
           <div class="agent-info">

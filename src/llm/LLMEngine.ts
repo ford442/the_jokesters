@@ -165,24 +165,29 @@ export interface LLMEngine {
   ): AsyncGenerator<string>
   
   /**
-   * Interrupt the current generation
+   * Get the ID of the currently loaded model
+   */
+  getLoadedModelId(): string | null
+
+  /**
+   * Active context window size in tokens (after load / user override).
+   */
+  getContextWindowSize(): number
+
+  /**
+   * Interrupt in-flight generation. Must be idempotent and must not throw.
    */
   interrupt(): Promise<void>
-  
+
   /**
    * Get the engine type identifier
    */
   getEngineType(): EngineType
-  
+
   /**
    * Check if the engine is initialized
    */
   isInitialized(): boolean
-  
-  /**
-   * Get the ID of the currently loaded model
-   */
-  getLoadedModelId(): string | null
 
   /**
    * Count tokens in text using the engine tokenizer when available.

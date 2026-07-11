@@ -85,8 +85,9 @@ export class TransformersEngineAdapter implements LLMEngine {
     options: GenerationOptions
   ): AsyncGenerator<string> {
     if (!this.generator) throw new Error('Engine not initialized')
-    
-    const abortSignal = this.abortController?.signal
+
+    this.abortController = new AbortController()
+    const abortSignal = this.abortController.signal
     const formattedMessages = messages.map(m => ({ role: m.role, content: m.content }))
     
     // Use TextStreamer for real-time output
@@ -146,6 +147,10 @@ export class TransformersEngineAdapter implements LLMEngine {
   
   isInitialized(): boolean { return this.generator !== null }
   getLoadedModelId(): string | null { return this.config?.id || null }
+
+  getContextWindowSize(): number {
+    return this.config?.context_window_size ?? 4096
+  }
 
   countTokens(text: string): number | null {
     if (!this.generator?.tokenizer || !text) return null;

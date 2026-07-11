@@ -1,6 +1,7 @@
 
 import * as THREE from 'three';
 import { Actor } from './Actor';
+import type { ReactionClip } from './actorAnimations';
 
 /**
  * TechBroActor - Extended Actor with Tech Bro specific animations
@@ -240,77 +241,38 @@ export class TechBroActor extends Actor {
     }
     
     /**
-     * Override update to handle Tech Bro specific animations
-     * Enhanced lip-sync for faster speech pattern (0.9 temp = faster speech)
+     * Map shared reaction clips → Tech Bro signature gestures.
      */
-    update(volume: number): void {
-        const deltaTime = 0.016; // Approximate 60fps
-        
-        // Ensure custom elements are attached (handles LOD changes)
-        this.ensureElementsAttached();
-        
-        // Handle gesture animations
-        if (this.isGestureAnimating) {
-            this.updateAnimation(deltaTime);
-        } else {
-            // Idle breathing animation (confident chest-out)
-            this.updateIdleBreathing();
+    override playReaction(clip: ReactionClip, durationSec?: number): void {
+        super.playReaction(clip, durationSec);
+        if (clip === 'laugh' || clip === 'bounce') {
+            this.triggerFingerGuns();
+        } else if (clip === 'think' || clip === 'shrug') {
+            this.triggerWatchCheck();
+        } else if (clip === 'gasp' || clip === 'angry') {
+            this.triggerHairFlip();
         }
-        
-        // Enhanced lip-sync for faster speech pattern
-        this.updateLipSync(volume);
     }
-    
+
     /**
-     * Update lip-sync with faster response for Tech Bro's quick speech
+     * Base Actor drives idle/think/reaction; we layer props + chest-out bias.
      */
-    private updateLipSync(volume: number): void {
+    override update(volume: number, timeSec?: number): void {
+        const amplified = Math.min(volume * 1.25, 1.0);
+        super.update(amplified, timeSec);
+
+        this.ensureElementsAttached();
+
         const mesh = this.getCurrentMesh();
-        if (!mesh) return;
-        
-        // Amplify volume for more responsive animation (faster speech = more movement)
-        const amplifiedVolume = Math.min(volume * 1.3, 1.0);
-        
-        // Squash and stretch with higher frequency response
-        const scale = 1 + amplifiedVolume * 0.6;
-        
-        // Apply to mesh while preserving confident pose scale
-        mesh.scale.set(
-            this.CONFIDENT_SCALE_X / Math.sqrt(scale), 
-            this.CONFIDENT_SCALE_Y * scale, 
-            this.CONFIDENT_SCALE_Z / Math.sqrt(scale)
-        );
-        
-        // Adjust Y position to maintain grounded appearance
-        mesh.position.y = this.CONFIDENT_POSITION_Y + 0.8 * (scale - 1);
-    }
-    
-    /**
-     * Subtle breathing animation for idle state
-     */
-    private updateIdleBreathing(): void {
-        const mesh = this.getCurrentMesh();
-        if (!mesh) return;
-        
-        const time = Date.now() * 0.001;
-        
-        // Slow confident breathing
-        const breathScale = 1 + Math.sin(time * 2) * 0.015;
-        
-        // Maintain chest-out pose with breathing
-        mesh.scale.set(
-            this.CONFIDENT_SCALE_X * breathScale,
-            this.CONFIDENT_SCALE_Y / breathScale,
-            this.CONFIDENT_SCALE_Z * breathScale
-        );
-        
-        // Subtle chest heave
-        mesh.position.y = this.CONFIDENT_POSITION_Y + Math.sin(time * 2) * 0.01;
-        
-        // Maintain confident rotation
-        mesh.rotation.x = this.CONFIDENT_ROTATION_X;
-        mesh.rotation.z = 0;
-        mesh.rotation.y = 0;
+        if (mesh && !this.isGestureAnimating) {
+            mesh.rotation.x += this.CONFIDENT_ROTATION_X * 0.5;
+            mesh.scale.x *= this.CONFIDENT_SCALE_X;
+            mesh.scale.z *= this.CONFIDENT_SCALE_Z;
+        }
+
+        if (this.isGestureAnimating) {
+            this.updateAnimation(0.016);
+        }
     }
     
     /**

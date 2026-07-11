@@ -7,6 +7,7 @@ import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/renderer
 import { LipSync } from '../visuals/LipSync'
 import { AudioEngine } from '../audio/AudioEngine'
 import { SpeechQueue } from '../audio/SpeechQueue'
+import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
 import { MemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
 import { agents } from './agents'
@@ -16,6 +17,7 @@ import { setProgress, setInputsEnabled } from './loadingUi'
 import { renderInitErrorPanel } from './errorPanel'
 import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
+import { saveSuccessfulLaunch } from './modelGuide'
 
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: { model_id: string }) => m.model_id))
 
@@ -57,6 +59,11 @@ export async function initApp(): Promise<void> {
   const userInput = document.getElementById('user-input') as HTMLInputElement
 
   const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens, enginePreference } = launchConfig
+
+  // Remember attempt so OOM panel can step down to a smaller blessed model
+  try {
+    sessionStorage.setItem('jokesters-last-attempt-model', selectedModelId)
+  } catch { /* ignore */ }
 
   setInputsEnabled(false)
 
@@ -101,10 +108,17 @@ export async function initApp(): Promise<void> {
     })
 
     const lipSync = new LipSync(speechQueue.getAudioContext())
+    // TTS → ttsGain → analyser → speakers (gain enables SFX ducking)
     speechQueue.setDestination(lipSync.analyser)
     lipSync.analyser.connect(speechQueue.getAudioContext().destination)
     stage.setLipSync(lipSync)
     stage.render()
+
+    const sfxManager = new SfxManager({ basePath: './sfx' })
+    await sfxManager.init(speechQueue.getAudioContext(), speechQueue.getTtsGainNode())
+    sfxManager.setInterruptHandler(() => speechQueue.stop())
+    setSharedSfxManager(sfxManager)
+    ;(window as any).getSfxManager = () => sfxManager
 
     currentInitState = 'BOOTING'
     setProgress('Setting up graphics...', 10)
@@ -140,6 +154,9 @@ export async function initApp(): Promise<void> {
     currentInitState = 'READY'
     setReadyStatus(groupChatManager)
 
+    // Persist successful launch for next visit (model + chat/VRAM opts)
+    saveSuccessfulLaunch(launchConfig)
+
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
 
@@ -159,6 +176,9 @@ export async function initApp(): Promise<void> {
   } catch (error: unknown) {
     currentInitState = 'ERROR'
     console.error('Initialization error:', error)
-    renderInitErrorPanel(error, () => { void initApp() })
+    // Full re-init so model picker + OOM fallback session keys are honored
+    renderInitErrorPanel(error, () => {
+      void initApp()
+    })
   }
 }

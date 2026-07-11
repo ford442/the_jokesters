@@ -238,6 +238,10 @@ export class LlamaCppEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
+  getContextWindowSize(): number {
+    return this.config?.context_window_size ?? this.config?.llamaCpp?.context_size ?? 4096
+  }
+
   getEngineType(): EngineType {
     return 'llamacpp'
   }
