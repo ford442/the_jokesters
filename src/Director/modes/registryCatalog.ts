@@ -2070,6 +2070,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'talk_show',
+    title: 'Talk Show',
+    category: 'dream',
+    description: 'A Talk Show scene.',
+    tags: ['dream', 'talk', 'show'],
+    showInPresets: false,
+  },
+  {
     id: 'tavern_brawlers_anonymous',
     title: 'Tavern Brawlers Anonymous',
     category: 'dream',

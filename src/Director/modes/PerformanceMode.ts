@@ -718,3 +718,70 @@ export async function runVisualStageDestructionLoop(_scenario: Scenario, ctx: Mo
         round++;
     }
 }
+
+export async function runTalkShowLoop(_scenario: Scenario, ctx: ModeContext) {
+    const host = 'scientist';
+    const guest1 = 'comedian';
+    const guest2 = 'philosopher';
+
+    ctx.callbacks.onMessage('Director', `🎙️ WELCOME TO THE LATE NIGHT SHOW!`, '#3498db');
+
+    // Segment 1: Monologue
+    ctx.callbacks.onMessage('Director', `[SEGMENT 1: MONOLOGUE]`, '#e74c3c');
+    await ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(host, `(HOST: You are the logical, overly-analytical host of a late-night talk show. Deliver your opening monologue. Try to make a joke, but ruin it by explaining the science behind it.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    // Segment 2: First Guest (Comedian)
+    ctx.callbacks.onMessage('Director', `[SEGMENT 2: FIRST GUEST]`, '#e74c3c');
+    await ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(host, `(HOST: Introduce your first guest, a wildly unpredictable comedian who has been in the news recently for a bizarre stunt.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.callbacks.onTurnStart(guest1);
+    await ctx.manager.chatForAgent(guest1, `(GUEST 1: You are a frantic, unhinged comedian. Ignore the host's questions entirely and plug your ridiculous new product or movie.)`, async (s) => await ctx.callbacks.onSpeak(s, guest1, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    // Segment 3: Second Guest (Philosopher)
+    ctx.callbacks.onMessage('Director', `[SEGMENT 3: SECOND GUEST]`, '#e74c3c');
+    await ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(host, `(HOST: Try to regain control of the show. Introduce your second guest, a pretentious philosopher who takes everything too seriously.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    await ctx.callbacks.onTurnStart(guest2);
+    await ctx.manager.chatForAgent(guest2, `(GUEST 2: You are a deep, existential philosopher. Question the very concept of a "talk show" and criticize the first guest's trivial behavior.)`, async (s) => await ctx.callbacks.onSpeak(s, guest2, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    // Segment 4: Chaos
+    ctx.callbacks.onMessage('Director', `[SEGMENT 4: PANEL DISCUSSION CHAOS]`, '#e74c3c');
+    let round = 0;
+    while (ctx.isRunning() && round < 2) {
+        await ctx.callbacks.onTurnStart(guest1);
+        await ctx.manager.chatForAgent(guest1, `(GUEST 1: Start a heated argument with the philosopher. Mock their deep thoughts with something incredibly stupid and shallow.)`, async (s) => await ctx.callbacks.onSpeak(s, guest1, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(guest2);
+        await ctx.manager.chatForAgent(guest2, `(GUEST 2: Retaliate against the comedian by psychoanalyzing their deep-seated insecurities.)`, async (s) => await ctx.callbacks.onSpeak(s, guest2, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        await ctx.callbacks.onTurnStart(host);
+        await ctx.manager.chatForAgent(host, `(HOST: Panic. Try to cut to a commercial break using an awkward scientific transition, but fail to get them to stop arguing.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        round++;
+    }
+}
