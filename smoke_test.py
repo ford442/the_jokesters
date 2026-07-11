@@ -23,6 +23,9 @@ import re
 from datetime import datetime
 from playwright.sync_api import sync_playwright, Page, ConsoleMessage
 
+# Repository root (script location); avoids Docker-only hardcoded /app paths
+REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 # Configuration
 DEV_SERVER_URL = "http://localhost:5173"
 EXPECTED_AGENTS = 5
@@ -82,7 +85,7 @@ class SmokeTestRunner:
             ['npm', 'run', 'build'],
             capture_output=True,
             text=True,
-            cwd='/app'
+            cwd=REPO_ROOT
         )
         
         self.metrics['build_time'] = time.time() - start
@@ -114,7 +117,7 @@ class SmokeTestRunner:
         
         missing = []
         for f in required_files:
-            path = f'/app/{f}'
+            path = os.path.join(REPO_ROOT, f)
             if not os.path.exists(path):
                 missing.append(f)
         
@@ -130,7 +133,7 @@ class SmokeTestRunner:
         """Verify all 5 agents are configured"""
         print("\n--- Checking Agent Configuration ---")
         
-        with open('/app/src/config/agents.ts', 'r') as f:
+        with open(os.path.join(REPO_ROOT, 'src/config/agents.ts'), 'r') as f:
             content = f.read()
         
         expected_agents = ['comedian', 'philosopher', 'scientist', 'techBro', 'robot']
@@ -153,7 +156,7 @@ class SmokeTestRunner:
         """Verify CallbackEngine implementation"""
         print("\n--- Checking CallbackEngine ---")
         
-        with open('/app/src/comedy/callbackEngine.ts', 'r') as f:
+        with open(os.path.join(REPO_ROOT, 'src/comedy/callbackEngine.ts'), 'r') as f:
             content = f.read()
         
         # Check for key features
@@ -180,7 +183,7 @@ class SmokeTestRunner:
         """Verify QualityFilter implementation"""
         print("\n--- Checking QualityFilter ---")
         
-        with open('/app/src/comedy/qualityFilter.ts', 'r') as f:
+        with open(os.path.join(REPO_ROOT, 'src/comedy/qualityFilter.ts'), 'r') as f:
             content = f.read()
         
         checks = {
@@ -205,7 +208,7 @@ class SmokeTestRunner:
         """Verify TTS configuration"""
         print("\n--- Checking TTS Setup ---")
         
-        with open('/app/src/audio/AudioEngine.ts', 'r') as f:
+        with open(os.path.join(REPO_ROOT, 'src/audio/AudioEngine.ts'), 'r') as f:
             content = f.read()
         
         checks = {
@@ -232,7 +235,7 @@ class SmokeTestRunner:
             ['npm', 'run', 'dev'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd='/app'
+            cwd=REPO_ROOT
         )
         
         # Wait for server to be ready
@@ -346,7 +349,8 @@ class SmokeTestRunner:
     
     def write_pass_report(self):
         """Write the smoke test pass report"""
-        os.makedirs('/app/docs', exist_ok=True)
+        docs_dir = os.path.join(REPO_ROOT, 'docs')
+        os.makedirs(docs_dir, exist_ok=True)
         
         report = f"""# Smoke Test Passed ✓
 
@@ -431,10 +435,11 @@ WebGPU availability depends on browser and hardware support.
 **Status: ALL CHECKS PASSED** ✅
 """
         
-        with open('/app/docs/smoke-test-passed.md', 'w') as f:
+        report_path = os.path.join(docs_dir, 'smoke-test-passed.md')
+        with open(report_path, 'w') as f:
             f.write(report)
         
-        print(f"\n✓ Report written to /docs/smoke-test-passed.md")
+        print(f"\n✓ Report written to {report_path}")
     
     def run(self):
         """Run the complete smoke test"""
