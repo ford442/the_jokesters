@@ -263,6 +263,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'support_group': async () => (await import('./InteractiveMode')).runSupportGroupLoop,
   'suspicious_barkeep': async () => (await import('./DreamModes_Absurdist_Philosophical_PartA')).runSuspiciousBarkeepLoop,
   'synergy_sync': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runSynergySyncLoop,
+  'talk_show': async () => (await import('./PerformanceMode')).runTalkShowLoop,
   'tavern_brawlers_anonymous': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runTavernBrawlersAnonymousLoop,
   'tech_debt_confessional': async () => (await import('./DreamModes_Tech')).runTechDebtConfessionalLoop,
   'tech_support': async () => (await import('./InteractiveMode')).runTechSupportLoop,

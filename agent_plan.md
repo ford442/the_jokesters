@@ -2,6 +2,9 @@
 
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
+## Project Velocity
+tasks_per_run: 2
+
 ## Process (P0)
 
 | Doc | Use |
@@ -26,9 +29,33 @@ Prioritize these over new premises:
 | **Tests + typecheck** | CI green (`npm run typecheck`, `npm test`); no silent debt |
 | **Context accuracy** | VRAM probe, memory depth, blessed presets, real download estimates |
 
-Related product backlog: [docs/ROADMAP.md](./docs/ROADMAP.md), [docs/plan.md](./docs/plan.md).  
-**P3 (after foundation):** [docs/LIVE_SHOW_VISION.md](./docs/LIVE_SHOW_VISION.md) — audience mode, party-mode votes, laugh track; no signaling server until MVP is solid.  
-Native compile guardrail: [docs/adr/0001-native-cpp-boundary.md](./docs/adr/0001-native-cpp-boundary.md).
+## Implementation Roadmap
+- [x] Add Talk Show Mode from Phase 1 of roadmap. Host interviews agents with pre-defined segments.
+- [ ] Add Courtroom Mode from Phase 1 of roadmap. Prosecutor vs Defense with absurd case.
+- [ ] Add Game Show Mode from Phase 1 of roadmap. Host asks trivia, agents compete hilariously.
+- [ ] Add News Desk Mode from Phase 1 of roadmap. Anchor reports breaking "news" with correspondent interviews.
+
+## Dream Phase (Architectural Expansion)
+### A. Creative Expansion (New Modes)
+- Collaborative Sandbox Construction Mode:
+  - Premise one-liner: Agents try to build a sandbox game, but completely disagree on mechanics.
+  - Agent roles: Scientist (optimization focused), Comedian (chaos focused), Philosopher (meaning focused). Pair with DeepSeek Coder for coding abilities.
+  - Why funnier than freeform improv: Structured around actually writing pseudo-code snippets that clash.
+  - Callback opportunities: Referencing bugs from previous turns.
+  - Token budget notes (short/long): Long, due to code generation.
+- Talk Show Mode:
+  - Premise one-liner: A chaotic late-night talk show where the host tries to maintain order while guests derail the conversation.
+  - Agent roles: Scientist as the logical host, Comedian and Philosopher as unhinged celebrity guests.
+  - Why funnier than freeform improv: The strict segment structure (monologue, interview, musical guest) forces agents to adapt their chaotic behavior to formal constraints.
+  - Callback opportunities: The host can reference terrible things that happened in previous segments.
+  - Token budget notes (short/long): Short, punchy segments.
+
+### B. Infrastructure & Storage (Cloud Persistence)
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
+- **Steps:**
+  1. Authenticate with the HF API using `hfToken` from `MemoryManager`.
+  2. Implement `saveEpisodeScriptToCloud(script, episodeId)` to push full dialogue transcripts to a private HF Dataset (e.g., `episodes/`).
+  3. Implement `fetchPreviousEpisodeSummaries()` at boot in `MemoryManager` to retrieve past summaries from HF and prime the `GroupChatManager` context, bypassing localStorage limits.
 
 ## Mode PR template (short)
 

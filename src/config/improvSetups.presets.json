@@ -888,5 +888,10 @@
     "id": "debugging_therapy",
     "title": "Debugging Therapy Mode",
     "description": "Agents play developers attending therapy for a codebase they cannot fix."
+  },
+  {
+    "id": "talk_show",
+    "title": "Talk Show Mode",
+    "description": "Host interviews agents with pre-defined segments."
   }
 ]
