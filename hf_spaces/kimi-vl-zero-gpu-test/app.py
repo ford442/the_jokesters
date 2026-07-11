@@ -36,11 +36,17 @@ except ImportError as _imp_err:  # pragma: no cover
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-KIMI_MODEL_ID = os.getenv("KIMI_MODEL_ID", "moonshotai/Kimi-VL-A3B-Thinking-2506")
+# Instruct is faster on ZeroGPU; override with KIMI_MODEL_ID for Thinking-2506.
+KIMI_MODEL_ID = os.getenv(
+    "KIMI_MODEL_ID", "moonshotai/Kimi-VL-A3B-Instruct"
+)
 VICUNA_MODEL_ID = os.getenv("VICUNA_MODEL_ID", "lmsys/vicuna-7b-v1.5")
 
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", "256"))
 VICUNA_4BIT = os.getenv("VICUNA_4BIT", "1") == "1"
+# Moonshot: Thinking → 0.8, Instruct → 0.2
+_DEFAULT_KIMI_TEMP = 0.8 if "thinking" in KIMI_MODEL_ID.lower() else 0.2
+KIMI_TEMPERATURE = float(os.getenv("KIMI_TEMPERATURE", str(_DEFAULT_KIMI_TEMP)))
 
 # ---------------------------------------------------------------------------
 # State
@@ -106,6 +112,24 @@ def _vram_summary() -> Dict[str, float]:
 # ---------------------------------------------------------------------------
 # Model loading
 # ---------------------------------------------------------------------------
+
+
+def _free_gpu_memory() -> None:
+    """Release cached CUDA allocations between model loads."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
+def _unload_holder(holder: ModelHolder) -> None:
+    holder.model = None
+    holder.tokenizer = None
+    holder.processor = None
+    holder.loaded = False
+    holder.load_time_s = 0.0
+    holder.load_vram_gb = 0.0
+    holder.device = "cpu"
+    _free_gpu_memory()
 
 
 def _load_kimi_vl() -> str:
@@ -216,7 +240,7 @@ def _load_vicuna() -> str:
 # ---------------------------------------------------------------------------
 
 
-@spaces.GPU
+@spaces.GPU(duration=180)
 def load_kimi_gpu() -> str:
     try:
         return _load_kimi_vl()
@@ -224,7 +248,7 @@ def load_kimi_gpu() -> str:
         return f"❌ Kimi-VL load error: {exc}"
 
 
-@spaces.GPU
+@spaces.GPU(duration=120)
 def load_vicuna_gpu() -> str:
     try:
         return _load_vicuna()
@@ -232,17 +256,20 @@ def load_vicuna_gpu() -> str:
         return f"❌ Vicuna load error: {exc}"
 
 
-@spaces.GPU
+@spaces.GPU(duration=180)
 def load_both_gpu() -> str:
+    """Load Kimi-VL then Vicuna sequentially; frees VRAM between steps on failure."""
     msgs: List[str] = []
     try:
         msgs.append(_load_kimi_vl())
     except Exception as exc:
         msgs.append(f"❌ Kimi-VL: {exc}")
+        _unload_holder(kimi_holder)
     try:
         msgs.append(_load_vicuna())
     except Exception as exc:
         msgs.append(f"❌ Vicuna: {exc}")
+        _unload_holder(vicuna_holder)
     return "\n".join(msgs)
 
 
@@ -252,34 +279,34 @@ def load_both_gpu() -> str:
 
 
 def _prepare_kimi_inputs(processor, message: str, image: Optional[Image.Image]):
-    """Robust input preparation for Kimi-VL (tries multiple formats)."""
+    """Official Kimi-VL chat template (Moonshot README)."""
     if image is not None:
-        # Standard vision2seq format
-        try:
-            return processor(text=message, images=image, return_tensors="pt")
-        except Exception:
-            pass
+        conversation = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": message},
+                ],
+            }
+        ]
+    else:
+        conversation = [{"role": "user", "content": message}]
 
-        # Conversation-style format (LLaVA-like)
-        try:
-            conversation = [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "image"},
-                        {"type": "text", "text": message},
-                    ],
-                }
-            ]
-            prompt = processor.apply_chat_template(
-                conversation, add_generation_prompt=True
-            )
-            return processor(text=prompt, images=image, return_tensors="pt")
-        except Exception:
-            pass
-
-    # Text-only
-    return processor(text=message, return_tensors="pt")
+    text = processor.apply_chat_template(
+        conversation, add_generation_prompt=True, return_tensors="pt"
+    )
+    if image is not None:
+        return processor(
+            images=image,
+            text=text,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+        )
+    return processor(
+        text=text, return_tensors="pt", padding=True, truncation=True
+    )
 
 
 @spaces.GPU
@@ -305,21 +332,26 @@ def infer_kimi(message: str, image: Optional[Image.Image]) -> Tuple[str, Dict[st
             **inputs,
             max_new_tokens=MAX_NEW_TOKENS,
             do_sample=True,
-            temperature=0.7,
+            temperature=KIMI_TEMPERATURE,
             top_p=0.9,
             pad_token_id=processor.tokenizer.pad_token_id
             if hasattr(processor, "tokenizer")
             else None,
         )
 
-    # Decode only new tokens
+    # Decode only new tokens (official trim pattern)
     input_ids = inputs.get("input_ids")
     if input_ids is None:
         input_len = 0
     else:
         input_len = input_ids.shape[1]
     new_ids = output_ids[0][input_len:]
-    response = processor.decode(new_ids, skip_special_tokens=True).strip()
+    if hasattr(processor, "batch_decode"):
+        response = processor.batch_decode(
+            [new_ids], skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0].strip()
+    else:
+        response = processor.decode(new_ids, skip_special_tokens=True).strip()
 
     latency = time.time() - t0
     peak_vram = _peak_vram_gb()
@@ -531,7 +563,7 @@ def _build_ui() -> gr.Blocks:
         # Outputs
         with gr.Row(equal_height=True):
             with gr.Column(elem_classes="model-card"):
-                gr.Markdown("### 🧠 Kimi-VL-A3B-Thinking")
+                gr.Markdown("### 🧠 Kimi-VL-A3B")
                 kimi_out = gr.Textbox(
                     label="Response",
                     lines=14,
