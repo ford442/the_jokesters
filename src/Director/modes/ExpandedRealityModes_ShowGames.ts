@@ -335,3 +335,83 @@ export async function runIntergalacticCookingLoop(_scenario: Scenario, ctx: Mode
     }
 }
 
+
+export async function runCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
+    const caseTopic = scenario.config?.courtCase || 'the theft of the concept of Tuesday';
+    ctx.callbacks.onMessage('Director', `⚖️ COURT IS IN SESSION: Case of ${caseTopic}`, '#8e44ad');
+
+    const judge = 'philosopher';
+    const prosecutor = 'scientist';
+    const defense = 'comedian';
+
+    // 1. Judge Opening
+    ctx.callbacks.onTurnStart(judge);
+    await ctx.manager.chatForAgent(judge, `(JUDGE: You are presiding over an absurd trial regarding "${caseTopic}". Call the court to order. Question the metaphysical significance of the case before asking the prosecutor for their opening statement.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Witness (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Prosecutor attacks
+        ctx.callbacks.onTurnStart(prosecutor);
+        await ctx.manager.chatForAgent(prosecutor, `(PROSECUTOR: The witness (User) just testified: "${userInput}". Aggressively cross-examine them using overly complex pseudo-science and logic to twist their words into an admission of guilt regarding "${caseTopic}".)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Defense objects
+        ctx.callbacks.onTurnStart(defense);
+        await ctx.manager.chatForAgent(defense, `(DEFENSE: The prosecutor just attacked your client (the User). Object to their statement with a completely irrelevant, chaotic, and illogical argument. Distract the court!)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Judge rules
+        ctx.callbacks.onTurnStart(judge);
+        await ctx.manager.chatForAgent(judge, `(JUDGE: Rule on the defense's objection. Do so by applying deep philosophical concepts to the absurd situation. Instruct the witness to continue.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runGameShowLoop(scenario: Scenario, ctx: ModeContext) {
+    const topic = scenario.config?.gameShowTopic || 'Extremely Niche 1990s Cereal Commercials';
+    ctx.callbacks.onMessage('Director', `📺 GAME SHOW MODE: Topic - ${topic}`, '#f1c40f');
+
+    const host = 'scientist';
+    const contestant1 = 'comedian';
+    const contestant2 = 'philosopher';
+
+    // 1. Host Intro
+    ctx.callbacks.onTurnStart(host);
+    await ctx.manager.chatForAgent(host, `(HOST: Welcome the User to a bizarre game show about "${topic}". Explain the incredibly complex and arbitrary rules. Ask the User the first question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Contestant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Contestant 1 (Comedian) buzzes in to steal or comment
+        ctx.callbacks.onTurnStart(contestant1);
+        await ctx.manager.chatForAgent(contestant1, `(CONTESTANT 1: The human contestant just answered: "${userInput}". Buzz in! Mock their answer, give a hilariously wrong alternative, and complain about the prize you were promised.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant1, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Contestant 2 (Philosopher) buzzes in
+        ctx.callbacks.onTurnStart(contestant2);
+        await ctx.manager.chatForAgent(contestant2, `(CONTESTANT 2: Buzz in! Ignore the actual game. Deconstruct the hidden existential meaning behind the human's answer: "${userInput}". Question why anyone plays games at all.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant2, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Host judges
+        ctx.callbacks.onTurnStart(host);
+        await ctx.manager.chatForAgent(host, `(HOST: Judge the human's answer and the other contestants' interruptions. Award meaningless points based on a flawed scientific formula. Ask the human the next question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

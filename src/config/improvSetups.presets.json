@@ -893,5 +893,20 @@
     "id": "talk_show",
     "title": "Talk Show Mode",
     "description": "Host interviews agents with pre-defined segments."
+  },
+  {
+    "id": "courtroom",
+    "title": "Courtroom Mode",
+    "description": "Prosecutor vs Defense with an absurd case."
+  },
+  {
+    "id": "game_show",
+    "title": "Game Show Mode",
+    "description": "Host asks trivia, agents compete hilariously."
+  },
+  {
+    "id": "news_desk",
+    "title": "News Desk Mode",
+    "description": "Anchor reports breaking news with correspondent interviews."
   }
 ]

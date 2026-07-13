@@ -74,6 +74,9 @@ export interface Scenario {
         standupTopic?: string;
         meltdownTopic?: string;
         newsroomTopic?: string;
+        courtCase?: string;
+        gameShowTopic?: string;
+        breakingNews?: string;
         podcastConfig?: {
             host: string;
             guest: string;

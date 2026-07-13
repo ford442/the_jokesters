@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -31,12 +31,26 @@ Prioritize these over new premises:
 
 ## Implementation Roadmap
 - [x] Add Talk Show Mode from Phase 1 of roadmap. Host interviews agents with pre-defined segments.
-- [ ] Add Courtroom Mode from Phase 1 of roadmap. Prosecutor vs Defense with absurd case.
-- [ ] Add Game Show Mode from Phase 1 of roadmap. Host asks trivia, agents compete hilariously.
-- [ ] Add News Desk Mode from Phase 1 of roadmap. Anchor reports breaking "news" with correspondent interviews.
+- [x] Add Courtroom Mode from Phase 1 of roadmap. Prosecutor vs Defense with absurd case.
+- [x] Add Game Show Mode from Phase 1 of roadmap. Host asks trivia, agents compete hilariously.
+- [x] Add News Desk Mode from Phase 1 of roadmap. Anchor reports breaking "news" with correspondent interviews.
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+
+- Roast Battle Mode:
+  - Premise one-liner: Agents ruthlessly roast the user and each other in a structured battle format.
+  - Agent roles: Comedian as the primary roaster (use Hermes-3 for unfiltered roasting), Scientist as the literal joke analyzer, Philosopher as the existential despair bringer.
+  - Why funnier than freeform improv: Structured back-and-forth raises the stakes and forces punchlines.
+  - Callback opportunities: Referencing previous burns to create running jokes.
+  - Token budget notes (short/long): Short, punchy punchlines.
+- Musical Improv Mode:
+  - Premise one-liner: Agents spontaneously create a terrible Broadway musical based on user prompts.
+  - Agent roles: Scientist as the lyricist obsessed with rhyme schemes, Comedian as the diva lead singer, Philosopher as the depressed chorus.
+  - Why funnier than freeform improv: Forces rhyming and musical structures onto absurd topics.
+  - Callback opportunities: Recurring motifs and choruses.
+  - Token budget notes (short/long): Medium, rhyming lyrics require careful generation.
+
 - Collaborative Sandbox Construction Mode:
   - Premise one-liner: Agents try to build a sandbox game, but completely disagree on mechanics.
   - Agent roles: Scientist (optimization focused), Comedian (chaos focused), Philosopher (meaning focused). Pair with DeepSeek Coder for coding abilities.

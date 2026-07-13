@@ -261,3 +261,43 @@ export async function runMeltdownLoop(scenario: Scenario, ctx: ModeContext) {
         await new Promise(r => setTimeout(r, 1200));
     }
 }
+
+export async function runNewsDeskLoop(scenario: Scenario, ctx: ModeContext) {
+    const breakingNews = scenario.config?.breakingNews || 'a pigeon elected as mayor';
+    ctx.callbacks.onMessage('Director', `📰 BREAKING NEWS: ${breakingNews}`, '#c0392b');
+
+    const anchor = 'scientist';
+    const fieldReporter = 'comedian';
+    const analyst = 'philosopher';
+
+    // 1. Anchor Intro
+    ctx.callbacks.onTurnStart(anchor);
+    await ctx.manager.chatForAgent(anchor, `(ANCHOR: You are a serious news anchor reporting on the breaking story: "${breakingNews}". Deliver the headlines with absolute gravity, using statistics that don't make sense. Throw to your field reporter (the User) for a live update.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Live Witness (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Field Reporter interjects
+        ctx.callbacks.onTurnStart(fieldReporter);
+        await ctx.manager.chatForAgent(fieldReporter, `(FIELD REPORTER: You are at the chaotic scene of "${breakingNews}". The witness just said: "${userInput}". Sensationalize their statement! Describe something incredibly dangerous happening right behind you!)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Analyst comments
+        ctx.callbacks.onTurnStart(analyst);
+        await ctx.manager.chatForAgent(analyst, `(ANALYST: You are in the studio. Analyze the field report and the witness statement: "${userInput}". Connect this event to the inevitable collapse of society and human hubris.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
+        await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // Anchor wraps up
+        ctx.callbacks.onTurnStart(anchor);
+        await ctx.manager.chatForAgent(anchor, `(ANCHOR: Thank the analyst and the witness. Transition smoothly from the existential dread to a completely inappropriate, trivial local news story or sponsor read. Ask the witness another question.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

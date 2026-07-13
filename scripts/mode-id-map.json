@@ -1294,5 +1294,17 @@
   {
     "id": "talk_show",
     "handler": "runTalkShowLoop"
+  },
+  {
+    "id": "courtroom",
+    "handler": "runCourtroomLoop"
+  },
+  {
+    "id": "game_show",
+    "handler": "runGameShowLoop"
+  },
+  {
+    "id": "news_desk",
+    "handler": "runNewsDeskLoop"
   }
 ]
