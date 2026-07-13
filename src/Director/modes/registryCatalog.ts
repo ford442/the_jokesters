@@ -382,6 +382,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'courtroom',
+    title: 'Courtroom',
+    category: 'dream',
+    description: 'A Courtroom scene.',
+    tags: ['dream', 'courtroom'],
+    showInPresets: false,
+  },
+  {
     id: 'customer_service_hell',
     title: 'Customer Service Hell',
     category: 'interactive',
@@ -643,6 +651,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'interactive',
     description: 'A Galactic Translators scene.',
     tags: ['interactive', 'galactic', 'translators'],
+    showInPresets: false,
+  },
+  {
+    id: 'game_show',
+    title: 'Game Show',
+    category: 'dream',
+    description: 'A Game Show scene.',
+    tags: ['dream', 'game', 'show'],
     showInPresets: false,
   },
   {
@@ -1148,6 +1164,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'Overly suspicious neighborhood watch members interrogating the user.',
     tags: ['dream', 'neighborhood', 'watch', 'overlords'],
     showInPresets: true,
+  },
+  {
+    id: 'news_desk',
+    title: 'News Desk',
+    category: 'dream',
+    description: 'A News Desk scene.',
+    tags: ['dream', 'news', 'desk'],
+    showInPresets: false,
   },
   {
     id: 'newsroom',
@@ -2071,11 +2095,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'talk_show',
-    title: 'Talk Show',
+    title: 'Talk Show Mode',
     category: 'dream',
-    description: 'A Talk Show scene.',
+    description: 'Host interviews agents with pre-defined segments.',
     tags: ['dream', 'talk', 'show'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'tavern_brawlers_anonymous',
