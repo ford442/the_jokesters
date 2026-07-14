@@ -310,6 +310,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'collaborative_sandbox_construction',
+    title: 'Collaborative Sandbox Construction',
+    category: 'dream',
+    description: 'A Collaborative Sandbox Construction scene.',
+    tags: ['dream', 'collaborative', 'sandbox', 'construction'],
+    showInPresets: false,
+  },
+  {
     id: 'collaborative_story',
     title: 'Collaborative Story',
     category: 'performance',
@@ -383,11 +391,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'courtroom',
-    title: 'Courtroom',
+    title: 'Courtroom Mode',
     category: 'dream',
-    description: 'A Courtroom scene.',
+    description: 'Prosecutor vs Defense with an absurd case.',
     tags: ['dream', 'courtroom'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'customer_service_hell',
@@ -655,11 +663,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'game_show',
-    title: 'Game Show',
+    title: 'Game Show Mode',
     category: 'dream',
-    description: 'A Game Show scene.',
+    description: 'Host asks trivia, agents compete hilariously.',
     tags: ['dream', 'game', 'show'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'garage_sale_negotiators',
@@ -1167,11 +1175,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'news_desk',
-    title: 'News Desk',
+    title: 'News Desk Mode',
     category: 'dream',
-    description: 'A News Desk scene.',
+    description: 'Anchor reports breaking news with correspondent interviews.',
     tags: ['dream', 'news', 'desk'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'newsroom',

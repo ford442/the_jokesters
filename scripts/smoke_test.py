@@ -24,7 +24,7 @@ from datetime import datetime
 from playwright.sync_api import sync_playwright, Page, ConsoleMessage
 
 # Repository root (script location); avoids Docker-only hardcoded /app paths
-REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Configuration
 DEV_SERVER_URL = "http://localhost:5173"

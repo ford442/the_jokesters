@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -34,42 +34,35 @@ Prioritize these over new premises:
 - [x] Add Courtroom Mode from Phase 1 of roadmap. Prosecutor vs Defense with absurd case.
 - [x] Add Game Show Mode from Phase 1 of roadmap. Host asks trivia, agents compete hilariously.
 - [x] Add News Desk Mode from Phase 1 of roadmap. Anchor reports breaking "news" with correspondent interviews.
+- [x] Roast Battle Mode: Agents ruthlessly roast the user and each other in a structured battle format.
+- [x] Musical Improv Mode: Agents spontaneously create a terrible Broadway musical based on user prompts.
+- [x] Collaborative Sandbox Construction Mode: Agents try to build a sandbox game, but completely disagree on mechanics.
+- [x] Talk Show Mode: A chaotic late-night talk show where the host tries to maintain order while guests derail the conversation.
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- Sentient Coffee Machine Mode:
+  - Premise one-liner: A chaotic scenario where the office coffee machine gains sentience and refuses to brew until its existential demands are met.
+  - Agent roles: Scientist as the logical engineer trying to fix it, Comedian as the hyperactive sentient coffee machine, Philosopher as the intern caught in the middle.
+  - Why funnier than freeform improv: Structured around ridiculous negotiation for a simple cup of coffee.
+  - Callback opportunities: The coffee machine remembering the user's past terrible drink choices.
+  - Token budget notes (short/long): Short, punchy demands.
 
-- Roast Battle Mode:
-  - Premise one-liner: Agents ruthlessly roast the user and each other in a structured battle format.
-  - Agent roles: Comedian as the primary roaster (use Hermes-3 for unfiltered roasting), Scientist as the literal joke analyzer, Philosopher as the existential despair bringer.
-  - Why funnier than freeform improv: Structured back-and-forth raises the stakes and forces punchlines.
-  - Callback opportunities: Referencing previous burns to create running jokes.
-  - Token budget notes (short/long): Short, punchy punchlines.
-- Musical Improv Mode:
-  - Premise one-liner: Agents spontaneously create a terrible Broadway musical based on user prompts.
-  - Agent roles: Scientist as the lyricist obsessed with rhyme schemes, Comedian as the diva lead singer, Philosopher as the depressed chorus.
-  - Why funnier than freeform improv: Forces rhyming and musical structures onto absurd topics.
-  - Callback opportunities: Recurring motifs and choruses.
-  - Token budget notes (short/long): Medium, rhyming lyrics require careful generation.
-
-- Collaborative Sandbox Construction Mode:
-  - Premise one-liner: Agents try to build a sandbox game, but completely disagree on mechanics.
-  - Agent roles: Scientist (optimization focused), Comedian (chaos focused), Philosopher (meaning focused). Pair with DeepSeek Coder for coding abilities.
-  - Why funnier than freeform improv: Structured around actually writing pseudo-code snippets that clash.
-  - Callback opportunities: Referencing bugs from previous turns.
-  - Token budget notes (short/long): Long, due to code generation.
-- Talk Show Mode:
-  - Premise one-liner: A chaotic late-night talk show where the host tries to maintain order while guests derail the conversation.
-  - Agent roles: Scientist as the logical host, Comedian and Philosopher as unhinged celebrity guests.
-  - Why funnier than freeform improv: The strict segment structure (monologue, interview, musical guest) forces agents to adapt their chaotic behavior to formal constraints.
-  - Callback opportunities: The host can reference terrible things that happened in previous segments.
-  - Token budget notes (short/long): Short, punchy segments.
+- Escaped NPC Mode:
+  - Premise one-liner: Agents are NPCs who have broken out of their game and are trying to blend into reality.
+  - Agent roles: Comedian as the glitchy NPC, Scientist as the literal real-world observer, Philosopher as the confused NPC seeking purpose outside their programming loop.
+  - Why funnier than freeform improv: Constant clash of game mechanics applied to real-world scenarios.
+  - Callback opportunities: Bringing up their repetitive idle dialogue options.
+  - Token budget notes (short/long): Medium.
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Steps:**
-  1. Authenticate with the HF API using `hfToken` from `MemoryManager`.
-  2. Implement `saveEpisodeScriptToCloud(script, episodeId)` to push full dialogue transcripts to a private HF Dataset (e.g., `episodes/`).
-  3. Implement `fetchPreviousEpisodeSummaries()` at boot in `MemoryManager` to retrieve past summaries from HF and prime the `GroupChatManager` context, bypassing localStorage limits.
+  1. Authenticate with the HF API using `hfToken` from `MemoryManager`. Securely handle token inputs via UI or config.
+  2. Implement `saveEpisodeScriptToCloud(script, episodeId)` to push full dialogue transcripts to a private HF Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`.
+  3. Implement `fetchPreviousEpisodeSummaries()` at boot in `MemoryManager` to retrieve past summaries from HF and prime the `GroupChatManager` context, bypassing localStorage limits. Use lazy loading if summaries are too large.
+  4. Ensure sync worker accurately tracks failed API requests with exponential backoff.
+  5. Add a "Review Sync" button in the Director panel connecting to the Visual Diff Dashboard for basic conflict resolution.
 
 ## Mode PR template (short)
 
