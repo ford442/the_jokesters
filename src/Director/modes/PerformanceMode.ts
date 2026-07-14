@@ -785,3 +785,35 @@ export async function runTalkShowLoop(_scenario: Scenario, ctx: ModeContext) {
         round++;
     }
 }
+
+export async function runCollaborativeSandboxConstructionLoop(_scenario: Scenario, ctx: ModeContext) {
+    const scientist = 'scientist';
+    const comedian = 'comedian';
+    const philosopher = 'philosopher';
+
+    ctx.callbacks.onMessage('Director', `🎮 WELCOME TO COLLABORATIVE SANDBOX CONSTRUCTION! 🎮\nThe agents must build a sandbox game, but completely disagree on mechanics. Type a mechanic to add!`, '#3498db');
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('Human (You)', userInput, '#ffffff');
+
+        // Scientist (optimization focused)
+        await ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(SANDBOX CONSTRUCTION: The user suggested mechanic: "${userInput}". You are the optimization-focused programmer. Write pseudo-code for it, but over-optimize it until it's a completely rigid simulation that drains all fun. Focus on efficiency and strict rules.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Comedian (chaos focused)
+        await ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(SANDBOX CONSTRUCTION: The user suggested mechanic: "${userInput}". You are the chaos-focused designer. Reject the Scientist's rigid pseudo-code. Introduce a completely unbalanced, explosive, and ridiculous mechanic that breaks the game engine. Write chaotic pseudo-code for it.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Philosopher (meaning focused)
+        await ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(SANDBOX CONSTRUCTION: The user suggested mechanic: "${userInput}". You are the meaning-focused narrative designer. Ignore the code of the Scientist and the chaos of the Comedian. Question the existential implications of this mechanic. Why are we building this? Are we just NPCs in our own simulation?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await ctx.callbacks.onTurnEnd();
+    }
+}

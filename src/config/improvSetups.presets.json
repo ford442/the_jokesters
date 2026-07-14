@@ -908,5 +908,10 @@
     "id": "news_desk",
     "title": "News Desk Mode",
     "description": "Anchor reports breaking news with correspondent interviews."
+  },
+  {
+    "id": "collaborative_sandbox_construction",
+    "title": "Collaborative Sandbox Construction",
+    "description": "Agents try to build a sandbox game, but completely disagree on mechanics."
   }
 ]

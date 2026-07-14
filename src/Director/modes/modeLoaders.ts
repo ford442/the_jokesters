@@ -43,6 +43,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'clippy_support_group': async () => (await import('./DreamModes_Tech')).runClippySupportGroupLoop,
   'cloud_storage_eviction': async () => (await import('./DreamModes_Tech')).runCloudStorageEvictionLoop,
   'code_review': async () => (await import('./CodeReviewMode')).runCodeReviewLoop,
+  'collaborative_sandbox_construction': async () => (await import('./PerformanceMode')).runCollaborativeSandboxConstructionLoop,
   'collaborative_story': async () => (await import('./PerformanceMode')).runCollaborativeStoryLoop,
   'commentary': async () => (await import('./InteractiveMode')).runCommentaryLoop,
   'conspiracy': async () => (await import('./ExpandedRealityModes_Supernatural')).runConspiracyLoop,
