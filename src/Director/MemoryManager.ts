@@ -302,6 +302,39 @@ export class MemoryManager {
         return null;
     }
 
+
+    public async saveEpisodeScriptToCloud(script: any, episodeId: string): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
+        const filename = `episodes/${episodeId}/script.json`;
+        const content = JSON.stringify(script, null, 2);
+
+        try {
+            await this.hfStorage.saveFile(this.hfToken, this.hfRepoId, filename, content);
+        } catch (e) {
+            console.error("Failed to save episode script to cloud:", e);
+            throw e;
+        }
+    }
+
+    public async fetchPreviousEpisodeSummaries(): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) return;
+        try {
+            const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
+            if (content) {
+                const parsed = JSON.parse(content);
+                if (!this.cloudSummaryCache) {
+                    this.cloudSummaryCache = { history: [] };
+                }
+                // Prime the GroupChatManager context by injecting past history
+                if (parsed.history && Array.isArray(parsed.history)) {
+                    this.cloudSummaryCache.history = parsed.history;
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to fetch previous episode summaries:', e);
+        }
+    }
+
     public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: any): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/delta-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;

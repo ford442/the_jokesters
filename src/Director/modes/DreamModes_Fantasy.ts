@@ -350,3 +350,46 @@ export async function runSupervillainBrainstormingSessionLoop(_scenario: Scenari
 
     await ctx.manager.chatForAgent(philosopher, `(You are the Evil Mastermind. Overreact to the Henchman's incompetence, then dramatically spin the flaw into a "brilliant" new direction for the evil plan.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
 }
+
+export async function runEscapedNPCModeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎮 ESCAPED NPC MODE: Out of Bounds`, '#8e44ad');
+
+    const glitchy = 'comedian'; // The glitchy NPC
+    const observer = 'scientist'; // The literal real-world observer
+    const seeker = 'philosopher'; // The confused NPC seeking purpose outside their programming
+
+    ctx.callbacks.onTurnStart(glitchy);
+    await ctx.manager.chatForAgent(glitchy, `(You are an NPC who has escaped from a video game into the real world. You are currently glitching out, clipping through a table, and trying to act normal by repeating your idle dialogue: "Nice day for fishing, ain't it?". Do so enthusiastically.)`, async (s) => await ctx.callbacks.onSpeak(s, glitchy, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(seeker);
+    await ctx.manager.chatForAgent(seeker, `(You are another escaped NPC. You just realized that in this "Real World", there are no quest markers or leveling up. Express an existential crisis about having no pre-programmed purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, seeker, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(observer);
+    await ctx.manager.chatForAgent(observer, `(You are the scientist who discovered these two entities. You are trying to logically explain the physics of the real world to them, particularly why one of them keeps clipping through solid objects, using overly complex scientific terms.)`, async (s) => await ctx.callbacks.onSpeak(s, observer, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Real Person (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(glitchy);
+            await ctx.manager.chatForAgent(glitchy, `(The user just spoke. Respond by either failing to process their input and offering them a side quest involving fetching 10 rat tails, or by describing a visual bug you are currently experiencing.)`, async (s) => await ctx.callbacks.onSpeak(s, glitchy, {}), { hiddenInstruction: "Never break character as a glitchy video game NPC." });
+            ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(seeker);
+            await ctx.manager.chatForAgent(seeker, `(The user just spoke. Try to interpret their words as a profound philosophical truth about the 'Developers' who created this 'Real World'. Ask them what their main quest is.)`, async (s) => await ctx.callbacks.onSpeak(s, seeker, {}), { hiddenInstruction: "Everything is a metaphor for game design to you." });
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(observer);
+            await ctx.manager.chatForAgent(observer, `(The user just spoke. Ignore the philosophical ramblings and try to analyze the user's statement for dimensional anomalies or frame-rate drops.)`, async (s) => await ctx.callbacks.onSpeak(s, observer, {}), { hiddenInstruction: "Treat everything like an experiment in dimensional physics." });
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}

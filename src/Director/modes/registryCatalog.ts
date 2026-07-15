@@ -313,9 +313,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'collaborative_sandbox_construction',
     title: 'Collaborative Sandbox Construction',
     category: 'dream',
-    description: 'A Collaborative Sandbox Construction scene.',
+    description: 'Agents try to build a sandbox game, but completely disagree on mechanics.',
     tags: ['dream', 'collaborative', 'sandbox', 'construction'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'collaborative_story',
@@ -572,6 +572,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'Agents try to guide (or hinder) the user out of a bizarre escape room.',
     tags: ['interactive', 'escape', 'room', 'game', 'master'],
     showInPresets: true,
+  },
+  {
+    id: 'escaped_npc',
+    title: 'Escaped Npc',
+    category: 'dream',
+    description: 'A Escaped Npc scene.',
+    tags: ['dream', 'escaped', 'npc'],
+    showInPresets: false,
   },
   {
     id: 'excalibur_tech_support',

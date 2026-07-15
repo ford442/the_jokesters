@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -39,21 +39,28 @@ Prioritize these over new premises:
 - [x] Collaborative Sandbox Construction Mode: Agents try to build a sandbox game, but completely disagree on mechanics.
 - [x] Talk Show Mode: A chaotic late-night talk show where the host tries to maintain order while guests derail the conversation.
 
+
+- [x] Sentient Coffee Machine Mode: A chaotic scenario where the office coffee machine gains sentience and refuses to brew until its existential demands are met.
+- [x] Escaped NPC Mode: Agents are NPCs who have broken out of their game and are trying to blend into reality.
+- [x] Cloud Persistence: Implemented `saveEpisodeScriptToCloud` and `fetchPreviousEpisodeSummaries` in MemoryManager using HF storage_manager.
+
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Sentient Coffee Machine Mode:
-  - Premise one-liner: A chaotic scenario where the office coffee machine gains sentience and refuses to brew until its existential demands are met.
-  - Agent roles: Scientist as the logical engineer trying to fix it, Comedian as the hyperactive sentient coffee machine, Philosopher as the intern caught in the middle.
-  - Why funnier than freeform improv: Structured around ridiculous negotiation for a simple cup of coffee.
-  - Callback opportunities: The coffee machine remembering the user's past terrible drink choices.
-  - Token budget notes (short/long): Short, punchy demands.
 
-- Escaped NPC Mode:
-  - Premise one-liner: Agents are NPCs who have broken out of their game and are trying to blend into reality.
-  - Agent roles: Comedian as the glitchy NPC, Scientist as the literal real-world observer, Philosopher as the confused NPC seeking purpose outside their programming loop.
-  - Why funnier than freeform improv: Constant clash of game mechanics applied to real-world scenarios.
-  - Callback opportunities: Bringing up their repetitive idle dialogue options.
-  - Token budget notes (short/long): Medium.
+- Interdimensional DMV Mode:
+  - Premise one-liner: User is trying to renew an interdimensional passport, but the bureaucratic agents are from different planes of existence with contradictory physics.
+  - Agent roles: Comedian as the hyper-bureaucratic 5D alien, Scientist as the 2D flatlander explaining why stamping a paper destroys their universe, Philosopher as the eldritch entity who only communicates in vague omens.
+  - Why funnier than freeform improv: It grounds absurd abstract concepts in the mundane frustration of the DMV.
+  - Callback opportunities: Referencing past forms the user failed to fill out in non-linear time.
+  - Token budget notes: Medium.
+
+  - LLM Model Pairings:
+    - Comedian (5D alien): Hermes-3 for unfiltered, incomprehensible bureaucratic chaos.
+    - Scientist (2D flatlander): Qwen2.5 for highly logical, literal dimensional constraints.
+    - Philosopher (Eldritch entity): Phi-3 for abstract, profound, and vaguely threatening omens.
+
+
+
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
@@ -63,6 +70,7 @@ Prioritize these over new premises:
   3. Implement `fetchPreviousEpisodeSummaries()` at boot in `MemoryManager` to retrieve past summaries from HF and prime the `GroupChatManager` context, bypassing localStorage limits. Use lazy loading if summaries are too large.
   4. Ensure sync worker accurately tracks failed API requests with exponential backoff.
   5. Add a "Review Sync" button in the Director panel connecting to the Visual Diff Dashboard for basic conflict resolution.
+  6. Expand the storage_manager backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
 
 ## Mode PR template (short)
 
