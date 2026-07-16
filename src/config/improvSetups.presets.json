@@ -913,5 +913,10 @@
     "id": "collaborative_sandbox_construction",
     "title": "Collaborative Sandbox Construction",
     "description": "Agents try to build a sandbox game, but completely disagree on mechanics."
+  },
+  {
+    "id": "escaped_npc",
+    "title": "Escaped NPC Mode",
+    "description": "Agents are NPCs who have broken out of their game and are trying to blend into reality."
   }
 ]

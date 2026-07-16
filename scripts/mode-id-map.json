@@ -1310,5 +1310,9 @@
   {
     "id": "collaborative_sandbox_construction",
     "handler": "runCollaborativeSandboxConstructionLoop"
+  },
+  {
+    "id": "escaped_npc",
+    "handler": "runEscapedNPCModeLoop"
   }
 ]
