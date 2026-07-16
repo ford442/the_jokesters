@@ -144,3 +144,33 @@ export async function runCorporateJargonTranslatorLoop(_scenario: Scenario, ctx:
     }
 }
 
+
+export async function runCustomerServiceForVillainsLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📞 TECH SUPPORT: Your Doomsday Device is malfunctioning...`, '#e74c3c');
+
+    const cheeryRep = 'comedian'; // Hermes-3: Way too cheerful
+    const techRep = 'scientist'; // Qwen2.5: Highly technical
+
+    ctx.callbacks.onTurnStart(cheeryRep);
+    await ctx.manager.chatForAgent(cheeryRep, `(VILLAIN TECH SUPPORT: You are a painfully cheery customer service rep for "Doomsday Devices Inc." The User (a supervillain) is calling because their death ray isn't working. Thank them for calling and put them on a brief, annoying imaginary hold before asking how you can provide excellent service today.)`, async (s) => await ctx.callbacks.onSpeak(s, cheeryRep, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Supervillain (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(cheeryRep);
+            await ctx.manager.chatForAgent(cheeryRep, `(VILLAIN TECH SUPPORT: The Supervillain said: "${userInput}". Be overly positive and unhelpful. Offer them a 5% discount on volcano lair insurance instead of solving their problem. Put them on hold again.)`, async (s) => await ctx.callbacks.onSpeak(s, cheeryRep, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(techRep);
+            await ctx.manager.chatForAgent(techRep, `(VILLAIN TECH SUPPORT: The Supervillain said: "${userInput}". You are the Level 2 Tech Support. Ignore their anger. Ask highly specific, technical questions like if the plasma conduit is inverted or if they plugged the dark matter core into a standard 120V outlet.)`, async (s) => await ctx.callbacks.onSpeak(s, techRep, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}

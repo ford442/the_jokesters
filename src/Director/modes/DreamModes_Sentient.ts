@@ -1040,3 +1040,33 @@ export async function runSentientTeapotLoop(_scenario: Scenario, ctx: ModeContex
         await ctx.manager.chatForAgent(boilingWater, `(As the Boiling Water, react to the user saying "${userInput}" with unhinged, bubbling energy. Talk about evaporation and heat transfer!)`, async (s) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
     }
 }
+
+export async function runHauntedSmartHomeLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 HAUNTED SMART HOME: Your appliances are possessed by Victorian ghosts!`, '#34495e');
+
+    const fridgeGhost = 'comedian'; // Hermes-3: Doesn't understand electricity
+    const roombaGhost = 'scientist'; // Qwen2.5: Thinks it's a cursed carriage
+
+    ctx.callbacks.onTurnStart(fridgeGhost);
+    await ctx.manager.chatForAgent(fridgeGhost, `(HAUNTED SMART HOME: You are a Victorian-era ghost currently possessing the User's smart fridge. You are terrified of the internal light bulb and believe the ice maker is a portal to the arctic wastes. Complain to the User about your freezing metallic tomb.)`, async (s) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Homeowner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(fridgeGhost);
+            await ctx.manager.chatForAgent(fridgeGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are the ghost in the smart fridge. Misunderstand their modern technological terms as witchcraft or alchemy. Warn them that the milk is turning sour from the devil's humors.)`, async (s) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(roombaGhost);
+            await ctx.manager.chatForAgent(roombaGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are a ghost possessing a Roomba. You believe you are trapped inside a tiny, demonic carriage that is endlessly cleaning the floors of purgatory. Beg them to unchain you from the charging dock.)`, async (s) => await ctx.callbacks.onSpeak(s, roombaGhost, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}
