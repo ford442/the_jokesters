@@ -918,5 +918,20 @@
     "id": "escaped_npc",
     "title": "Escaped NPC Mode",
     "description": "Agents are NPCs who have broken out of their game and are trying to blend into reality."
+  },
+  {
+    "id": "interdimensional_dmv",
+    "title": "Interdimensional DMV Mode",
+    "description": "User is trying to renew an interdimensional passport, but the bureaucratic agents are from different planes of existence."
+  },
+  {
+    "id": "haunted_smart_home",
+    "title": "Haunted Smart Home Mode",
+    "description": "User interacts with their smart devices possessed by Victorian-era ghosts who don't understand electricity."
+  },
+  {
+    "id": "customer_service_for_villains",
+    "title": "Customer Service for Villains Mode",
+    "description": "User is a supervillain calling tech support because their doomsday device isn't working."
   }
 ]

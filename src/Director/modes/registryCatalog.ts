@@ -398,6 +398,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'customer_service_for_villains',
+    title: 'Customer Service For Villains',
+    category: 'dream',
+    description: 'A Customer Service For Villains scene.',
+    tags: ['dream', 'customer', 'service', 'for', 'villains'],
+    showInPresets: false,
+  },
+  {
     id: 'customer_service_hell',
     title: 'Customer Service Hell',
     category: 'interactive',
@@ -575,11 +583,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'escaped_npc',
-    title: 'Escaped Npc',
+    title: 'Escaped NPC Mode',
     category: 'dream',
-    description: 'A Escaped Npc scene.',
+    description: 'Agents are NPCs who have broken out of their game and are trying to blend into reality.',
     tags: ['dream', 'escaped', 'npc'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'excalibur_tech_support',
@@ -726,6 +734,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'haunted_smart_home',
+    title: 'Haunted Smart Home Mode',
+    category: 'dream',
+    description: 'User interacts with their smart devices possessed by Victorian-era ghosts who don\'t understand electricity.',
+    tags: ['dream', 'haunted', 'smart', 'home'],
+    showInPresets: true,
+  },
+  {
     id: 'heckler_interaction',
     title: 'Heckler Interaction',
     category: 'performance',
@@ -852,6 +868,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Interdimensional Customs scene.',
     tags: ['interactive', 'interdimensional', 'customs'],
     showInPresets: false,
+  },
+  {
+    id: 'interdimensional_dmv',
+    title: 'Interdimensional DMV Mode',
+    category: 'dream',
+    description: 'User is trying to renew an interdimensional passport, but the bureaucratic agents are from different planes of existence.',
+    tags: ['dream', 'interdimensional', 'dmv'],
+    showInPresets: true,
   },
   {
     id: 'interdimensional_public_access_tv',

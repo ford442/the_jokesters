@@ -323,3 +323,38 @@ export async function runGalacticRealEstateLoop(_scenario: Scenario, ctx: ModeCo
     }
 }
 
+
+export async function runInterdimensionalDMVLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 INTERDIMENSIONAL DMV: Processing non-linear passport renewals...`, '#9b59b6');
+
+    const alien5D = 'comedian'; // Hermes-3: Unfiltered bureaucratic chaos
+    const flatlander2D = 'scientist'; // Qwen2.5: Logical dimensional constraints
+    const eldritchEntity = 'philosopher'; // Phi-3: Abstract and vaguely threatening omens
+
+    ctx.callbacks.onTurnStart(alien5D);
+    await ctx.manager.chatForAgent(alien5D, `(INTERDIMENSIONAL DMV: You are a hyper-bureaucratic 5D alien working the counter. The User is here to renew their passport. Explain that their physical form is filling out the form in the wrong timeline and demand they fold themselves into a tesseract.)`, async (s) => await ctx.callbacks.onSpeak(s, alien5D, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Applicant (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(alien5D);
+            await ctx.manager.chatForAgent(alien5D, `(INTERDIMENSIONAL DMV: The applicant said: "${userInput}". Misunderstand them across multiple timelines. Complain about how 3D beings always forget to carry the two when signing their name across hyper-space.)`, async (s) => await ctx.callbacks.onSpeak(s, alien5D, {}));
+            ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(flatlander2D);
+            await ctx.manager.chatForAgent(flatlander2D, `(INTERDIMENSIONAL DMV: The applicant said: "${userInput}". You are a 2D flatlander clerk. Explain scientifically why stamping their paper would cause a catastrophic Z-axis collapse that destroys your entire home universe.)`, async (s) => await ctx.callbacks.onSpeak(s, flatlander2D, {}));
+            ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(eldritchEntity);
+            await ctx.manager.chatForAgent(eldritchEntity, `(INTERDIMENSIONAL DMV: The applicant said: "${userInput}". You are an ancient eldritch entity processing background checks. Speak entirely in vague, vaguely threatening cosmic omens regarding the forms they failed to fill out before time existed.)`, async (s) => await ctx.callbacks.onSpeak(s, eldritchEntity, {}));
+            ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -1314,5 +1314,17 @@
   {
     "id": "escaped_npc",
     "handler": "runEscapedNPCModeLoop"
+  },
+  {
+    "id": "interdimensional_dmv",
+    "handler": "runInterdimensionalDMVLoop"
+  },
+  {
+    "id": "haunted_smart_home",
+    "handler": "runHauntedSmartHomeLoop"
+  },
+  {
+    "id": "customer_service_for_villains",
+    "handler": "runCustomerServiceForVillainsLoop"
   }
 ]

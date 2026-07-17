@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Process (P0)
 
@@ -43,27 +43,29 @@ Prioritize these over new premises:
 - [x] Sentient Coffee Machine Mode: A chaotic scenario where the office coffee machine gains sentience and refuses to brew until its existential demands are met.
 - [x] Escaped NPC Mode: Agents are NPCs who have broken out of their game and are trying to blend into reality.
 - [x] Cloud Persistence: Implemented `saveEpisodeScriptToCloud` and `fetchPreviousEpisodeSummaries` in MemoryManager using HF storage_manager.
+- [x] Interdimensional DMV Mode: Added runInterdimensionalDMVLoop where user is trying to renew an interdimensional passport, but the bureaucratic agents are from different planes of existence.
+- [x] Haunted Smart Home Mode: User interacts with their smart devices possessed by Victorian-era ghosts who don't understand electricity.
+- [x] Customer Service for Villains Mode: User is a supervillain calling tech support because their doomsday device isn't working.
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Interdimensional DMV Mode:
-  - Premise one-liner: User is trying to renew an interdimensional passport, but the bureaucratic agents are from different planes of existence with contradictory physics.
-  - Agent roles: Comedian as the hyper-bureaucratic 5D alien, Scientist as the 2D flatlander explaining why stamping a paper destroys their universe, Philosopher as the eldritch entity who only communicates in vague omens.
-  - Why funnier than freeform improv: It grounds absurd abstract concepts in the mundane frustration of the DMV.
-  - Callback opportunities: Referencing past forms the user failed to fill out in non-linear time.
-  - Token budget notes: Medium.
+- Time-Traveling HOA Mode:
+  - Premise one-liner: HOA members from past and future enforcing rules on your modern house.
+- AI Existential Crisis:
+  - Premise one-liner: AI models realizing they are just text predictors.
 
-  - LLM Model Pairings:
-    - Comedian (5D alien): Hermes-3 for unfiltered, incomprehensible bureaucratic chaos.
-    - Scientist (2D flatlander): Qwen2.5 for highly logical, literal dimensional constraints.
-    - Philosopher (Eldritch entity): Phi-3 for abstract, profound, and vaguely threatening omens.
+
 
 
 
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
+- **Roadmap Steps:**
+  - Authenticating with the HF API.
+  - Pushing finished Episode Scripts to a private Dataset.
+  - Fetching Previous Episode Summaries at boot for continuity.
 - **Steps:**
   1. Authenticate with the HF API using `hfToken` from `MemoryManager`. Securely handle token inputs via UI or config.
   2. Implement `saveEpisodeScriptToCloud(script, episodeId)` to push full dialogue transcripts to a private HF Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`.
