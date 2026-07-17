@@ -1326,5 +1326,13 @@
   {
     "id": "customer_service_for_villains",
     "handler": "runCustomerServiceForVillainsLoop"
+  },
+  {
+    "id": "supervillain_roommate",
+    "handler": "runSupervillainRoommateLoop"
+  },
+  {
+    "id": "grammar_police_interrogation",
+    "handler": "runGrammarPoliceInterrogationLoop"
   }
 ]
