@@ -3,6 +3,7 @@
  */
 import type {
   ChatMessage,
+  ChatStreamEvent,
   EngineType,
   GenerationOptions,
   InitProgressReport,
@@ -59,7 +60,7 @@ export class MockLLMEngine implements LLMEngine {
     this.abortController = null
   }
 
-  async *chat(messages: ChatMessage[], options: GenerationOptions): AsyncGenerator<string> {
+  async *chat(messages: ChatMessage[], options: GenerationOptions): AsyncGenerator<ChatStreamEvent> {
     if (!this.initialized) {
       throw new Error('MockLLMEngine not initialized')
     }

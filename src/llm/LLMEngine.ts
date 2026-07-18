@@ -5,6 +5,8 @@
  * between MLC WebLLM and llama.cpp WASM engines without breaking existing functionality.
  */
 
+import type { ChatStreamEvent } from './streamEvents'
+
 export type EngineType = 'mlc' | 'llamacpp' | 'transformers' | 'api' | 'auto'
 
 export interface ContentPartText {
@@ -34,6 +36,8 @@ export interface GenerationOptions {
   stop?: string[]
   stream?: boolean
 }
+
+export type { ChatStreamChunk, ChatStreamEvent } from './streamEvents'
 
 export interface NormalizedGenerationOptions {
   temperature: number
@@ -162,7 +166,7 @@ export interface LLMEngine {
   chat(
     messages: ChatMessage[],
     options: GenerationOptions
-  ): AsyncGenerator<string>
+  ): AsyncGenerator<ChatStreamEvent>
   
   /**
    * Get the ID of the currently loaded model
