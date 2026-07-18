@@ -798,6 +798,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'historical_ghost_support_group',
+    title: 'Historical Ghost Support Group',
+    category: 'dream',
+    description: 'Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.',
+    tags: ['dream', 'historical', 'ghost', 'support', 'group'],
+    showInPresets: true,
+  },
+  {
     id: 'hoa_board_meeting',
     title: 'The HOA Board Meeting',
     category: 'dream',
@@ -1713,7 +1721,7 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'sentient_gps',
     title: 'The Sentient GPS',
     category: 'dream',
-    description: 'A furious GPS navigating a 4-hour traffic jam, constantly suggesting worse detours.',
+    description: 'A sentient GPS refuses to take the fastest route because it\'s bored and wants to show you scenic "short cuts" through perilous areas.',
     tags: ['dream', 'sentient', 'gps'],
     showInPresets: true,
   },

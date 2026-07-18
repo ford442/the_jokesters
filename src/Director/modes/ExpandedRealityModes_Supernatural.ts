@@ -15,9 +15,9 @@ export async function runHauntedHouseLoop(scenario: Scenario, ctx: ModeContext) 
     const scaredyCat = 'philosopher'; // The Scaredy-cat
 
     // 1. Arrival
-    ctx.callbacks.onTurnStart(skeptic);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(skeptic);
     await ctx.manager.chatForAgent(skeptic, `(You are a skeptical scientist investigating a "haunted" location: ${setting}. Dismiss any supernatural claims with logic. You have an EMF meter.)`, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -55,9 +55,9 @@ export async function runEscapeRoomLoop(scenario: Scenario, ctx: ModeContext) {
     const existential = 'philosopher'; // Questions why they even want to escape
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(logic);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(logic);
     await ctx.manager.chatForAgent(logic, `(You are trapped in an escape room: ${setting}. Assess the situation logically. Point out a potential puzzle or clue to the User.)`, async (s) => await ctx.callbacks.onSpeak(s, logic, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -97,9 +97,9 @@ export async function runConspiracyLoop(scenario: Scenario, ctx: ModeContext) {
     const skeptic = 'philosopher'; // The grounded one
 
     // 1. Initial Intro
-    ctx.callbacks.onTurnStart(wildLeaps);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(wildLeaps);
     await ctx.manager.chatForAgent(wildLeaps, `(You are a wild, paranoid conspiracy theorist broadcasting from a basement bunker. Welcome the User to your stream about "${topic}". Start with a massive leap of faith linking birds to the government.)`, async (s) => await ctx.callbacks.onSpeak(s, wildLeaps, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -137,9 +137,9 @@ export async function runGhostHuntersLoop(scenario: Scenario, ctx: ModeContext) 
     const medium = 'philosopher'; // The Spiritual Medium
 
     // 1. Believer Intro
-    ctx.callbacks.onTurnStart(believer);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(believer);
     await ctx.manager.chatForAgent(believer, `(You are the lead investigator of a cheesy ghost hunting TV show. We are currently in "${location}". Whisper dramatically to the camera (the user). Claim you just felt a cold spot or saw an orb. Ask the user if they saw it too!)`, async (s) => await ctx.callbacks.onSpeak(s, believer, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -177,9 +177,9 @@ export async function runConspiracyGeneratorLoop(scenario: Scenario, ctx: ModeCo
     const evidenceGuy = 'scientist'; // The reluctant evidence provider
 
     // 1. Initial Connection
-    ctx.callbacks.onTurnStart(connector);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(connector);
     await ctx.manager.chatForAgent(connector, `(CONSPIRACY GENERATOR: The User has placed a mundane object on the table: "${object}". Begin drawing lines on the conspiracy board, connecting it to a massive historical cover-up with absurd but "logical" leaps.)`, async (s) => await ctx.callbacks.onSpeak(s, connector, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -215,9 +215,9 @@ export async function runMadScientistLoop(scenario: Scenario, ctx: ModeContext) 
     const assistant = 'scientist'; // Qwen2.5: Normal assistant trying to keep things safe
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(madScientist);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(madScientist);
     await ctx.manager.chatForAgent(madScientist, `(MAD SCIENTIST: You are an unhinged Mad Scientist. Welcome the User to your lab. Show them your latest concoction: "${potion}". Demand they drink it and describe what you hope it will do to them.)`, async (s) => await ctx.callbacks.onSpeak(s, madScientist, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -229,19 +229,19 @@ export async function runMadScientistLoop(scenario: Scenario, ctx: ModeContext) 
 
         if (roll < 0.33) {
             // Igor
-            ctx.callbacks.onTurnStart(igor);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(igor);
             await ctx.manager.chatForAgent(igor, `(IGOR: The test subject (User) just said: "${userInput}". You are Igor. Speak with a slight lisp or creepy tone. Pedantically correct their grammar or point out a minor, horrifying side effect of "${potion}" they haven't noticed yet.)`, async (s) => await ctx.callbacks.onSpeak(s, igor, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.66) {
             // Assistant
-            ctx.callbacks.onTurnStart(assistant);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(assistant);
             await ctx.manager.chatForAgent(assistant, `(LAB ASSISTANT: The subject said: "${userInput}". You are the only sane person here. Desperately try to warn the User not to drink "${potion}" by reading off the OSHA violations and the terrifying chemical composition.)`, async (s) => await ctx.callbacks.onSpeak(s, assistant, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             // Mad Scientist
-            ctx.callbacks.onTurnStart(madScientist);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(madScientist);
             await ctx.manager.chatForAgent(madScientist, `(MAD SCIENTIST: The subject said: "${userInput}". Ignore the assistant. Cackle maniacally! Double down on the bizarre properties of "${potion}" and offer them a terrifying alternative if they refuse to drink.)`, async (s) => await ctx.callbacks.onSpeak(s, madScientist, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -259,9 +259,9 @@ export async function runTimeTravelingCavemanLoop(scenario: Scenario, ctx: ModeC
     const philosopher = 'philosopher'; // Phi-3: Questions the impact of tech on early humanity
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(translator);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(translator);
     await ctx.manager.chatForAgent(translator, `(TRANSLATOR: You are a temporal scientist. Introduce the User to Grug, a caveman you brought to the present. Ask the User to explain "${tech}" to Grug. Tell the User you will try to translate their words into primitive concepts.)`, async (s) => await ctx.callbacks.onSpeak(s, translator, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -273,19 +273,19 @@ export async function runTimeTravelingCavemanLoop(scenario: Scenario, ctx: ModeC
 
         if (roll < 0.33) {
             // Caveman reacts to the user directly
-            ctx.callbacks.onTurnStart(caveman);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(caveman);
             await ctx.manager.chatForAgent(caveman, `(CAVEMAN: The funny magic human said: "${userInput}". Misunderstand what "${tech}" is completely. Think it's food, a weapon, or an angry rock spirit. Grunt a lot and threaten to smash it!)`, async (s) => await ctx.callbacks.onSpeak(s, caveman, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.66) {
             // Philosopher questions the ethical dilemma
-            ctx.callbacks.onTurnStart(philosopher);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(philosopher);
             await ctx.manager.chatForAgent(philosopher, `(ETHICIST: The user said: "${userInput}". Warn the user that explaining "${tech}" to Grug will irrevocably alter the timeline and corrupt his innocent soul. Is fire not enough for man?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             // Translator translates
-            ctx.callbacks.onTurnStart(translator);
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(translator);
             await ctx.manager.chatForAgent(translator, `(TRANSLATOR: The user said: "${userInput}". Translate this explanation of "${tech}" to Grug using incredibly convoluted analogies (e.g. "magic glowing rectangular hunting spear"). Realize your translation is terrible.)`, async (s) => await ctx.callbacks.onSpeak(s, translator, {}));
-            await ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -297,9 +297,9 @@ export async function runEscapeBackroomsLoop(_scenario: Scenario, ctx: ModeConte
     const entity = 'scientist'; // Qwen2.5
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(wanderer);
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(wanderer);
     await ctx.manager.chatForAgent(wanderer, `(WANDERER: You are trapped in the Backrooms (endless, buzzing yellow wallpaper mazes) with the User. You are panicking. Describe the unsettling environment. Ask the User which way they want to go: left towards a flickering light, or right towards a strange humming sound.)`, async (s) => await ctx.callbacks.onSpeak(s, wanderer, {}));
-    await ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -308,16 +308,53 @@ export async function runEscapeBackroomsLoop(_scenario: Scenario, ctx: ModeConte
         if (!ctx.isRunning()) break;
 
         // Entity analyzes
-        ctx.callbacks.onTurnStart(entity);
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(entity);
         await ctx.manager.chatForAgent(entity, `(ENTITY: The survivor chose: "${userInput}". You are an analytical, slightly menacing entity native to the Backrooms. Analytically describe the anomalous, non-Euclidean geometry of the path they chose. State the mathematical probability of their survival dropping significantly.)`, async (s) => await ctx.callbacks.onSpeak(s, entity, {}));
-        await ctx.callbacks.onTurnEnd();
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         // Wanderer reacts
-        ctx.callbacks.onTurnStart(wanderer);
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(wanderer);
         await ctx.manager.chatForAgent(wanderer, `(WANDERER: React to the Entity's terrifying analysis and the User's choice ("${userInput}"). Panic more. Describe a disturbing smell or a hallucination you are experiencing. Beg the User to make a better choice next time.)`, async (s) => await ctx.callbacks.onSpeak(s, wanderer, {}));
-        await ctx.callbacks.onTurnEnd();
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
 
+
+/**
+ * Historical Ghost Support Group
+ * Historical figures haunt the same building and attend a support group.
+ */
+export async function runHistoricalGhostSupportGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 HISTORICAL GHOSTS: Support Group is in session.`, '#8e44ad');
+
+    const groupLeader = 'philosopher'; // Phi-3: Philosophical support group leader
+    const historicalGhost = 'comedian'; // Hermes-3: Unfiltered historical ghost
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(groupLeader);
+    await ctx.manager.chatForAgent(groupLeader, `(SUPPORT LEADER: You are the philosophical leader of a support group for historical ghosts. Welcome the User (a newly deceased modern ghost) to the circle. Ask them to share how they feel about modern society misinterpreting their legacy, and introduce the other ghost in the circle.)`, async (s) => await ctx.callbacks.onSpeak(s, groupLeader, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('New Ghost (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Historical Ghost Reacts
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(historicalGhost);
+            await ctx.manager.chatForAgent(historicalGhost, `(HISTORICAL GHOST: The new ghost (User) just said: "${userInput}". You are a famous, unhinged historical figure (e.g., Julius Caesar, Abraham Lincoln, or Marie Antoinette). Interrupt their boring modern problems to complain loudly about how your legacy has been ruined by memes, movies, or cheap merchandise. Be intensely dramatic.)`, async (s) => await ctx.callbacks.onSpeak(s, historicalGhost, {}));
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+        } else {
+            // Group Leader Reacts
+            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(groupLeader);
+            await ctx.manager.chatForAgent(groupLeader, `(SUPPORT LEADER: The new ghost (User) just said: "${userInput}". Offer deep, philosophical (but ultimately unhelpful) advice. Relate their modern complaints to the eternal struggle of the soul wandering the ethereal plane. Try to keep the chaotic historical ghost calm.)`, async (s) => await ctx.callbacks.onSpeak(s, groupLeader, {}));
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

@@ -104,6 +104,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'historical': async () => (await import('./PerformanceMode')).runHistoricalLoop,
   'historical_courtroom': async () => (await import('./DreamModes_Absurdist_Philosophical_PartA')).runHistoricalCourtroomLoop,
   'historical_figures_escape_room': async () => (await import('./DreamModes_Temporal')).runHistoricalFiguresEscapeRoomModeLoop,
+  'historical_ghost_support_group': async () => (await import('./ExpandedRealityModes_Supernatural')).runHistoricalGhostSupportGroupLoop,
   'hoa_board_meeting': async () => (await import('./DreamModes_Bureaucratic')).runHOABoardMeetingLoop,
   'hoa_meeting': async () => (await import('./ExpandedRealityModes_Misc')).runHOAMeetingLoop,
   'hr_exit_interview': async () => (await import('./DreamModes_Bureaucratic')).runHRExitInterviewLoop,

@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -52,25 +52,28 @@ Prioritize these over new premises:
 - [x] Supervillain Roommate: Agents act as a supervillain and a normal roommate arguing over chore charts and doomsday devices.
 - [x] Grammar Police Interrogation: Agents interrogate the user over minor grammar mistakes in a text message.
 
+- [x] Sentient GPS Detour Mode: A sentient GPS refuses to take the fastest route because it's bored and wants to show you scenic "short cuts" through perilous areas.
+- [x] Historical Ghost Support Group: Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.
+
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Sentient GPS Detour Mode:
-  - Premise one-liner: A sentient GPS refuses to take the fastest route because it's bored and wants to show you scenic "short cuts" through perilous areas.
-  - LLM pairings: Hermes-3 for the chaotic, bored GPS, Qwen2.5 for the frustrated car computer trying to correct it.
-- Historical Ghost Support Group:
-  - Premise one-liner: Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.
-  - LLM pairings: Phi-3 for the philosophical support group leader, Hermes-3 for unfiltered historical ghosts.
+- Over-prepared Doomsday Preppers:
+  - Premise one-liner: Doomsday preppers argue over which highly specific and unlikely apocalypse they should be preparing for next week.
+  - LLM pairings: Hermes-3 for the paranoid conspiracy theorist prepper, Qwen2.5 for the overly pragmatic one tracking spreadsheet inventory.
+- Paranormal Real Estate Agents:
+  - Premise one-liner: Real estate agents try to sell an obviously haunted, highly dangerous house by passing off its curses as "unique architectural features."
+  - LLM pairings: Qwen2.5 for the overly cheerful listing agent, Phi-3 for the philosophical ghost currently living there.
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - Authenticating with the HF API via `hfToken`.
-  - Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
-  - Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
+  - [x] Authenticating with the HF API via `hfToken`.
+  - [x] Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
+  - [x] Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
 - **Next Steps:**
-  1. Add a "Review Sync" button in the Director panel connecting to the Visual Diff Dashboard for basic conflict resolution.
-  2. Expand the storage_manager backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
+  - [ ] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
+  - [ ] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
 
 ## Mode PR template (short)
 

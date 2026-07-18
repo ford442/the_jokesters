@@ -1334,5 +1334,9 @@
   {
     "id": "grammar_police_interrogation",
     "handler": "runGrammarPoliceInterrogationLoop"
+  },
+  {
+    "id": "historical_ghost_support_group",
+    "handler": "runHistoricalGhostSupportGroupLoop"
   }
 ]
