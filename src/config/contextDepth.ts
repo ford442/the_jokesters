@@ -1,4 +1,4 @@
-import type { ModeCategory } from '../Director/modes/registry';
+import type { ModeCatalogEntry, ModeCategory } from '../Director/modes/registry';
 
 /** Minimum / maximum message-count window for conversation history. */
 export const MIN_MEMORY_DEPTH = 4;
@@ -52,6 +52,27 @@ export function saveMemoryDepthPreference(depth: number): void {
 
 export function getDefaultContextDepthForCategory(category: ModeCategory): number {
   return CATEGORY_CONTEXT_DEPTH_DEFAULTS[category] ?? DEFAULT_MEMORY_DEPTH;
+}
+
+/**
+ * Resolve scene memory depth from mode metadata when `config.contextDepth` is omitted.
+ * Numeric `estimatedTurns` is treated as an explicit message budget; short/medium/long
+ * nudge relative to the category default.
+ */
+export function getContextDepthForMode(mode: ModeCatalogEntry): number {
+  const base = getDefaultContextDepthForCategory(mode.category);
+  const turns = mode.estimatedTurns;
+  if (typeof turns === 'number') {
+    return clampMemoryDepth(turns);
+  }
+  switch (turns) {
+    case 'short':
+      return clampMemoryDepth(base - 4);
+    case 'long':
+      return clampMemoryDepth(base + 4);
+    default:
+      return base;
+  }
 }
 
 /** Director analysis window scales with memory depth (~40%, min 4). */

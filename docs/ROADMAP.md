@@ -29,9 +29,11 @@ This document tracks planned enhancements, feature ideas, and technical improvem
 - Applied automatically — no toggle required
 
 ### Context Window Limiting
-- Agent turns use last **15 messages** from conversation history
-- Director critique uses last **6 messages** for focused momentum judgment
-- Keeps inference fast and token usage manageable
+- **Memory Depth slider** (4–30 messages) controls how much history each agent turn sees; persisted in `localStorage`
+- **Scene `contextDepth`** and mode `estimatedTurns` override the slider for Director scenes (see [CONTEXT_DEPTH.md](./CONTEXT_DEPTH.md))
+- **Director `memoryHint`** (`zoom_in`, `zoom_out`, `recall:TOPIC`) applies a one-turn depth override
+- Token-budget truncation in `DynamicContextManager` runs after the message-depth slice
+- Status bar shows `Depth: used/limit msgs` plus token usage
 
 ---
 
@@ -51,6 +53,8 @@ Allow the context window size to be adjusted dynamically:
 - `GroupChatManager.setMemoryDepth()` + message-count slice before token truncation
 - `getDirectorCritique()` returns `{ instruction, status, memoryHint }`
 - Status bar shows depth + token usage
+
+**Acceptance criteria:** slider mid-session updates, one-turn Director override, category defaults documented in [CONTEXT_DEPTH.md](./CONTEXT_DEPTH.md).
 
 ---
 

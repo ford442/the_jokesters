@@ -201,7 +201,7 @@ export class ConversationStore {
       return combined
     }
 
-    return combined.slice(overflow)
+    return [...recalled, ...recent.slice(overflow)]
   }
 
   prepareHistoryForContext(
