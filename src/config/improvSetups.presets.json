@@ -570,9 +570,9 @@
     "description": "Agents act as formulas inside a spreadsheet demanding data from the user and arguing over formatting."
   },
   {
-    "id": "sentient-gps",
+    "id": "sentient_gps",
     "title": "The Sentient GPS",
-    "description": "Agents act as competing navigation systems arguing over the most chaotic route to the grocery store."
+    "description": "A sentient GPS refuses to take the fastest route because it's bored and wants to show you scenic \"short cuts\" through perilous areas."
   },
   {
     "id": "angry-windshield-wipers",
@@ -608,11 +608,6 @@
     "id": "kitchen-nightmares-reality-show",
     "title": "Kitchen Nightmares Reality Show",
     "description": "Agents act as an angry executive chef and terrified line cooks screaming about a piece of raw chicken."
-  },
-  {
-    "id": "sentient_gps",
-    "title": "The Sentient GPS",
-    "description": "A furious GPS navigating a 4-hour traffic jam, constantly suggesting worse detours."
   },
   {
     "id": "carpool_karaoke",
@@ -943,5 +938,10 @@
     "id": "grammar_police_interrogation",
     "title": "Grammar Police",
     "description": "Agents interrogate you over a minor grammar mistake in your text message."
+  },
+  {
+    "id": "historical_ghost_support_group",
+    "title": "Historical Ghost Support Group",
+    "description": "Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies."
   }
 ]
