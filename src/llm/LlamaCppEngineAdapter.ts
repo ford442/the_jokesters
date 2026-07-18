@@ -15,6 +15,7 @@ import type {
   LLMEngine,
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
+import type { ChatStreamEvent } from './streamEvents'
 import { WLLAMA_WASM_PATHS, rethrowWllamaRuntimeError } from './wllamaRuntime'
 
 export class LlamaCppEngineAdapter implements LLMEngine {
@@ -130,7 +131,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
   async *chat(
     messages: ChatMessage[],
     options: GenerationOptions
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<ChatStreamEvent> {
     if (!this.wllama || !this.initialized) {
       throw new Error('LlamaCppEngineAdapter not initialized. Call initialize() first.')
     }

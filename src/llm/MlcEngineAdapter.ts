@@ -24,6 +24,7 @@ export interface MlcModelConfig extends UnifiedModelConfig {
 }
 
 import type { LLMEngine } from './LLMEngine'
+import type { ChatStreamEvent } from './streamEvents'
 
 export class MlcEngineAdapter implements LLMEngine {
   readonly id = 'mlc'
@@ -90,7 +91,7 @@ export class MlcEngineAdapter implements LLMEngine {
   async *chat(
     messages: ChatMessage[],
     options: GenerationOptions
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<ChatStreamEvent> {
     if (!this.engine || !this.initialized) {
       throw new Error('MlcEngineAdapter not initialized. Call initialize() first.')
     }
@@ -113,11 +114,16 @@ export class MlcEngineAdapter implements LLMEngine {
     for await (const chunk of completion) {
       const delta = chunk.choices[0]?.delta
       const content = delta?.content || ''
-      if (content) {
+      if (!content) continue
+
+      const sentenceBoundary = Boolean(
+        (delta as { sentence_boundary?: boolean } | undefined)?.sentence_boundary,
+      )
+      if (sentenceBoundary) {
+        yield { content, sentenceBoundary: true }
+      } else {
         yield content
       }
-      // Custom fork: sentence_boundary on delta enables earlier TTS handoff (see comedy/streaming)
-      void (delta as { sentence_boundary?: boolean } | undefined)?.sentence_boundary
     }
   }
 

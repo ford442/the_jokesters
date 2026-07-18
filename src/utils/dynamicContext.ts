@@ -1,3 +1,4 @@
+import { buildComedyLogitProcessorRegistry } from '../llm/webllmComedyExtensions';
 import type { TokenEstimator, TokenEstimationSource } from './tokenEstimator';
 import { HeuristicTokenEstimator } from './tokenEstimator';
 import * as webllm from '@mlc-ai/web-llm';
@@ -670,6 +671,9 @@ export async function loadModelWithDynamicContext(
         {
           initProgressCallback: onProgress,
           appConfig: dynamicAppConfig,
+          logitProcessorRegistry: buildComedyLogitProcessorRegistry(modelConfig.model_id) as
+            | Map<string, unknown>
+            | undefined,
         },
         chatOpts
       ),

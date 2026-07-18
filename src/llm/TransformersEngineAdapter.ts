@@ -13,6 +13,7 @@ import type {
   InitProgressReport, 
   UnifiedModelConfig 
 } from './LLMEngine'
+import type { ChatStreamEvent } from './streamEvents'
 import { VPS_STORAGE_ORIGIN } from '../config/models'
 
 export interface TransformersEngineConfig {
@@ -83,7 +84,7 @@ export class TransformersEngineAdapter implements LLMEngine {
   async *chat(
     messages: ChatMessage[],
     options: GenerationOptions
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<ChatStreamEvent> {
     if (!this.generator) throw new Error('Engine not initialized')
 
     this.abortController = new AbortController()

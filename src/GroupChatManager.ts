@@ -22,6 +22,7 @@ import { ConversationStore } from './chat/ConversationStore'
 import { ModelSession } from './chat/ModelSession'
 import { PersonalityStore } from './chat/PersonalityStore'
 import { categorizeChatError } from './chat/chatErrors'
+import { getStreamContent, isSentenceBoundaryEvent } from './llm/streamEvents'
 
 export type { ProfanityLevel, Agent, Message, ErrorCategory }
 export { PROFANITY_LEVEL }
@@ -228,48 +229,63 @@ export class GroupChatManager {
       let fullResponse = ''
       let buffer = ''
 
-      for await (const content of stream) {
-        if (content) {
-          fullResponse += content
-          buffer += content
+      for await (const event of stream) {
+        const content = getStreamContent(event)
+        if (!content) continue
 
-          const stopTokens = ['###', 'Director:', 'User:']
-          let earliestIdx = -1
-          let matchedToken: string | null = null
-          for (const token of stopTokens) {
-            const idx = buffer.indexOf(token)
-            if (idx >= 0 && (earliestIdx === -1 || idx < earliestIdx)) {
-              earliestIdx = idx
-              matchedToken = token
-            }
-          }
-          if (earliestIdx >= 0 && matchedToken) {
-            const preStop = buffer
-              .substring(0, earliestIdx)
-              .trim()
-              .replace(new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i'), '')
-              .replace(/###/g, '')
-              .replace(/Director:\s*/gi, '')
-              .replace(/User:\s*/gi, '')
-              .trim()
-            if (preStop) onSentence?.(preStop)
-            buffer = ''
-          }
+        fullResponse += content
+        buffer += content
 
-          let match
-          while ((match = buffer.match(/([.!?])\s/))) {
-            const endIdx = match.index! + 1
-            let sentence = buffer.substring(0, endIdx).trim()
-            const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-            sentence = sentence
-              .replace(namePrefixRegex, '')
-              .replace(/###/g, '')
-              .replace(/Director:\s*/gi, '')
-              .replace(/User:\s*/gi, '')
-              .trim()
-            if (sentence) onSentence?.(sentence)
-            buffer = buffer.substring(endIdx + 1)
+        const stopTokens = ['###', 'Director:', 'User:']
+        let earliestIdx = -1
+        let matchedToken: string | null = null
+        for (const token of stopTokens) {
+          const idx = buffer.indexOf(token)
+          if (idx >= 0 && (earliestIdx === -1 || idx < earliestIdx)) {
+            earliestIdx = idx
+            matchedToken = token
           }
+        }
+        if (earliestIdx >= 0 && matchedToken) {
+          const preStop = buffer
+            .substring(0, earliestIdx)
+            .trim()
+            .replace(new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i'), '')
+            .replace(/###/g, '')
+            .replace(/Director:\s*/gi, '')
+            .replace(/User:\s*/gi, '')
+            .trim()
+          if (preStop) onSentence?.(preStop)
+          buffer = ''
+        }
+
+        let match
+        while ((match = buffer.match(/([.!?])\s/))) {
+          const endIdx = match.index! + 1
+          let sentence = buffer.substring(0, endIdx).trim()
+          const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+          sentence = sentence
+            .replace(namePrefixRegex, '')
+            .replace(/###/g, '')
+            .replace(/Director:\s*/gi, '')
+            .replace(/User:\s*/gi, '')
+            .trim()
+          if (sentence) onSentence?.(sentence)
+          buffer = buffer.substring(endIdx + 1)
+        }
+
+        // Custom web-llm fork: flush on sentence_boundary even without trailing space
+        if (isSentenceBoundaryEvent(event) && buffer.trim()) {
+          let sentence = buffer.trim()
+          const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
+          sentence = sentence
+            .replace(namePrefixRegex, '')
+            .replace(/###/g, '')
+            .replace(/Director:\s*/gi, '')
+            .replace(/User:\s*/gi, '')
+            .trim()
+          if (sentence) onSentence?.(sentence)
+          buffer = ''
         }
       }
 
@@ -360,7 +376,7 @@ export class GroupChatManager {
 
       let response = ''
       for await (const chunk of stream) {
-        response += chunk
+        response += getStreamContent(chunk)
       }
 
       const raw = response.trim()
@@ -491,7 +507,7 @@ export class GroupChatManager {
 
         let fullResponse = ''
         for await (const chunk of stream) {
-          fullResponse += chunk
+          fullResponse += getStreamContent(chunk)
         }
 
         const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')

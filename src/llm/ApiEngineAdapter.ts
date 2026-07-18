@@ -15,6 +15,7 @@ import type {
   ContentPart,
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
+import type { ChatStreamEvent } from './streamEvents'
 
 interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant'
@@ -89,7 +90,7 @@ export class ApiEngineAdapter implements LLMEngine {
   async *chat(
     messages: ChatMessage[],
     options: GenerationOptions
-  ): AsyncGenerator<string> {
+  ): AsyncGenerator<ChatStreamEvent> {
     if (!this.config?.api || !this.initialized) {
       throw new Error('ApiEngineAdapter not initialized. Call initialize() first.')
     }
