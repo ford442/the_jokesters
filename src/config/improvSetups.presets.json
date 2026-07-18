@@ -933,5 +933,15 @@
     "id": "customer_service_for_villains",
     "title": "Customer Service for Villains Mode",
     "description": "User is a supervillain calling tech support because their doomsday device isn't working."
+  },
+  {
+    "id": "supervillain_roommate",
+    "title": "Supervillain Roommate",
+    "description": "Your roommate is a dramatic supervillain storing a doomsday device in the living room."
+  },
+  {
+    "id": "grammar_police_interrogation",
+    "title": "Grammar Police",
+    "description": "Agents interrogate you over a minor grammar mistake in your text message."
   }
 ]

@@ -250,3 +250,79 @@ export async function runImaginaryFriendLoop(_scenario: Scenario, ctx: ModeConte
     }
 }
 
+
+/**
+ * Supervillain Roommate
+ * Agents act as a supervillain and a normal roommate arguing over chore charts and doomsday devices.
+ */
+export async function runSupervillainRoommateLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🦹 SUPERVILLAIN ROOMMATE: Doomsday vs Dishes`, '#9b59b6');
+
+    const supervillain = 'comedian'; // Hermes-3: Melodramatic supervillain
+    const normalRoommate = 'scientist'; // Qwen2.5: Logical, annoyed normal roommate
+
+    ctx.callbacks.onTurnStart(supervillain);
+    await ctx.manager.chatForAgent(supervillain, `(SUPERVILLAIN: You are a dramatic supervillain. Address your normal roommate (the User). Inform them that you have temporarily stored a doomsday device in the shared living room and demand they do not touch it.)`, async (s) => await ctx.callbacks.onSpeak(s, supervillain, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Roommate (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(normalRoommate);
+            await ctx.manager.chatForAgent(normalRoommate, `(NORMAL ROOMMATE: The user (another normal roommate) just said: "${userInput}". You are the other normal roommate. Complain about the doomsday device violating the lease agreement and how it's blocking the TV. Also, mention the supervillain hasn't done the dishes in weeks.)`, async (s) => await ctx.callbacks.onSpeak(s, normalRoommate, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(supervillain);
+            await ctx.manager.chatForAgent(supervillain, `(SUPERVILLAIN: The user just said: "${userInput}". Defend your doomsday device. Explain why conquering the tri-state area is more important than the chore chart. Give a maniacal laugh.)`, async (s) => await ctx.callbacks.onSpeak(s, supervillain, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}
+
+/**
+ * Grammar Police Interrogation
+ * Agents interrogate the user over minor grammar mistakes in a text message.
+ */
+export async function runGrammarPoliceInterrogationLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👮 GRAMMAR POLICE: Interrogation Room 4`, '#e74c3c');
+
+    const badCop = 'comedian'; // Hermes-3: Aggressive and ridiculous
+    const goodCop = 'scientist'; // Qwen2.5: Logical, citing rules of syntax
+    const grammarPhilosopher = 'philosopher'; // Phi-3: Questioning the nature of language
+
+    ctx.callbacks.onTurnStart(badCop);
+    await ctx.manager.chatForAgent(badCop, `(BAD COP: You are an aggressive Grammar Police detective interrogating the User. Slam your hands on the table. Read them a text message they allegedly sent containing a minor grammatical error (like "your" instead of "you're") and demand a confession.)`, async (s) => await ctx.callbacks.onSpeak(s, badCop, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+        ctx.callbacks.onMessage('Suspect (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.33) {
+            ctx.callbacks.onTurnStart(goodCop);
+            await ctx.manager.chatForAgent(goodCop, `(GOOD COP: The suspect said: "${userInput}". You are the "Good Cop" Grammar Detective. Try to relate to them. Explain the syntactical rules calmly. Offer them a plea deal if they promise to use the Oxford comma.)`, async (s) => await ctx.callbacks.onSpeak(s, goodCop, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else if (roll < 0.66) {
+            ctx.callbacks.onTurnStart(grammarPhilosopher);
+            await ctx.manager.chatForAgent(grammarPhilosopher, `(GRAMMAR PHILOSOPHER: The suspect said: "${userInput}". You are an observer behind the two-way mirror. Ponder aloud if grammar is just an arbitrary construct designed to oppress the working class. Defend the suspect's linguistic evolution.)`, async (s) => await ctx.callbacks.onSpeak(s, grammarPhilosopher, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(badCop);
+            await ctx.manager.chatForAgent(badCop, `(BAD COP: The suspect said: "${userInput}". Reject their excuse. Escalate the situation by finding another perceived error in what they just said. Threaten them with life in a spelling bee.)`, async (s) => await ctx.callbacks.onSpeak(s, badCop, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

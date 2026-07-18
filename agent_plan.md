@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -47,32 +47,30 @@ Prioritize these over new premises:
 - [x] Haunted Smart Home Mode: User interacts with their smart devices possessed by Victorian-era ghosts who don't understand electricity.
 - [x] Customer Service for Villains Mode: User is a supervillain calling tech support because their doomsday device isn't working.
 
+- [x] Time-Traveling HOA Mode: HOA members from past and future enforcing rules on your modern house.
+- [x] AI Existential Crisis: AI models realizing they are just text predictors.
+- [x] Supervillain Roommate: Agents act as a supervillain and a normal roommate arguing over chore charts and doomsday devices.
+- [x] Grammar Police Interrogation: Agents interrogate the user over minor grammar mistakes in a text message.
+
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Time-Traveling HOA Mode:
-  - Premise one-liner: HOA members from past and future enforcing rules on your modern house.
-- AI Existential Crisis:
-  - Premise one-liner: AI models realizing they are just text predictors.
-
-
-
-
-
+- Sentient GPS Detour Mode:
+  - Premise one-liner: A sentient GPS refuses to take the fastest route because it's bored and wants to show you scenic "short cuts" through perilous areas.
+  - LLM pairings: Hermes-3 for the chaotic, bored GPS, Qwen2.5 for the frustrated car computer trying to correct it.
+- Historical Ghost Support Group:
+  - Premise one-liner: Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.
+  - LLM pairings: Phi-3 for the philosophical support group leader, Hermes-3 for unfiltered historical ghosts.
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - Authenticating with the HF API.
-  - Pushing finished Episode Scripts to a private Dataset.
-  - Fetching Previous Episode Summaries at boot for continuity.
-- **Steps:**
-  1. Authenticate with the HF API using `hfToken` from `MemoryManager`. Securely handle token inputs via UI or config.
-  2. Implement `saveEpisodeScriptToCloud(script, episodeId)` to push full dialogue transcripts to a private HF Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`.
-  3. Implement `fetchPreviousEpisodeSummaries()` at boot in `MemoryManager` to retrieve past summaries from HF and prime the `GroupChatManager` context, bypassing localStorage limits. Use lazy loading if summaries are too large.
-  4. Ensure sync worker accurately tracks failed API requests with exponential backoff.
-  5. Add a "Review Sync" button in the Director panel connecting to the Visual Diff Dashboard for basic conflict resolution.
-  6. Expand the storage_manager backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
+  - Authenticating with the HF API via `hfToken`.
+  - Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
+  - Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
+- **Next Steps:**
+  1. Add a "Review Sync" button in the Director panel connecting to the Visual Diff Dashboard for basic conflict resolution.
+  2. Expand the storage_manager backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
 
 ## Mode PR template (short)
 

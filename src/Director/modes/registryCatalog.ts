@@ -399,11 +399,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'customer_service_for_villains',
-    title: 'Customer Service For Villains',
+    title: 'Customer Service for Villains Mode',
     category: 'dream',
-    description: 'A Customer Service For Villains scene.',
+    description: 'User is a supervillain calling tech support because their doomsday device isn\'t working.',
     tags: ['dream', 'customer', 'service', 'for', 'villains'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'customer_service_hell',
@@ -700,6 +700,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Ghost Hunters scene.',
     tags: ['dream', 'ghost', 'hunters'],
     showInPresets: false,
+  },
+  {
+    id: 'grammar_police_interrogation',
+    title: 'Grammar Police',
+    category: 'dream',
+    description: 'Agents interrogate you over a minor grammar mistake in your text message.',
+    tags: ['dream', 'grammar', 'police', 'interrogation'],
+    showInPresets: true,
   },
   {
     id: 'greek_god_hoa',
@@ -2099,6 +2107,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Agents play incompetent supervillains trying to come up with a new evil plan.',
     tags: ['dream', 'supervillain', 'brainstorming', 'session'],
+    showInPresets: true,
+  },
+  {
+    id: 'supervillain_roommate',
+    title: 'Supervillain Roommate',
+    category: 'dream',
+    description: 'Your roommate is a dramatic supervillain storing a doomsday device in the living room.',
+    tags: ['dream', 'supervillain', 'roommate'],
     showInPresets: true,
   },
   {
