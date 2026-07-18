@@ -7,7 +7,7 @@ The Jokesters controls how much conversation history agents see via a **message-
 | Control | Where | Behavior |
 |---------|-------|----------|
 | **Memory Depth slider** | In-app settings panel | User preference, persisted in `localStorage` (`jokesters-memory-depth`). Changes take effect on the **next turn** mid-session. |
-| **Scene `contextDepth`** | `Scenario.config.contextDepth` | Overrides slider for Director-driven scenes. Falls back to per-category defaults when omitted. |
+| **Scene `contextDepth`** | `Scenario.config.contextDepth` | Overrides slider for Director-driven scenes. Falls back to mode `estimatedTurns`, then per-category defaults when omitted. |
 | **Director `memoryHint`** | `getDirectorCritique()` | One-turn override: `zoom_in`, `zoom_out`, or `recall:TOPIC`. |
 
 ## Default depth by mode category
@@ -23,6 +23,17 @@ The Jokesters controls how much conversation history agents see via a **message-
 | `dream` | 12 | Surreal beats, less continuity needed |
 
 Director critique uses ~40% of the effective depth (minimum 4 messages).
+
+### Mode `estimatedTurns` fallback
+
+When a scene omits `config.contextDepth`, depth is derived from registry metadata:
+
+| `estimatedTurns` | Depth |
+|------------------|-------|
+| `'short'` | category default − 4 |
+| `'medium'` / omitted | category default |
+| `'long'` | category default + 4 |
+| number | clamped to 4–30 |
 
 ## Memory hints
 

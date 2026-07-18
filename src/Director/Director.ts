@@ -6,7 +6,7 @@ import { ComedySession } from '../comedy/ComedySession';
 import { isComedyEnabled } from './modeConfig';
 import { loadModeLoop, getMode } from './modes/registry';
 import type { RegisteredModeId } from './modes/registry';
-import { getDefaultContextDepthForCategory } from '../config/contextDepth';
+import { getContextDepthForMode } from '../config/contextDepth';
 import { buildEpisodeFromHistory, setLastEpisode } from '../episode';
 
 export interface DirectorCallbacks {
@@ -300,7 +300,7 @@ export class Director {
 
         const modeDef = getMode(scenario.type);
         const sceneDepth = scenario.config?.contextDepth
-            ?? (modeDef ? getDefaultContextDepthForCategory(modeDef.category) : null);
+            ?? (modeDef ? getContextDepthForMode(modeDef) : null);
         this.manager.setSceneMemoryDepth(sceneDepth);
 
         this.initComedySession(scenario);
