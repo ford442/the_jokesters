@@ -34,6 +34,7 @@ function generateVisualDiff(localObj: any, cloudObj: any) {
 
 export const setupDashboard = () => {
     const dashboardBtn = document.getElementById('cloud-dashboard-btn');
+    const reviewSyncBtn = document.getElementById('review-sync-btn');
     const dashboardModal = document.getElementById('cloud-dashboard-modal');
     const closeBtn = document.getElementById('close-cloud-dashboard-btn');
     const refreshBtn = document.getElementById('refresh-cloud-dashboard-btn');
@@ -95,6 +96,12 @@ export const setupDashboard = () => {
             historyList.appendChild(div);
         });
     };
+
+    if (reviewSyncBtn) {
+        reviewSyncBtn.addEventListener('click', () => {
+            dashboardModal.style.display = 'flex';
+        });
+    }
 
     dashboardBtn.addEventListener('click', () => {
         dashboardModal.style.display = 'flex';

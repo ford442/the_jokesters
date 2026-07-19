@@ -233,6 +233,7 @@ export function getAppTemplate(): string {
 
             <span id="sync-icon">☁️</span>
             <span id="sync-text">Not synced</span>
+            <button id="review-sync-btn" style="background: none; border: 1px solid #4ecdc4; color: #4ecdc4; border-radius: 4px; padding: 2px 5px; cursor: pointer; font-size: 0.9em; margin-left: 10px;">Review Sync</button>
             <button id="cloud-dashboard-btn" style="background: none; border: 1px solid #4ecdc4; color: #4ecdc4; border-radius: 4px; padding: 2px 5px; cursor: pointer; font-size: 0.9em; margin-left: 10px;">Dashboard</button>
 
           </div>
