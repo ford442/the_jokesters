@@ -54,6 +54,8 @@ export interface Scenario {
     title: string;
     description: string;
     config?: {
+        apocalypseType?: string;
+        hauntedFeature?: string;
         chaosLevel?: number;
         initialPrompt?: string;
         videoUrl?: string;

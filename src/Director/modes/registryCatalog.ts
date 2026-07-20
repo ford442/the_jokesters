@@ -1270,6 +1270,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'over_prepared_doomsday_preppers',
+    title: 'Over-prepared Doomsday Preppers',
+    category: 'dream',
+    description: 'Doomsday preppers argue over which highly specific and unlikely apocalypse they should be preparing for next week.',
+    tags: ['dream', 'over', 'prepared', 'doomsday', 'preppers'],
+    showInPresets: true,
+  },
+  {
     id: 'overprotective_smart_lock',
     title: 'The Overprotective Smart Lock',
     category: 'dream',
@@ -1307,6 +1315,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'A smoke detector going off every time someone has a heated argument.',
     tags: ['dream', 'paranoid', 'smoke', 'detector'],
+    showInPresets: true,
+  },
+  {
+    id: 'paranormal_real_estate_agents',
+    title: 'Paranormal Real Estate Agents',
+    category: 'dream',
+    description: 'Real estate agents try to sell an obviously haunted house by passing off its curses as unique architectural features.',
+    tags: ['dream', 'paranormal', 'real', 'estate', 'agents'],
     showInPresets: true,
   },
   {

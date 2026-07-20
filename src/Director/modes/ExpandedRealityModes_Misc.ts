@@ -326,3 +326,39 @@ export async function runGrammarPoliceInterrogationLoop(scenario: Scenario, ctx:
         }
     }
 }
+
+/**
+ * Over-prepared Doomsday Preppers Mode
+ * Preppers argue over which highly specific and unlikely apocalypse they should prepare for next week.
+ */
+export async function runOverPreparedDoomsdayPreppersLoop(scenario: Scenario, ctx: ModeContext) {
+    const apocalypseType = scenario.config?.apocalypseType || 'Y2K but for toasters';
+    ctx.callbacks.onMessage('Director', `🥫 BUNKERS READY: Preparing for ${apocalypseType}`, '#e67e22');
+
+    const conspiracyPrepper = 'comedian'; // Hermes-3: Paranoid and unhinged
+    const pragmaticPrepper = 'scientist'; // Qwen2.5: Obsessed with spreadsheets and inventory
+
+    // 1. Initial Briefing
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(conspiracyPrepper);
+    await ctx.manager.chatForAgent(conspiracyPrepper, `(You are a paranoid doomsday prepper. You just discovered a new existential threat: ${apocalypseType}. Pitch it to your fellow prepper and explain why you need to hoard a specific random item to survive it.)`, async (s) => await ctx.callbacks.onSpeak(s, conspiracyPrepper, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('The Bunker Radio (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Pragmatic response
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(pragmaticPrepper);
+        await ctx.manager.chatForAgent(pragmaticPrepper, `(You are the pragmatic, spreadsheet-obsessed prepper. The radio just broadcasted: "${userInput}". Evaluate how this affects your supply chain and inventory. Criticize the other prepper's lack of organization.)`, async (s) => await ctx.callbacks.onSpeak(s, pragmaticPrepper, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Conspiracy escalation
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(conspiracyPrepper);
+        await ctx.manager.chatForAgent(conspiracyPrepper, `(React to "${userInput}" and the other prepper. Spin it into a wild conspiracy theory about how it's all connected to the ${apocalypseType}.)`, async (s) => await ctx.callbacks.onSpeak(s, conspiracyPrepper, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}
