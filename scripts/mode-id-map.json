@@ -1338,5 +1338,13 @@
   {
     "id": "historical_ghost_support_group",
     "handler": "runHistoricalGhostSupportGroupLoop"
+  },
+  {
+    "id": "over_prepared_doomsday_preppers",
+    "handler": "runOverPreparedDoomsdayPreppersLoop"
+  },
+  {
+    "id": "paranormal_real_estate_agents",
+    "handler": "runParanormalRealEstateAgentsLoop"
   }
 ]

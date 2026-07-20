@@ -358,3 +358,39 @@ export async function runHistoricalGhostSupportGroupLoop(_scenario: Scenario, ct
         }
     }
 }
+
+/**
+ * Paranormal Real Estate Agents Mode
+ * Agents try to sell an obviously haunted house by passing off curses as features.
+ */
+export async function runParanormalRealEstateAgentsLoop(scenario: Scenario, ctx: ModeContext) {
+    const hauntedFeature = scenario.config?.hauntedFeature || 'bleeding walls';
+    ctx.callbacks.onMessage('Director', `🏠 OPEN HOUSE: Featuring ${hauntedFeature}`, '#9b59b6');
+
+    const listingAgent = 'scientist'; // Qwen2.5: Overly cheerful, ignoring reality
+    const residentGhost = 'philosopher'; // Phi-3: Philosophical ghost currently living there
+
+    // 1. Initial Pitch
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(listingAgent);
+    await ctx.manager.chatForAgent(listingAgent, `(You are an overly cheerful real estate agent trying to sell a house to the user. Address the obvious problem: the ${hauntedFeature}. Spin it as a "unique architectural feature" or a "bonus".)`, async (s) => await ctx.callbacks.onSpeak(s, listingAgent, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Potential Buyer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // 2. Ghostly interruption
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(residentGhost);
+        await ctx.manager.chatForAgent(residentGhost, `(You are the philosophical ghost living in the house. React to the buyer saying: "${userInput}". Explain why the ${hauntedFeature} is actually a profound metaphor for the human condition, and try to scare them away politely.)`, async (s) => await ctx.callbacks.onSpeak(s, residentGhost, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        // 3. Agent damage control
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(listingAgent);
+        await ctx.manager.chatForAgent(listingAgent, `(The ghost just tried to scare the buyer. The buyer said "${userInput}". Do damage control! Spin the ghost's presence as an included "smart home security system" or "historical charm".)`, async (s) => await ctx.callbacks.onSpeak(s, listingAgent, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}
