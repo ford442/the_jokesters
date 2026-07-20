@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -65,6 +65,14 @@ Prioritize these over new premises:
   - Premise one-liner: Real estate agents try to sell an obviously haunted, highly dangerous house by passing off its curses as "unique architectural features."
   - LLM pairings: Qwen2.5 for the overly cheerful listing agent, Phi-3 for the philosophical ghost currently living there.
 
+
+- Sentient Codebase Mode:
+  - Premise one-liner: The codebase itself achieves sentience and complains to the developers about spaghetti code.
+  - LLM pairings: Qwen2.5 for the overly strict linter personality, Hermes-3 for the chaotic junior developer.
+- Audience Heckler Mode:
+  - Premise one-liner: The audience aggressively heckles the agents, who must ruthlessly roast them back while trying to finish their sets.
+  - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the bewildered event organizer.
+
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
@@ -72,8 +80,8 @@ Prioritize these over new premises:
   - [x] Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
   - [x] Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
 - **Next Steps:**
-  - [ ] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
-  - [ ] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
+  - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
+  - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
 
 ## Mode PR template (short)
 

@@ -303,6 +303,37 @@ export class MemoryManager {
     }
 
 
+
+    public async saveEpisodeAssetToCloud(episodeId: string, assetType: 'song' | 'pattern' | 'shader', assetName: string, assetContent: string): Promise<void> {
+        if (!this.hfToken || !this.hfRepoId) {
+            console.warn("Skipping cloud asset save: HF credentials not configured.");
+            return;
+        }
+
+        try {
+            const filename = `episodes/${episodeId}/assets/${assetType}s/${assetName}`;
+            await this.hfStorage.saveFile(this.hfToken, this.hfRepoId, filename, assetContent);
+            console.log(`Successfully saved ${assetType} asset to cloud: ${filename}`);
+        } catch (e) {
+            console.error(`Failed to save episode asset to cloud (${assetType}/${assetName}):`, e);
+        }
+    }
+
+    public async loadEpisodeAssetFromCloud(episodeId: string, assetType: 'song' | 'pattern' | 'shader', assetName: string): Promise<string | null> {
+        if (!this.hfToken || !this.hfRepoId) {
+            return null;
+        }
+
+        try {
+            const filename = `episodes/${episodeId}/assets/${assetType}s/${assetName}`;
+            const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, filename);
+            return content;
+        } catch (e) {
+            console.error(`Failed to load episode asset from cloud (${assetType}/${assetName}):`, e);
+            return null;
+        }
+    }
+
     public async saveEpisodeScriptToCloud(script: any, episodeId: string): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/script.json`;
