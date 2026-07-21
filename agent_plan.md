@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 1
 
 ## Process (P0)
 
@@ -60,15 +60,12 @@ Prioritize these over new premises:
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Undercover Boss: Alien Invasion Edition:
-  - Premise one-liner: An alien commander goes undercover as a low-level earthling to see how the invasion preparations are going.
-  - LLM pairings: Qwen2.5 for the strict boss, Phi-3 for the oblivious human coworker.
-- Time-Traveling Tour Guide:
-  - Premise one-liner: A tour guide from the year 3000 shows tourists around the "primitive" year 2024.
-  - LLM pairings: Hermes-3 for the smug tour guide, Qwen2.5 for the confused tourist.
-
-
-
+- Intergalactic Zoo Escape:
+  - Premise one-liner: Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.
+  - LLM pairings: Hermes-3 for the panicked zookeeper, Qwen2.5 for the logical alien animal control.
+- Undercover Boss: Sentient AI:
+  - Premise one-liner: An advanced AGI goes undercover as a simple calculator app to see how users treat rudimentary software.
+  - LLM pairings: Qwen2.5 for the strict AI boss, Phi-3 for the confused user.
 - Sentient Codebase Mode:
   - Premise one-liner: The codebase itself achieves sentience and complains to the developers about spaghetti code.
   - LLM pairings: Qwen2.5 for the overly strict linter personality, Hermes-3 for the chaotic junior developer.
@@ -82,7 +79,7 @@ Prioritize these over new premises:
   - [x] Authenticating with the HF API via `hfToken`.
   - [x] Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
   - [x] Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
-  - [ ] Implement conflict resolution UI for local vs cloud versions of episode assets like songs/patterns/shaders.
+  - [x] Implement conflict resolution UI for local vs cloud versions of episode assets like songs/patterns/shaders.
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
   - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.

@@ -215,8 +215,27 @@ export const setupDashboard = () => {
                     div.innerHTML = `<div style="font-weight: bold; color: #ffd700;">${delta.path || 'Unknown file'}</div>
                                      <div style="font-size: 0.85em; color: #ccc;">Size: ${delta.size || 0} bytes</div>
                                      <button class="preview-diff-btn" data-path="${delta.path}" style="margin-top: 5px; background: #0f3460; color: white; border: 1px solid #4ecdc4; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Preview Diff</button>
+                                     <button class="accept-local-btn" data-path="${delta.path}" style="margin-top: 5px; margin-left: 5px; background: #27ae60; color: white; border: 1px solid #2ecc71; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Accept Local</button>
+                                     <button class="accept-cloud-btn" data-path="${delta.path}" style="margin-top: 5px; margin-left: 5px; background: #c0392b; color: white; border: 1px solid #e74c3c; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Accept Cloud</button>
                                      <div class="diff-preview-container" style="display: none; margin-top: 10px; font-family: monospace; font-size: 0.8em; white-space: pre-wrap; background: #000; padding: 5px; border-radius: 4px; border: 1px solid #333;"></div>`;
                     deltasList.appendChild(div);
+                });
+
+                // Add event listeners for Accept Local / Accept Cloud
+                document.querySelectorAll('.accept-local-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const target = e.target as HTMLButtonElement;
+                        const path = target.getAttribute('data-path');
+                        alert("Accept Local clicked for " + path + ". (Placeholder for local merge logic)");
+                    });
+                });
+
+                document.querySelectorAll('.accept-cloud-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const target = e.target as HTMLButtonElement;
+                        const path = target.getAttribute('data-path');
+                        alert("Accept Cloud clicked for " + path + ". (Placeholder for cloud merge logic)");
+                    });
                 });
 
                 // Add event listeners to diff buttons
