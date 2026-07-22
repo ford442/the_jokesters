@@ -928,3 +928,40 @@ export async function runMultiverseEscapeRoomLoop(_scenario: Scenario, ctx: Mode
         }
     }
 }
+
+
+/**
+ * Intergalactic Zoo Escape
+ * Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.
+ */
+export async function runEscapeZooLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 ZOO ESCAPE: Rounding up intergalactic animals...`, '#27ae60');
+
+    const panickedZookeeper = 'comedian'; // Hermes-3 equivalent for panicked/unfiltered zookeeper
+    const alienControl = 'scientist'; // Qwen2.5 equivalent for strict logical alien animal control
+
+    ctx.callbacks.onTurnStart(panickedZookeeper);
+    await ctx.manager.chatForAgent(panickedZookeeper, `(ZOO ESCAPE: You are a panicked zookeeper whose intergalactic zoo just had a massive security breach. Animals like the "Quantum Sloth" or "Plasma Badger" have escaped. Plead with the User to help you catch them before your boss finds out. Emphasize how dangerous and bizarre these animals are.)`, async (s) => await ctx.callbacks.onSpeak(s, panickedZookeeper, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    ctx.callbacks.onTurnStart(alienControl);
+    await ctx.manager.chatForAgent(alienControl, `(ZOO ESCAPE: You are a highly logical, cold alien animal control agent. The zookeeper is panicking, but you are strictly focused on applying Intergalactic Zoo Regulations. Describe a highly specific, bizarre alien method for catching the escaped animals and ask the User to assist in deploying it.)`, async (s) => await ctx.callbacks.onSpeak(s, alienControl, {}));
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            ctx.callbacks.onTurnStart(panickedZookeeper);
+            await ctx.manager.chatForAgent(panickedZookeeper, `(ZOO ESCAPE: The user just suggested: "${userInput}". React with sheer panic, explaining why this method will only enrage the escaped animals or cause a temporal paradox. Beg the User to think of something else.)`, async (s) => await ctx.callbacks.onSpeak(s, panickedZookeeper, {}));
+            await ctx.callbacks.onTurnEnd();
+        } else {
+            ctx.callbacks.onTurnStart(alienControl);
+            await ctx.manager.chatForAgent(alienControl, `(ZOO ESCAPE: The user just suggested: "${userInput}". Analyze the user's suggestion logically. Point out its flaws based on alien biology or physics, and counter with a much more complex, bureaucratic, or dangerous solution.)`, async (s) => await ctx.callbacks.onSpeak(s, alienControl, {}));
+            await ctx.callbacks.onTurnEnd();
+        }
+    }
+}

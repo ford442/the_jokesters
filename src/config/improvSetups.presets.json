@@ -953,5 +953,10 @@
     "id": "paranormal_real_estate_agents",
     "title": "Paranormal Real Estate Agents",
     "description": "Real estate agents try to sell an obviously haunted house by passing off its curses as unique architectural features."
+  },
+  {
+    "id": "escape_zoo",
+    "title": "Intergalactic Zoo Escape",
+    "description": "Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods."
   }
 ]

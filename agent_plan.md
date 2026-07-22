@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 1
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -56,13 +56,16 @@ Prioritize these over new premises:
 
 - [x] Sentient GPS Detour Mode: A sentient GPS refuses to take the fastest route because it's bored and wants to show you scenic "short cuts" through perilous areas.
 - [x] Historical Ghost Support Group: Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.
+- [x] Intergalactic Zoo Escape: Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Intergalactic Zoo Escape:
-  - Premise one-liner: Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.
-  - LLM pairings: Hermes-3 for the panicked zookeeper, Qwen2.5 for the logical alien animal control.
+- Sentient Coffee Table Mode:
+  - Premise one-liner: A sentient coffee table is tired of people leaving condensation rings on it and demands a better working environment.
+  - LLM pairings: Qwen2.5 for the strict AI coffee table, Phi-3 for the confused user.
+
+
 - Undercover Boss: Sentient AI:
   - Premise one-liner: An advanced AGI goes undercover as a simple calculator app to see how users treat rudimentary software.
   - LLM pairings: Qwen2.5 for the strict AI boss, Phi-3 for the confused user.
@@ -76,10 +79,9 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [x] Authenticating with the HF API via `hfToken`.
-  - [x] Pushing finished Episode Scripts to a private Dataset (e.g., `episodes/`) utilizing the dataset API via `fetch`, with exponential backoff for 429s.
-  - [x] Fetching Previous Episode Summaries at boot for continuity, caching them locally, and lazily loading full history to prime the `GroupChatManager` context.
-  - [x] Implement conflict resolution UI for local vs cloud versions of episode assets like songs/patterns/shaders.
+  - [x] Authenticating with the HF API.
+  - [x] Pushing finished "Episode Scripts" to a private Dataset.
+  - [x] Fetching "Previous Episode Summaries" at boot for continuity.
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
   - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.

@@ -77,6 +77,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'escape_backrooms': async () => (await import('./ExpandedRealityModes_Supernatural')).runEscapeBackroomsLoop,
   'escape_room': async () => (await import('./ExpandedRealityModes_Supernatural')).runEscapeRoomLoop,
   'escape_room_game_master': async () => (await import('./InteractiveMode')).runEscapeRoomGameMasterLoop,
+  'escape_zoo': async () => (await import('./DreamModes_Scifi')).runEscapeZooLoop,
   'escaped_npc': async () => (await import('./DreamModes_Fantasy')).runEscapedNPCModeLoop,
   'excalibur_tech_support': async () => (await import('./DreamModes_Fantasy')).runExcaliburTechSupportLoop,
   'floppy_disk_defenders': async () => (await import('./DreamModes_Tech')).runFloppyDiskDefendersLoop,
