@@ -582,6 +582,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'escape_zoo',
+    title: 'Intergalactic Zoo Escape',
+    category: 'dream',
+    description: 'Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.',
+    tags: ['dream', 'escape', 'zoo'],
+    showInPresets: true,
+  },
+  {
     id: 'escaped_npc',
     title: 'Escaped NPC Mode',
     category: 'dream',
