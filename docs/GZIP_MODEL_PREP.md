@@ -1,9 +1,15 @@
 # Preparing gzip-compressed model shards for storage.1ink.us
 
 The service worker transparently fetches `<shard>.bin.gz` (or `.wasm.gz`) instead
-of the plain file when the compressed twin exists on the VPS. This cuts download
-size by roughly 20–35% with zero code changes on the client — the SW handles
-decompression with the browser's native `DecompressionStream('gzip')`.
+of the plain file when the compressed twin exists **on the same host** as the
+request. This cuts download size by roughly 20–35% with zero code changes on the
+client — the SW handles decompression with the browser's native
+`DecompressionStream('gzip')`.
+
+**Important:** gzip only pays off on `storage.1ink.us`. Contabo-only `.gz` twins
+are a footgun — the SW will not cross-host to Contabo for compression (that host
+is slower). After compressing on Contabo origin, sync `.gz` files with
+`sync_models_to_1ink.sh`. Missing `.gz` HEADs are negative-cached for ~1 hour.
 
 **Why gzip and not brotli:** browsers only expose `DecompressionStream` for
 `gzip`, `deflate`, and `deflate-raw`. Brotli is server-side (`Content-Encoding: br`)
@@ -13,8 +19,11 @@ and Dreamhost shared hosting doesn't support it. gzip -9 is the practical maximu
 
 ## What to compress
 
-Only files served from `storage.1ink.us` are eligible — the SW skips HuggingFace
-CDN URLs. Compress every file with extension `.bin`, `.wasm`, or `.gguf`.
+Only files served from **`storage.1ink.us`** are eligible — the service worker
+probes `<url>.gz` on the **same origin** as the request. Contabo-only `.gz`
+twins on `storage.noahcohn.com` are ignored (cross-host gzip would pull from the
+slower origin). Compress every file with extension `.bin`, `.wasm`, or `.gguf`,
+then sync those `.gz` files to DreamHost via `sync_models_to_1ink.sh`.
 
 Priority order (biggest wins first):
 

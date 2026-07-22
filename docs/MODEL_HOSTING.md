@@ -1,6 +1,11 @@
 # Model Hosting on VPS - Setup Guide
 
-This guide explains how all Jokesters models are hosted on the Contabo VPS (`storage.noahcohn.com`) for reliable, resumable downloads with full range header support.
+This guide explains how all Jokesters models are hosted for reliable, resumable
+downloads with full range header support.
+
+- **Public CDN (app default):** `https://storage.1ink.us/models`
+- **Origin / failover mirror:** Contabo VPS at `https://storage.noahcohn.com/models`
+  (`/data/files/models/`), synced to DreamHost with `contabo_storage_manager/scripts/sync_models_to_1ink.sh`
 
 ## Overview
 
@@ -38,6 +43,10 @@ chmod 755 /data/files/models
 # Ensure nginx is configured for CORS and range requests
 nginx -t
 systemctl reload nginx
+
+# Sync origin → public CDN (DreamHost)
+# export SFTP_PASS=…
+# bash /path/to/contabo_storage_manager/scripts/sync_models_to_1ink.sh
 ```
 
 ### 2. Automated Model Migration
@@ -68,8 +77,10 @@ export VPS_HOST=storage.noahcohn.com
 export VPS_USER=root
 export VPS_KEY_PATH=~/.ssh/id_rsa
 
-# Upload everything staged in .vps-staging/
+# Upload everything staged in .vps-staging/ (Contabo origin)
 python scripts/upload_staged_to_vps.py
+
+# Then sync Contabo → storage.1ink.us (see contabo_storage_manager/scripts/sync_models_to_1ink.sh)
 ```
 
 ### 4. Verify Uploads
@@ -165,7 +176,7 @@ All model URLs in the codebase now point to the VPS:
 - `src/llm/TransformersEngineAdapter.ts` — `env.remoteHost` redirected to VPS
 - `src/audio/Supertonic.ts` — TTS ONNX models
 - `src/audio/AudioEngine.ts` — TTS voice styles
-- `src/service-worker.ts` — Intercepts `storage.noahcohn.com` for parallel downloads
+- `src/service-worker.ts` — Intercepts `storage.1ink.us` (and Contabo failover) for parallel downloads
 
 ## Storage Requirements
 
@@ -184,16 +195,16 @@ All model URLs in the codebase now point to the VPS:
 
 ```bash
 curl -I -H "Range: bytes=0-1023" \
-  https://storage.noahcohn.com/models/Llama-2-7b-chat-hf-q4f32_1-MLC/params_shard_0.bin
+  https://storage.1ink.us/models/Llama-2-7b-chat-hf-q4f32_1-MLC/params_shard_0.bin
 ```
 
-Should return `HTTP/1.1 206 Partial Content` and `Accept-Ranges: bytes`.
+Should return `HTTP/2 206` (or `HTTP/1.1 206`) and `Accept-Ranges: bytes`.
 
 ### CORS Errors
 
 ```bash
 curl -I -H "Origin: https://your-app.com" \
-  https://storage.noahcohn.com/models/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm
+  https://storage.1ink.us/models/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm
 ```
 
 Should return `Access-Control-Allow-Origin: *`.
@@ -201,9 +212,10 @@ Should return `Access-Control-Allow-Origin: *`.
 ### Upload Failures
 
 1. Ensure SSH key is loaded: `ssh-add -l`
-2. Test connection: `ssh -i ~/.ssh/id_rsa root@storage.noahcohn.com`
+2. Test Contabo origin: `ssh -i ~/.ssh/id_rsa root@storage.noahcohn.com`
 3. Check disk space: `df -h /data`
 4. Check permissions: `ls -la /data/files/models/`
+5. Re-sync CDN: `SFTP_PASS=… bash contabo_storage_manager/scripts/sync_models_to_1ink.sh`
 
 ## Migration Checklist
 

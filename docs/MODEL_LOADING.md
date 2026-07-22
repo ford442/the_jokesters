@@ -14,7 +14,7 @@ The model picker in `src/main.ts` exposes two visible Vicuna paths today, and a 
 
 - **Engine**: `MlcEngineAdapter` → WebLLM → WebGPU
 - **Quantization**: q4f32 (4-bit weights, fp32 activations)
-- **Source**: VPS at `storage.noahcohn.com`
+- **Source**: VPS CDN at `storage.1ink.us`
 - **WASM lib**: MLC's prebuilt Llama-2-7B/Vicuna lib (`Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`)
 - **VRAM**: ~4 GB
 - **Runs on**: any WebGPU GPU; no `shader-f16` requirement (this is the whole point of q4f32)
@@ -103,12 +103,12 @@ If the extension isn't installed, WebLLM falls back gracefully. Pure upside.
 
 **Status**: Added to `src/config/models.ts`.
 
-#### 3.2. HTTP/2 or HTTP/3 on storage.noahcohn.com
+#### 3.2. HTTP/2 or HTTP/3 on storage.1ink.us
 
-WebLLM downloads many small shards. Each shard over HTTP/1.1 has TCP overhead. Verify your VPS is serving the model directory over HTTP/2 (most modern reverse proxies do this by default with TLS, but worth confirming).
+WebLLM downloads many small shards. Each shard over HTTP/1.1 has TCP overhead. Verify the public CDN is serving the model directory over HTTP/2 (DreamHost does with TLS).
 
 ```bash
-curl -I --http2 https://storage.noahcohn.com/models/vicuna-7b-q4f32-MLC/mlc-chat-config.json
+curl -I --http2 https://storage.1ink.us/models/vicuna-7b-q4f32-webllm/mlc-chat-config.json
 # Look for: HTTP/2 200
 ```
 
@@ -161,7 +161,7 @@ Today the `.wasm` library only starts downloading after `engine.reload()` is cal
 
 ```html
 <link rel="preload" as="fetch" crossorigin
-  href="https://storage.noahcohn.com/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm">
+  href="https://storage.1ink.us/models/wasm-libs/Llama-3.2-3B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm">
 ```
 
 Saves ~1–2s on subsequent load. Only do this for the recommended model — preloading every option wastes bandwidth.
@@ -176,7 +176,7 @@ Cosmetic but valuable. Track bytes/sec from `progressCallback` and project total
 
 ### Not worth doing ❌
 
-- **Sharding to a CDN like jsDelivr or Cloudflare R2** — cost/complexity not justified for a personal project; `storage.noahcohn.com` is fine.
+- **Sharding to a CDN like jsDelivr or Cloudflare R2** — cost/complexity not justified for a personal project; `storage.1ink.us` is the public CDN (Contabo is origin/failover).
 - ~~**Custom-recompiling a smaller Vicuna with MLC's compiler**~~ — **We now do this.** See `scripts/build-vicuna-wasm.sh`, Colab `public/Jokesters_WebLLM_Compile.ipynb`, and `docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md` §1.4. Policy for when to go deeper: [ADR 0001](./adr/0001-native-cpp-boundary.md). The payoff is real for 4GB GPU users, even if Hermes-3 3B is still the better default for most people.
 - **Pruning / distilling Vicuna 7B yourself** — same reason. The community has moved on; Hermes-3 and Llama-3 are the distilled successors.
 - **2-bit / 3-bit quantization (VPTQ, AQLM, QuIP#)** — research-grade, no MLC pipeline support today, quality cliff at <4 bits is real. Reconsider if MLC ships a 3-bit kernel; until then it's a side quest.
@@ -215,7 +215,7 @@ The Jokesters loads LLM weights at runtime in the user's browser. Three engines 
 
 After bumping `@wllama/wllama`, run `npm run verify:wllama` and update `scripts/wllama-wasm.manifest.json`. VPS-hosted wllama WASM (`wllama-wasm/`) is optional legacy mirror for `download_models_on_vps.py`; the app uses bundled WASM.
 
-Model weights are hosted on `storage.noahcohn.com` (self-hosted mirror) with HuggingFace as a fallback. Self-hosting gives us control over CORS, MIME types, cache headers, and uptime; HF gives us geo-distributed CDN reach. Both paths use the same MLC-compiled q4f32 weights for Vicuna 7B and the same Llama-2 model library `.wasm`.
+Model weights are hosted on `storage.1ink.us` (public CDN) with Contabo `storage.noahcohn.com` as origin/failover and HuggingFace as a last-resort path for some models. Self-hosting gives us control over CORS, MIME types, cache headers, and uptime; HF gives us geo-distributed CDN reach. Both VPS paths use the same MLC-compiled q4f32 weights for Vicuna 7B and the same Llama-2 model library `.wasm`.
 
 First-load is ~2–4 GB depending on model size; subsequent loads are instant from IndexedDB cache. The cache is cleared if storage pressure is detected (see `checkStorage()` in `main.ts`).
 
@@ -230,7 +230,7 @@ First-load is ~2–4 GB depending on model size; subsequent loads are instant fr
 | # | Action | Status | File |
 |---|--------|--------|------|
 | 1 | Add `cacheBackend: "cross-origin"` to AppConfig | ✅ Done | `src/config/models.ts` |
-| 2 | Audit `storage.noahcohn.com` headers | 🟡 Pending | Run `scripts/verify_vps_headers.py` |
+| 2 | Audit `storage.1ink.us` headers | 🟡 Pending | Run `scripts/verify_vps_headers.py` |
 | 3 | Drop / relabel GGUF Vicuna in picker | ✅ Done | `src/main.ts` |
 | 4 | Relabel two MLC Vicuna options | ✅ Done | `src/main.ts` |
 | 5 | Add `<link rel="preload">` for recommended `.wasm` | ✅ Done | `index.html` |

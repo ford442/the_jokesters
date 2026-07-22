@@ -1,7 +1,12 @@
 /// <reference lib="webworker" />
 // Inject manifest from vite-plugin-pwa
 import { precacheAndRoute } from 'workbox-precaching';
-import { rewriteVpsModelUrl } from './utils/vpsStorageUrl';
+import {
+  isVpsStorageUrl,
+  rewriteVpsModelUrl,
+  toVpsMirrorUrl,
+  vpsGzUrl,
+} from './utils/vpsStorageUrl';
 
 // @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST || []);
@@ -22,10 +27,11 @@ self.addEventListener('activate', (event) => {
  * requests for large files (> CHUNK_SIZE). For smaller files it acts as a
  * thin pass-through to avoid unnecessary memory buffering.
  *
- * Installation: Register in main.ts with:
- *   if ('serviceWorker' in navigator) {
- *     navigator.serviceWorker.register('./service-worker.js')
- *   }
+ * Reliability: after primary retries exhaust, falls back once to the Contabo
+ * mirror (storage.noahcohn.com ↔ storage.1ink.us).
+ *
+ * Speed: same-origin `.gz` twins only (no cross-host Contabo .gz pulls);
+ * negative-caches missing `.gz` HEADs for 1 hour.
  */
 
 // Service worker context (use any to avoid type conflicts with DOM types)
@@ -42,18 +48,36 @@ const MODEL_HOSTS = [
   'storage.noahcohn.com',
 ];
 
-/** Contabo mirror — .gz twins may exist here before DreamHost sync completes */
-const GZ_MIRROR_ORIGIN = 'https://storage.noahcohn.com';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
+const GZ_MISS_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/** Session negative cache for missing same-origin `.gz` twins. */
+const gzMissCache = new Map<string, number>();
+
+function isGzMissCached(gzUrl: string): boolean {
+  const expires = gzMissCache.get(gzUrl);
+  if (expires === undefined) return false;
+  if (Date.now() > expires) {
+    gzMissCache.delete(gzUrl);
+    return false;
+  }
+  return true;
+}
+
+function markGzMiss(gzUrl: string): void {
+  gzMissCache.set(gzUrl, Date.now() + GZ_MISS_TTL_MS);
+}
 
 /**
- * Fetch with exponential backoff retry
+ * Fetch with exponential backoff. On VPS URLs, after retries exhaust, try the
+ * mirror host once (primary ↔ Contabo).
  */
 async function fetchWithRetry(
   url: string,
   options?: RequestInit,
-  maxRetries = MAX_RETRIES
+  maxRetries = MAX_RETRIES,
+  allowMirrorFailover = true,
 ): Promise<Response> {
   let lastError: Error | undefined;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -81,12 +105,16 @@ async function fetchWithRetry(
       }
     }
   }
-  throw lastError || new Error(`fetch failed after ${maxRetries} retries`);
-}
 
-/** VPS hosts serve flat files; WebLLM's cleanModelUrl() injects /resolve/main/ (HF-style). */
-function rewriteVpsModelUrlForSw(url: string): string {
-  return rewriteVpsModelUrl(url);
+  if (allowMirrorFailover) {
+    const mirror = toVpsMirrorUrl(url);
+    if (mirror) {
+      console.warn(`[ServiceWorker] Primary failed, failing over to mirror: ${url} → ${mirror}`);
+      return fetchWithRetry(mirror, options, maxRetries, false);
+    }
+  }
+
+  throw lastError || new Error(`fetch failed after ${maxRetries} retries`);
 }
 
 /**
@@ -104,7 +132,7 @@ function isModelFile(url: string): boolean {
     return true;
   }
   // VPS /resolve/main/ paths (any extension) — needs rewrite
-  if (url.includes('storage.1ink.us/models/') && url.includes('/resolve/main/')) {
+  if (isVpsStorageUrl(url) && url.includes('/resolve/main/')) {
     return true;
   }
   return false;
@@ -112,119 +140,117 @@ function isModelFile(url: string): boolean {
 
 /**
  * Extensions whose weight shards may have pre-compressed .gz twins on the VPS.
- * Only applies to our own storage origin.
+ * Only applies to our own storage origin (same-origin probe).
  */
 const GZ_ELIGIBLE_EXTENSIONS = ['.bin', '.wasm', '.gguf', '.safetensors'];
 
 function isGzEligible(url: string): boolean {
   return (
-    url.includes('storage.1ink.us') &&
+    isVpsStorageUrl(url) &&
     GZ_ELIGIBLE_EXTENSIONS.some(ext => url.includes(ext))
   );
 }
 
 /**
- * Try to fetch a pre-compressed .gz twin of a model shard.
+ * Try to fetch a pre-compressed .gz twin of a model shard (same origin only).
  *
  * Flow:
- *  1. HEAD <url>.gz — if 404 or error, return null immediately (fast path).
- *  2. If found: download compressed bytes (parallel if range-capable).
- *  3. Decompress via DecompressionStream('gzip') (Chrome 80+, Edge 80+).
- *  4. Return a synthesised Response with the decompressed bytes.
+ *  1. Skip if negative-cached miss.
+ *  2. HEAD <url>.gz — if 404 or error, cache miss and return null.
+ *  3. If found: download compressed bytes (parallel if range-capable).
+ *  4. Decompress via DecompressionStream('gzip').
  *
- * The .gz files must be pre-created on the VPS with `gzip -9 <shard>`.
+ * The .gz files must be pre-created on the same host as `url` (usually
+ * storage.1ink.us). Contabo-only .gz twins are ignored by design.
  */
-function gzCandidateUrls(url: string): string[] {
-  const primary = url + '.gz';
-  if (!url.startsWith('https://storage.1ink.us/')) {
-    return [primary];
-  }
-  const mirror = primary.replace('https://storage.1ink.us/', `${GZ_MIRROR_ORIGIN}/`);
-  return mirror === primary ? [primary] : [primary, mirror];
-}
-
 async function tryFetchGzCompressed(url: string): Promise<Response | null> {
-  for (const gzUrl of gzCandidateUrls(url)) {
-    try {
-      const headResp = await fetch(gzUrl, { method: 'HEAD' });
-      if (!headResp.ok) continue;
-
-      const compressedSize = parseInt(headResp.headers.get('content-length') || '0', 10);
-      if (compressedSize === 0) continue;
-
-      const supportsRanges =
-        headResp.headers.has('accept-ranges') &&
-        headResp.headers.get('accept-ranges') !== 'none';
-
-      console.log(`[ServiceWorker] Found .gz shard: ${gzUrl} (${(compressedSize / 1024 / 1024).toFixed(1)} MB compressed)`);
-
-      // Download compressed bytes — parallel if the server supports Range requests
-      let compressedBytes: Uint8Array;
-      if (supportsRanges && compressedSize > CHUNK_SIZE) {
-        const combined = await downloadParallel(gzUrl, compressedSize);
-        const buf = await combined.arrayBuffer();
-        compressedBytes = new Uint8Array(buf);
-      } else {
-        const resp = await fetchWithRetry(gzUrl, {}, MAX_RETRIES);
-        const buf = await resp.arrayBuffer();
-        compressedBytes = new Uint8Array(buf);
-      }
-
-      // Decompress using the native browser DecompressionStream (gzip)
-      const ds = new DecompressionStream('gzip');
-      const writer = ds.writable.getWriter();
-      const reader = ds.readable.getReader();
-
-      // Write all compressed bytes then close; collect decompressed chunks
-      (async () => {
-        try {
-          await writer.write(compressedBytes as any);
-          await writer.close();
-        } catch { /* reader will see the error */ }
-      })();
-
-      const decompressedChunks: Uint8Array[] = [];
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        decompressedChunks.push(value as Uint8Array);
-      }
-
-      const totalSize = decompressedChunks.reduce((s, c) => s + c.length, 0);
-      const decompressed = new Uint8Array(totalSize);
-      let offset = 0;
-      for (const chunk of decompressedChunks) {
-        decompressed.set(chunk, offset);
-        offset += chunk.length;
-      }
-
-      console.log(
-        `[ServiceWorker] Decompressed ${gzUrl}: ` +
-        `${(compressedSize / 1024 / 1024).toFixed(1)} MB → ${(totalSize / 1024 / 1024).toFixed(1)} MB`
-      );
-
-      return new Response(decompressed.buffer.slice(decompressed.byteOffset, decompressed.byteOffset + decompressed.byteLength), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'Content-Length': String(totalSize),
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-          'Access-Control-Allow-Headers': 'Range, Origin, Accept, Content-Type',
-          'Accept-Ranges': 'bytes',
-        },
-      });
-    } catch (error) {
-      console.log(`[ServiceWorker] No usable .gz for ${gzUrl}:`, (error as Error).message ?? error);
-    }
+  const gzUrl = vpsGzUrl(url);
+  if (isGzMissCached(gzUrl)) {
+    return null;
   }
-  return null;
+
+  try {
+    const headResp = await fetch(gzUrl, { method: 'HEAD' });
+    if (!headResp.ok) {
+      markGzMiss(gzUrl);
+      return null;
+    }
+
+    const compressedSize = parseInt(headResp.headers.get('content-length') || '0', 10);
+    if (compressedSize === 0) {
+      markGzMiss(gzUrl);
+      return null;
+    }
+
+    const supportsRanges =
+      headResp.headers.has('accept-ranges') &&
+      headResp.headers.get('accept-ranges') !== 'none';
+
+    console.log(`[ServiceWorker] Found .gz shard: ${gzUrl} (${(compressedSize / 1024 / 1024).toFixed(1)} MB compressed)`);
+
+    let compressedBytes: Uint8Array;
+    if (supportsRanges && compressedSize > CHUNK_SIZE) {
+      const combined = await downloadParallel(gzUrl, compressedSize);
+      const buf = await combined.arrayBuffer();
+      compressedBytes = new Uint8Array(buf);
+    } else {
+      const resp = await fetchWithRetry(gzUrl, {}, MAX_RETRIES);
+      const buf = await resp.arrayBuffer();
+      compressedBytes = new Uint8Array(buf);
+    }
+
+    const ds = new DecompressionStream('gzip');
+    const writer = ds.writable.getWriter();
+    const reader = ds.readable.getReader();
+
+    (async () => {
+      try {
+        await writer.write(compressedBytes as any);
+        await writer.close();
+      } catch { /* reader will see the error */ }
+    })();
+
+    const decompressedChunks: Uint8Array[] = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      decompressedChunks.push(value as Uint8Array);
+    }
+
+    const totalSize = decompressedChunks.reduce((s, c) => s + c.length, 0);
+    const decompressed = new Uint8Array(totalSize);
+    let offset = 0;
+    for (const chunk of decompressedChunks) {
+      decompressed.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    console.log(
+      `[ServiceWorker] Decompressed ${gzUrl}: ` +
+      `${(compressedSize / 1024 / 1024).toFixed(1)} MB → ${(totalSize / 1024 / 1024).toFixed(1)} MB`
+    );
+
+    return new Response(decompressed.buffer.slice(decompressed.byteOffset, decompressed.byteOffset + decompressed.byteLength), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(totalSize),
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers': 'Range, Origin, Accept, Content-Type',
+        'Accept-Ranges': 'bytes',
+      },
+    });
+  } catch (error) {
+    markGzMiss(gzUrl);
+    console.log(`[ServiceWorker] No usable .gz for ${gzUrl}:`, (error as Error).message ?? error);
+    return null;
+  }
 }
 
 /**
  * Download a large file with parallel connections.
- * Streams chunks directly into a combined response to avoid keeping the
- * entire file in service-worker RAM.
+ * Chunk workers use fetchWithRetry (including mirror failover).
  */
 async function downloadParallel(
   url: string,
@@ -232,7 +258,6 @@ async function downloadParallel(
 ): Promise<Response> {
   const chunkCount = Math.ceil(fileSize / CHUNK_SIZE);
 
-  // Pre-compute range headers so workers can pull from a queue
   const ranges: Array<{ start: number; end: number }> = [];
   for (let i = 0; i < chunkCount; i++) {
     const start = i * CHUNK_SIZE;
@@ -264,17 +289,14 @@ async function downloadParallel(
     }
   };
 
-  // Start parallel workers
   const workers = Array.from(
     { length: Math.min(PARALLEL_CONNECTIONS, chunkCount) },
     () => downloadWorker()
   );
   await Promise.all(workers);
 
-  // Sort chunks back into order
   completedChunks.sort((a, b) => a.index - b.index);
 
-  // Combine into single buffer
   const totalSize = completedChunks.reduce((sum, c) => sum + c.data.length, 0);
   const combined = new Uint8Array(totalSize);
   let offset = 0;
@@ -313,7 +335,7 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
     return; // Let browser handle non-model requests
   }
 
-  const fetchUrl = rewriteVpsModelUrlForSw(requestUrl);
+  const fetchUrl = rewriteVpsModelUrl(requestUrl);
   if (fetchUrl !== requestUrl) {
     console.log('[ServiceWorker] Rewrote VPS URL:', requestUrl, '→', fetchUrl);
   } else {
@@ -344,28 +366,31 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
           return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
         }
 
-        // For binary shards on our VPS, try a pre-compressed .gz twin first.
-        // This transparently reduces download size when .gz files exist server-side.
-        // Pre-compress with: gzip -9 <shard>.bin  (no .br because browser DecompressionStream
-        // only supports gzip/deflate — brotli is server-side only in current browsers).
+        // Same-origin .gz twin only (must live on storage.1ink.us for primary URLs).
         if (isGzEligible(fetchUrl)) {
           const gzResp = await tryFetchGzCompressed(fetchUrl);
           if (gzResp) return gzResp;
         }
 
-        // Get file size via HEAD for parallel download decision
+        // Get file size via HEAD for parallel download decision.
+        // If primary fails over to the mirror, Response.url is the mirror URL —
+        // reuse it so subsequent GETs stay on the working host.
         let headResponse: Response | null = null;
         let fileSize = 0;
+        let downloadUrl = fetchUrl;
         try {
           headResponse = await fetchWithRetry(fetchUrl, { method: 'HEAD' }, 1);
           fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
-        } catch (headError) {
+          if (headResponse.url) {
+            downloadUrl = headResponse.url;
+          }
+        } catch {
           console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', fetchUrl);
           return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
         }
 
         if (fileSize === 0 || !headResponse.ok) {
-          return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
+          return fetchWithRetry(downloadUrl, fetchInit, MAX_RETRIES);
         }
 
         const supportsRanges =
@@ -373,14 +398,21 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
           headResponse.headers.get('accept-ranges') !== 'none';
 
         if (supportsRanges && fileSize > CHUNK_SIZE) {
-          console.log('[ServiceWorker] Using parallel download for:', fetchUrl);
-          return await downloadParallel(fetchUrl, fileSize);
+          console.log('[ServiceWorker] Using parallel download for:', downloadUrl);
+          return await downloadParallel(downloadUrl, fileSize);
         }
 
-        console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', fetchUrl);
-        return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
+        console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', downloadUrl);
+        return fetchWithRetry(downloadUrl, fetchInit, MAX_RETRIES);
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
+        // Last-ditch: try mirror once more, then bare fetch
+        const mirror = toVpsMirrorUrl(fetchUrl);
+        if (mirror) {
+          try {
+            return await fetchWithRetry(mirror, fetchInit, MAX_RETRIES, false);
+          } catch { /* fall through */ }
+        }
         return fetch(fetchUrl, fetchInit);
       }
     })()
@@ -395,6 +427,7 @@ self.addEventListener('message', (event: ExtendableMessageEvent & { data: { type
   if (event.data?.type === 'SKIP_WAITING') {
     (self as any).skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
+    gzMissCache.clear();
     console.log('[ServiceWorker] Memory cache cleared');
   }
 });

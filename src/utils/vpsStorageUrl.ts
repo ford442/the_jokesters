@@ -61,6 +61,42 @@ export function rewriteVpsModelUrl(url: string): string {
   return match ? `${match[1]}/${match[2]}` : url
 }
 
+/**
+ * Swap primary ↔ mirror storage host. Returns null if `url` is not on either host
+ * or if primary and mirror are the same origin.
+ */
+export function toVpsMirrorUrl(url: string): string | null {
+  if (VPS_STORAGE_ORIGIN === VPS_STORAGE_MIRROR_ORIGIN) return null
+
+  const primaryPrefix = `${VPS_STORAGE_ORIGIN}/`
+  const mirrorPrefix = `${VPS_STORAGE_MIRROR_ORIGIN}/`
+
+  if (url.startsWith(primaryPrefix)) {
+    return `${VPS_STORAGE_MIRROR_ORIGIN}/${url.slice(primaryPrefix.length)}`
+  }
+  if (url.startsWith(mirrorPrefix)) {
+    return `${VPS_STORAGE_ORIGIN}/${url.slice(mirrorPrefix.length)}`
+  }
+  return null
+}
+
+/**
+ * Same-origin `.gz` twin URL for pre-compressed shards.
+ * Contabo-only `.gz` files are intentionally not probed — gzip only pays off
+ * when the twin lives on the same host as the request (usually storage.1ink.us).
+ */
+export function vpsGzUrl(url: string): string {
+  return `${url}.gz`
+}
+
+/** True when `url` is on our primary or mirror storage host. */
+export function isVpsStorageUrl(url: string): boolean {
+  return (
+    url.startsWith(`${VPS_STORAGE_ORIGIN}/`) ||
+    url.startsWith(`${VPS_STORAGE_MIRROR_ORIGIN}/`)
+  )
+}
+
 function resolveRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === 'string') return input
   if (input instanceof URL) return input.href
