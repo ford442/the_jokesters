@@ -19,6 +19,7 @@ Utility scripts for model hosting, WebLLM builds, and deployment.
 | `generate-mode-registry.mjs` | Regenerate mode registry entries |
 | `stage_vicuna_wasm_from_ci.sh` / `build-vicuna-wasm.sh` | Vicuna WASM pipeline (`mlc_llm compile`; see ADR) |
 | `deploy_dist.py` | **Deploy `dist/` over SFTP — credentials via env only** |
+| `../deploy.py` (repo root) | **Contabo zip deploy** → `storage.noahcohn.com` (env `DEPLOY_TOKEN`) |
 | `smoke_test.py` | Playwright-oriented smoke test |
 
 ### Native / C++ policy
@@ -48,6 +49,23 @@ Canonical constant: `src/utils/vpsStorageUrl.ts` → `VPS_STORAGE_ORIGIN` / `VPS
 
 ## Environment — deploy
 
+Two supported paths (both keep secrets out of git):
+
+### A. Contabo zip deploy (repo root `deploy.py`)
+
+Uploads `dist/` as one zip to `https://storage.noahcohn.com`; the VPS unpacks and SFTPs to the site. Prefer this for day-to-day deploys.
+
+```bash
+export DEPLOY_TOKEN="..."           # from VPS DEPLOY_AUTH_TOKEN when required
+# export DEPLOY_TARGET=go           # default: test → test.1ink.us
+# export TARGET_FOLDER=the-jokesters  # optional override
+
+npm run build
+python deploy.py
+```
+
+### B. Direct SFTP (`scripts/deploy_dist.py`)
+
 `scripts/deploy_dist.py` uploads `dist/` via Paramiko SFTP. **No secrets in the repo.**
 
 ```bash
@@ -63,7 +81,7 @@ export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
 # Destructive: wipe remote contents before upload (default off)
 # export DEPLOY_CLEAN=1
 
-npm run deploy              # build + upload
+npm run deploy              # build + SFTP upload
 npm run deploy:dry          # build + dry-run (no remote writes)
 npm run deploy:verify       # build + upload + SHA-256 sample verify
 
@@ -73,7 +91,7 @@ python scripts/deploy_dist.py --clean --verify
 
 Legacy aliases: `JOKESTERS_SFTP_*` still work.
 
-**Guards:**
+**Guards (SFTP path):**
 - Refuses to run if credentials contain `CHANGEME` / similar placeholders
 - `--dry-run` lists mkdir/put/delete without writing
 - Key auth preferred; password optional fallback

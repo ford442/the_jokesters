@@ -58,8 +58,17 @@ The following environment variables should be configured on the deployment serve
 |----------|-------------|----------|
 | `HF_TOKEN` | HuggingFace API token for cloud episode sync | No |
 
-### Deploy script (env-only credentials)
-Use `scripts/deploy_dist.py` / `npm run deploy` — **no secrets in the repo**:
+### Deploy scripts (env-only credentials)
+
+**Preferred (Contabo zip):** root `deploy.py` — no SFTP secrets in the client:
+
+```bash
+export DEPLOY_TOKEN="..."    # when VPS has_token=true
+# export DEPLOY_TARGET=go    # default: test
+npm run build && python deploy.py
+```
+
+**Direct SFTP:** `scripts/deploy_dist.py` / `npm run deploy` — **no secrets in the repo**:
 
 ```bash
 export DEPLOY_HOST=1ink.us
@@ -69,13 +78,13 @@ export DEPLOY_KEY=~/.ssh/id_ed25519           # preferred over password
 export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
 
 npm run deploy:dry        # build + dry-run (no remote writes)
-npm run deploy            # build + upload
+npm run deploy            # build + SFTP upload
 npm run deploy:verify     # build + upload + checksum sample
 # Destructive clean (default off):
 # DEPLOY_CLEAN=1 npm run deploy
 ```
 
-Guards: refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, optional `--verify`.  
+Guards (SFTP): refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, optional `--verify`.  
 CI: GitHub Actions **Deploy dist** workflow (`workflow_dispatch`) with secrets `DEPLOY_USER` + `DEPLOY_KEY`.  
 See `scripts/README.md`. **Never commit keys or passwords; rotate anything that was ever committed.**
 
