@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -61,7 +61,23 @@ Prioritize these over new premises:
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 
-- Sentient Coffee Table Mode:
+- Roast Battle Mode 2.0:
+  - Premise one-liner: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
+  - LLM pairings: Hermes-3 for the unfiltered roaster, Qwen2.5 for the pedantic judge.
+
+- Collaborative Musical Improv:
+  - Premise one-liner: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
+  - LLM pairings: Phi-3 for the chaotic lyricist, Hermes-3 for the grumpy composer.
+
+- Heckler Interaction Pro:
+  - Premise one-liner: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+  - LLM pairings: Qwen2.5 for the crowd work expert, Phi-3 for the panicking MC.
+
+- [x] Sentient Water Cooler:
+  - Premise one-liner: Agents act as office appliances gossiping about the terrible habits of the human employees.
+  - LLM pairings: Comedian (water cooler) and Scientist (microwave) vs Philosopher (printer).
+
+- [x] Sentient Coffee Table Mode:
   - Premise one-liner: A sentient coffee table is tired of people leaving condensation rings on it and demands a better working environment.
   - LLM pairings: Qwen2.5 for the strict AI coffee table, Phi-3 for the confused user.
 
@@ -79,12 +95,14 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [x] Authenticating with the HF API.
-  - [x] Pushing finished "Episode Scripts" to a private Dataset.
-  - [x] Fetching "Previous Episode Summaries" at boot for continuity.
+  - [ ] Authenticating with the HF API via the Hugging Face Inference API.
+  - [ ] Pushing finished "Episode Scripts" to a private Dataset in HF.
+  - [ ] Fetching "Previous Episode Summaries" at boot for continuity across sessions.
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
   - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
+  - [ ] Implementing vector-clock based merging for concurrent multi-device editing of scripts before they push to HF.
+  - [ ] Storing full episodic assets (songs, UI configs) in HF Datasets alongside scripts.
 
 ## Mode PR template (short)
 
