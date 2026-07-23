@@ -1346,5 +1346,13 @@
   {
     "id": "paranormal_real_estate_agents",
     "handler": "runParanormalRealEstateAgentsLoop"
+  },
+  {
+    "id": "sentient_coffee_table",
+    "handler": "runSentientCoffeeTableLoop"
+  },
+  {
+    "id": "sentient_water_cooler",
+    "handler": "runSentientWaterCoolerLoop"
   }
 ]

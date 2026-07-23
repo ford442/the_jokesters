@@ -1726,6 +1726,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_coffee_table',
+    title: 'Sentient Coffee Table',
+    category: 'dream',
+    description: 'A sentient coffee table is tired of people leaving condensation rings on it and demands a better working environment.',
+    tags: ['dream', 'sentient', 'coffee', 'table'],
+    showInPresets: true,
+  },
+  {
     id: 'sentient_dictionary',
     title: '📚 Sentient Dictionary',
     category: 'dream',
@@ -1971,6 +1979,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Snacks negotiate for prime shelf space while you restock the vending machine.',
     tags: ['dream', 'sentient', 'vending', 'machine', 'restocker'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_water_cooler',
+    title: 'The Sentient Water Cooler',
+    category: 'dream',
+    description: 'Agents act as office appliances gossiping about the terrible habits of the human employees.',
+    tags: ['dream', 'sentient', 'water', 'cooler'],
     showInPresets: true,
   },
   {

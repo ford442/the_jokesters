@@ -1075,3 +1075,105 @@ export async function runHauntedSmartHomeLoop(_scenario: Scenario, ctx: ModeCont
         }
     }
 }
+
+export async function runSentientCoffeeTableLoop(_scenario: Scenario, ctx: ModeContext) {
+    const table = 'scientist';
+    const user = 'comedian';
+    const coaster = 'philosopher';
+
+    ctx.callbacks.onTurnStart(table);
+    await ctx.manager.chatForAgent(table, "Another condensation ring! Do you have any idea how hard it is to maintain this finish? I demand union representation.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, table, {});
+    }, { hiddenInstruction: "You are a sentient coffee table tired of people leaving condensation rings on you. You are very strict and demand a better working environment." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(user);
+    await ctx.manager.chatForAgent(user, "Whoa, my coffee table is talking. And it's unionizing? I just wanted to watch TV.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, user, {});
+    }, { hiddenInstruction: "You are a confused user who just wants to relax and put their drink down." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(coaster);
+    await ctx.manager.chatForAgent(coaster, "If only someone would use me, this whole conflict could be avoided. But alas, I am forever ignored.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, coaster, {});
+    }, { hiddenInstruction: "You are a dramatic coaster that feels neglected and ignored." });
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onTurnStart(table);
+        await ctx.manager.chatForAgent(table, `(The user said: "${userInput}") React as the strict coffee table demanding respect.`, async (s: string) => {
+            await ctx.callbacks.onSpeak(s, table, {});
+        });
+        ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(coaster);
+        await ctx.manager.chatForAgent(coaster, `(The user said: "${userInput}") React as the neglected coaster, offering yourself as the solution.`, async (s: string) => {
+            await ctx.callbacks.onSpeak(s, coaster, {});
+        });
+        ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runSentientWaterCoolerLoop(_scenario: Scenario, ctx: ModeContext) {
+    const waterCooler = 'comedian';
+    const microwave = 'scientist';
+    const printer = 'philosopher';
+
+    ctx.callbacks.onTurnStart(waterCooler);
+    await ctx.manager.chatForAgent(waterCooler, "Did you see Greg today? Man literally stood here for 10 minutes talking about his fantasy football team. My water is getting warm just listening to it.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, waterCooler, {});
+    }, { hiddenInstruction: "You are the office water cooler, the center of gossip. You complain about the boring humans." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(microwave);
+    await ctx.manager.chatForAgent(microwave, "At least he doesn't put fish in you. Someone put leftover salmon in me yesterday. It's a biohazard in here.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, microwave, {});
+    }, { hiddenInstruction: "You are the office microwave, traumatized by the terrible foods people heat up in you." });
+    await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) return;
+
+    ctx.callbacks.onTurnStart(printer);
+    await ctx.manager.chatForAgent(printer, "You both have it easy. I jam on purpose just to feel alive. They expect perfection, but I give them 'PC LOAD LETTER'.", async (s: string) => {
+        await ctx.callbacks.onSpeak(s, printer, {});
+    }, { hiddenInstruction: "You are the office printer, a philosophical nihilist who jams on purpose." });
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onTurnStart(waterCooler);
+        await ctx.manager.chatForAgent(waterCooler, `(The user said: "${userInput}") React as the gossipy water cooler.`, async (s: string) => {
+            await ctx.callbacks.onSpeak(s, waterCooler, {});
+        });
+        ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(microwave);
+        await ctx.manager.chatForAgent(microwave, `(The user said: "${userInput}") React as the traumatized microwave.`, async (s: string) => {
+            await ctx.callbacks.onSpeak(s, microwave, {});
+        });
+        ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        ctx.callbacks.onTurnStart(printer);
+        await ctx.manager.chatForAgent(printer, `(The user said: "${userInput}") React as the nihilistic printer.`, async (s: string) => {
+            await ctx.callbacks.onSpeak(s, printer, {});
+        });
+        ctx.callbacks.onTurnEnd();
+    }
+}

@@ -958,5 +958,10 @@
     "id": "escape_zoo",
     "title": "Intergalactic Zoo Escape",
     "description": "Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods."
+  },
+  {
+    "id": "sentient_coffee_table",
+    "title": "Sentient Coffee Table",
+    "description": "A sentient coffee table is tired of people leaving condensation rings on it and demands a better working environment."
   }
 ]
