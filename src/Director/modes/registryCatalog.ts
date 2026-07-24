@@ -310,6 +310,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'collaborative_musical_improv',
+    title: 'Collaborative Musical Improv',
+    category: 'dream',
+    description: 'A Collaborative Musical Improv scene.',
+    tags: ['dream', 'collaborative', 'musical', 'improv'],
+    showInPresets: false,
+  },
+  {
     id: 'collaborative_sandbox_construction',
     title: 'Collaborative Sandbox Construction',
     category: 'dream',
@@ -763,6 +771,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'performance',
     description: 'A Heckler Interaction scene.',
     tags: ['performance', 'heckler', 'interaction'],
+    showInPresets: false,
+  },
+  {
+    id: 'heckler_interaction_pro',
+    title: 'Heckler Interaction Pro',
+    category: 'dream',
+    description: 'A Heckler Interaction Pro scene.',
+    tags: ['dream', 'heckler', 'interaction', 'pro'],
     showInPresets: false,
   },
   {
@@ -1620,6 +1636,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'An intense mode where agents take turns creatively insulting each other or the user.',
     tags: ['performance', 'roast', 'battle'],
     showInPresets: true,
+  },
+  {
+    id: 'roast_battle_two',
+    title: 'Roast Battle Two',
+    category: 'dream',
+    description: 'A Roast Battle Two scene.',
+    tags: ['dream', 'roast', 'battle', 'two'],
+    showInPresets: false,
   },
   {
     id: 'rpg_tavern_brawl',
