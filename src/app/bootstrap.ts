@@ -1,7 +1,6 @@
 import { registerSW } from 'virtual:pwa-register'
 import * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
-import { ImprovSceneManager } from '../ImprovSceneManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
@@ -149,8 +148,6 @@ export async function initApp(): Promise<void> {
     currentInitState = 'FINALIZING'
     setProgress('Finalizing setup...', 90)
 
-    const improvSceneManager = new ImprovSceneManager(groupChatManager)
-
     currentInitState = 'READY'
     setReadyStatus(groupChatManager)
 
@@ -168,7 +165,6 @@ export async function initApp(): Promise<void> {
     wireSceneController({
       agents,
       groupChatManager,
-      improvSceneManager,
       audioEngine,
       speechQueue,
       stage,
