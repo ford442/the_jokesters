@@ -1354,5 +1354,17 @@
   {
     "id": "sentient_water_cooler",
     "handler": "runSentientWaterCoolerLoop"
+  },
+  {
+    "id": "roast_battle_two",
+    "handler": "runRoastBattleTwoLoop"
+  },
+  {
+    "id": "collaborative_musical_improv",
+    "handler": "runCollaborativeMusicalImprovLoop"
+  },
+  {
+    "id": "heckler_interaction_pro",
+    "handler": "runHecklerInteractionProLoop"
   }
 ]

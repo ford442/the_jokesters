@@ -817,3 +817,125 @@ export async function runCollaborativeSandboxConstructionLoop(_scenario: Scenari
         await ctx.callbacks.onTurnEnd();
     }
 }
+
+
+export async function runRoastBattleTwoLoop(_scenario: Scenario, ctx: ModeContext) {
+    const comedian = "comedian"; // Hermes-3
+    const scientist = "scientist"; // Qwen2.5
+
+    ctx.callbacks.onMessage('Director', '🔥 ROAST BATTLE 2.0 INITIATED! Step up to the mic. Bring up historical grudges from past episodes! 🔥', '#ff4500');
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('Target (You)', userInput, '#ffffff');
+
+        // Comedian roasts unfiltered
+        ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(ROAST BATTLE 2.0: The user said: "${userInput}". Deliver an absolutely brutal, unfiltered roast targeting the user. Bring up a historical grudge from a past episode using your cloud memory.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Scientist judges pedantically
+        ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(ROAST BATTLE 2.0: Evaluate the previous roast pedantically. Give it a scientific score and point out its logical flaws or historical inaccuracies from the cloud memory.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runCollaborativeMusicalImprovLoop(_scenario: Scenario, ctx: ModeContext) {
+    const philosopher = "philosopher"; // Phi-3
+    const comedian = "comedian"; // Hermes-3
+
+    ctx.callbacks.onMessage('Director', '🎵 MUSICAL IMPROV INITIATED! We are writing a musical together. Suggest a topic or genre! 🎵', '#9b59b6');
+
+    let currentGenre = "Cyberpunk";
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('User (Audience)', userInput, '#ffffff');
+
+        // Randomly shift genre based on input length or randomness
+        if (Math.random() > 0.5) {
+             const genres = ["Cyberpunk", "Victorian Romance", "Spaghetti Western", "Space Opera", "Noir Thriller"];
+             currentGenre = genres[Math.floor(Math.random() * genres.length)];
+             ctx.callbacks.onMessage('Director', `⚠️ GENRE SHIFT! The musical is now a ${currentGenre} ⚠️`, '#e74c3c');
+        }
+
+        // Philosopher as chaotic lyricist
+        ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(MUSICAL IMPROV: The user said: "${userInput}". The current genre is ${currentGenre}. You are the chaotic lyricist. Write the next stanza of our musical incorporating deep, confusing existential themes. SING IT OUT!)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, philosopher, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // Comedian as grumpy composer
+        ctx.callbacks.onTurnStart(comedian);
+        await ctx.manager.chatForAgent(comedian, `(MUSICAL IMPROV: The lyricist just sang. The current genre is ${currentGenre}. You are the grumpy composer. Complain about the lyrics, explain how they ruin the tempo and melody, and grudgingly provide a musical arrangement or counter-melody.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runHecklerInteractionProLoop(_scenario: Scenario, ctx: ModeContext) {
+    const scientist = "scientist"; // Qwen2.5 (Crowd work expert)
+    const philosopher = "philosopher"; // Phi-3 (Panicking MC)
+
+    let sentiment = 100;
+
+    ctx.callbacks.onMessage('Director', `🎙️ HECKLER INTERACTION PRO: You are on stage. The Heckler (User) is in the audience. Don't lose the crowd! (Sentiment: ${sentiment}%)`, '#f1c40f');
+
+    // MC Intro
+    ctx.callbacks.onTurnStart(philosopher);
+    await ctx.manager.chatForAgent(philosopher, `(HECKLER PRO: You are the MC. Introduce the main act and express your deep anxiety about the hostile crowd.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, philosopher, {});
+    });
+    await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        // Sentiment drops when heckled
+        sentiment -= Math.floor(Math.random() * 20) + 10;
+        if (sentiment < 0) sentiment = 0;
+
+        ctx.callbacks.onMessage('Heckler (You)', userInput, '#ffffff');
+        ctx.callbacks.onMessage('Director', `📉 AUDIENCE SENTIMENT DROPPED TO ${sentiment}%!`, '#e74c3c');
+
+        if (sentiment === 0) {
+             ctx.callbacks.onMessage('Director', `💥 THE CROWD RIOTS! YOU WENT FULL HEEL! 💥`, '#c0392b');
+
+             ctx.callbacks.onTurnStart(scientist);
+             await ctx.manager.chatForAgent(scientist, `(HECKLER PRO: The crowd sentiment hit 0%. The audience is rioting. Go full heel, insult everyone, and embrace your villain era using pure cold logic.)`, async (s) => {
+                 if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+             });
+             await ctx.callbacks.onTurnEnd();
+             break;
+        }
+
+        // Crowd work expert responds
+        ctx.callbacks.onTurnStart(scientist);
+        await ctx.manager.chatForAgent(scientist, `(HECKLER PRO: The heckler just said: "${userInput}". Current sentiment is ${sentiment}%. You are the crowd work expert. Use sharp psychological profiling and factual takedowns to win the crowd back.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+        if (!ctx.isRunning()) break;
+
+        // MC panics
+        ctx.callbacks.onTurnStart(philosopher);
+        await ctx.manager.chatForAgent(philosopher, `(HECKLER PRO: The heckler just yelled. Current sentiment is ${sentiment}%. You are the panicking MC. Question your life choices and plead with the crowd existentially to calm down.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, philosopher, {});
+        });
+        await ctx.callbacks.onTurnEnd();
+    }
+}

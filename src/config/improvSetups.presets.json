@@ -963,5 +963,20 @@
     "id": "sentient_coffee_table",
     "title": "Sentient Coffee Table",
     "description": "A sentient coffee table is tired of people leaving condensation rings on it and demands a better working environment."
+  },
+  {
+    "id": "roast_battle_two",
+    "title": "Roast Battle Mode 2.0",
+    "description": "An enhanced roast battle where agents bring up historical grudges from past episodes using cloud memory."
+  },
+  {
+    "id": "collaborative_musical_improv",
+    "title": "Collaborative Musical Improv",
+    "description": "Agents try to write a musical together but keep genre-shifting unexpectedly."
+  },
+  {
+    "id": "heckler_interaction_pro",
+    "title": "Heckler Interaction Pro",
+    "description": "The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel."
   }
 ]

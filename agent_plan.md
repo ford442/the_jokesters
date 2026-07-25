@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Process (P0)
 
@@ -58,8 +58,21 @@ Prioritize these over new premises:
 - [x] Historical Ghost Support Group: Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.
 - [x] Intergalactic Zoo Escape: Animals from an intergalactic zoo have escaped, and agents are trying to round them up using alien methods.
 
+
+- [x] Roast Battle Mode 2.0: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
+- [x] Collaborative Musical Improv: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
+- [x] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- Existential Tech Support Mode:
+  - Premise one-liner: Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality.
+  - LLM pairings: Phi-3 for the existential tech, Qwen2.5 for the frustrated user.
+
+- Time-Traveling Health Inspector Mode:
+  - Premise one-liner: A health inspector from the future tries to shut down a medieval tavern for code violations.
+  - LLM pairings: Qwen2.5 for the pedantic health inspector, Hermes-3 for the bewildered tavern keeper.
+
 
 - Roast Battle Mode 2.0:
   - Premise one-liner: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
@@ -95,9 +108,9 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [ ] Authenticating with the HF API via the Hugging Face Inference API.
-  - [ ] Pushing finished "Episode Scripts" to a private Dataset in HF.
-  - [ ] Fetching "Previous Episode Summaries" at boot for continuity across sessions.
+  - [ ] Authenticate with HF API: Use a user-provided Hugging Face API Token (write access). Verify it via `HFStorageManager.validateToken`.
+  - [ ] Push Finished Scripts: Serialize completed episode contexts to JSON and push them as a new file (e.g., `episodes/user_ep_1.json`) to a private HF Dataset using the inference API.
+  - [ ] Fetch Previous Summaries: On app boot or mode initialization, fetch the latest summaries from the HF dataset to seed the agents' cloud memory.
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
   - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.
