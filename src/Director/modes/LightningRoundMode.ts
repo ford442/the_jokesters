@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 // Pre-set comedy categories the user can pick from (shown in the UI dropdown)
 const CATEGORIES = [
@@ -81,15 +82,9 @@ export async function runLightningRoundLoop(scenario: Scenario, ctx: ModeContext
         if (!ctx.isRunning()) break;
 
         // 1. Rotating host fires off a rapid question (speed bumped for energy)
-        ctx.callbacks.onTurnStart(host);
-        await ctx.manager.chatForAgent(
-            host,
-            isSuddenDeath
+        await chatForAgentWithComedy(ctx, host, isSuddenDeath
                 ? `(LIGHTNING ROUND SUDDEN DEATH: Topic is "${topic}". FINAL ROUND — ask the most brutal, hilarious, utterly unanswerable question you can. 6-9 words max. GO NUCLEAR.)`
-                : `(LIGHTNING ROUND HOST: Topic is "${topic}". Ask ONE extremely short, punchy, roast-ready question. Keep it under 9 words. No preamble — straight to the question. Stay in character.)`,
-            async (q) => await ctx.callbacks.onSpeak(q, host, { speed: 1.4 })
-        );
-        await ctx.callbacks.onTurnEnd();
+                : `(LIGHTNING ROUND HOST: Topic is "${topic}". Ask ONE extremely short, punchy, roast-ready question. Keep it under 9 words. No preamble — straight to the question. Stay in character.)`, async (q) => await ctx.callbacks.onSpeak(q, host, { speed: 1.4 }));
 
         if (!ctx.isRunning()) break;
 
@@ -118,13 +113,7 @@ export async function runLightningRoundLoop(scenario: Scenario, ctx: ModeContext
 
         for (const agent of ['comedian', 'philosopher', 'scientist'] as const) {
             if (!ctx.isRunning()) break;
-            ctx.callbacks.onTurnStart(agent);
-            await ctx.manager.chatForAgent(
-                agent,
-                `(LIGHTNING ROUND ROAST: Player answered "${answerText}" on the topic "${topic}".${roastSuffix} Stay 100% in character.)`,
-                async (r) => await ctx.callbacks.onSpeak(r, agent, { speed: 1.5 })
-            );
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, agent, `(LIGHTNING ROUND ROAST: Player answered "${answerText}" on the topic "${topic}".${roastSuffix} Stay 100% in character.)`, async (r) => await ctx.callbacks.onSpeak(r, agent, { speed: 1.5 }));
         }
 
         if (!ctx.isRunning()) break;
@@ -161,13 +150,7 @@ export async function runLightningRoundLoop(scenario: Scenario, ctx: ModeContext
     // 6. Each agent delivers a closing one-liner about the player's performance
     for (const agent of ['comedian', 'philosopher', 'scientist'] as const) {
         if (!ctx.isRunning()) break;
-        ctx.callbacks.onTurnStart(agent);
-        await ctx.manager.chatForAgent(
-            agent,
-            `(LIGHTNING ROUND FINALE: Game over. Player scored ${totalScore}/${maxRounds * 10} — "${finalTitle}". Deliver ONE hilarious closing line about their performance. Stay fully in character. No setup — just the line.)`,
-            async (s) => await ctx.callbacks.onSpeak(s, agent, { speed: 1.3 })
-        );
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, agent, `(LIGHTNING ROUND FINALE: Game over. Player scored ${totalScore}/${maxRounds * 10} — "${finalTitle}". Deliver ONE hilarious closing line about their performance. Stay fully in character. No setup — just the line.)`, async (s) => await ctx.callbacks.onSpeak(s, agent, { speed: 1.3 }));
     }
 
     if (!ctx.isRunning()) return;

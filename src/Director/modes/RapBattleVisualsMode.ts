@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runRapBattleVisualsLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', '🎤 RAP BATTLE: Drop the beat!', '#ff00ff');
@@ -27,9 +28,7 @@ export async function runRapBattleVisualsLoop(_scenario: Scenario, ctx: ModeCont
             // Visual flair for the active rapper
             ctx.callbacks.onMessage('Director', `🔥 ${agent.toUpperCase()} IS ON THE MIC 🔥`, '#ff00ff');
 
-            await ctx.manager.chatForAgent(agent, `(RAP BATTLE: You are in a freestyle rap battle against the other agents. Drop a sick, rhyming 4-line verse. Make it punchy, rhythmic, and perfectly in character. DO NOT use emojis. DO NOT output stage directions. Just the lyrics.)`, async (s) => await ctx.callbacks.onSpeak(s, agent, {}));
-
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, agent, `(RAP BATTLE: You are in a freestyle rap battle against the other agents. Drop a sick, rhyming 4-line verse. Make it punchy, rhythmic, and perfectly in character. DO NOT use emojis. DO NOT output stage directions. Just the lyrics.)`, async (s) => await ctx.callbacks.onSpeak(s, agent, {}));
 
             // Simulate crowd reaction based on a random roll
             const hype = Math.random();

@@ -35,7 +35,7 @@ Until foundation milestones are healthy, mode spam is **out of scope**. See [age
 | Area | Why it blocks more modes |
 |------|---------------------------|
 | Mode registry hygiene | Discovery, presets, validation (`validateRegistry`) |
-| Comedy wiring | Callbacks / quality gate underused by modes |
+| Comedy wiring | ✅ Wired across Dream/Expanded + featured 8 (`chatForAgentWithComedy`/`processTurnWithComedy`); keep new modes wired — enforced by `tests/unit/modeChatForAgentWiring.test.ts` |
 | Main / app split | Onboarding, export, prerender, SFX — product core |
 | Tests | Registry integrity, comedy units, no silent tsc debt |
 | Context accuracy | VRAM / memory depth / guided load — show must start |

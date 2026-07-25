@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runPhilosopherLoop(scenario: Scenario, ctx: ModeContext) {
     const topic = scenario.config?.philosopherTopic || 'The Trolley Problem';
@@ -14,9 +15,7 @@ export async function runPhilosopherLoop(scenario: Scenario, ctx: ModeContext) {
     const maxIntensity = 5;
 
     // 1. Introduction (Logician)
-    await ctx.callbacks.onTurnStart(logician);
-    await ctx.manager.chatForAgent(logician, `(You are a logician starting a debate on the paradox: "${topic}". State the core contradiction clearly and soberly. Do not be funny yet.)`, async (s) => await ctx.callbacks.onSpeak(s, logician, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, logician, `(You are a logician starting a debate on the paradox: "${topic}". State the core contradiction clearly and soberly. Do not be funny yet.)`, async (s) => await ctx.callbacks.onSpeak(s, logician, {}));
 
     while (ctx.isRunning()) {
         // Check for user interruption (Heckle/Comment)
@@ -30,8 +29,7 @@ export async function runPhilosopherLoop(scenario: Scenario, ctx: ModeContext) {
         if (ctx.isRunning()) {
             await ctx.callbacks.onTurnStart(skeptic);
             const skepticPrompt = `(You are a skeptic. Attack the previous point about "${topic}" with cold logic. Point out a flaw. Intensity Level: ${intensity}/${maxIntensity}. ${userInterjection ? `Address the user's comment: "${userInterjection}".` : ''})`;
-            await ctx.manager.chatForAgent(skeptic, skepticPrompt, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, skeptic, skepticPrompt, async (s) => await ctx.callbacks.onSpeak(s, skeptic, {}));
         }
 
         if (!ctx.isRunning()) break;
@@ -48,8 +46,7 @@ export async function runPhilosopherLoop(scenario: Scenario, ctx: ModeContext) {
         if (ctx.isRunning()) {
             await ctx.callbacks.onTurnStart(absurdist);
             const absurdistPrompt = `(You are an absurdist philosopher. Take the debate to a weird, surreal place. Use a metaphor involving food or animals. Intensity Level: ${intensity}/${maxIntensity}. ${userInterjection ? `Respond to "${userInterjection}" with nonsense.` : ''})`;
-            await ctx.manager.chatForAgent(absurdist, absurdistPrompt, async (s) => await ctx.callbacks.onSpeak(s, absurdist, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, absurdist, absurdistPrompt, async (s) => await ctx.callbacks.onSpeak(s, absurdist, {}));
         }
 
         if (!ctx.isRunning()) break;
@@ -59,8 +56,7 @@ export async function runPhilosopherLoop(scenario: Scenario, ctx: ModeContext) {
         if (ctx.isRunning()) {
             await ctx.callbacks.onTurnStart(logician);
             const logicianPrompt = `(You are a logician losing your patience. Rebut the absurdist with a complex, abstract counter-argument. Use big words. Intensity Level: ${intensity}/${maxIntensity}. Scream if necessary (use CAPS). ${userInterjection ? `Dismiss the user's comment: "${userInterjection}".` : ''})`;
-            await ctx.manager.chatForAgent(logician, logicianPrompt, async (s) => await ctx.callbacks.onSpeak(s, logician, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, logician, logicianPrompt, async (s) => await ctx.callbacks.onSpeak(s, logician, {}));
         }
 
         if (intensity >= maxIntensity) {

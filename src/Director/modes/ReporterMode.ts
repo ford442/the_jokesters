@@ -1,5 +1,6 @@
 import type { Scenario, ReporterSegment } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runReporterLoop(scenario: Scenario, ctx: ModeContext) {
     const topic = scenario.config?.reporterTopic || scenario.title;
@@ -167,9 +168,7 @@ export async function runNewsroomLoop(scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Ticker', `BREAKING: ${topic} dominates the headlines...`, '#ff0000');
 
     // Intro from Anchor
-    ctx.callbacks.onTurnStart(anchor);
-    await ctx.manager.chatForAgent(anchor, `(You are a highly professional news anchor presenting a developing story about "${topic}". Welcome the viewers, state the main headline, and toss it over to the field reporter.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, anchor, `(You are a highly professional news anchor presenting a developing story about "${topic}". Welcome the viewers, state the main headline, and toss it over to the field reporter.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
 
     let round = 1;
     while (ctx.isRunning()) {
@@ -181,23 +180,17 @@ export async function runNewsroomLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (round % 3 === 1) {
             // Field Reporter reacts
-            ctx.callbacks.onTurnStart(fieldReporter);
-            await ctx.manager.chatForAgent(fieldReporter, `(You are a stressed field reporter live on the scene. The producer just reported: "${userInput}". Describe the chaos around you related to "${topic}" and this new update.)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, fieldReporter, `(You are a stressed field reporter live on the scene. The producer just reported: "${userInput}". Describe the chaos around you related to "${topic}" and this new update.)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
 
             ctx.callbacks.onMessage('Ticker', `UPDATE: Field reporter struggling with "${userInput}"...`, '#ff0000');
         } else if (round % 3 === 2) {
             // Expert analyzes
-            ctx.callbacks.onTurnStart(expert);
-            await ctx.manager.chatForAgent(expert, `(You are a weirdly specific studio expert. The producer reported: "${userInput}". Analyze this development using overly complex, mostly fabricated jargon and statistics.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, expert, `(You are a weirdly specific studio expert. The producer reported: "${userInput}". Analyze this development using overly complex, mostly fabricated jargon and statistics.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
 
             ctx.callbacks.onMessage('Ticker', `ANALYSIS: Experts remain confused about "${userInput}"...`, '#ff0000');
         } else {
             // Anchor brings it back
-            ctx.callbacks.onTurnStart(anchor);
-            await ctx.manager.chatForAgent(anchor, `(You are the main anchor. The producer said: "${userInput}". Summarize the absurdity of what the field reporter and expert just said, and transition smoothly as if this is normal news.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, anchor, `(You are the main anchor. The producer said: "${userInput}". Summarize the absurdity of what the field reporter and expert just said, and transition smoothly as if this is normal news.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
 
             ctx.callbacks.onMessage('Ticker', `LIVE: Anchor continues despite "${userInput}"...`, '#ff0000');
         }
@@ -215,9 +208,7 @@ export async function runMeltdownLoop(scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `📺 LIVE NEWS: ${topic}`, '#4ecdc4');
 
     // Normal intro
-    ctx.callbacks.onTurnStart(anchor);
-    await ctx.manager.chatForAgent(anchor, `(You are a highly professional news anchor presenting a story about "${topic}". Be serious and confident.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, anchor, `(You are a highly professional news anchor presenting a story about "${topic}". Be serious and confident.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
 
     // The breakdown
     ctx.callbacks.onMessage('Director', `🚨 ERROR: TELEPROMPTER BROKE! 🚨`, '#ff0000');
@@ -227,23 +218,23 @@ export async function runMeltdownLoop(scenario: Scenario, ctx: ModeContext) {
         if (ctx.interruptQueue.length > 0) {
             const heckle = ctx.interruptQueue.shift()!;
             ctx.callbacks.onMessage('Producer', `"${heckle}"`, '#ff6b6b');
-            await ctx.manager.chatForAgent(anchor, `(The producer yelled in your earpiece: "${heckle}". React live on air!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+            await chatForAgentWithComedy(ctx, anchor, `(The producer yelled in your earpiece: "${heckle}". React live on air!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
             continue;
         }
 
         if (!ctx.isRunning()) break;
 
         // Anchor spirals
-        await ctx.manager.chatForAgent(anchor, `(The teleprompter is completely broken. You are live on air discussing "${topic}". Panic and start making up the most ridiculous, unhinged conspiracy theories to fill time!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, { speed: 1.2 }));
+        await chatForAgentWithComedy(ctx, anchor, `(The teleprompter is completely broken. You are live on air discussing "${topic}". Panic and start making up the most ridiculous, unhinged conspiracy theories to fill time!)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, { speed: 1.2 }));
 
         if (!ctx.isRunning()) break;
 
         // Co-anchor tries to save it
         if (round % 2 === 0) {
-            await ctx.manager.chatForAgent(coAnchor, `(You are the co-anchor. The main anchor is having a live meltdown. Try to salvage the segment and bring it back to logical facts.)`, async (s) => await ctx.callbacks.onSpeak(s, coAnchor, {}));
+            await chatForAgentWithComedy(ctx, coAnchor, `(You are the co-anchor. The main anchor is having a live meltdown. Try to salvage the segment and bring it back to logical facts.)`, async (s) => await ctx.callbacks.onSpeak(s, coAnchor, {}));
         } else {
             // Expert makes it worse
-            await ctx.manager.chatForAgent(expert, `(You are the live field expert. Validate the anchor's insane conspiracy theory using fake science jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
+            await chatForAgentWithComedy(ctx, expert, `(You are the live field expert. Validate the anchor's insane conspiracy theory using fake science jargon.)`, async (s) => await ctx.callbacks.onSpeak(s, expert, {}));
         }
 
         if (ctx.callbacks.onTicker) {
@@ -271,9 +262,7 @@ export async function runNewsDeskLoop(scenario: Scenario, ctx: ModeContext) {
     const analyst = 'philosopher';
 
     // 1. Anchor Intro
-    ctx.callbacks.onTurnStart(anchor);
-    await ctx.manager.chatForAgent(anchor, `(ANCHOR: You are a serious news anchor reporting on the breaking story: "${breakingNews}". Deliver the headlines with absolute gravity, using statistics that don't make sense. Throw to your field reporter (the User) for a live update.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, anchor, `(ANCHOR: You are a serious news anchor reporting on the breaking story: "${breakingNews}". Deliver the headlines with absolute gravity, using statistics that don't make sense. Throw to your field reporter (the User) for a live update.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -282,22 +271,16 @@ export async function runNewsDeskLoop(scenario: Scenario, ctx: ModeContext) {
         if (!ctx.isRunning()) break;
 
         // Field Reporter interjects
-        ctx.callbacks.onTurnStart(fieldReporter);
-        await ctx.manager.chatForAgent(fieldReporter, `(FIELD REPORTER: You are at the chaotic scene of "${breakingNews}". The witness just said: "${userInput}". Sensationalize their statement! Describe something incredibly dangerous happening right behind you!)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, fieldReporter, `(FIELD REPORTER: You are at the chaotic scene of "${breakingNews}". The witness just said: "${userInput}". Sensationalize their statement! Describe something incredibly dangerous happening right behind you!)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
 
         if (!ctx.isRunning()) break;
 
         // Analyst comments
-        ctx.callbacks.onTurnStart(analyst);
-        await ctx.manager.chatForAgent(analyst, `(ANALYST: You are in the studio. Analyze the field report and the witness statement: "${userInput}". Connect this event to the inevitable collapse of society and human hubris.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, analyst, `(ANALYST: You are in the studio. Analyze the field report and the witness statement: "${userInput}". Connect this event to the inevitable collapse of society and human hubris.)`, async (s) => await ctx.callbacks.onSpeak(s, analyst, {}));
 
         if (!ctx.isRunning()) break;
 
         // Anchor wraps up
-        ctx.callbacks.onTurnStart(anchor);
-        await ctx.manager.chatForAgent(anchor, `(ANCHOR: Thank the analyst and the witness. Transition smoothly from the existential dread to a completely inappropriate, trivial local news story or sponsor read. Ask the witness another question.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, anchor, `(ANCHOR: Thank the analyst and the witness. Transition smoothly from the existential dread to a completely inappropriate, trivial local news story or sponsor read. Ask the witness another question.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
     }
 }
