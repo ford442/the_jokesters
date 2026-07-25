@@ -1,6 +1,5 @@
 import { GroupChatManager } from '../GroupChatManager'
 import type { Agent } from '../GroupChatManager'
-import type { ImprovSceneManager } from '../ImprovSceneManager'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { AudioEngine } from '../audio/AudioEngine'
 import type { Stage } from '../visuals/Stage'
@@ -23,7 +22,6 @@ import { getAppDirector } from './directorBridge'
 export interface ImprovControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  improvSceneManager: ImprovSceneManager
   audioEngine: AudioEngine
   speechQueue: SpeechQueue
   stage: Stage
@@ -65,7 +63,6 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   const {
     agents,
     groupChatManager,
-    improvSceneManager,
     audioEngine,
     speechQueue,
     stage,
@@ -513,7 +510,6 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     coordinator.cancel('user stop')
     speechQueue.stop()
     speechQueue.clearPrerendered()
-    if (improvSceneManager.isSceneRunning()) improvSceneManager.stop()
     const director = getAppDirector()
     if (director?.isSceneRunning()) director.stopScene()
     chatLog.addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')

@@ -1,6 +1,5 @@
 import type { Agent, ProfanityLevel } from '../GroupChatManager'
 import type { GroupChatManager } from '../GroupChatManager'
-import type { ImprovSceneManager } from '../ImprovSceneManager'
 import type { AudioEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
@@ -18,7 +17,6 @@ import type { Director } from '../Director/Director'
 export interface SceneControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  improvSceneManager: ImprovSceneManager
   audioEngine: AudioEngine
   speechQueue: SpeechQueue
   stage: Stage
@@ -29,7 +27,6 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   const {
     agents,
     groupChatManager,
-    improvSceneManager,
     audioEngine,
     speechQueue,
     stage,
@@ -127,10 +124,6 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     chatModeControls.style.display = 'flex'
     improvModeControls.style.display = 'none'
 
-    if (improvSceneManager.isSceneRunning()) {
-      improvSceneManager.stop()
-    }
-
     updateNextAgentUI(groupChatManager)
   })
 
@@ -144,7 +137,6 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   wireImprovController({
     agents,
     groupChatManager,
-    improvSceneManager,
     audioEngine,
     speechQueue,
     stage,

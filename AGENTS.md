@@ -91,8 +91,6 @@ the_jokesters/
 │   ├── main.ts                    # Application entry point, UI setup, event handlers, service worker registration
 │   ├── GroupChatManager.ts        # LLM chat management, conversation history, agent rotation, retry logic
 │   ├── AgentModelManager.ts       # Per-agent model assignment and hot-swapping
-│   ├── ImprovSceneManager.ts      # [Legacy] Improv scene orchestration
-│   ├── SceneManager.ts            # [Legacy] 3D scene management
 │   ├── Director/                  # Scene orchestration and mode implementations
 │   │   ├── Director.ts            # Main orchestration class (game loop), Scenario execution, 100+ mode dispatch
 │   │   ├── MemoryManager.ts       # Episode persistence (IndexedDB + localStorage + HuggingFace cloud)
@@ -164,8 +162,6 @@ the_jokesters/
 │   │   ├── models.ts              # LLM model configurations (VPS, HF, unified, triple-engine)
 │   │   └── improvSetups.ts        # Pre-defined improv scene setups
 │   ├── ui/                        # UI utilities
-│   │   ├── htmlTemplate.ts        # HTML template generation for the UI
-│   │   ├── ModeHandlers.ts        # Mode button handlers and UI controls
 │   │   └── BeatGenerator.ts       # Simple beat animation for musical mode
 │   ├── utils/                     # Utilities
 │   │   ├── RNG.ts                 # Seeded random number generator
