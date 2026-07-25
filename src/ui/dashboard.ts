@@ -51,6 +51,10 @@ export const setupDashboard = () => {
 
     if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
 
+    // Ensure the modal never blocks the initial launch UI; it should only
+    // appear when explicitly opened via the dashboard/review-sync buttons.
+    dashboardModal.style.display = 'none';
+
     const loadHistory = async () => {
         historyList.innerHTML = '<div style="color: #888;">Loading history...</div>';
         const getMemMgr = (window as any).getMemoryManager;
