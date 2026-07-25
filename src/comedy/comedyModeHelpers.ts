@@ -63,8 +63,14 @@ export async function chatForAgentWithComedy(
   agentId: string,
   prompt: string,
   onSpeak: (sentence: string) => Promise<void>,
-  options: { callbackChance?: number } = {},
+  options: {
+    callbackChance?: number;
+    qualityGate?: boolean;
+    /** Passed through verbatim to the underlying `GroupChatManager.chatForAgent` call. */
+    chatOptions?: { maxTokens?: number; seed?: number; hiddenInstruction?: string };
+  } = {},
 ): Promise<string | null> {
+  const { qualityGate = true } = options;
   const enrichedPrompt = withComedyPrompt(ctx, prompt, options.callbackChance ?? 0.25);
 
   let responseText = '';
@@ -72,10 +78,25 @@ export async function chatForAgentWithComedy(
   await ctx.manager.chatForAgent(agentId, enrichedPrompt, async (sentence) => {
     responseText += `${sentence} `;
     await onSpeak(sentence);
-  });
+  }, options.chatOptions);
+
+  let trimmed = responseText.trim();
+
+  if (qualityGate && ctx.comedy && trimmed) {
+    const assessment = ctx.comedy.rateAndMaybeRetry(trimmed);
+    if (!assessment.passed && assessment.qualityPrompt) {
+      let retryText = '';
+      await ctx.manager.chatForAgent(agentId, `${enrichedPrompt} ${assessment.qualityPrompt}`, async (sentence) => {
+        retryText += `${sentence} `;
+        await onSpeak(sentence);
+      }, options.chatOptions);
+      const retryTrimmed = retryText.trim();
+      if (retryTrimmed) trimmed = retryTrimmed;
+    }
+  }
+
   await ctx.callbacks.onTurnEnd();
 
-  const trimmed = responseText.trim();
   if (trimmed && ctx.comedy) {
     ctx.comedy.handleAgentResponse(trimmed, agentId);
   }

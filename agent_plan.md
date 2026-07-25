@@ -23,7 +23,7 @@ Prioritize these over new premises:
 |------|------|
 | **Mode registry** | Keep `MODE_REGISTRY` / `validateRegistry` healthy; metadata complete for new entries |
 | **Mode browser** | Search, categories, featured 8, lazy loaders — [MODE_BROWSER.md](./docs/MODE_BROWSER.md) |
-| **Comedy wiring** | More modes use `ModeContext.comedy` + `comedyModeHelpers` (callbacks, quality gate) |
+| **Comedy wiring** | ✅ Dream/Expanded + featured-8 loops route agent turns through `comedyModeHelpers` (callbacks, quality gate). Keep new modes wired — see `tests/unit/modeChatForAgentWiring.test.ts`. |
 | **App / main split** | Onboarding, export, prerender, SFX, guided load stay solid |
 | **GroupChat facade** | `ConversationStore` + `ModelSession` — [GROUP_CHAT_FACADE.md](./docs/GROUP_CHAT_FACADE.md) |
 | **Tests + typecheck** | CI green (`npm run typecheck`, `npm test`); no silent debt |

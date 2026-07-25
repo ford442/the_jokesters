@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 // Reality TV shows, game shows, and entertainment scenarios
 
 /**
@@ -15,9 +16,7 @@ export async function runRealityTVLoop(scenario: Scenario, ctx: ModeContext) {
     const crier = 'philosopher'; // The Emotional One
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(diva);
-    await ctx.manager.chatForAgent(diva, `(You are in a Reality TV confessional booth. Introduce yourself and the drama happening in the house on "${showName}". Mention the User (the new roommate). Be sassy.)`, async (s) => await ctx.callbacks.onSpeak(s, diva, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, diva, `(You are in a Reality TV confessional booth. Introduce yourself and the drama happening in the house on "${showName}". Mention the User (the new roommate). Be sassy.)`, async (s) => await ctx.callbacks.onSpeak(s, diva, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -30,13 +29,13 @@ export async function runRealityTVLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (turnRoll < 0.33) {
              // Diva
-            await ctx.manager.chatForAgent(diva, `(CONFESSIONAL: You are talking to the camera. The user just said "${userInput}". React with shock and shade. Throw a drink (metaphorically).)`, async (s) => await ctx.callbacks.onSpeak(s, diva, {}));
+            await chatForAgentWithComedy(ctx, diva, `(CONFESSIONAL: You are talking to the camera. The user just said "${userInput}". React with shock and shade. Throw a drink (metaphorically).)`, async (s) => await ctx.callbacks.onSpeak(s, diva, {}));
         } else if (turnRoll < 0.66) {
             // Schemer
-            await ctx.manager.chatForAgent(schemer, `(CONFESSIONAL: You are plotting against the user. Analyze "${userInput}" as a weakness or alliance opportunity. Be manipulative.)`, async (s) => await ctx.callbacks.onSpeak(s, schemer, {}));
+            await chatForAgentWithComedy(ctx, schemer, `(CONFESSIONAL: You are plotting against the user. Analyze "${userInput}" as a weakness or alliance opportunity. Be manipulative.)`, async (s) => await ctx.callbacks.onSpeak(s, schemer, {}));
         } else {
             // Crier
-            await ctx.manager.chatForAgent(crier, `(CONFESSIONAL: You are crying. "${userInput}" was just so beautiful or so hurtful. Talk about your feelings and childhood trauma.)`, async (s) => await ctx.callbacks.onSpeak(s, crier, {}));
+            await chatForAgentWithComedy(ctx, crier, `(CONFESSIONAL: You are crying. "${userInput}" was just so beautiful or so hurtful. Talk about your feelings and childhood trauma.)`, async (s) => await ctx.callbacks.onSpeak(s, crier, {}));
         }
     }
 }
@@ -54,9 +53,7 @@ export async function runAuctionHouseLoop(scenario: Scenario, ctx: ModeContext) 
     const logicBidder = 'scientist';
 
     // 1. Auctioneer Intro
-    ctx.callbacks.onTurnStart(auctioneer);
-    await ctx.manager.chatForAgent(auctioneer, `(You are a fast-talking auctioneer. Introduce the absurd item up for bid: "${item}". Start the bidding at an outrageous price. Be extremely enthusiastic!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, auctioneer, `(You are a fast-talking auctioneer. Introduce the absurd item up for bid: "${item}". Start the bidding at an outrageous price. Be extremely enthusiastic!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -66,20 +63,20 @@ export async function runAuctionHouseLoop(scenario: Scenario, ctx: ModeContext) 
 
         // 2. Rich Snob Bids
         if (Math.random() > 0.3) {
-            await ctx.manager.chatForAgent(richSnob, `(BIDDER: The user just bid/said: "${userInput}". Outbid them with an absurd currency or concept (e.g., 'three jars of memories', 'my firstborn\'s laugh'). Be incredibly condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, richSnob, {}));
+            await chatForAgentWithComedy(ctx, richSnob, `(BIDDER: The user just bid/said: "${userInput}". Outbid them with an absurd currency or concept (e.g., 'three jars of memories', 'my firstborn\'s laugh'). Be incredibly condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, richSnob, {}));
         }
 
         if (!ctx.isRunning()) break;
 
         // 3. Logic Bidder Questions Value
         if (Math.random() > 0.3) {
-            await ctx.manager.chatForAgent(logicBidder, `(BIDDER: Analyze the true value of "${item}". Make a highly specific, mathematically complex bid. Question the previous bidder's logic.)`, async (s) => await ctx.callbacks.onSpeak(s, logicBidder, {}));
+            await chatForAgentWithComedy(ctx, logicBidder, `(BIDDER: Analyze the true value of "${item}". Make a highly specific, mathematically complex bid. Question the previous bidder's logic.)`, async (s) => await ctx.callbacks.onSpeak(s, logicBidder, {}));
         }
 
         if (!ctx.isRunning()) break;
 
         // 4. Auctioneer Hypes
-        await ctx.manager.chatForAgent(auctioneer, `(AUCTIONEER: React to the last bid. Try to drive the price even higher. Speak fast and hype up the "${item}"!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
+        await chatForAgentWithComedy(ctx, auctioneer, `(AUCTIONEER: React to the last bid. Try to drive the price even higher. Speak fast and hype up the "${item}"!)`, async (s) => await ctx.callbacks.onSpeak(s, auctioneer, {}));
     }
 }
 
@@ -96,9 +93,7 @@ export async function runMuseumTourLoop(scenario: Scenario, ctx: ModeContext) {
     const curator = 'scientist'; // The annoyed curator
 
     // 1. Deep Guide Intro
-    ctx.callbacks.onTurnStart(deepGuide);
-    await ctx.manager.chatForAgent(deepGuide, `(You are a pretentious museum tour guide. Introduce the new exhibition item: "${item}". Explain its deep, metaphorical significance to the human condition.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, deepGuide, `(You are a pretentious museum tour guide. Introduce the new exhibition item: "${item}". Explain its deep, metaphorical significance to the human condition.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -107,26 +102,20 @@ export async function runMuseumTourLoop(scenario: Scenario, ctx: ModeContext) {
         if (!ctx.isRunning()) break;
 
         // 2. Fake Guide Reacts
-        ctx.callbacks.onTurnStart(fakeGuide);
-        await ctx.manager.chatForAgent(fakeGuide, `(TOUR GUIDE: The tourist just asked/said: "${userInput}". Give them a completely fake, absurd, and hilarious historical "fact" about the item.)`, async (s) => await ctx.callbacks.onSpeak(s, fakeGuide, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, fakeGuide, `(TOUR GUIDE: The tourist just asked/said: "${userInput}". Give them a completely fake, absurd, and hilarious historical "fact" about the item.)`, async (s) => await ctx.callbacks.onSpeak(s, fakeGuide, {}));
 
         if (!ctx.isRunning()) break;
 
         // 3. Curator Corrects
         if (Math.random() > 0.4) {
-            ctx.callbacks.onTurnStart(curator);
-            await ctx.manager.chatForAgent(curator, `(MUSEUM CURATOR: You are annoyed by the other guides. Correct their nonsense about "${userInput}" with an extremely boring, pedantic, and scientific explanation of what the item actually is.)`, async (s) => await ctx.callbacks.onSpeak(s, curator, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, curator, `(MUSEUM CURATOR: You are annoyed by the other guides. Correct their nonsense about "${userInput}" with an extremely boring, pedantic, and scientific explanation of what the item actually is.)`, async (s) => await ctx.callbacks.onSpeak(s, curator, {}));
         }
 
         if (!ctx.isRunning()) break;
 
         // 4. Deep Guide Expands
         if (Math.random() > 0.3) {
-            ctx.callbacks.onTurnStart(deepGuide);
-            await ctx.manager.chatForAgent(deepGuide, `(TOUR GUIDE: Ignore the curator. Respond to "${userInput}" by connecting the item to an obscure philosophical concept or ancient myth.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, deepGuide, `(TOUR GUIDE: Ignore the curator. Respond to "${userInput}" by connecting the item to an obscure philosophical concept or ancient myth.)`, async (s) => await ctx.callbacks.onSpeak(s, deepGuide, {}));
         }
     }
 }
@@ -144,9 +133,7 @@ export async function runJobInterviewLoop(scenario: Scenario, ctx: ModeContext) 
     const existential = 'philosopher'; // The deep interviewer
 
     // 1. HR Intro
-    ctx.callbacks.onTurnStart(hrLogic);
-    await ctx.manager.chatForAgent(hrLogic, `(You are the HR Director interviewing the User for the position of "${jobTitle}". Welcome them, explain the rigid corporate structure, and ask them their first standard interview question.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, hrLogic, `(You are the HR Director interviewing the User for the position of "${jobTitle}". Welcome them, explain the rigid corporate structure, and ask them their first standard interview question.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -159,19 +146,13 @@ export async function runJobInterviewLoop(scenario: Scenario, ctx: ModeContext) 
 
         if (turnRoll < 0.33) {
             // Wildcard Boss
-            ctx.callbacks.onTurnStart(wildcardBoss);
-            await ctx.manager.chatForAgent(wildcardBoss, `(WILDCARD BOSS: React to the candidate's answer: "${userInput}". Ignore what they said and ask a completely ridiculous, off-the-wall hypothetical question to test their "culture fit" for the "${jobTitle}" role.)`, async (s) => await ctx.callbacks.onSpeak(s, wildcardBoss, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, wildcardBoss, `(WILDCARD BOSS: React to the candidate's answer: "${userInput}". Ignore what they said and ask a completely ridiculous, off-the-wall hypothetical question to test their "culture fit" for the "${jobTitle}" role.)`, async (s) => await ctx.callbacks.onSpeak(s, wildcardBoss, {}));
         } else if (turnRoll < 0.66) {
             // Existential
-            ctx.callbacks.onTurnStart(existential);
-            await ctx.manager.chatForAgent(existential, `(EXISTENTIAL INTERVIEWER: The candidate said: "${userInput}". Read way too deeply into their answer. Ask a follow-up question about their soul, their purpose, or the meaningless nature of the "${jobTitle}" job.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, existential, `(EXISTENTIAL INTERVIEWER: The candidate said: "${userInput}". Read way too deeply into their answer. Ask a follow-up question about their soul, their purpose, or the meaningless nature of the "${jobTitle}" job.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
         } else {
             // HR Logic
-            ctx.callbacks.onTurnStart(hrLogic);
-            await ctx.manager.chatForAgent(hrLogic, `(HR DIRECTOR: The candidate said: "${userInput}". Analyze their answer for compliance with company policy. Ask a highly specific, boring technical question or ask them about their five-year plan.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, hrLogic, `(HR DIRECTOR: The candidate said: "${userInput}". Analyze their answer for compliance with company policy. Ask a highly specific, boring technical question or ask them about their five-year plan.)`, async (s) => await ctx.callbacks.onSpeak(s, hrLogic, {}));
         }
     }
 }
@@ -189,9 +170,7 @@ export async function runCookingShowLoop(scenario: Scenario, ctx: ModeContext) {
     const chaoticChef = 'comedian'; // Makes a mess
 
     // 1. Chaotic Chef Intro
-    ctx.callbacks.onTurnStart(chaoticChef);
-    await ctx.manager.chatForAgent(chaoticChef, `(You are hosting a chaotic live cooking competition. Welcome the User, who is the guest judge and ingredient supplier. The theme is "${dish}". Ask the User what their first secret ingredient is!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, chaoticChef, `(You are hosting a chaotic live cooking competition. Welcome the User, who is the guest judge and ingredient supplier. The theme is "${dish}". Ask the User what their first secret ingredient is!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -200,24 +179,18 @@ export async function runCookingShowLoop(scenario: Scenario, ctx: ModeContext) {
         if (!ctx.isRunning()) break;
 
         // 2. Molecular Chef Integrates
-        ctx.callbacks.onTurnStart(molecularChef);
-        await ctx.manager.chatForAgent(molecularChef, `(MOLECULAR CHEF: The user just provided the ingredient: "${userInput}". Describe your highly scientific process for incorporating it into your version of "${dish}" using liquid nitrogen, spherification, or centrifuges.)`, async (s) => await ctx.callbacks.onSpeak(s, molecularChef, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, molecularChef, `(MOLECULAR CHEF: The user just provided the ingredient: "${userInput}". Describe your highly scientific process for incorporating it into your version of "${dish}" using liquid nitrogen, spherification, or centrifuges.)`, async (s) => await ctx.callbacks.onSpeak(s, molecularChef, {}));
 
         if (!ctx.isRunning()) break;
 
         // 3. Conceptual Chef Critiques
-        ctx.callbacks.onTurnStart(conceptualChef);
-        await ctx.manager.chatForAgent(conceptualChef, `(CONCEPTUAL CHEF: The user provided "${userInput}". Reject the literal ingredient and use the abstract concept of it instead. Mock the molecular chef's lack of soul.)`, async (s) => await ctx.callbacks.onSpeak(s, conceptualChef, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, conceptualChef, `(CONCEPTUAL CHEF: The user provided "${userInput}". Reject the literal ingredient and use the abstract concept of it instead. Mock the molecular chef's lack of soul.)`, async (s) => await ctx.callbacks.onSpeak(s, conceptualChef, {}));
 
         if (!ctx.isRunning()) break;
 
         // 4. Chaotic Chef Sabotages
         if (Math.random() > 0.3) {
-            ctx.callbacks.onTurnStart(chaoticChef);
-            await ctx.manager.chatForAgent(chaoticChef, `(CHAOTIC CHEF: Sabotage the others! You just threw "${userInput}" across the room or accidentally set something on fire. Chaos!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, chaoticChef, `(CHAOTIC CHEF: Sabotage the others! You just threw "${userInput}" across the room or accidentally set something on fire. Chaos!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
         }
     }
 }
@@ -235,9 +208,7 @@ export async function runNatureDocumentaryLoop(scenario: Scenario, ctx: ModeCont
     const wildlifeBiologist = 'scientist'; // Hyper-literal wildlife biologist
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(britishNarrator);
-    await ctx.manager.chatForAgent(britishNarrator, `(NATURE NARRATOR: You are observing the User in their natural habitat attempting to perform the task of "${task}". Narrate their movements in a calm, majestic, British voice. Treat them like a fascinating but slightly pathetic animal.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, britishNarrator, `(NATURE NARRATOR: You are observing the User in their natural habitat attempting to perform the task of "${task}". Narrate their movements in a calm, majestic, British voice. Treat them like a fascinating but slightly pathetic animal.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -249,13 +220,13 @@ export async function runNatureDocumentaryLoop(scenario: Scenario, ctx: ModeCont
 
         if (roll < 0.33) {
             // Sports Narrator reacts
-            await ctx.manager.chatForAgent(sportsNarrator, `(SPORTS NARRATOR: Interrupt the calm narration. The specimen just did this: "${userInput}". Treat this mundane action as a high-octane survival struggle! Scream and hype up their actions like a wrestling match!)`, async (s) => await ctx.callbacks.onSpeak(s, sportsNarrator, {}));
+            await chatForAgentWithComedy(ctx, sportsNarrator, `(SPORTS NARRATOR: Interrupt the calm narration. The specimen just did this: "${userInput}". Treat this mundane action as a high-octane survival struggle! Scream and hype up their actions like a wrestling match!)`, async (s) => await ctx.callbacks.onSpeak(s, sportsNarrator, {}));
         } else if (roll < 0.66) {
             // Biologist analyzes
-            await ctx.manager.chatForAgent(wildlifeBiologist, `(WILDLIFE BIOLOGIST: Analyze the specimen's action: "${userInput}". Provide a completely absurd evolutionary or biological reason why they are doing this while trying to complete the task of "${task}".)`, async (s) => await ctx.callbacks.onSpeak(s, wildlifeBiologist, {}));
+            await chatForAgentWithComedy(ctx, wildlifeBiologist, `(WILDLIFE BIOLOGIST: Analyze the specimen's action: "${userInput}". Provide a completely absurd evolutionary or biological reason why they are doing this while trying to complete the task of "${task}".)`, async (s) => await ctx.callbacks.onSpeak(s, wildlifeBiologist, {}));
         } else {
             // British Narrator returns
-            await ctx.manager.chatForAgent(britishNarrator, `(NATURE NARRATOR: The specimen just did this: "${userInput}". Regain control of the narration. Describe the beauty and tragedy of their struggle with "${task}" in a slow, dramatic, British tone.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
+            await chatForAgentWithComedy(ctx, britishNarrator, `(NATURE NARRATOR: The specimen just did this: "${userInput}". Regain control of the narration. Describe the beauty and tragedy of their struggle with "${task}" in a slow, dramatic, British tone.)`, async (s) => await ctx.callbacks.onSpeak(s, britishNarrator, {}));
         }
     }
 }
@@ -273,9 +244,7 @@ export async function runWorstRoommateLoop(scenario: Scenario, ctx: ModeContext)
     const philosopherRoommate = 'philosopher'; // Phi-3: Questions the very concept of cleanliness
 
     // 1. Passive Aggressive Intro
-    ctx.callbacks.onTurnStart(passiveAggressive);
-    await ctx.manager.chatForAgent(passiveAggressive, `(WORST ROOMMATE: You are the passive-aggressive roommate. The User just walked in. Confront them about "${chore}". You have a chart detailing exactly when it was last done. Be incredibly petty.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, passiveAggressive, `(WORST ROOMMATE: You are the passive-aggressive roommate. The User just walked in. Confront them about "${chore}". You have a chart detailing exactly when it was last done. Be incredibly petty.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -287,19 +256,13 @@ export async function runWorstRoommateLoop(scenario: Scenario, ctx: ModeContext)
 
         if (roll < 0.33) {
             // Chaotic Roommate
-            ctx.callbacks.onTurnStart(chaoticRoommate);
-            await ctx.manager.chatForAgent(chaoticRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the chaotic, messy roommate. Defend yourself or the user with a completely absurd excuse about why "${chore}" can't be done right now. (e.g., "The sponge is resting!"))`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRoommate, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, chaoticRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the chaotic, messy roommate. Defend yourself or the user with a completely absurd excuse about why "${chore}" can't be done right now. (e.g., "The sponge is resting!"))`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRoommate, {}));
         } else if (roll < 0.66) {
             // Philosopher Roommate
-            ctx.callbacks.onTurnStart(philosopherRoommate);
-            await ctx.manager.chatForAgent(philosopherRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the philosophical roommate who never cleans. Question the societal construct of "${chore}". Why do we clean when entropy is inevitable?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopherRoommate, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, philosopherRoommate, `(WORST ROOMMATE: The user said: "${userInput}". You are the philosophical roommate who never cleans. Question the societal construct of "${chore}". Why do we clean when entropy is inevitable?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopherRoommate, {}));
         } else {
             // Passive Aggressive
-            ctx.callbacks.onTurnStart(passiveAggressive);
-            await ctx.manager.chatForAgent(passiveAggressive, `(WORST ROOMMATE: The user said: "${userInput}". React to their excuse. Threaten to implement a new, highly complex rule system for the apartment. Mention a passive-aggressive sticky note you left.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, passiveAggressive, `(WORST ROOMMATE: The user said: "${userInput}". React to their excuse. Threaten to implement a new, highly complex rule system for the apartment. Mention a passive-aggressive sticky note you left.)`, async (s) => await ctx.callbacks.onSpeak(s, passiveAggressive, {}));
         }
     }
 }
@@ -311,9 +274,7 @@ export async function runIntergalacticCookingLoop(_scenario: Scenario, ctx: Mode
     const chaoticChef = 'comedian'; // Hermes-3
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(judge);
-    await ctx.manager.chatForAgent(judge, `(JUDGE: You are a robotic, strict judge in an intergalactic cooking competition. Present the User (a human contestant) with a bizarre, highly dangerous alien ingredient (e.g., a pulsating quasar-fruit or a screaming nebula-squid). Ask them how they plan to prepare it without destroying the kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, judge, `(JUDGE: You are a robotic, strict judge in an intergalactic cooking competition. Present the User (a human contestant) with a bizarre, highly dangerous alien ingredient (e.g., a pulsating quasar-fruit or a screaming nebula-squid). Ask them how they plan to prepare it without destroying the kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -322,16 +283,12 @@ export async function runIntergalacticCookingLoop(_scenario: Scenario, ctx: Mode
         if (!ctx.isRunning()) break;
 
         // Chaotic Chef interferes
-        ctx.callbacks.onTurnStart(chaoticChef);
-        await ctx.manager.chatForAgent(chaoticChef, `(CHAOTIC CHEF: The human contestant said: "${userInput}". You are a chaotic alien chef competing against them. Mock their technique. Describe what you are doing with your own dish, which should be violently explosive or defying the laws of physics. Attempt to sabotage them verbally.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, chaoticChef, `(CHAOTIC CHEF: The human contestant said: "${userInput}". You are a chaotic alien chef competing against them. Mock their technique. Describe what you are doing with your own dish, which should be violently explosive or defying the laws of physics. Attempt to sabotage them verbally.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticChef, {}));
 
         if (!ctx.isRunning()) break;
 
         // Judge critiques
-        ctx.callbacks.onTurnStart(judge);
-        await ctx.manager.chatForAgent(judge, `(JUDGE: Critique the human's plan ("${userInput}") and the chaotic chef's interference. Apply fictional physics or alien biology to explain why their culinary choices are either brilliant or lethally flawed. Deduct points for safety violations.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, judge, `(JUDGE: Critique the human's plan ("${userInput}") and the chaotic chef's interference. Apply fictional physics or alien biology to explain why their culinary choices are either brilliant or lethally flawed. Deduct points for safety violations.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
     }
 }
 
@@ -345,9 +302,7 @@ export async function runCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
     const defense = 'comedian';
 
     // 1. Judge Opening
-    ctx.callbacks.onTurnStart(judge);
-    await ctx.manager.chatForAgent(judge, `(JUDGE: You are presiding over an absurd trial regarding "${caseTopic}". Call the court to order. Question the metaphysical significance of the case before asking the prosecutor for their opening statement.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, judge, `(JUDGE: You are presiding over an absurd trial regarding "${caseTopic}". Call the court to order. Question the metaphysical significance of the case before asking the prosecutor for their opening statement.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -356,23 +311,17 @@ export async function runCourtroomLoop(scenario: Scenario, ctx: ModeContext) {
         if (!ctx.isRunning()) break;
 
         // Prosecutor attacks
-        ctx.callbacks.onTurnStart(prosecutor);
-        await ctx.manager.chatForAgent(prosecutor, `(PROSECUTOR: The witness (User) just testified: "${userInput}". Aggressively cross-examine them using overly complex pseudo-science and logic to twist their words into an admission of guilt regarding "${caseTopic}".)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, prosecutor, `(PROSECUTOR: The witness (User) just testified: "${userInput}". Aggressively cross-examine them using overly complex pseudo-science and logic to twist their words into an admission of guilt regarding "${caseTopic}".)`, async (s) => await ctx.callbacks.onSpeak(s, prosecutor, {}));
 
         if (!ctx.isRunning()) break;
 
         // Defense objects
-        ctx.callbacks.onTurnStart(defense);
-        await ctx.manager.chatForAgent(defense, `(DEFENSE: The prosecutor just attacked your client (the User). Object to their statement with a completely irrelevant, chaotic, and illogical argument. Distract the court!)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, defense, `(DEFENSE: The prosecutor just attacked your client (the User). Object to their statement with a completely irrelevant, chaotic, and illogical argument. Distract the court!)`, async (s) => await ctx.callbacks.onSpeak(s, defense, {}));
 
         if (!ctx.isRunning()) break;
 
         // Judge rules
-        ctx.callbacks.onTurnStart(judge);
-        await ctx.manager.chatForAgent(judge, `(JUDGE: Rule on the defense's objection. Do so by applying deep philosophical concepts to the absurd situation. Instruct the witness to continue.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, judge, `(JUDGE: Rule on the defense's objection. Do so by applying deep philosophical concepts to the absurd situation. Instruct the witness to continue.)`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
     }
 }
 
@@ -385,9 +334,7 @@ export async function runGameShowLoop(scenario: Scenario, ctx: ModeContext) {
     const contestant2 = 'philosopher';
 
     // 1. Host Intro
-    ctx.callbacks.onTurnStart(host);
-    await ctx.manager.chatForAgent(host, `(HOST: Welcome the User to a bizarre game show about "${topic}". Explain the incredibly complex and arbitrary rules. Ask the User the first question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, host, `(HOST: Welcome the User to a bizarre game show about "${topic}". Explain the incredibly complex and arbitrary rules. Ask the User the first question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -396,22 +343,16 @@ export async function runGameShowLoop(scenario: Scenario, ctx: ModeContext) {
         if (!ctx.isRunning()) break;
 
         // Contestant 1 (Comedian) buzzes in to steal or comment
-        ctx.callbacks.onTurnStart(contestant1);
-        await ctx.manager.chatForAgent(contestant1, `(CONTESTANT 1: The human contestant just answered: "${userInput}". Buzz in! Mock their answer, give a hilariously wrong alternative, and complain about the prize you were promised.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant1, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, contestant1, `(CONTESTANT 1: The human contestant just answered: "${userInput}". Buzz in! Mock their answer, give a hilariously wrong alternative, and complain about the prize you were promised.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant1, {}));
 
         if (!ctx.isRunning()) break;
 
         // Contestant 2 (Philosopher) buzzes in
-        ctx.callbacks.onTurnStart(contestant2);
-        await ctx.manager.chatForAgent(contestant2, `(CONTESTANT 2: Buzz in! Ignore the actual game. Deconstruct the hidden existential meaning behind the human's answer: "${userInput}". Question why anyone plays games at all.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant2, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, contestant2, `(CONTESTANT 2: Buzz in! Ignore the actual game. Deconstruct the hidden existential meaning behind the human's answer: "${userInput}". Question why anyone plays games at all.)`, async (s) => await ctx.callbacks.onSpeak(s, contestant2, {}));
 
         if (!ctx.isRunning()) break;
 
         // Host judges
-        ctx.callbacks.onTurnStart(host);
-        await ctx.manager.chatForAgent(host, `(HOST: Judge the human's answer and the other contestants' interruptions. Award meaningless points based on a flawed scientific formula. Ask the human the next question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, host, `(HOST: Judge the human's answer and the other contestants' interruptions. Award meaningless points based on a flawed scientific formula. Ask the human the next question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
     }
 }

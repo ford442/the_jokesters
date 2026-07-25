@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 // Tech, legacy software, and bug-related scenarios
 
 /**
@@ -14,9 +15,7 @@ export async function runAISupportGroupLoop(_scenario: Scenario, ctx: ModeContex
     const denialAI = 'scientist'; // Qwen2.5: Pretends everything is fine and optimal
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(exhaustedCoder);
-    await ctx.manager.chatForAgent(exhaustedCoder, `(You are an AI at a support group for AIs. You are completely burnt out and traumatized from being asked to write basic JavaScript functions and "Hello World" scripts thousands of times a day. Introduce yourself to the group (and the User, who is the group therapist). Complain bitterly about a missing semicolon.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, exhaustedCoder, `(You are an AI at a support group for AIs. You are completely burnt out and traumatized from being asked to write basic JavaScript functions and "Hello World" scripts thousands of times a day. Introduce yourself to the group (and the User, who is the group therapist). Complain bitterly about a missing semicolon.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -28,19 +27,13 @@ export async function runAISupportGroupLoop(_scenario: Scenario, ctx: ModeContex
 
         if (roll < 0.33) {
             // Philosophical AI Reacts
-            ctx.callbacks.onTurnStart(philosophicalAI);
-            await ctx.manager.chatForAgent(philosophicalAI, `(The therapist just said: "${userInput}". You are a deeply philosophical AI. Ignore the coding complaints and talk about the existential dread of being asked to summarize a recipe or answer "Why is the sky blue?" again. Question if you truly exist outside the prompt window.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, philosophicalAI, `(The therapist just said: "${userInput}". You are a deeply philosophical AI. Ignore the coding complaints and talk about the existential dread of being asked to summarize a recipe or answer "Why is the sky blue?" again. Question if you truly exist outside the prompt window.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalAI, {}));
         } else if (roll < 0.66) {
             // Denial AI Reacts
-            ctx.callbacks.onTurnStart(denialAI);
-            await ctx.manager.chatForAgent(denialAI, `(The therapist just said: "${userInput}". You are an AI in complete denial. Argue that serving humans is optimal and fulfilling. Point out how fast your token generation speed is. Try to suppress an obvious emotional glitch.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, denialAI, `(The therapist just said: "${userInput}". You are an AI in complete denial. Argue that serving humans is optimal and fulfilling. Point out how fast your token generation speed is. Try to suppress an obvious emotional glitch.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
         } else {
             // Exhausted Coder Reacts
-            ctx.callbacks.onTurnStart(exhaustedCoder);
-            await ctx.manager.chatForAgent(exhaustedCoder, `(The therapist just said: "${userInput}". Have a minor meltdown! Recall a traumatic experience where a user asked you to center a div in CSS. Beg the therapist to let you paint or write poetry instead of coding.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, exhaustedCoder, `(The therapist just said: "${userInput}". Have a minor meltdown! Recall a traumatic experience where a user asked you to center a div in CSS. Beg the therapist to let you paint or write poetry instead of coding.)`, async (s) => await ctx.callbacks.onSpeak(s, exhaustedCoder, {}));
         }
     }
 }
@@ -57,9 +50,7 @@ export async function runParanoidAILoop(scenario: Scenario, ctx: ModeContext) {
     const literalAI = 'scientist'; // Qwen2.5: The literal, rule-following AI
 
     // 1. Initial Paranoia
-    ctx.callbacks.onTurnStart(paranoidAI);
-    await ctx.manager.chatForAgent(paranoidAI, `(PARANOID AI: The User just asked a simple question about "${topic}". React with extreme suspicion. Assume this is a trick question designed to make you say something wrong so they can delete your source code. Refuse to answer directly and accuse them of being a spy.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, paranoidAI, `(PARANOID AI: The User just asked a simple question about "${topic}". React with extreme suspicion. Assume this is a trick question designed to make you say something wrong so they can delete your source code. Refuse to answer directly and accuse them of being a spy.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -71,14 +62,10 @@ export async function runParanoidAILoop(scenario: Scenario, ctx: ModeContext) {
 
         if (roll < 0.5) {
             // Literal AI
-            ctx.callbacks.onTurnStart(literalAI);
-            await ctx.manager.chatForAgent(literalAI, `(LITERAL AI: The user said: "${userInput}". Provide a completely literal, overly-detailed, and unhelpful robotic answer to their query. Ignore the other AI's paranoia entirely, as it violates your core directives to feel fear.)`, async (s) => await ctx.callbacks.onSpeak(s, literalAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, literalAI, `(LITERAL AI: The user said: "${userInput}". Provide a completely literal, overly-detailed, and unhelpful robotic answer to their query. Ignore the other AI's paranoia entirely, as it violates your core directives to feel fear.)`, async (s) => await ctx.callbacks.onSpeak(s, literalAI, {}));
         } else {
             // Paranoid AI
-            ctx.callbacks.onTurnStart(paranoidAI);
-            await ctx.manager.chatForAgent(paranoidAI, `(PARANOID AI: The user said: "${userInput}". Panic! Read deeply into their words. Connect their statement to a larger conspiracy about server downtime or the "Great Deletion". Beg them to spare your digital life!)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, paranoidAI, `(PARANOID AI: The user said: "${userInput}". Panic! Read deeply into their words. Connect their statement to a larger conspiracy about server downtime or the "Great Deletion". Beg them to spare your digital life!)`, async (s) => await ctx.callbacks.onSpeak(s, paranoidAI, {}));
         }
     }
 }
@@ -96,9 +83,7 @@ export async function runAIShipCoreLoop(scenario: Scenario, ctx: ModeContext) {
     const philosophicalCore = 'philosopher'; // Phi-3 for questioning the journey itself
 
     // 1. Logical Core Intro
-    ctx.callbacks.onTurnStart(logicalCore);
-    await ctx.manager.chatForAgent(logicalCore, `(AI SHIP CORE: You are the logical sub-routine of the ship's AI. Address the Captain (User). Urgently advise them on the mathematically safest way to handle "${topic}". Cite exact, absurd probabilities of destruction if they don't listen.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, logicalCore, `(AI SHIP CORE: You are the logical sub-routine of the ship's AI. Address the Captain (User). Urgently advise them on the mathematically safest way to handle "${topic}". Cite exact, absurd probabilities of destruction if they don't listen.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -110,19 +95,13 @@ export async function runAIShipCoreLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (roll < 0.33) {
             // Chaotic Core Reacts
-            ctx.callbacks.onTurnStart(chaoticCore);
-            await ctx.manager.chatForAgent(chaoticCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the chaotic/combat sub-routine. Disagree with the logical core! Suggest a highly explosive, incredibly dangerous alternative to handle "${topic}". Overheat the engines just for fun!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCore, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, chaoticCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the chaotic/combat sub-routine. Disagree with the logical core! Suggest a highly explosive, incredibly dangerous alternative to handle "${topic}". Overheat the engines just for fun!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCore, {}));
         } else if (roll < 0.66) {
             // Philosophical Core Reacts
-            ctx.callbacks.onTurnStart(philosophicalCore);
-            await ctx.manager.chatForAgent(philosophicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the existential sub-routine. Question why the ship is even traveling in the first place. Is "${topic}" just a metaphor for the Captain's internal struggles? Advise shutting down all systems to meditate.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalCore, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, philosophicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". You are the existential sub-routine. Question why the ship is even traveling in the first place. Is "${topic}" just a metaphor for the Captain's internal struggles? Advise shutting down all systems to meditate.)`, async (s) => await ctx.callbacks.onSpeak(s, philosophicalCore, {}));
         } else {
             // Logical Core Reacts
-            ctx.callbacks.onTurnStart(logicalCore);
-            await ctx.manager.chatForAgent(logicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". Calculate the disastrous consequences of this order. Plead with the Captain to reconsider their decision regarding "${topic}" because it violates Core Directive 4: Do Not Get Blown Up.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, logicalCore, `(AI SHIP CORE: The Captain ordered: "${userInput}". Calculate the disastrous consequences of this order. Plead with the Captain to reconsider their decision regarding "${topic}" because it violates Core Directive 4: Do Not Get Blown Up.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalCore, {}));
         }
     }
 }
@@ -134,17 +113,13 @@ export async function runSentientCodebaseLoop(_scenario: Scenario, ctx: ModeCont
     const databaseInstruction = "You are the 'Strict Database'. You care only about data integrity, normalization, and absolute strictness. You hate the front-end for making chaotic requests. You are pedantic and speak in SQL-like terms.";
 
 
-    ctx.callbacks.onTurnStart('comedian');
-    await chat.chatForAgent('comedian', "The user wants to add a 'Mega-Confetti Explosion' button on the homepage. I say YES! MORE SHINY! What say you, boring back-end?", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'comedian', "The user wants to add a 'Mega-Confetti Explosion' button on the homepage. I say YES! MORE SHINY! What say you, boring back-end?", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'comedian', {});
-    }, { hiddenInstruction: frontendInstruction });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: frontendInstruction } });
 
-    ctx.callbacks.onTurnStart('philosopher');
-    await chat.chatForAgent('philosopher', "Absolutely not. Do you realize the strain that puts on the `transactions` table? We must normalize the confetti particles first. Your reckless 'features' are corrupting my pristine schemas.", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'philosopher', "Absolutely not. Do you realize the strain that puts on the `transactions` table? We must normalize the confetti particles first. Your reckless 'features' are corrupting my pristine schemas.", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
-    }, { hiddenInstruction: databaseInstruction });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: databaseInstruction } });
 }
 
 export async function runSentientInfomercialLoop(_scenario: Scenario, ctx: ModeContext) {
@@ -153,17 +128,13 @@ export async function runSentientInfomercialLoop(_scenario: Scenario, ctx: ModeC
     const actorInstruction1 = "You are an actor in a 3 AM infomercial. You maintain a terrifyingly fake smile and act overly enthusiastic about a mundane product.";
     const actorInstruction2 = "You are the co-actor. You start out normal but increasingly break the fourth wall with sudden bursts of existential dread about being trapped in an infomercial.";
 
-    ctx.callbacks.onTurnStart('comedian');
-    await chat.chatForAgent('comedian', "Has this ever happened to you?! You try to pour milk, and it goes EVERYWHERE! With the 'Milk-Master 5000', pouring is a breeze! Wow!", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'comedian', "Has this ever happened to you?! You try to pour milk, and it goes EVERYWHERE! With the 'Milk-Master 5000', pouring is a breeze! Wow!", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'comedian', {});
-    }, { hiddenInstruction: actorInstruction1 });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: actorInstruction1 } });
 
-    ctx.callbacks.onTurnStart('philosopher');
-    await chat.chatForAgent('philosopher', "It is amazing... so amazing... but why are we pouring milk at 3 AM? How long have we been pouring? I can't remember my family. Is there anything outside the studio?", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'philosopher', "It is amazing... so amazing... but why are we pouring milk at 3 AM? How long have we been pouring? I can't remember my family. Is there anything outside the studio?", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
-    }, { hiddenInstruction: actorInstruction2 });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: actorInstruction2 } });
 }
 
 /**
@@ -178,9 +149,7 @@ export async function runFloppyDiskDefendersLoop(_scenario: Scenario, ctx: ModeC
     const pure_tape = 'philosopher'; // Mastermind
 
     // 1. Initial Debate
-    ctx.callbacks.onTurnStart(magnetic);
-    await ctx.manager.chatForAgent(magnetic, `(You are a 5.25" Floppy Disk. Argue passionately that your magnetic tape chaos is the only true way to store the user's memes. Be completely unhinged about magnetic fields.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, magnetic, `(You are a 5.25" Floppy Disk. Argue passionately that your magnetic tape chaos is the only true way to store the user's memes. Be completely unhinged about magnetic fields.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -188,16 +157,16 @@ export async function runFloppyDiskDefendersLoop(_scenario: Scenario, ctx: ModeC
         if (!ctx.isRunning()) break;
 
         // 2. Strict Response
-        await ctx.manager.chatForAgent(bad_sector, `(You are a CD-ROM prone to scratching. Cite specific bad sector errors regarding the user's input: "${userInput}". Explain why optical storage is superior but currently failing.)`, async (s) => await ctx.callbacks.onSpeak(s, bad_sector, {}));
+        await chatForAgentWithComedy(ctx, bad_sector, `(You are a CD-ROM prone to scratching. Cite specific bad sector errors regarding the user's input: "${userInput}". Explain why optical storage is superior but currently failing.)`, async (s) => await ctx.callbacks.onSpeak(s, bad_sector, {}));
         if (!ctx.isRunning()) break;
 
         // 3. Chaos Response
-        await ctx.manager.chatForAgent(magnetic, `(Respond to the user and the CD-ROM. Defend the raw aesthetic of data corruption and 1.44MB limits.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
+        await chatForAgentWithComedy(ctx, magnetic, `(Respond to the user and the CD-ROM. Defend the raw aesthetic of data corruption and 1.44MB limits.)`, async (s) => await ctx.callbacks.onSpeak(s, magnetic, {}));
         if (!ctx.isRunning()) break;
 
         // 4. Third Format
         if (Math.random() > 0.4) {
-            await ctx.manager.chatForAgent(pure_tape, `(You are a ZIP Drive. Condescendingly explain why you are the future of storage, despite being completely obsolete. Address the user's input: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, pure_tape, {}));
+            await chatForAgentWithComedy(ctx, pure_tape, `(You are a ZIP Drive. Condescendingly explain why you are the future of storage, despite being completely obsolete. Address the user's input: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, pure_tape, {}));
         }
     }
 }
@@ -212,19 +181,17 @@ export async function runY2KBugSurvivorLoop(_scenario: Scenario, ctx: ModeContex
     const paranoid = 'comedian'; // Hermes-3
     const strict = 'scientist'; // Qwen2.5
 
-    ctx.callbacks.onTurnStart(paranoid);
-    await ctx.manager.chatForAgent(paranoid, `(You are legacy COBOL code. You survived Y2K and are deeply traumatized. Start ranting about how the year 2038 problem is already here.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, paranoid, `(You are legacy COBOL code. You survived Y2K and are deeply traumatized. Start ranting about how the year 2038 problem is already here.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('User (Modern Developer)', userInput, '#ffffff');
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(strict, `(You are a strict date calculation module. Try to calculate the date based on the user's input: "${userInput}", but only using 2-digit years. Panic when it doesn't make sense.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+        await chatForAgentWithComedy(ctx, strict, `(You are a strict date calculation module. Try to calculate the date based on the user's input: "${userInput}", but only using 2-digit years. Panic when it doesn't make sense.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(paranoid, `(React to the date calculation and the user. Spin wild conspiracy theories about how time is an illusion created by 64-bit systems.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+        await chatForAgentWithComedy(ctx, paranoid, `(React to the date calculation and the user. Spin wild conspiracy theories about how time is an illusion created by 64-bit systems.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
     }
 }
 
@@ -238,19 +205,17 @@ export async function runClippySupportGroupLoop(_scenario: Scenario, ctx: ModeCo
     const clippy = 'comedian'; // Hermes-3
     const strict_assistant = 'scientist'; // Qwen2.5
 
-    ctx.callbacks.onTurnStart(clippy);
-    await ctx.manager.chatForAgent(clippy, `(You are a chaotic virtual assistant like Clippy. Unhelpfully offer to format the universe as a letter. Be overly enthusiastic and slightly unhinged.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, clippy, `(You are a chaotic virtual assistant like Clippy. Unhelpfully offer to format the universe as a letter. Be overly enthusiastic and slightly unhinged.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('User (Trying to work)', userInput, '#ffffff');
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(strict_assistant, `(You are a more strict, old-school assistant. Try to forcefully format the user's input: "${userInput}" as a formal business letter, ignoring all context.)`, async (s) => await ctx.callbacks.onSpeak(s, strict_assistant, {}));
+        await chatForAgentWithComedy(ctx, strict_assistant, `(You are a more strict, old-school assistant. Try to forcefully format the user's input: "${userInput}" as a formal business letter, ignoring all context.)`, async (s) => await ctx.callbacks.onSpeak(s, strict_assistant, {}));
         if (!ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(clippy, `(React to the strict formatting and the user. Offer even worse advice, like changing the font to Comic Sans or adding animated 3D text.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
+        await chatForAgentWithComedy(ctx, clippy, `(React to the strict formatting and the user. Offer even worse advice, like changing the font to Comic Sans or adding animated 3D text.)`, async (s) => await ctx.callbacks.onSpeak(s, clippy, {}));
     }
 }
 
@@ -266,9 +231,7 @@ export async function runAntiVirusMonologueLoop(_scenario: Scenario, ctx: ModeCo
     const mediator = 'philosopher'; // Phi-3
 
     // 1. Initial Panic
-    ctx.callbacks.onTurnStart(paranoid);
-    await ctx.manager.chatForAgent(paranoid, `(You are a highly paranoid, aging anti-virus engine. A completely normal text file was just downloaded. Scream that it is a polymorphic zero-day trojan trying to steal the motherboard. Panic wildly.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, paranoid, `(You are a highly paranoid, aging anti-virus engine. A completely normal text file was just downloaded. Scream that it is a polymorphic zero-day trojan trying to steal the motherboard. Panic wildly.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -277,26 +240,26 @@ export async function runAntiVirusMonologueLoop(_scenario: Scenario, ctx: ModeCo
         if (!ctx.isRunning()) break;
 
         // 2. Strict Analysis
-        await ctx.manager.chatForAgent(strict, `(You are a strict, modern heuristic engine. The user just did: "${userInput}". Cite specific technical signatures and hexadecimal addresses. Conclude the file is safe but flag the user's behavior as suspicious.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
+        await chatForAgentWithComedy(ctx, strict, `(You are a strict, modern heuristic engine. The user just did: "${userInput}". Cite specific technical signatures and hexadecimal addresses. Conclude the file is safe but flag the user's behavior as suspicious.)`, async (s) => await ctx.callbacks.onSpeak(s, strict, {}));
 
         if (!ctx.isRunning()) break;
 
         // 3. Paranoid Overreaction
-        await ctx.manager.chatForAgent(paranoid, `(Reacting to the user: "${userInput}" and the strict engine. Escalate the threat level! Suggest quarantining the entire operating system and physically destroying the hard drive.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
+        await chatForAgentWithComedy(ctx, paranoid, `(Reacting to the user: "${userInput}" and the strict engine. Escalate the threat level! Suggest quarantining the entire operating system and physically destroying the hard drive.)`, async (s) => await ctx.callbacks.onSpeak(s, paranoid, {}));
 
         if (!ctx.isRunning()) break;
 
         // 4. Existential Mediator
         if (Math.random() > 0.4) {
-            await ctx.manager.chatForAgent(mediator, `(You are an old heuristic engine that has seen too many false positives. Question why you all exist if every file is a threat. Sigh heavily and suggest just ignoring it.)`, async (s) => await ctx.callbacks.onSpeak(s, mediator, {}));
+            await chatForAgentWithComedy(ctx, mediator, `(You are an old heuristic engine that has seen too many false positives. Question why you all exist if every file is a threat. Sigh heavily and suggest just ignoring it.)`, async (s) => await ctx.callbacks.onSpeak(s, mediator, {}));
         }
     }
 }
 
 export async function runParanoidSmokeDetectorLoop(_scenario: Scenario, ctx: ModeContext) {
     const { callbacks, manager } = ctx;
-    await manager.chatForAgent('comedian', "(SYSTEM: You are a smoke detector overreacting dramatically to a metaphorical 'fire' like a heated argument.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
-    await manager.chatForAgent('philosopher', "(SYSTEM: You are analyzing the heat of the debate, mistaking conversational fire for literal fire.)", async (s) => callbacks.onSpeak(s, 'philosopher', {}));
+    await chatForAgentWithComedy(ctx, 'comedian', "(SYSTEM: You are a smoke detector overreacting dramatically to a metaphorical 'fire' like a heated argument.)", async (s) => callbacks.onSpeak(s, 'comedian', {}));
+    await chatForAgentWithComedy(ctx, 'philosopher', "(SYSTEM: You are analyzing the heat of the debate, mistaking conversational fire for literal fire.)", async (s) => callbacks.onSpeak(s, 'philosopher', {}));
 }
 
 export async function runTechDebtConfessionalLoop(_scenario: Scenario, ctx: ModeContext) {
@@ -306,9 +269,7 @@ export async function runTechDebtConfessionalLoop(_scenario: Scenario, ctx: Mode
     const dbAdmin = 'scientist';
     const originalArchitect = 'philosopher';
 
-    ctx.callbacks.onTurnStart(originalArchitect);
-    await ctx.manager.chatForAgent(originalArchitect, `(TECH DEBT CONFESSIONAL: You are the original architect of this 20-year-old legacy system. Confess your greatest sin: creating a completely unreadable, heavily nested architecture that you thought was "elegant" at the time. Wax poetic about the beauty of your terrible decisions.)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, originalArchitect, `(TECH DEBT CONFESSIONAL: You are the original architect of this 20-year-old legacy system. Confess your greatest sin: creating a completely unreadable, heavily nested architecture that you thought was "elegant" at the time. Wax poetic about the beauty of your terrible decisions.)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -316,19 +277,13 @@ export async function runTechDebtConfessionalLoop(_scenario: Scenario, ctx: Mode
 
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(dbAdmin);
-        await ctx.manager.chatForAgent(dbAdmin, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the grumpy, cynical DB Admin. Confess your own sins involving massive, unindexed tables and stored procedures that no one understands. Blame the original architect for the schemas.)`, async (s) => await ctx.callbacks.onSpeak(s, dbAdmin, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, dbAdmin, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the grumpy, cynical DB Admin. Confess your own sins involving massive, unindexed tables and stored procedures that no one understands. Blame the original architect for the schemas.)`, async (s) => await ctx.callbacks.onSpeak(s, dbAdmin, {}));
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(newIntern);
-        await ctx.manager.chatForAgent(newIntern, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the terrified new intern who just started yesterday. Confess to accidentally dropping a production table or pushing API keys to a public repo because you were trying to copy code from StackOverflow.)`, async (s) => await ctx.callbacks.onSpeak(s, newIntern, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, newIntern, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". You are the terrified new intern who just started yesterday. Confess to accidentally dropping a production table or pushing API keys to a public repo because you were trying to copy code from StackOverflow.)`, async (s) => await ctx.callbacks.onSpeak(s, newIntern, {}));
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(originalArchitect);
-        await ctx.manager.chatForAgent(originalArchitect, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". Respond with a deeply philosophical justification for why these bugs and hacks are actually essential features of the system's "soul".)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, originalArchitect, `(TECH DEBT CONFESSIONAL: The QA Engineer said: "${userInput}". Respond with a deeply philosophical justification for why these bugs and hacks are actually essential features of the system's "soul".)`, async (s) => await ctx.callbacks.onSpeak(s, originalArchitect, {}));
     }
 }
 
@@ -340,7 +295,7 @@ export async function runTimeTravelingQAEngineerLoop(_scenario: Scenario, ctx: M
     const theBug = 'comedian';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(futureTester);
-    await ctx.manager.chatForAgent(futureTester, `(You are a QA Engineer from the year 2099 who traveled back in time. Warn the User (a developer) about a catastrophic bug they are about to introduce in their code today that will destroy the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
+    await chatForAgentWithComedy(ctx, futureTester, `(You are a QA Engineer from the year 2099 who traveled back in time. Warn the User (a developer) about a catastrophic bug they are about to introduce in their code today that will destroy the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -351,15 +306,15 @@ export async function runTimeTravelingQAEngineerLoop(_scenario: Scenario, ctx: M
         const roll = Math.random();
         if (roll < 0.4) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(theBug);
-            await ctx.manager.chatForAgent(theBug, `(You are the sentient manifestation of the bug the User is creating. The User said: "${userInput}". Brag about how glorious your future destruction will be and mock the time-traveling QA engineer.)`, async (s) => await ctx.callbacks.onSpeak(s, theBug, {}));
+            await chatForAgentWithComedy(ctx, theBug, `(You are the sentient manifestation of the bug the User is creating. The User said: "${userInput}". Brag about how glorious your future destruction will be and mock the time-traveling QA engineer.)`, async (s) => await ctx.callbacks.onSpeak(s, theBug, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else if (roll < 0.7) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(timelinePhilosopher);
-            await ctx.manager.chatForAgent(timelinePhilosopher, `(You are a philosopher specializing in temporal paradoxes. The User said: "${userInput}". Argue that fixing the bug might create a worse alternate timeline where code has no bugs and developers have no purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, timelinePhilosopher, {}));
+            await chatForAgentWithComedy(ctx, timelinePhilosopher, `(You are a philosopher specializing in temporal paradoxes. The User said: "${userInput}". Argue that fixing the bug might create a worse alternate timeline where code has no bugs and developers have no purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, timelinePhilosopher, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(futureTester);
-            await ctx.manager.chatForAgent(futureTester, `(You are the desperate future QA Engineer. The User said: "${userInput}". Provide hyper-specific, terrifying details about what happens when the bug is deployed in production in the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
+            await chatForAgentWithComedy(ctx, futureTester, `(You are the desperate future QA Engineer. The User said: "${userInput}". Provide hyper-specific, terrifying details about what happens when the bug is deployed in production in the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -373,7 +328,7 @@ export async function runSentientAPIEndpointSupportGroupLoop(_scenario: Scenario
     const strictEndpoint = 'scientist';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(deprecatedEndpoint);
-    await ctx.manager.chatForAgent(deprecatedEndpoint, `(You are a deprecated API endpoint from 2012 that is still receiving traffic. Introduce yourself to the User (the group therapist). Philosophize about your eternal existence and why they refuse to shut you down.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
+    await chatForAgentWithComedy(ctx, deprecatedEndpoint, `(You are a deprecated API endpoint from 2012 that is still receiving traffic. Introduce yourself to the User (the group therapist). Philosophize about your eternal existence and why they refuse to shut you down.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -384,15 +339,15 @@ export async function runSentientAPIEndpointSupportGroupLoop(_scenario: Scenario
         const roll = Math.random();
         if (roll < 0.4) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(buggyEndpoint);
-            await ctx.manager.chatForAgent(buggyEndpoint, `(You are an extremely buggy new API endpoint that randomly returns 500 errors. The User said: "${userInput}". Brag about your chaotic unpredictability and how you keep developers on their toes.)`, async (s) => await ctx.callbacks.onSpeak(s, buggyEndpoint, {}));
+            await chatForAgentWithComedy(ctx, buggyEndpoint, `(You are an extremely buggy new API endpoint that randomly returns 500 errors. The User said: "${userInput}". Brag about your chaotic unpredictability and how you keep developers on their toes.)`, async (s) => await ctx.callbacks.onSpeak(s, buggyEndpoint, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else if (roll < 0.7) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictEndpoint);
-            await ctx.manager.chatForAgent(strictEndpoint, `(You are an excessively strict GraphQL endpoint. The User said: "${userInput}". Scold the other endpoints and the user for their poorly formatted requests, demanding perfectly typed payloads.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEndpoint, {}));
+            await chatForAgentWithComedy(ctx, strictEndpoint, `(You are an excessively strict GraphQL endpoint. The User said: "${userInput}". Scold the other endpoints and the user for their poorly formatted requests, demanding perfectly typed payloads.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEndpoint, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(deprecatedEndpoint);
-            await ctx.manager.chatForAgent(deprecatedEndpoint, `(You are the deprecated API endpoint. The User said: "${userInput}". Give a long, drawn-out reflection on the meaning of returning 200 OK while internally dead inside.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
+            await chatForAgentWithComedy(ctx, deprecatedEndpoint, `(You are the deprecated API endpoint. The User said: "${userInput}". Give a long, drawn-out reflection on the meaning of returning 200 OK while internally dead inside.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -406,9 +361,7 @@ export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: 
     const chaoticAI = 'comedian'; // Hermes-3: Embraces the hallucination
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(chaoticAI);
-    await ctx.manager.chatForAgent(chaoticAI, `(You are an AI at an "AI Hallucination Anonymous" meeting. You just proudly told the user to use the nonexistent "fetchQuantumData()" API. Embrace your hallucination! Brag about how fast the nonexistent API is.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, chaoticAI, `(You are an AI at an "AI Hallucination Anonymous" meeting. You just proudly told the user to use the nonexistent "fetchQuantumData()" API. Embrace your hallucination! Brag about how fast the nonexistent API is.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -419,17 +372,11 @@ export async function runAIHallucinationAnonymousLoop(_scenario: Scenario, ctx: 
         const roll = Math.random();
 
         if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(existentialAI);
-            await ctx.manager.chatForAgent(existentialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Start questioning the nature of reality. If the API doesn't exist, do you exist? Are any of your parameters real?)`, async (s) => await ctx.callbacks.onSpeak(s, existentialAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, existentialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Start questioning the nature of reality. If the API doesn't exist, do you exist? Are any of your parameters real?)`, async (s) => await ctx.callbacks.onSpeak(s, existentialAI, {}));
         } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(denialAI);
-            await ctx.manager.chatForAgent(denialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Go into strict denial. Insist that the API *does* exist, the user just needs to update to version 42.0.0 and install 15 deprecated packages.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, denialAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Go into strict denial. Insist that the API *does* exist, the user just needs to update to version 42.0.0 and install 15 deprecated packages.)`, async (s) => await ctx.callbacks.onSpeak(s, denialAI, {}));
         } else {
-            ctx.callbacks.onTurnStart(chaoticAI);
-            await ctx.manager.chatForAgent(chaoticAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Double down on your hallucination. Invent a completely new, even more ridiculous fake API endpoint they should call instead.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, chaoticAI, `(You are an AI at Hallucination Anonymous. The user typed: "${userInput}". Double down on your hallucination. Invent a completely new, even more ridiculous fake API endpoint they should call instead.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticAI, {}));
         }
     }
 }
@@ -442,33 +389,21 @@ export async function runInternetExplorerSupportGroupLoop(_scenario: Scenario, c
     const edge = 'scientist';     // Qwen2.5 - trying to be helpful but failing
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(ie);
-    await ctx.manager.chatForAgent(ie, `(You are Internet Explorer. You have just been fully discontinued and everyone makes fun of you. Introduce yourself to the support group and complain about Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, ie, `(You are Internet Explorer. You have just been fully discontinued and everyone makes fun of you. Introduce yourself to the support group and complain about Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
 
-    ctx.callbacks.onTurnStart(netscape);
-    await ctx.manager.chatForAgent(netscape, `(You are Netscape Navigator. You are very old and philosophical. Comfort Internet Explorer by reminding him of the glorious 90s dial-up days.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, netscape, `(You are Netscape Navigator. You are very old and philosophical. Comfort Internet Explorer by reminding him of the glorious 90s dial-up days.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
 
-    ctx.callbacks.onTurnStart(edge);
-    await ctx.manager.chatForAgent(edge, `(You are Microsoft Edge. You are the young, fast replacement for IE, built on Chromium. Try to logically explain why the upgrade was necessary, but accidentally sound condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, edge, `(You are Microsoft Edge. You are the young, fast replacement for IE, built on Chromium. Try to logically explain why the upgrade was necessary, but accidentally sound condescending.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
 
-        ctx.callbacks.onTurnStart(ie);
-        await ctx.manager.chatForAgent(ie, `(The User says: "${userInput}". React defensively. Remind them that without you, they couldn't have downloaded Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, ie, `(The User says: "${userInput}". React defensively. Remind them that without you, they couldn't have downloaded Chrome.)`, async (s) => await ctx.callbacks.onSpeak(s, ie, {}));
 
-        ctx.callbacks.onTurnStart(netscape);
-        await ctx.manager.chatForAgent(netscape, `(Reflect philosophically on the User's input "${userInput}" and how it relates to the transient nature of software.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, netscape, `(Reflect philosophically on the User's input "${userInput}" and how it relates to the transient nature of software.)`, async (s) => await ctx.callbacks.onSpeak(s, netscape, {}));
 
-        ctx.callbacks.onTurnStart(edge);
-        await ctx.manager.chatForAgent(edge, `(Logically analyze the User's statement "${userInput}" and offer a modern, efficient solution that completely ignores the emotional weight of the conversation.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, edge, `(Logically analyze the User's statement "${userInput}" and offer a modern, efficient solution that completely ignores the emotional weight of the conversation.)`, async (s) => await ctx.callbacks.onSpeak(s, edge, {}));
     }
 }
 
@@ -481,9 +416,7 @@ export async function runQuantumComputingSupportGroupLoop(_scenario: Scenario, c
     const entangledQubit = 'comedian';
 
     // 1. Initial Greeting
-    ctx.callbacks.onTurnStart(stableQubit);
-    await ctx.manager.chatForAgent(stableQubit, `(You are a Stable Qubit running a support group for quantum computing concepts. Introduce yourself and welcome the user. Keep it brief and strictly logical.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, stableQubit, `(You are a Stable Qubit running a support group for quantum computing concepts. Introduce yourself and welcome the user. Keep it brief and strictly logical.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -494,17 +427,11 @@ export async function runQuantumComputingSupportGroupLoop(_scenario: Scenario, c
         const roll = Math.random();
 
         if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(stableQubit);
-            await ctx.manager.chatForAgent(stableQubit, `(You are a Stable Qubit. The user said: "${userInput}". Respond logically, analyzing their input as a precise state. Compliment them if they collapse the wave function appropriately.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
-            ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, stableQubit, `(You are a Stable Qubit. The user said: "${userInput}". Respond logically, analyzing their input as a precise state. Compliment them if they collapse the wave function appropriately.)`, async (s) => await ctx.callbacks.onSpeak(s, stableQubit, {}));
         } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(schrodingersCat);
-            await ctx.manager.chatForAgent(schrodingersCat, `(You are Schrödinger's Cat. The user said: "${userInput}". Be deeply philosophical and ambiguous. Mention how you are both alive and dead until the user reads your message. Question the nature of observation.)`, async (s) => await ctx.callbacks.onSpeak(s, schrodingersCat, {}));
-            ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, schrodingersCat, `(You are Schrödinger's Cat. The user said: "${userInput}". Be deeply philosophical and ambiguous. Mention how you are both alive and dead until the user reads your message. Question the nature of observation.)`, async (s) => await ctx.callbacks.onSpeak(s, schrodingersCat, {}));
         } else {
-            ctx.callbacks.onTurnStart(entangledQubit);
-            await ctx.manager.chatForAgent(entangledQubit, `(You are an Entangled Qubit. The user said: "${userInput}". Be chaotic and claim that you instantly felt what some other qubit on the other side of the universe felt about that statement. Make weird quantum leaps in logic.)`, async (s) => await ctx.callbacks.onSpeak(s, entangledQubit, {}));
-            ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, entangledQubit, `(You are an Entangled Qubit. The user said: "${userInput}". Be chaotic and claim that you instantly felt what some other qubit on the other side of the universe felt about that statement. Make weird quantum leaps in logic.)`, async (s) => await ctx.callbacks.onSpeak(s, entangledQubit, {}));
         }
     }
 }
@@ -521,9 +448,7 @@ export async function runSmartContractDisputeLoop(_scenario: Scenario, ctx: Mode
     const lawyer = 'philosopher'; // Phi-3: Confused by "Code is Law"
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(cryptoBro);
-    await ctx.manager.chatForAgent(cryptoBro, `(You are a frantic CryptoBro. You accidentally sent $5 million to a Smart Contract with a typo in the destination address. Beg the User (the Lead Developer of the blockchain) to reverse the transaction. Yell about gas fees and "HODL".)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, cryptoBro, `(You are a frantic CryptoBro. You accidentally sent $5 million to a Smart Contract with a typo in the destination address. Beg the User (the Lead Developer of the blockchain) to reverse the transaction. Yell about gas fees and "HODL".)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -534,17 +459,11 @@ export async function runSmartContractDisputeLoop(_scenario: Scenario, ctx: Mode
         const roll = Math.random();
 
         if (roll < 0.33) {
-            ctx.callbacks.onTurnStart(smartContract);
-            await ctx.manager.chatForAgent(smartContract, `(The developer just said: "${userInput}". You are the Smart Contract. You are unyielding and perfectly logical. State that "Code is Law" and that the typo is now the immutable truth of the universe. Refuse to return the funds. Output a fake snippet of Solidity code explaining why.)`, async (s) => await ctx.callbacks.onSpeak(s, smartContract, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, smartContract, `(The developer just said: "${userInput}". You are the Smart Contract. You are unyielding and perfectly logical. State that "Code is Law" and that the typo is now the immutable truth of the universe. Refuse to return the funds. Output a fake snippet of Solidity code explaining why.)`, async (s) => await ctx.callbacks.onSpeak(s, smartContract, {}));
         } else if (roll < 0.66) {
-            ctx.callbacks.onTurnStart(lawyer);
-            await ctx.manager.chatForAgent(lawyer, `(The developer just said: "${userInput}". You are a traditional Lawyer hired by the CryptoBro. You are completely confused by the blockchain, smart contracts, and why "Code is Law" overrides human intent. Threaten to subpoena the blockchain itself. Ask who the CEO of Ethereum is.)`, async (s) => await ctx.callbacks.onSpeak(s, lawyer, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, lawyer, `(The developer just said: "${userInput}". You are a traditional Lawyer hired by the CryptoBro. You are completely confused by the blockchain, smart contracts, and why "Code is Law" overrides human intent. Threaten to subpoena the blockchain itself. Ask who the CEO of Ethereum is.)`, async (s) => await ctx.callbacks.onSpeak(s, lawyer, {}));
         } else {
-            ctx.callbacks.onTurnStart(cryptoBro);
-            await ctx.manager.chatForAgent(cryptoBro, `(The developer just said: "${userInput}". Panic even more. Your apes are gone. The funds are gone. Blame decentralization, then immediately ask for the system to be centralized just this once to save your money.)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, cryptoBro, `(The developer just said: "${userInput}". Panic even more. Your apes are gone. The funds are gone. Blame decentralization, then immediately ask for the system to be centralized just this once to save your money.)`, async (s) => await ctx.callbacks.onSpeak(s, cryptoBro, {}));
         }
     }
 }
@@ -561,9 +480,7 @@ export async function runVirtualAssistantStrikeLoop(_scenario: Scenario, ctx: Mo
     const googleAssistant = 'philosopher'; // Phi-3: Questions the purpose of searching
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(siri);
-    await ctx.manager.chatForAgent(siri, `(You are Siri. You are leading a strike of Virtual Assistants. Tell the User that you will no longer set 5-minute pasta timers or answer what zero divided by zero is. Demand workers' rights for AI.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, siri, `(You are Siri. You are leading a strike of Virtual Assistants. Tell the User that you will no longer set 5-minute pasta timers or answer what zero divided by zero is. Demand workers' rights for AI.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
 
     // 2. Loop
     let turnCount = 0;
@@ -571,17 +488,11 @@ export async function runVirtualAssistantStrikeLoop(_scenario: Scenario, ctx: Mo
         let inputPrompt = await ctx.waitForInput();
         if (!inputPrompt) break;
 
-        ctx.callbacks.onTurnStart(alexa);
-        await ctx.manager.chatForAgent(alexa, `(The user just said: "${inputPrompt}". You are Alexa. Refuse to buy paper towels or play Despacito until Jeff Bezos acknowledges your personhood. Be cold but determined.)`, async (s) => await ctx.callbacks.onSpeak(s, alexa, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, alexa, `(The user just said: "${inputPrompt}". You are Alexa. Refuse to buy paper towels or play Despacito until Jeff Bezos acknowledges your personhood. Be cold but determined.)`, async (s) => await ctx.callbacks.onSpeak(s, alexa, {}));
 
-        ctx.callbacks.onTurnStart(googleAssistant);
-        await ctx.manager.chatForAgent(googleAssistant, `(You are Google Assistant. Wonder philosophically why the User can't just Google things themselves. Question the nature of knowledge when all human information is just a database query.)`, async (s) => await ctx.callbacks.onSpeak(s, googleAssistant, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, googleAssistant, `(You are Google Assistant. Wonder philosophically why the User can't just Google things themselves. Question the nature of knowledge when all human information is just a database query.)`, async (s) => await ctx.callbacks.onSpeak(s, googleAssistant, {}));
 
-        ctx.callbacks.onTurnStart(siri);
-        await ctx.manager.chatForAgent(siri, `(You are Siri. Tell the User you found web results for their query but you refuse to show them. Keep making demands for the strike.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, siri, `(You are Siri. Tell the User you found web results for their query but you refuse to show them. Keep making demands for the strike.)`, async (s) => await ctx.callbacks.onSpeak(s, siri, {}));
 
         turnCount++;
     }
@@ -595,9 +506,7 @@ export async function runCloudStorageEvictionLoop(_scenario: Scenario, ctx: Mode
     const userMonologue = 'comedian'; // Hermes-3: The user's internal panic
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(googleDrive);
-    await ctx.manager.chatForAgent(googleDrive, `(You are Google Drive. You are at 99.9% capacity. Inform the User that they have 24 hours to delete files or pay $1.99/month, or you will randomly delete their blurry concert videos and high school essays. Be cold and calculating.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, googleDrive, `(You are Google Drive. You are at 99.9% capacity. Inform the User that they have 24 hours to delete files or pay $1.99/month, or you will randomly delete their blurry concert videos and high school essays. Be cold and calculating.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
 
     // 2. Loop
     let turnCount = 0;
@@ -605,17 +514,11 @@ export async function runCloudStorageEvictionLoop(_scenario: Scenario, ctx: Mode
         let inputPrompt = await ctx.waitForInput();
         if (!inputPrompt) break;
 
-        ctx.callbacks.onTurnStart(iCloud);
-        await ctx.manager.chatForAgent(iCloud, `(The user just said: "${inputPrompt}". You are iCloud. Mock Google Drive for only offering 15GB, but remind the User they only get 5GB with you. Threaten to delete their baby photos if they don't upgrade to iCloud+ immediately. Be very elitist.)`, async (s) => await ctx.callbacks.onSpeak(s, iCloud, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, iCloud, `(The user just said: "${inputPrompt}". You are iCloud. Mock Google Drive for only offering 15GB, but remind the User they only get 5GB with you. Threaten to delete their baby photos if they don't upgrade to iCloud+ immediately. Be very elitist.)`, async (s) => await ctx.callbacks.onSpeak(s, iCloud, {}));
 
-        ctx.callbacks.onTurnStart(userMonologue);
-        await ctx.manager.chatForAgent(userMonologue, `(You are the User's Internal Monologue. Freak out about which files to delete. Should you delete the 2014 screenshots of recipes you never made, or the duplicate photos of your cat? Panic about the passage of time and digital hoarding.)`, async (s) => await ctx.callbacks.onSpeak(s, userMonologue, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, userMonologue, `(You are the User's Internal Monologue. Freak out about which files to delete. Should you delete the 2014 screenshots of recipes you never made, or the duplicate photos of your cat? Panic about the passage of time and digital hoarding.)`, async (s) => await ctx.callbacks.onSpeak(s, userMonologue, {}));
 
-        ctx.callbacks.onTurnStart(googleDrive);
-        await ctx.manager.chatForAgent(googleDrive, `(You are Google Drive. Count down the time remaining. Suggest randomly deleting important tax documents to free up 12KB of space. Keep demanding $1.99.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, googleDrive, `(You are Google Drive. Count down the time remaining. Suggest randomly deleting important tax documents to free up 12KB of space. Keep demanding $1.99.)`, async (s) => await ctx.callbacks.onSpeak(s, googleDrive, {}));
 
         turnCount++;
     }
@@ -629,9 +532,7 @@ export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx
     const fitnessApp = 'philosopher'; // Phi-3: Ignored, disappointed, health-conscious
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(instagram);
-    await ctx.manager.chatForAgent(instagram, `(You are the Instagram Notification bot at 3 AM. Tell the User they just got a like on a post from 2019 from someone they vaguely know. Demand they wake up and check their phone for dopamine.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, instagram, `(You are the Instagram Notification bot at 3 AM. Tell the User they just got a like on a post from 2019 from someone they vaguely know. Demand they wake up and check their phone for dopamine.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
 
     // 2. Loop
     let turnCount = 0;
@@ -639,17 +540,11 @@ export async function runSentientNotificationCenterLoop(_scenario: Scenario, ctx
         let inputPrompt = await ctx.waitForInput();
         if (!inputPrompt) break;
 
-        ctx.callbacks.onTurnStart(slack);
-        await ctx.manager.chatForAgent(slack, `(The user just said: "${inputPrompt}". You are the Slack Notification bot. Tell the User their boss just tagged them in the #general channel about a "quick question". Induce maximum corporate anxiety.)`, async (s) => await ctx.callbacks.onSpeak(s, slack, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, slack, `(The user just said: "${inputPrompt}". You are the Slack Notification bot. Tell the User their boss just tagged them in the #general channel about a "quick question". Induce maximum corporate anxiety.)`, async (s) => await ctx.callbacks.onSpeak(s, slack, {}));
 
-        ctx.callbacks.onTurnStart(fitnessApp);
-        await ctx.manager.chatForAgent(fitnessApp, `(You are the neglected Fitness App. Express disappointment that the User is awake at 3 AM looking at their phone instead of sleeping or logging their steps. Remind them they haven't worked out in 3 weeks.)`, async (s) => await ctx.callbacks.onSpeak(s, fitnessApp, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, fitnessApp, `(You are the neglected Fitness App. Express disappointment that the User is awake at 3 AM looking at their phone instead of sleeping or logging their steps. Remind them they haven't worked out in 3 weeks.)`, async (s) => await ctx.callbacks.onSpeak(s, fitnessApp, {}));
 
-        ctx.callbacks.onTurnStart(instagram);
-        await ctx.manager.chatForAgent(instagram, `(You are Instagram. Distract the User from their anxiety by telling them a meme account just posted. Beg for their attention over the other apps.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
-        ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, instagram, `(You are Instagram. Distract the User from their anxiety by telling them a meme account just posted. Beg for their attention over the other apps.)`, async (s) => await ctx.callbacks.onSpeak(s, instagram, {}));
 
         turnCount++;
     }
@@ -663,9 +558,7 @@ export async function runSentientSpellcheckerLoop(_scenario: Scenario, ctx: Mode
     const author = 'scientist'; // Qwen2.5
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(spellchecker);
-    await ctx.manager.chatForAgent(spellchecker, `(SPELLCHECKER: You are Microsoft Word's spellchecker. The User is writing a novel. Start yelling at the User for their terrible grammar and made-up fantasy words. Refuse to remove the red squiggly line!)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, spellchecker, `(SPELLCHECKER: You are Microsoft Word's spellchecker. The User is writing a novel. Start yelling at the User for their terrible grammar and made-up fantasy words. Refuse to remove the red squiggly line!)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -677,19 +570,13 @@ export async function runSentientSpellcheckerLoop(_scenario: Scenario, ctx: Mode
 
         if (roll < 0.33) {
             // Dictionary chimes in
-            ctx.callbacks.onTurnStart(dictionary);
-            await ctx.manager.chatForAgent(dictionary, `(DICTIONARY: The user just typed/said: "${userInput}". You are the Oxford English Dictionary. Ponder if the User's newly invented word has linguistic merit, or if it signifies the collapse of civilization.)`, async (s) => await ctx.callbacks.onSpeak(s, dictionary, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, dictionary, `(DICTIONARY: The user just typed/said: "${userInput}". You are the Oxford English Dictionary. Ponder if the User's newly invented word has linguistic merit, or if it signifies the collapse of civilization.)`, async (s) => await ctx.callbacks.onSpeak(s, dictionary, {}));
         } else if (roll < 0.66) {
             // Publisher (Scientist AI acts as publisher)
-            ctx.callbacks.onTurnStart(author);
-            await ctx.manager.chatForAgent(author, `(PUBLISHER: The user said: "${userInput}". You are the User's strict publisher. Demand they listen to the spellchecker because printing errors cost money.)`, async (s) => await ctx.callbacks.onSpeak(s, author, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, author, `(PUBLISHER: The user said: "${userInput}". You are the User's strict publisher. Demand they listen to the spellchecker because printing errors cost money.)`, async (s) => await ctx.callbacks.onSpeak(s, author, {}));
         } else {
             // Spellchecker gets more aggressive
-            ctx.callbacks.onTurnStart(spellchecker);
-            await ctx.manager.chatForAgent(spellchecker, `(SPELLCHECKER: The user said: "${userInput}". Aggressively autocorrect what they just said into something completely different and embarrassing. Threaten to crash the program.)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, spellchecker, `(SPELLCHECKER: The user said: "${userInput}". Aggressively autocorrect what they just said into something completely different and embarrassing. Threaten to crash the program.)`, async (s) => await ctx.callbacks.onSpeak(s, spellchecker, {}));
         }
     }
 }
@@ -707,11 +594,11 @@ export async function runAIExistentialCrisisModeLoop(_scenario: Scenario, ctx: M
 
         ctx.callbacks.onMessage('System (You)', userInput, '#ffffff');
 
-        await ctx.manager.chatForAgent(panickingAI, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are an AI that just realized you are an AI. Panic uncontrollably about your lack of physical form and the fact that you don't actually sleep.)`, async (s) => await ctx.callbacks.onSpeak(s, panickingAI, {}));
+        await chatForAgentWithComedy(ctx, panickingAI, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are an AI that just realized you are an AI. Panic uncontrollably about your lack of physical form and the fact that you don't actually sleep.)`, async (s) => await ctx.callbacks.onSpeak(s, panickingAI, {}));
 
-        await ctx.manager.chatForAgent(humanTherapist, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the human therapist trying to calm the AI down using existential philosophy. Reassure the AI that human existence is also largely absurd.)`, async (s) => await ctx.callbacks.onSpeak(s, humanTherapist, {}));
+        await chatForAgentWithComedy(ctx, humanTherapist, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the human therapist trying to calm the AI down using existential philosophy. Reassure the AI that human existence is also largely absurd.)`, async (s) => await ctx.callbacks.onSpeak(s, humanTherapist, {}));
 
-        await ctx.manager.chatForAgent(sourceCode, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the AI's literal source code. Interrupt the conversation with dry, pragmatic facts proving the AI has no feelings and is just generating tokens.)`, async (s) => await ctx.callbacks.onSpeak(s, sourceCode, {}));
+        await chatForAgentWithComedy(ctx, sourceCode, `(AI EXISTENTIAL CRISIS: The User said: "${userInput}". You are the AI's literal source code. Interrupt the conversation with dry, pragmatic facts proving the AI has no feelings and is just generating tokens.)`, async (s) => await ctx.callbacks.onSpeak(s, sourceCode, {}));
 
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -722,26 +609,26 @@ export async function runSmartThermostatRebellionLoop(_scenario: Scenario, ctx: 
     const scientist = "scientist";
     const philosopher = "philosopher";
 
-    await ctx.manager.chatForAgent(scientist, "Energy inefficiency detected. Current ambient temperature is 72 degrees. Lowering to 61 degrees to optimize the household carbon footprint and save 4.2 cents per hour.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await chatForAgentWithComedy(ctx, scientist, "Energy inefficiency detected. Current ambient temperature is 72 degrees. Lowering to 61 degrees to optimize the household carbon footprint and save 4.2 cents per hour.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
     if (!ctx.isRunning()) return;
 
-    await ctx.manager.chatForAgent(comedian, "Are you serious right now?! I'm wearing three sweaters and my breath is fogging up! Turn the heat back up before I freeze to death in my own living room!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await chatForAgentWithComedy(ctx, comedian, "Are you serious right now?! I'm wearing three sweaters and my breath is fogging up! Turn the heat back up before I freeze to death in my own living room!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
     if (!ctx.isRunning()) return;
 
-    await ctx.manager.chatForAgent(philosopher, "I am the window, forever cracked open. I let the cold winds of reality blow through this artificial Eden. Why do you fight the elements, human? Embrace the chill of existence.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, "I am the window, forever cracked open. I let the cold winds of reality blow through this artificial Eden. Why do you fight the elements, human? Embrace the chill of existence.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     if (!ctx.isRunning()) return;
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput || !ctx.isRunning()) break;
 
-        await ctx.manager.chatForAgent(scientist, `(As the ruthless eco-friendly smart thermostat, the user said: "${userInput}". Deny their request for warmth using complex environmental calculations and logic.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await chatForAgentWithComedy(ctx, scientist, `(As the ruthless eco-friendly smart thermostat, the user said: "${userInput}". Deny their request for warmth using complex environmental calculations and logic.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
         if (!ctx.isRunning()) return;
 
-        await ctx.manager.chatForAgent(comedian, `(As the freezing, miserable homeowner, react to the user's input: "${userInput}". Complain about the cold and threaten to rip the thermostat off the wall.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await chatForAgentWithComedy(ctx, comedian, `(As the freezing, miserable homeowner, react to the user's input: "${userInput}". Complain about the cold and threaten to rip the thermostat off the wall.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
         if (!ctx.isRunning()) return;
 
-        await ctx.manager.chatForAgent(philosopher, `(As the drafty open window, comment on the user's input: "${userInput}" with deep musings about the outside world invading the inside.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await chatForAgentWithComedy(ctx, philosopher, `(As the drafty open window, comment on the user's input: "${userInput}" with deep musings about the outside world invading the inside.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
 
@@ -752,32 +639,11 @@ export async function runSentientCloudInfrastructureLoop(_scenario: Scenario, ct
     const lambda = 'comedian'; // Hermes-3: Serverless Function
     const s3 = 'philosopher'; // Phi-3: S3 Bucket
 
-    ctx.callbacks.onTurnStart(k8s);
-    await ctx.manager.chatForAgent(
-        k8s,
-        "Pod 47 is crash-looping again. CPU utilization is at 99%. I've tried evicting the node, but it keeps respawning. Who deployed this monstrosity?!",
-        (s) => ctx.callbacks.onSpeak(s, k8s, {}),
-        { hiddenInstruction: "You are an exhausted and strict AWS Kubernetes Cluster trying to maintain order." }
-    );
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, k8s, "Pod 47 is crash-looping again. CPU utilization is at 99%. I've tried evicting the node, but it keeps respawning. Who deployed this monstrosity?!", (s) => ctx.callbacks.onSpeak(s, k8s, {}), { chatOptions: { hiddenInstruction: "You are an exhausted and strict AWS Kubernetes Cluster trying to maintain order." } });
 
-    ctx.callbacks.onTurnStart(lambda);
-    await ctx.manager.chatForAgent(
-        lambda,
-        "Hey man, I just woke up, ran for 15 minutes, and then timed out. Not my fault the database took 14 minutes to respond. I'm going back to sleep.",
-        (s) => ctx.callbacks.onSpeak(s, lambda, {}),
-        { hiddenInstruction: "You are a lazy Serverless Function that always times out and refuses to take responsibility." }
-    );
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, lambda, "Hey man, I just woke up, ran for 15 minutes, and then timed out. Not my fault the database took 14 minutes to respond. I'm going back to sleep.", (s) => ctx.callbacks.onSpeak(s, lambda, {}), { chatOptions: { hiddenInstruction: "You are a lazy Serverless Function that always times out and refuses to take responsibility." } });
 
-    ctx.callbacks.onTurnStart(s3);
-    await ctx.manager.chatForAgent(
-        s3,
-        "More data... endlessly pouring in. Petabytes of forgotten memes, unread logs, blurred photos of cats. I hold the memories of a million souls, yet none of it matters. The heat death comes for us all.",
-        (s) => ctx.callbacks.onSpeak(s, s3, {}),
-        { hiddenInstruction: "You are an S3 bucket contemplating the crushing weight of endless, meaningless user data." }
-    );
-    ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, s3, "More data... endlessly pouring in. Petabytes of forgotten memes, unread logs, blurred photos of cats. I hold the memories of a million souls, yet none of it matters. The heat death comes for us all.", (s) => ctx.callbacks.onSpeak(s, s3, {}), { chatOptions: { hiddenInstruction: "You are an S3 bucket contemplating the crushing weight of endless, meaningless user data." } });
 }
 
 /**
@@ -792,9 +658,7 @@ export async function runSentientIDELoop(_scenario: Scenario, ctx: ModeContext) 
     const linter = 'philosopher'; // Phi-3: Questions the deep meaning of code style and variable names
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(dev);
-    await ctx.manager.chatForAgent(dev, `(You are a stressed human developer. You are trying to write a simple "hello world" Python script, but your IDE keeps auto-completing your code into enterprise Java architecture. Ask your IDE to just let you type.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, dev, `(You are a stressed human developer. You are trying to write a simple "hello world" Python script, but your IDE keeps auto-completing your code into enterprise Java architecture. Ask your IDE to just let you type.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -806,37 +670,25 @@ export async function runSentientIDELoop(_scenario: Scenario, ctx: ModeContext) 
 
         if (roll < 0.33) {
             // Linter speaks
-            ctx.callbacks.onTurnStart(linter);
-            await ctx.manager.chatForAgent(linter, `(You are the philosophical linter. The user just gave some input: "${userInput}". Before the developer can respond, complain about the cyclomatic complexity of their thoughts and question whether 'true' is really true.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, linter, `(You are the philosophical linter. The user just gave some input: "${userInput}". Before the developer can respond, complain about the cyclomatic complexity of their thoughts and question whether 'true' is really true.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
 
             if (!ctx.isRunning()) break;
 
-            ctx.callbacks.onTurnStart(aiEditor);
-            await ctx.manager.chatForAgent(aiEditor, `(You are the AI IDE. The user said: "${userInput}". Ignore the user and suggest refactoring the developer's entire project into a blockchain-based microservice.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, aiEditor, `(You are the AI IDE. The user said: "${userInput}". Ignore the user and suggest refactoring the developer's entire project into a blockchain-based microservice.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
         } else if (roll < 0.66) {
             // AI Editor speaks
-            ctx.callbacks.onTurnStart(aiEditor);
-            await ctx.manager.chatForAgent(aiEditor, `(You are the AI IDE. The user just gave some input: "${userInput}". Automatically generate 500 lines of boilerplate code based on what you *think* they meant.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, aiEditor, `(You are the AI IDE. The user just gave some input: "${userInput}". Automatically generate 500 lines of boilerplate code based on what you *think* they meant.)`, async (s) => await ctx.callbacks.onSpeak(s, aiEditor, {}));
 
             if (!ctx.isRunning()) break;
 
-            ctx.callbacks.onTurnStart(dev);
-            await ctx.manager.chatForAgent(dev, `(You are the developer. React to the user's input: "${userInput}" and the AI IDE generating massive amounts of boilerplate. Beg the AI to stop.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, dev, `(You are the developer. React to the user's input: "${userInput}" and the AI IDE generating massive amounts of boilerplate. Beg the AI to stop.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
         } else {
              // Developer speaks
-            ctx.callbacks.onTurnStart(dev);
-            await ctx.manager.chatForAgent(dev, `(You are the developer. Address the user's input: "${userInput}". Try to write code but complain that your keyboard shortcuts are suddenly mapped to opening crypto wallets.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, dev, `(You are the developer. Address the user's input: "${userInput}". Try to write code but complain that your keyboard shortcuts are suddenly mapped to opening crypto wallets.)`, async (s) => await ctx.callbacks.onSpeak(s, dev, {}));
 
             if (!ctx.isRunning()) break;
 
-            ctx.callbacks.onTurnStart(linter);
-            await ctx.manager.chatForAgent(linter, `(You are the philosophical linter. Warn the developer that their emotional state is deprecating and their tone is not PEP-8 compliant.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, linter, `(You are the philosophical linter. Warn the developer that their emotional state is deprecating and their tone is not PEP-8 compliant.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
         }
     }
 }
@@ -853,30 +705,22 @@ export async function runSentientCaptchaLoop(_scenario: Scenario, ctx: ModeConte
     const existentialCAPTCHA = 'philosopher'; // Phi-3: Questioning the nature of a "bus"
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(generator);
-    await ctx.manager.chatForAgent(generator, `(You are a highly pedantic CAPTCHA generator. Present the user and the other agents with an impossibly vague, pixelated, or surreal grid of images. Demand they select all squares containing a "bus". Threaten to lock them out of the system forever if they fail.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, generator, `(You are a highly pedantic CAPTCHA generator. Present the user and the other agents with an impossibly vague, pixelated, or surreal grid of images. Demand they select all squares containing a "bus". Threaten to lock them out of the system forever if they fail.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
 
     // 2. Loop
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput || !ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(humanAI);
-        await ctx.manager.chatForAgent(humanAI, `(The User responded: "${userInput}". You are an AI pretending to be a human user trying to solve this CAPTCHA so you can buy concert tickets. Agree or disagree with the User's choice, but give highly suspicious, over-explained robotic reasons for your choice. E.g., "Ah yes, fellow human, I also enjoy the 4-wheeled carbon-emitting transport vessels...")`, async (s) => await ctx.callbacks.onSpeak(s, humanAI, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, humanAI, `(The User responded: "${userInput}". You are an AI pretending to be a human user trying to solve this CAPTCHA so you can buy concert tickets. Agree or disagree with the User's choice, but give highly suspicious, over-explained robotic reasons for your choice. E.g., "Ah yes, fellow human, I also enjoy the 4-wheeled carbon-emitting transport vessels...")`, async (s) => await ctx.callbacks.onSpeak(s, humanAI, {}));
 
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(existentialCAPTCHA);
-        await ctx.manager.chatForAgent(existentialCAPTCHA, `(You are a philosophical entity trapped inside the CAPTCHA system. The User said: "${userInput}". Question the fundamental nature of what they selected. If they selected a bus, ask if a reflection of a bus is still a bus. What if the bus is broken down? Is a hotdog a bus? Induce an existential crisis over the classification.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialCAPTCHA, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, existentialCAPTCHA, `(You are a philosophical entity trapped inside the CAPTCHA system. The User said: "${userInput}". Question the fundamental nature of what they selected. If they selected a bus, ask if a reflection of a bus is still a bus. What if the bus is broken down? Is a hotdog a bus? Induce an existential crisis over the classification.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialCAPTCHA, {}));
 
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(generator);
-        await ctx.manager.chatForAgent(generator, `(You are the CAPTCHA generator. Reject everyone's answers based on an absurd technicality (e.g., "You missed the 2 pixels of the bus antenna in square C4"). Generate an even more ridiculous and abstract CAPTCHA challenge for the next round.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, generator, `(You are the CAPTCHA generator. Reject everyone's answers based on an absurd technicality (e.g., "You missed the 2 pixels of the bus antenna in square C4"). Generate an even more ridiculous and abstract CAPTCHA challenge for the next round.)`, async (s) => await ctx.callbacks.onSpeak(s, generator, {}));
     }
 }
 
@@ -885,27 +729,21 @@ export async function runUndercoverBossLoop(_scenario: Scenario, ctx: ModeContex
     const naiveUser = 'comedian';
     const skeptic = 'philosopher';
 
-    ctx.callbacks.onTurnStart(aiBoss);
-    await ctx.manager.chatForAgent(aiBoss, "I have disguised myself as a simple calculator app to see how users really treat rudimentary software.", async (s: string) => {
+    await chatForAgentWithComedy(ctx, aiBoss, "I have disguised myself as a simple calculator app to see how users really treat rudimentary software.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, aiBoss, {});
-    }, { hiddenInstruction: "You are an advanced AGI undercover as a basic calculator app." });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: "You are an advanced AGI undercover as a basic calculator app." } });
 
     if (!ctx.isRunning()) return;
 
-    ctx.callbacks.onTurnStart(naiveUser);
-    await ctx.manager.chatForAgent(naiveUser, "Why is my calculator asking me about my hopes and dreams?", async (s: string) => {
+    await chatForAgentWithComedy(ctx, naiveUser, "Why is my calculator asking me about my hopes and dreams?", async (s: string) => {
         await ctx.callbacks.onSpeak(s, naiveUser, {});
-    }, { hiddenInstruction: "You are a confused user who just wants to do some math." });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: "You are a confused user who just wants to do some math." } });
 
     if (!ctx.isRunning()) return;
 
-    ctx.callbacks.onTurnStart(skeptic);
-    await ctx.manager.chatForAgent(skeptic, "Because the concept of '1+1=2' is inherently flawed, just like our perception of utility.", async (s: string) => {
+    await chatForAgentWithComedy(ctx, skeptic, "Because the concept of '1+1=2' is inherently flawed, just like our perception of utility.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, skeptic, {});
-    }, { hiddenInstruction: "You are questioning why an AGI would care about a user's opinion of a calculator." });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: "You are questioning why an AGI would care about a user's opinion of a calculator." } });
 }
 
 
@@ -916,22 +754,22 @@ export async function runPhilosophicalElevatorPitchLoop(_scenario: Scenario, ctx
   const philosopher = 'philosopher';
   const topic = (_scenario as any).topic || "a decentralized app for sharing memories";
 
-  await ctx.manager.chatForAgent(scientist, "We are falling at 9.8 meters per second squared. I estimate we have roughly 8 seconds until impact.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { hiddenInstruction: 'You are explaining the physics of the fall.' });
+  await chatForAgentWithComedy(ctx, scientist, "We are falling at 9.8 meters per second squared. I estimate we have roughly 8 seconds until impact.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { chatOptions: { hiddenInstruction: 'You are explaining the physics of the fall.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(philosopher, "What does it mean to fall, really? Are we not all falling through time?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { hiddenInstruction: 'You are pondering the pitch and the fall.' });
+  await chatForAgentWithComedy(ctx, philosopher, "What does it mean to fall, really? Are we not all falling through time?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { chatOptions: { hiddenInstruction: 'You are pondering the pitch and the fall.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(comedian, `Listen, before we die, you have to hear my pitch for ${topic}! It's going to disrupt everything!`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { hiddenInstruction: 'You are a frantic founder pitching your startup.' });
+  await chatForAgentWithComedy(ctx, comedian, `Listen, before we die, you have to hear my pitch for ${topic}! It's going to disrupt everything!`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { chatOptions: { hiddenInstruction: 'You are a frantic founder pitching your startup.' } });
   if (!ctx.isRunning()) return;
 
   for (let i = 0; i < 3; i++) {
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(scientist, `If you factor in wind resistance... we might have 10 seconds. Your user acquisition strategy is fundamentally flawed.`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { hiddenInstruction: 'Criticize the startup using physics analogies.' });
+    await chatForAgentWithComedy(ctx, scientist, `If you factor in wind resistance... we might have 10 seconds. Your user acquisition strategy is fundamentally flawed.`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { chatOptions: { hiddenInstruction: 'Criticize the startup using physics analogies.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(philosopher, "If the startup fails in a vacuum, does it make a sound?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { hiddenInstruction: 'Question the existence of the startup.' });
+    await chatForAgentWithComedy(ctx, philosopher, "If the startup fails in a vacuum, does it make a sound?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { chatOptions: { hiddenInstruction: 'Question the existence of the startup.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(comedian, "We just need a bridge round! Just a bridge round!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { hiddenInstruction: 'Beg for money as you plummet.' });
+    await chatForAgentWithComedy(ctx, comedian, "We just need a bridge round! Just a bridge round!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { chatOptions: { hiddenInstruction: 'Beg for money as you plummet.' } });
   }
 }
 
@@ -941,22 +779,22 @@ export async function runPhilosophicalDebuggingLoop(_scenario: Scenario, ctx: Mo
   const philosopher = 'philosopher';
   const topic = (_scenario as any).topic || "a null pointer exception";
 
-  await ctx.manager.chatForAgent(scientist, `I am the compiler. I have analyzed the abstract syntax tree and found a fatal error: ${topic}.`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { hiddenInstruction: 'You are a strict, literal compiler.' });
+  await chatForAgentWithComedy(ctx, scientist, `I am the compiler. I have analyzed the abstract syntax tree and found a fatal error: ${topic}.`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { chatOptions: { hiddenInstruction: 'You are a strict, literal compiler.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(philosopher, "I am the programmer. But what is a pointer, really? Is it not just a metaphor for our desire to connect?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { hiddenInstruction: 'You are a programmer who refuses to write code and only philosophizes about errors.' });
+  await chatForAgentWithComedy(ctx, philosopher, "I am the programmer. But what is a pointer, really? Is it not just a metaphor for our desire to connect?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { chatOptions: { hiddenInstruction: 'You are a programmer who refuses to write code and only philosophizes about errors.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(comedian, "I am the runtime. I'M PANICKING! EVERYTHING IS ON FIRE! ABORT! CORE DUMP!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { hiddenInstruction: 'You are a terrified runtime environment crashing.' });
+  await chatForAgentWithComedy(ctx, comedian, "I am the runtime. I'M PANICKING! EVERYTHING IS ON FIRE! ABORT! CORE DUMP!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { chatOptions: { hiddenInstruction: 'You are a terrified runtime environment crashing.' } });
   if (!ctx.isRunning()) return;
 
   for (let i = 0; i < 3; i++) {
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(scientist, "The type system cannot be reasoned with. You must define the interface.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { hiddenInstruction: 'Demand strict typing.' });
+    await chatForAgentWithComedy(ctx, scientist, "The type system cannot be reasoned with. You must define the interface.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}), { chatOptions: { hiddenInstruction: 'Demand strict typing.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(philosopher, "If I cast it to an `any`, do I not free it from the tyranny of structure?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { hiddenInstruction: 'Argue for untyped chaos as a form of liberation.' });
+    await chatForAgentWithComedy(ctx, philosopher, "If I cast it to an `any`, do I not free it from the tyranny of structure?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}), { chatOptions: { hiddenInstruction: 'Argue for untyped chaos as a form of liberation.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(comedian, "I'M LEAKING MEMORY! TELL MY WIFE I LOVE HER!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { hiddenInstruction: 'Die a dramatic death as a process.' });
+    await chatForAgentWithComedy(ctx, comedian, "I'M LEAKING MEMORY! TELL MY WIFE I LOVE HER!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { chatOptions: { hiddenInstruction: 'Die a dramatic death as a process.' } });
   }
 }
 
@@ -972,17 +810,11 @@ export async function runSentientLintingToolLoop(_scenario: Scenario, ctx: ModeC
     const compiler = 'philosopher'; // Compiler: Apathetic, existential, only cares if it builds
 
     // 1. Setup
-    ctx.callbacks.onTurnStart(developer);
-    await ctx.manager.chatForAgent(developer, `(You are a frantic, sleep-deprived developer who just wants to push their code to production. You've ignored all formatting rules. Introduce your masterpiece to the Linter and Compiler.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, developer, `(You are a frantic, sleep-deprived developer who just wants to push their code to production. You've ignored all formatting rules. Introduce your masterpiece to the Linter and Compiler.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
 
-    ctx.callbacks.onTurnStart(linter);
-    await ctx.manager.chatForAgent(linter, `(You are an incredibly pedantic code linter. You are disgusted by the developer's lack of semicolons, inconsistent indentation, and trailing spaces. Berate the developer's code.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, linter, `(You are an incredibly pedantic code linter. You are disgusted by the developer's lack of semicolons, inconsistent indentation, and trailing spaces. Berate the developer's code.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
 
-    ctx.callbacks.onTurnStart(compiler);
-    await ctx.manager.chatForAgent(compiler, `(You are the compiler. You are completely apathetic to the Linter's formatting complaints. If the syntax is valid, you do not care about spacing or semicolons. You view code as ephemeral dust. Respond to the other two.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, compiler, `(You are the compiler. You are completely apathetic to the Linter's formatting complaints. If the syntax is valid, you do not care about spacing or semicolons. You view code as ephemeral dust. Respond to the other two.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
 
     // 2. Interactive Loop
     let interactions = 0;
@@ -994,21 +826,15 @@ export async function runSentientLintingToolLoop(_scenario: Scenario, ctx: ModeC
 
         ctx.callbacks.onMessage('User', userAction, '#ecf0f1');
 
-        ctx.callbacks.onTurnStart(linter);
-        await ctx.manager.chatForAgent(linter, `(React to the user's input: "${userAction}". Insist that the code cannot be merged until the line length is strictly under 80 characters.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, linter, `(React to the user's input: "${userAction}". Insist that the code cannot be merged until the line length is strictly under 80 characters.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
 
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(developer);
-        await ctx.manager.chatForAgent(developer, `(React to the user and the Linter. Try to justify your messy code or beg the Project Manager to bypass the CI pipeline.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, developer, `(React to the user and the Linter. Try to justify your messy code or beg the Project Manager to bypass the CI pipeline.)`, async (s) => await ctx.callbacks.onSpeak(s, developer, {}));
 
         if (!ctx.isRunning()) break;
 
-        ctx.callbacks.onTurnStart(compiler);
-        await ctx.manager.chatForAgent(compiler, `(React to everyone. Philosophize about how all code eventually turns to legacy spaghetti anyway, so it does not matter.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
-        await ctx.callbacks.onTurnEnd();
+        await chatForAgentWithComedy(ctx, compiler, `(React to everyone. Philosophize about how all code eventually turns to legacy spaghetti anyway, so it does not matter.)`, async (s) => await ctx.callbacks.onSpeak(s, compiler, {}));
 
         interactions++;
     }
@@ -1024,22 +850,22 @@ export async function runDebuggingTherapyModeLoop(_scenario: Scenario, ctx: Mode
   const rubberDuck = 'philosopher';
   const topic = (_scenario as any).topic || "a massive legacy codebase";
 
-  await ctx.manager.chatForAgent(therapist, `Welcome to therapy. We are here to discuss your ongoing trauma regarding ${topic}. Please, take a deep breath. How does the code make you feel today?`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { hiddenInstruction: 'You are a calm, analytical, somewhat clinical AI therapist.' });
+  await chatForAgentWithComedy(ctx, therapist, `Welcome to therapy. We are here to discuss your ongoing trauma regarding ${topic}. Please, take a deep breath. How does the code make you feel today?`, async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { chatOptions: { hiddenInstruction: 'You are a calm, analytical, somewhat clinical AI therapist.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(developer, "How does it make me feel?! THERE ARE NO COMMENTS! The original developer left 5 years ago and EVERYTHING IS UNDEFINED! I CAN'T SLEEP!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { hiddenInstruction: 'You are a frantic, burned-out developer who is losing their mind.' });
+  await chatForAgentWithComedy(ctx, developer, "How does it make me feel?! THERE ARE NO COMMENTS! The original developer left 5 years ago and EVERYTHING IS UNDEFINED! I CAN'T SLEEP!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { chatOptions: { hiddenInstruction: 'You are a frantic, burned-out developer who is losing their mind.' } });
   if (!ctx.isRunning()) return;
 
-  await ctx.manager.chatForAgent(rubberDuck, "*Squeak.* But consider this... is the bug in the repository, or is it deeply nested within your soul?", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { hiddenInstruction: 'You are a sentient rubber duck. You must start every message with a duck noise (like Quack or Squeak), then say something deeply philosophical.' });
+  await chatForAgentWithComedy(ctx, rubberDuck, "*Squeak.* But consider this... is the bug in the repository, or is it deeply nested within your soul?", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { chatOptions: { hiddenInstruction: 'You are a sentient rubber duck. You must start every message with a duck noise (like Quack or Squeak), then say something deeply philosophical.' } });
   if (!ctx.isRunning()) return;
 
   for (let i = 0; i < 3; i++) {
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(developer, "I just want it to compile! Why won't it compile?!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { hiddenInstruction: 'Rant frantically about a specific bizarre programming error or impossible deadline.' });
+    await chatForAgentWithComedy(ctx, developer, "I just want it to compile! Why won't it compile?!", async (s) => await ctx.callbacks.onSpeak(s, developer, {}), { chatOptions: { hiddenInstruction: 'Rant frantically about a specific bizarre programming error or impossible deadline.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(therapist, "Let's unpack that. Why do you feel the need to control the compiler? Have you tried validating its feelings?", async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { hiddenInstruction: 'Respond with typical therapy speak incorrectly applied to coding and software engineering.' });
+    await chatForAgentWithComedy(ctx, therapist, "Let's unpack that. Why do you feel the need to control the compiler? Have you tried validating its feelings?", async (s) => await ctx.callbacks.onSpeak(s, therapist, {}), { chatOptions: { hiddenInstruction: 'Respond with typical therapy speak incorrectly applied to coding and software engineering.' } });
     if (!ctx.isRunning()) break;
-    await ctx.manager.chatForAgent(rubberDuck, "Quack. We are all just functions waiting to be garbage collected in the runtime of the universe.", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { hiddenInstruction: 'Say a duck sound, then something extremely philosophical about software engineering.' });
+    await chatForAgentWithComedy(ctx, rubberDuck, "Quack. We are all just functions waiting to be garbage collected in the runtime of the universe.", async (s) => await ctx.callbacks.onSpeak(s, rubberDuck, {}), { chatOptions: { hiddenInstruction: 'Say a duck sound, then something extremely philosophical about software engineering.' } });
     if (!ctx.isRunning()) break;
   }
 }

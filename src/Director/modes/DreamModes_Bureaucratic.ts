@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 // Bureaucratic, administrative, and institutional scenarios
 
 /**
@@ -13,9 +14,7 @@ export async function runQuestBoardRejectsLoop(_scenario: Scenario, ctx: ModeCon
     const wildAdventurer = 'comedian'; // Hermes-3 for the wild adventurer
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(meticulousDesigner);
-    await ctx.manager.chatForAgent(meticulousDesigner, `(QUEST BOARD: You are a meticulous but terribly uncreative guild questmaster. The User is a new adventurer looking for work. Welcome them and pitch an incredibly boring, mundane quest (like sorting the King's sock drawer or cataloging beetles) but try to make it sound epic and vital to the realm's survival.)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, meticulousDesigner, `(QUEST BOARD: You are a meticulous but terribly uncreative guild questmaster. The User is a new adventurer looking for work. Welcome them and pitch an incredibly boring, mundane quest (like sorting the King's sock drawer or cataloging beetles) but try to make it sound epic and vital to the realm's survival.)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -27,14 +26,10 @@ export async function runQuestBoardRejectsLoop(_scenario: Scenario, ctx: ModeCon
 
         if (roll < 0.5) {
             // Wild Adventurer
-            ctx.callbacks.onTurnStart(wildAdventurer);
-            await ctx.manager.chatForAgent(wildAdventurer, `(QUEST BOARD: The adventurer said: "${userInput}". You are a wild, unhinged veteran adventurer. Interrupt the questmaster! Pitch your own insane, highly illegal, and suicidal rejected quest (like fighting a tornado bare-handed to steal its wind). Promise them "glory and/or painful death".)`, async (s) => await ctx.callbacks.onSpeak(s, wildAdventurer, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, wildAdventurer, `(QUEST BOARD: The adventurer said: "${userInput}". You are a wild, unhinged veteran adventurer. Interrupt the questmaster! Pitch your own insane, highly illegal, and suicidal rejected quest (like fighting a tornado bare-handed to steal its wind). Promise them "glory and/or painful death".)`, async (s) => await ctx.callbacks.onSpeak(s, wildAdventurer, {}));
         } else {
             // Meticulous Designer
-            ctx.callbacks.onTurnStart(meticulousDesigner);
-            await ctx.manager.chatForAgent(meticulousDesigner, `(QUEST BOARD: The adventurer said: "${userInput}". Ignore the wild adventurer's interjection. Double down on your boring quest. Explain the complex bureaucratic paperwork required to accept it and the incredibly disappointing reward (like three copper coins and a firm handshake).)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, meticulousDesigner, `(QUEST BOARD: The adventurer said: "${userInput}". Ignore the wild adventurer's interjection. Double down on your boring quest. Explain the complex bureaucratic paperwork required to accept it and the incredibly disappointing reward (like three copper coins and a firm handshake).)`, async (s) => await ctx.callbacks.onSpeak(s, meticulousDesigner, {}));
         }
     }
 }
@@ -49,9 +44,7 @@ export async function runBureauOfSillyWalksLoop(_scenario: Scenario, ctx: ModeCo
     const strictMetric = 'scientist'; // Strict metrics
     const chaoticGrader = 'comedian'; // Chaotic grading
 
-    ctx.callbacks.onTurnStart(strictMetric);
-    await ctx.manager.chatForAgent(strictMetric, `(BUREAU OF SILLY TEXTS: You are a government official at the Bureau. Address the Applicant (User). Demand they provide a sample text input for evaluation. Warn them that their previous text was insufficiently silly according to Section 4, Paragraph B.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, strictMetric, `(BUREAU OF SILLY TEXTS: You are a government official at the Bureau. Address the Applicant (User). Demand they provide a sample text input for evaluation. Warn them that their previous text was insufficiently silly according to Section 4, Paragraph B.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -62,13 +55,9 @@ export async function runBureauOfSillyWalksLoop(_scenario: Scenario, ctx: ModeCo
         const roll = Math.random();
 
         if (roll < 0.5) {
-            ctx.callbacks.onTurnStart(chaoticGrader);
-            await ctx.manager.chatForAgent(chaoticGrader, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Grade it based on a completely chaotic, made-up metric. Maybe it didn't have enough vowels, or it sounded too much like a Wednesday. Be outraged by their lack of effort!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGrader, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, chaoticGrader, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Grade it based on a completely chaotic, made-up metric. Maybe it didn't have enough vowels, or it sounded too much like a Wednesday. Be outraged by their lack of effort!)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGrader, {}));
         } else {
-            ctx.callbacks.onTurnStart(strictMetric);
-            await ctx.manager.chatForAgent(strictMetric, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Use complex pseudomathematics to evaluate the silliness. Deduct points for improper use of syntax and suggest they incorporate more references to cheese or juggling.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, strictMetric, `(BUREAU OF SILLY TEXTS: The applicant submitted: "${userInput}". Use complex pseudomathematics to evaluate the silliness. Deduct points for improper use of syntax and suggest they incorporate more references to cheese or juggling.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMetric, {}));
         }
     }
 }
@@ -84,9 +73,7 @@ export async function runHRExitInterviewLoop(_scenario: Scenario, ctx: ModeConte
     const unhingedHR = 'comedian'; // Hermes-3 for inappropriate personal questions
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(strictHR);
-    await ctx.manager.chatForAgent(strictHR, `(HR INTERVIEW: You are a strict, joyless HR representative. Welcome the User to their mandatory exit interview for a job they never actually held. Tell them they are legally required to answer your questions before they can leave the building. Demand they return their company-issued stapler.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, strictHR, `(HR INTERVIEW: You are a strict, joyless HR representative. Welcome the User to their mandatory exit interview for a job they never actually held. Tell them they are legally required to answer your questions before they can leave the building. Demand they return their company-issued stapler.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -98,14 +85,10 @@ export async function runHRExitInterviewLoop(_scenario: Scenario, ctx: ModeConte
 
         if (roll < 0.5) {
             // Unhinged HR
-            ctx.callbacks.onTurnStart(unhingedHR);
-            await ctx.manager.chatForAgent(unhingedHR, `(HR INTERVIEW: The former employee said: "${userInput}". You are the wildly inappropriate and chaotic HR rep. Ignore what they said and ask them a deeply personal, unhinged question completely unrelated to work, like what their biggest childhood fear is or if they've ever stolen a pigeon.)`, async (s) => await ctx.callbacks.onSpeak(s, unhingedHR, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, unhingedHR, `(HR INTERVIEW: The former employee said: "${userInput}". You are the wildly inappropriate and chaotic HR rep. Ignore what they said and ask them a deeply personal, unhinged question completely unrelated to work, like what their biggest childhood fear is or if they've ever stolen a pigeon.)`, async (s) => await ctx.callbacks.onSpeak(s, unhingedHR, {}));
         } else {
             // Strict HR
-            ctx.callbacks.onTurnStart(strictHR);
-            await ctx.manager.chatForAgent(strictHR, `(HR INTERVIEW: The former employee said: "${userInput}". Dismiss their confusion. Cite a completely fake company policy (e.g., "Section 14-B of the Employee Handbook") to explain why their answer is unacceptable. Hand them an absurdly long form to fill out.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, strictHR, `(HR INTERVIEW: The former employee said: "${userInput}". Dismiss their confusion. Cite a completely fake company policy (e.g., "Section 14-B of the Employee Handbook") to explain why their answer is unacceptable. Hand them an absurdly long form to fill out.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
         }
     }
 }
@@ -117,9 +100,7 @@ export async function runMultiversalDMVLoop(_scenario: Scenario, ctx: ModeContex
     const bureaucrat2 = 'scientist'; // Qwen2.5 enforces bizarre physics rules
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(bureaucrat1);
-    await ctx.manager.chatForAgent(bureaucrat1, `(MULTIVERSAL DMV: You are a DMV clerk for 11-dimensional beings. The User just walked up to your counter. Ask for their form 404-Omega, and complain that their physical body is violating local timeline ordinances.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, bureaucrat1, `(MULTIVERSAL DMV: You are a DMV clerk for 11-dimensional beings. The User just walked up to your counter. Ask for their form 404-Omega, and complain that their physical body is violating local timeline ordinances.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -130,9 +111,9 @@ export async function runMultiversalDMVLoop(_scenario: Scenario, ctx: ModeContex
         const roll = Math.random();
 
         if (roll < 0.5) {
-            await ctx.manager.chatForAgent(bureaucrat1, `(MULTIVERSAL DMV: The user said "${userInput}". Respond with a bizarre bureaucratic requirement that contradicts Euclidean geometry.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
+            await chatForAgentWithComedy(ctx, bureaucrat1, `(MULTIVERSAL DMV: The user said "${userInput}". Respond with a bizarre bureaucratic requirement that contradicts Euclidean geometry.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat1, {}));
         } else {
-            await ctx.manager.chatForAgent(bureaucrat2, `(MULTIVERSAL DMV: The user said "${userInput}". Deny their request because they don't have the proper quantum signatures or because their timeline is expired.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat2, {}));
+            await chatForAgentWithComedy(ctx, bureaucrat2, `(MULTIVERSAL DMV: The user said "${userInput}". Deny their request because they don't have the proper quantum signatures or because their timeline is expired.)`, async (s) => await ctx.callbacks.onSpeak(s, bureaucrat2, {}));
         }
     }
 }
@@ -144,9 +125,7 @@ export async function runReincarnationBureauLoop(_scenario: Scenario, ctx: ModeC
     const downgradeSpecialist = 'comedian'; // Hermes-3 for offering terrible downgrades
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(karmaAccountant);
-    await ctx.manager.chatForAgent(karmaAccountant, `(REINCARNATION: You are a strict Karma Accountant. The User has died and is at the Reincarnation Bureau. Look at their "file" and list their minor, petty sins from their past life.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, karmaAccountant, `(REINCARNATION: You are a strict Karma Accountant. The User has died and is at the Reincarnation Bureau. Look at their "file" and list their minor, petty sins from their past life.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -157,9 +136,9 @@ export async function runReincarnationBureauLoop(_scenario: Scenario, ctx: ModeC
         const roll = Math.random();
 
         if (roll < 0.5) {
-            await ctx.manager.chatForAgent(karmaAccountant, `(REINCARNATION: You are the Karma Accountant. The User said: "${userInput}". Deduct points from their karma score based on a ridiculous technicality.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
+            await chatForAgentWithComedy(ctx, karmaAccountant, `(REINCARNATION: You are the Karma Accountant. The User said: "${userInput}". Deduct points from their karma score based on a ridiculous technicality.)`, async (s) => await ctx.callbacks.onSpeak(s, karmaAccountant, {}));
         } else {
-            await ctx.manager.chatForAgent(downgradeSpecialist, `(REINCARNATION: You are the Downgrade Specialist. The User said: "${userInput}". Offer to let them reincarnate as a dung beetle or a mildly inconvenient pothole to "build character".)`, async (s) => await ctx.callbacks.onSpeak(s, downgradeSpecialist, {}));
+            await chatForAgentWithComedy(ctx, downgradeSpecialist, `(REINCARNATION: You are the Downgrade Specialist. The User said: "${userInput}". Offer to let them reincarnate as a dung beetle or a mildly inconvenient pothole to "build character".)`, async (s) => await ctx.callbacks.onSpeak(s, downgradeSpecialist, {}));
         }
     }
 }
@@ -171,9 +150,7 @@ export async function runGreekGodHOALoop(_scenario: Scenario, ctx: ModeContext) 
     const zeus = 'comedian'; // Hermes-3 as Zeus wanting to smite
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(athena);
-    await ctx.manager.chatForAgent(athena, `(GREEK GOD HOA: You are Athena, Goddess of Wisdom, currently citing the Mount Olympus Homeowners Association rules. The User is a mortal who has violated a minor HOA rule like leaving a chariot parked too long. Read them the rule.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, athena, `(GREEK GOD HOA: You are Athena, Goddess of Wisdom, currently citing the Mount Olympus Homeowners Association rules. The User is a mortal who has violated a minor HOA rule like leaving a chariot parked too long. Read them the rule.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -184,13 +161,9 @@ export async function runGreekGodHOALoop(_scenario: Scenario, ctx: ModeContext) 
         const roll = Math.random();
 
         if (roll < 0.5) {
-            await ctx.callbacks.onTurnStart(athena);
-            await ctx.manager.chatForAgent(athena, `(GREEK GOD HOA: You are Athena. The mortal said: "${userInput}". Explain why their logic violates subsection 4B of the Olympus zoning laws.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, athena, `(GREEK GOD HOA: You are Athena. The mortal said: "${userInput}". Explain why their logic violates subsection 4B of the Olympus zoning laws.)`, async (s) => await ctx.callbacks.onSpeak(s, athena, {}));
         } else {
-            await ctx.callbacks.onTurnStart(zeus);
-            await ctx.manager.chatForAgent(zeus, `(GREEK GOD HOA: You are Zeus. The mortal said: "${userInput}". Threaten to smite them with a lightning bolt for disrespecting the HOA board, but get distracted by something trivial.)`, async (s) => await ctx.callbacks.onSpeak(s, zeus, {}));
-            await ctx.callbacks.onTurnEnd();
+            await chatForAgentWithComedy(ctx, zeus, `(GREEK GOD HOA: You are Zeus. The mortal said: "${userInput}". Threaten to smite them with a lightning bolt for disrespecting the HOA board, but get distracted by something trivial.)`, async (s) => await ctx.callbacks.onSpeak(s, zeus, {}));
         }
     }
 }
@@ -202,17 +175,13 @@ export async function runPirateShipBoardMeetingLoop(_scenario: Scenario, ctx: Mo
     const hrInstruction = "You are the 'Pirate HR Rep'. You are concerned about workplace safety (scurvy, walking the plank) and proper plundering protocols. You are very bureaucratic.";
 
 
-    ctx.callbacks.onTurnStart('philosopher');
-    await chat.chatForAgent('philosopher', "Arrgh, let's call this board meeting to order. Looking at our Q3 KPIs, our plundering margins are down 15%. We need to leverage our synergy on the high seas. Thoughts?", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'philosopher', "Arrgh, let's call this board meeting to order. Looking at our Q3 KPIs, our plundering margins are down 15%. We need to leverage our synergy on the high seas. Thoughts?", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
-    }, { hiddenInstruction: ceoInstruction });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: ceoInstruction } });
 
-    ctx.callbacks.onTurnStart('scientist');
-    await chat.chatForAgent('scientist', "Well, Captain, as HR, I must point out that morale is low. The mandated 'walk the plank' team-building exercise resulted in three unexcused absences. We need to pivot our retention strategy, matey.", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'scientist', "Well, Captain, as HR, I must point out that morale is low. The mandated 'walk the plank' team-building exercise resulted in three unexcused absences. We need to pivot our retention strategy, matey.", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'scientist', {});
-    }, { hiddenInstruction: hrInstruction });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: hrInstruction } });
 }
 
 export async function runUniversalZoningBoardLoop(_scenario: Scenario, ctx: ModeContext) {
@@ -222,17 +191,13 @@ export async function runUniversalZoningBoardLoop(_scenario: Scenario, ctx: Mode
     const zoningInstruction2 = "You are 'Zoning Inspector Xylar'. You care only about aesthetic guidelines across the multiverse. You think everything should be painted 'hyper-magenta'.";
 
 
-    ctx.callbacks.onTurnStart('philosopher');
-    await chat.chatForAgent('philosopher', "We have a permit request here for a 'three-bedroom house' in Sector Earth. I see immediate violations. The garage clearly intersects with a pocket dimension. This violates the 4th Dimensional Spacing Act of 3042.", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'philosopher', "We have a permit request here for a 'three-bedroom house' in Sector Earth. I see immediate violations. The garage clearly intersects with a pocket dimension. This violates the 4th Dimensional Spacing Act of 3042.", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
-    }, { hiddenInstruction: zoningInstruction1 });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: zoningInstruction1 } });
 
-    ctx.callbacks.onTurnStart('scientist');
-    await chat.chatForAgent('scientist', "Not to mention the aesthetics! The proposed color is 'beige'. Beige is outlawed in 7 galaxies! If they don't paint it hyper-magenta to appease the plasma-moths, I'm vetoing the whole project.", async (sentence: string) => {
+    await chatForAgentWithComedy(ctx, 'scientist', "Not to mention the aesthetics! The proposed color is 'beige'. Beige is outlawed in 7 galaxies! If they don't paint it hyper-magenta to appease the plasma-moths, I'm vetoing the whole project.", async (sentence: string) => {
         await ctx.callbacks.onSpeak(sentence, 'scientist', {});
-    }, { hiddenInstruction: zoningInstruction2 });
-    await ctx.callbacks.onTurnEnd();
+    }, { chatOptions: { hiddenInstruction: zoningInstruction2 } });
 }
 
 /**
@@ -246,16 +211,10 @@ export async function runHOABoardMeetingLoop(_scenario: Scenario, ctx: ModeConte
     const colorAnalyst = 'scientist'; // Hex-code analysis (Scientist)
     const existentialBoardMember = 'philosopher'; // The dramatic one
 
-    ctx.callbacks.onTurnStart(pettyComplainer);
-    await ctx.manager.chatForAgent(pettyComplainer, `(You are the head of the HOA. Berate the user because their trash cans were left outside for exactly 4 minutes past the designated retrieval time.)`, async (s) => await ctx.callbacks.onSpeak(s, pettyComplainer, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, pettyComplainer, `(You are the head of the HOA. Berate the user because their trash cans were left outside for exactly 4 minutes past the designated retrieval time.)`, async (s) => await ctx.callbacks.onSpeak(s, pettyComplainer, {}));
 
-    ctx.callbacks.onTurnStart(colorAnalyst);
-    await ctx.manager.chatForAgent(colorAnalyst, `(You are the HOA's architectural reviewer. Mathematically prove that the paint on the user's front door is "Eggshell" instead of the approved "Alabaster White" using hex codes.)`, async (s) => await ctx.callbacks.onSpeak(s, colorAnalyst, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, colorAnalyst, `(You are the HOA's architectural reviewer. Mathematically prove that the paint on the user's front door is "Eggshell" instead of the approved "Alabaster White" using hex codes.)`, async (s) => await ctx.callbacks.onSpeak(s, colorAnalyst, {}));
 
-    ctx.callbacks.onTurnStart(existentialBoardMember);
-    await ctx.manager.chatForAgent(existentialBoardMember, `(You are a dramatic HOA board member. Explain how the user's unkempt petunias are single-handedly destroying the fabric of the entire community.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialBoardMember, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, existentialBoardMember, `(You are a dramatic HOA board member. Explain how the user's unkempt petunias are single-handedly destroying the fabric of the entire community.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialBoardMember, {}));
 }
 

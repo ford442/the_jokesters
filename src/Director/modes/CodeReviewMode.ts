@@ -1,5 +1,6 @@
 import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
+import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runCodeReviewLoop(scenario: Scenario, ctx: ModeContext) {
     const language = scenario.config?.codeLanguage || 'TypeScript';
@@ -10,9 +11,7 @@ export async function runCodeReviewLoop(scenario: Scenario, ctx: ModeContext) {
     const linter = 'scientist'; // The Pedantic Linter
 
     // 1. Intro
-    ctx.callbacks.onTurnStart(linter);
-    await ctx.manager.chatForAgent(linter, `(You are a Senior Engineer who is obsessed with clean code, linting rules, and type safety. You are about to review some code from a junior developer (The User). Be stern but fair. Introduce the session.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
-    await ctx.callbacks.onTurnEnd();
+    await chatForAgentWithComedy(ctx, linter, `(You are a Senior Engineer who is obsessed with clean code, linting rules, and type safety. You are about to review some code from a junior developer (The User). Be stern but fair. Introduce the session.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
 
     // 2. Wait for Code Input
     ctx.callbacks.onMessage('System', 'Paste your code snippet below...', '#888');
@@ -26,18 +25,18 @@ export async function runCodeReviewLoop(scenario: Scenario, ctx: ModeContext) {
 
         // Linter Analysis (First pass)
         if (round === 1) {
-            await ctx.manager.chatForAgent(linter, `(LINTER: Analyze this ${language} code: "${userCode}". Point out a specific syntax error, formatting issue, or inefficiency. Be very technical.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+            await chatForAgentWithComedy(ctx, linter, `(LINTER: Analyze this ${language} code: "${userCode}". Point out a specific syntax error, formatting issue, or inefficiency. Be very technical.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
         }
 
         if (!ctx.isRunning()) break;
 
         // Hacker Roast
-        await ctx.manager.chatForAgent(hacker, `(HACKER: You are a chaotic 10x developer who loves messy, fast code. Make fun of the Linter's complaints or suggest a "clever" one-liner hack that makes the code unreadable but faster. Use internet slang.)`, async (s) => await ctx.callbacks.onSpeak(s, hacker, {}));
+        await chatForAgentWithComedy(ctx, hacker, `(HACKER: You are a chaotic 10x developer who loves messy, fast code. Make fun of the Linter's complaints or suggest a "clever" one-liner hack that makes the code unreadable but faster. Use internet slang.)`, async (s) => await ctx.callbacks.onSpeak(s, hacker, {}));
 
         if (!ctx.isRunning()) break;
 
         // Manager Worry
-        await ctx.manager.chatForAgent(manager, `(MANAGER: You are a non-technical project manager. You don't understand the code, but you are worried about the deadline and "scalability". Ask if this will block the Q3 release or if it's "web scale".)`, async (s) => await ctx.callbacks.onSpeak(s, manager, {}));
+        await chatForAgentWithComedy(ctx, manager, `(MANAGER: You are a non-technical project manager. You don't understand the code, but you are worried about the deadline and "scalability". Ask if this will block the Q3 release or if it's "web scale".)`, async (s) => await ctx.callbacks.onSpeak(s, manager, {}));
 
         if (!ctx.isRunning()) break;
 
@@ -46,6 +45,6 @@ export async function runCodeReviewLoop(scenario: Scenario, ctx: ModeContext) {
         ctx.callbacks.onMessage('Junior Dev (You)', defense, '#ffffff');
 
         // Linter Rebuttal
-        await ctx.manager.chatForAgent(linter, `(LINTER: The user said: "${defense}". dismiss their excuse. Cite a specific page of the documentation or a design pattern they violated.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
+        await chatForAgentWithComedy(ctx, linter, `(LINTER: The user said: "${defense}". dismiss their excuse. Cite a specific page of the documentation or a design pattern they violated.)`, async (s) => await ctx.callbacks.onSpeak(s, linter, {}));
     }
 }
