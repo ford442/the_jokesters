@@ -772,8 +772,9 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   (`src/service-worker.ts`) does the rewrite but only controls the page **after a reload** (it never
   calls `clients.claim()`). A fresh first load can therefore 404 on `mlc-chat-config.json` — reload
   so the SW takes control (or rewrite `/resolve/main/` at the network layer in a test harness).
-- A **"Cloud Conflict Dashboard"** modal (`#cloud-dashboard-modal`) is rendered with `display:flex`
-  by default and overlays the **Load Model & Start** button; dismiss/hide it before interacting.
+- The **"Cloud Conflict Dashboard"** modal (`#cloud-dashboard-modal`) defaults to `display:none` and
+  `setupDashboard()` (`src/ui/dashboard.ts`) hides it again on init; it only opens via the dashboard
+  or "Review Sync" buttons, so it no longer blocks **Load Model & Start** on cold start.
 
 ---
 
