@@ -567,6 +567,26 @@ TypeScript (`npm run typecheck`) remains a separate hard gate.
 **Current high-ROI targets:** `GroupChatManager.getErrorCategory`, `DynamicContextManager.truncate`,
 `CallbackEngine` status decay, `qualityFilter.rateJoke`, `buildVRAMOverrides`, `MODE_REGISTRY` integrity.
 
+**Orchestration coverage** (`tests/unit/directorOrchestration.test.ts`, `tests/unit/prerenderCoordinator.test.ts`,
+`tests/unit/featuredModeLoaders.test.ts`) exercises the paths above that used to be caught only by manual
+browser runs or chaos scripts:
+- `Director.playScenario` / `stopScene` — comedy session init/teardown, turn callbacks, auto-stop when the
+  mode loop resolves, episode auto-save via a stubbed `MemoryManager`. Uses `vi.mock` on `Director/modes/registry`
+  to swap in a trivial test-double mode loop (`ModeLoop`) instead of a real Dream/Improv mode, so the test is
+  fast and only asserts Director's own contract. `GroupChatManager` + `MockLLMEngine.attachSessionForTests`
+  (no real model load) drive the chat turns. Director's constructor unconditionally touches
+  `(window as any).getDirector = …`, so stub `globalThis.window` (and `document` when passing a `memoryManager`)
+  before constructing it in Node.
+- `PrerenderCoordinator` — `fillInitial`/`refillInBackground` enqueue + `takeTurn` drain order, plus the
+  cancel-mid-flight race: a manually-resolvable ("deferred") promise lets a test call `cancel()` while an LLM
+  prerender call is still in flight, then resolve it late and assert the stale batch never reaches the queue
+  (epoch bump discards it).
+- Featured mode loaders (`improv`, `roast`, `reporter`, `tech_support`, `debate`, `audience_heckler`,
+  `lightning_round`, `therapy`) resolve via `loadModeLoop` and are confirmed to use dynamic `import()` in
+  `MODE_LOADER_BY_ID`, so loading one mode never pulls in the whole Dream/Expanded corpus.
+
+GPU/TTS/Three.js stay out of these tests — audio/visual callbacks are no-op stubs.
+
 **Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
 
 Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python smoke_test.py` from repo root).
