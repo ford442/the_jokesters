@@ -1,3 +1,5 @@
+import type { HFHistoryEntry } from './memoryTypes';
+
 export class HFStorageManager {
     private apiBase = "https://huggingface.co/api";
 
@@ -166,7 +168,7 @@ export class HFStorageManager {
      * @param token The HF API token.
      * @param repoId The repository ID.
      */
-    public async getDatasetHistory(token: string, repoId: string): Promise<any[]> {
+    public async getDatasetHistory(token: string, repoId: string): Promise<HFHistoryEntry[]> {
         if (!token || !repoId) throw new Error("Missing token or repoId");
 
         let cleanRepoId = repoId;
