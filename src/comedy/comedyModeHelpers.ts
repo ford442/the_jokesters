@@ -1,4 +1,5 @@
 import type { ModeContext } from '../Director/modes/ModeContext';
+import { mapScoreToAudienceFeedback, scoreTextToAudienceFeedback } from './audienceFeedback';
 
 /**
  * Append callback prompt injection when comedy session is active.
@@ -50,6 +51,10 @@ export async function processTurnWithComedy(
     if (!assessment.passed && assessment.qualityPrompt) {
       await ctx.processTurn(assessment.qualityPrompt);
     }
+    // ctx.processTurn() above already awaits onTurnEnd internally, so by the time we
+    // get here the line has actually finished playing — fire the audience reaction
+    // at that (speak) time, not back when generation completed.
+    ctx.callbacks.onAudienceReaction?.(mapScoreToAudienceFeedback(assessment.score));
   }
 
   return trimmed || null;
@@ -100,6 +105,13 @@ export async function chatForAgentWithComedy(
   if (trimmed && ctx.comedy) {
     ctx.comedy.handleAgentResponse(trimmed, agentId);
   }
+
+  // Fired after onTurnEnd (which waits for the line to actually finish playing), and
+  // re-scored on whatever text actually ended up spoken (original or the retry).
+  if (trimmed) {
+    ctx.callbacks.onAudienceReaction?.(scoreTextToAudienceFeedback(trimmed));
+  }
+
   return trimmed || null;
 }
 

@@ -11,6 +11,7 @@ import type { ChatLogApi } from './chatLog'
 import { CHARACTER_SPEEDS } from './chatLog'
 import type { SpeakAndVisualizeFn } from './chatController'
 import { updateNextAgentUI } from './statusBar'
+import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 
 export interface DirectorBridgeDeps {
   groupChatManager: GroupChatManager
@@ -26,6 +27,11 @@ export interface DirectorBridgeDeps {
 
 /** Create Director with app audio/visual callbacks (lazy mode loads happen in playScenario). */
 export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
+  const audienceFeedback = new AudienceFeedbackDriver({
+    triggerReaction: (reaction) => deps.stage.triggerAudienceReaction(reaction),
+    playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+  })
+
   const callbacks: DirectorCallbacks = {
     onMessage: (sender, message, color) => deps.chatLog.addMessage(sender, message, color),
     onSpeak: async (sentence, agentId, options) => {
@@ -57,6 +63,9 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     onReactToText: (agentId, text) => deps.stage.reactToText(agentId, text),
     onSfx: (name, agentId) => {
       getSharedSfxManager()?.play(name, agentId)
+    },
+    onAudienceReaction: (event) => {
+      audienceFeedback.handleEvent(event)
     },
   }
 

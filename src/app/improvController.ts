@@ -17,6 +17,8 @@ import { PrerenderCoordinator } from '../prerender/PrerenderCoordinator'
 import type { PrerenderedTurn } from '../prerender/PrerenderCoordinator'
 import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
+import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
+import { getSharedSfxManager } from '../audio/SfxManager'
 
 export interface ImprovControllerDeps {
   agents: Agent[]
@@ -77,6 +79,15 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   // Director's stopScene() invalidates the queue via this hook instead of importing
   // the prerender module directly (keeps Director decoupled from app-layer wiring).
   getDirector()?.setPrerenderInvalidator(() => coordinator.cancel('director stopScene'))
+
+  // This "classic improv" quick-start path runs its own turn loop (live + prerendered)
+  // outside Director/ComedySession, so it needs its own audience-feedback wiring —
+  // scored fresh at actual speak time (see the two waitUntilFinished() call sites below),
+  // never at generation/prerender time.
+  const audienceFeedback = new AudienceFeedbackDriver({
+    triggerReaction: (reaction) => stage.triggerAudienceReaction(reaction),
+    playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+  })
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
@@ -161,6 +172,10 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     groupChatManager.addToHistory('(Continue)', turn.response)
 
     await speechQueue.waitUntilFinished()
+    // Re-scored here (not when this turn was originally prerendered/generated) so the
+    // audience reacts when the line is actually heard, not whenever it happened to be
+    // batch-generated ahead of time.
+    audienceFeedback.handleSpokenText(turn.response)
     coordinator.markTurnEnd()
     updateNextAgentUI(groupChatManager)
     refreshHud()
@@ -256,6 +271,9 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       }
 
       await speechQueue.waitUntilFinished()
+      if (sentenceBuffer.length > 0) {
+        audienceFeedback.handleSpokenText(sentenceBuffer.join(' '))
+      }
       coordinator.markTurnEnd()
       updateNextAgentUI(groupChatManager)
       updateVRAMInfoBar(groupChatManager)

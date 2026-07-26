@@ -111,9 +111,6 @@ export async function initApp(): Promise<void> {
     }
     const activeRenderer = await stage.initRenderer()
     console.log(`[Renderer] Active 3D renderer: ${activeRenderer.toUpperCase()} · LLM inference: WebGPU (independent)`)
-    window.addEventListener('audienceReaction', (e: Event) => {
-      stage.triggerAudienceReaction((e as CustomEvent).detail.reaction)
-    })
 
     const lipSync = new LipSync(speechQueue.getAudioContext())
     // TTS → ttsGain → analyser → speakers (gain enables SFX ducking)

@@ -554,6 +554,31 @@ Joke quality assessment:
 - Homograph detection for TTS optimization (e.g., "read" → "reed"/"red")
 - Pattern-based analysis for cliché detection
 
+### Audience Feedback (quality → SFX + crowd mesh)
+**File**: `src/comedy/audienceFeedback.ts`
+
+Closes the loop from `QualityFilter.rateJoke` scores to `Stage.triggerAudienceReaction` +
+`SfxManager` playback, replacing the old keyword-heuristic heckler reaction:
+- `mapScoreToAudienceFeedback(score)` — pure, no I/O: score ≥ 8 → cheer (applause/rimshot),
+  score < 4 → groan (boo), otherwise neutral (occasional light chuckle just under the cheer
+  line). Thresholds/RNG are injectable for deterministic tests.
+- `scoreTextToAudienceFeedback(text)` — convenience wrapper that runs `rateJoke` then maps it.
+- `AudienceFeedbackDriver` — rate-limited dispatcher (2.5s default cooldown, uniform across all
+  events so rapid turns can't spam applause/boo) that forwards a mapped event to injected
+  `{ triggerReaction, playSfx }` sinks. `playSfx` goes through `SfxManager.play()`, so user
+  mute/volume settings are respected automatically — the driver never bypasses them.
+- **Wired at speak time, not generate time**: `comedyModeHelpers.ts`'s `chatForAgentWithComedy`/
+  `processTurnWithComedy` call `ctx.callbacks.onAudienceReaction` (new optional
+  `DirectorCallbacks` member) only after `onTurnEnd()` (i.e. after the line has actually
+  finished playing), covering every mode that uses the comedy helpers. The classic improv
+  quick-start (`improvController.ts`, which runs its own turn loop outside Director) has its
+  own `AudienceFeedbackDriver` instance and re-scores prerendered turns' text fresh at the
+  moment they're actually played back (`playPrerenderedTurn`), not when they were originally
+  generated ahead of time — the whole point of the "speak time" requirement.
+- The old keyword-sentiment `window.dispatchEvent('audienceReaction')` in
+  `PerformanceMode.ts`'s crowd-work loop is gone; that mode's reactions now come from the same
+  quality-scored `chatForAgentWithComedy` wiring as everything else.
+
 ### Service Worker
 **File**: `src/service-worker.ts`
 

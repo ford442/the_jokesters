@@ -9,6 +9,7 @@ import type { RegisteredModeId } from './modes/registry';
 import { getContextDepthForMode } from '../config/contextDepth';
 import { buildEpisodeFromHistory, setLastEpisode } from '../episode';
 import type { JokestersEpisode } from '../episode';
+import type { AudienceFeedbackEvent } from '../comedy/audienceFeedback';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -28,6 +29,8 @@ export interface DirectorCallbacks {
     onSfx?: (name: string, agentId?: string) => void;
     /** Called when a callback/running gag is recorded for visual feedback */
     onCallbackRecorded?: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
+    /** Quality-scored audience mesh + SFX reaction (see src/comedy/audienceFeedback.ts). Rate-limiting is the implementation's job, not the caller's. */
+    onAudienceReaction?: (event: AudienceFeedbackEvent) => void;
     videoControls?: {
         play: () => Promise<void>;
         pause: () => void;

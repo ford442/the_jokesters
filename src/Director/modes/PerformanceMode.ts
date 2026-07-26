@@ -545,10 +545,10 @@ export async function runAudienceInteractionLoop(_scenario: Scenario, ctx: ModeC
             sentiment = 'cheer';
         }
 
-        // Trigger the visual reaction on the stage (if the window has the stage global exposed, or just log it to be picked up by main.ts)
-        // Since Stage is managed by main.ts, we dispatch an event
-        window.dispatchEvent(new CustomEvent('audienceReaction', { detail: { reaction: sentiment } }));
-
+        // Audience mesh/SFX reactions are quality-score driven now (see
+        // chatForAgentWithComedy's onAudienceReaction wiring) rather than keyed off
+        // these keyword-matched `sentiment` guesses about the user's own heckle —
+        // `sentiment` below only steers which reply prompt the agents get.
         if (sentiment === 'groan') {
             await chatForAgentWithComedy(ctx, comedian, `(CROWD WORK: The audience member just heckled you or groaned: "${userInput}". Roast them back or try to win them over!)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
             if (Math.random() > 0.5 && ctx.isRunning()) {
