@@ -1,5 +1,26 @@
 import { SemanticSearch, MemorySnippet } from '../utils/SemanticSearch';
 import { HFStorageManager } from './HFStorageManager';
+import type { Message } from '../types/chat';
+import type { ScriptBeat } from './Director';
+import { resolveEpisodeConflict, applyManualResolution } from './memoryConflict';
+import type {
+    StoredEpisode,
+    SyncQueueItem,
+    EpisodeSearchResult,
+    EpisodeAnalytics,
+    SyncState,
+    CloudCredentials,
+    ConflictResolution,
+    UserProfile,
+    HFHistoryEntry,
+    PendingDelta,
+} from './memoryTypes';
+
+type SyncWorkerMessage =
+    | { type: 'sync_success'; queueKey: string; itemId: string }
+    | { type: 'sync_complete'; queueKey: string }
+    | { type: 'sync_error'; error: string; item?: unknown }
+    | { type: 'consolidation_complete'; episodeId: string };
 
 export class MemoryManager {
     private prefix: string = 'jokesters-';
@@ -20,8 +41,8 @@ export class MemoryManager {
     private openDB(): Promise<IDBDatabase> {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, 2);
-            request.onupgradeneeded = (event: any) => {
-                const db = event.target.result;
+            request.onupgradeneeded = () => {
+                const db = request.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
                     db.createObjectStore(this.storeName);
                 }
@@ -29,12 +50,12 @@ export class MemoryManager {
                     db.createObjectStore(this.queueStoreName);
                 }
             };
-            request.onsuccess = (event: any) => resolve(event.target.result);
-            request.onerror = (event: any) => reject(event.target.error);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
         });
     }
 
-    private async idbSetQueue(key: string, val: any): Promise<void> {
+    private async idbSetQueue<T>(key: string, val: T): Promise<void> {
         const db = await this.openDB();
         const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
@@ -42,23 +63,23 @@ export class MemoryManager {
             const store = tx.objectStore(this.queueStoreName);
             const request = store.put(val, namespacedKey);
             request.onsuccess = () => resolve();
-            request.onerror = (e: any) => reject(e.target.error);
+            request.onerror = () => reject(request.error);
         });
     }
 
-    private async idbGetQueue(key: string): Promise<any> {
+    private async idbGetQueue<T>(key: string): Promise<T | undefined> {
         const db = await this.openDB();
         const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.queueStoreName, 'readonly');
             const store = tx.objectStore(this.queueStoreName);
             const request = store.get(namespacedKey);
-            request.onsuccess = (e: any) => resolve(e.target.result);
-            request.onerror = (e: any) => reject(e.target.error);
+            request.onsuccess = () => resolve(request.result as T | undefined);
+            request.onerror = () => reject(request.error);
         });
     }
 
-    private async idbSet(key: string, val: any): Promise<void> {
+    private async idbSet<T>(key: string, val: T): Promise<void> {
         const db = await this.openDB();
         const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
@@ -66,19 +87,19 @@ export class MemoryManager {
             const store = tx.objectStore(this.storeName);
             const request = store.put(val, namespacedKey);
             request.onsuccess = () => resolve();
-            request.onerror = (e: any) => reject(e.target.error);
+            request.onerror = () => reject(request.error);
         });
     }
 
-    private async idbGet(key: string): Promise<any> {
+    private async idbGet<T>(key: string): Promise<T | undefined> {
         const db = await this.openDB();
         const namespacedKey = `${this.currentProfile}-${key}`;
         return new Promise((resolve, reject) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const request = store.get(namespacedKey);
-            request.onsuccess = (e: any) => resolve(e.target.result);
-            request.onerror = (e: any) => reject(e.target.error);
+            request.onsuccess = () => resolve(request.result as T | undefined);
+            request.onerror = () => reject(request.error);
         });
     }
 
@@ -99,12 +120,12 @@ export class MemoryManager {
             const tx = db.transaction(this.storeName, 'readonly');
             const store = tx.objectStore(this.storeName);
             const request = store.getAllKeys();
-            request.onsuccess = (e: any) => {
-                const keys = e.target.result as string[];
+            request.onsuccess = () => {
+                const keys = request.result as string[];
                 const prefix = `${this.currentProfile}-`;
                 resolve(keys.filter(k => k.startsWith(prefix)).map(k => k.substring(prefix.length)));
             };
-            request.onerror = (e: any) => reject(e.target.error);
+            request.onerror = () => reject(request.error);
         });
     }
 
@@ -119,13 +140,12 @@ export class MemoryManager {
         this.loadProfileFromStorage();
         if (typeof Worker !== 'undefined') {
             this.syncWorker = new Worker(new URL('../workers/hfSync.worker.ts', import.meta.url), { type: 'module' });
-            this.syncWorker.onmessage = async (e) => {
+            this.syncWorker.onmessage = async (e: MessageEvent<SyncWorkerMessage>) => {
                 const data = e.data;
                 if (data.type === 'sync_success') {
-                    const queueRaw = await this.idbGetQueue(data.queueKey);
+                    const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(data.queueKey);
                     if (queueRaw) {
-                        let queue: any[] = queueRaw;
-                        queue = queue.filter(q => q.id !== data.itemId);
+                        const queue = queueRaw.filter(q => q.id !== data.itemId);
                         await this.idbSetQueue(data.queueKey, queue);
                     }
                     if (this.syncStatusCallback) this.syncStatusCallback('Synced item successfully.');
@@ -164,6 +184,17 @@ export class MemoryManager {
         this.syncStatusCallback = callback;
     }
 
+    /** Surfaces a transient cloud-sync problem via the status callback (in addition to console logging). */
+    private notifySyncIssue(message: string): void {
+        if (!this.syncStatusCallback) return;
+        this.syncStatusCallback(message);
+        setTimeout(() => {
+            if (this.syncStatusCallback && !this.isSyncing) {
+                this.syncStatusCallback('');
+            }
+        }, 4000);
+    }
+
     private loadProfileFromStorage(): void {
         const savedProfile = localStorage.getItem(this.prefix + 'current-profile');
         if (savedProfile) {
@@ -172,9 +203,9 @@ export class MemoryManager {
     }
 
 
-    public async getSyncState(): Promise<{ isSyncing: boolean, queueLength: number, lastSyncTime: number | null, syncError: string | null }> {
+    public async getSyncState(): Promise<SyncState> {
         const queueKey = 'sync-queue';
-        const queueRaw = await this.idbGetQueue(queueKey);
+        const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
         const queue = queueRaw || [];
         const lastSyncTimeStr = localStorage.getItem(`${this.prefix}${this.currentProfile}-last-sync-time`);
         const lastSyncTime = lastSyncTimeStr ? parseInt(lastSyncTimeStr, 10) : null;
@@ -210,7 +241,7 @@ export class MemoryManager {
         localStorage.setItem(`${this.prefix}${this.currentProfile}-hf-repo`, repoId);
     }
 
-    public getCloudCredentials(): { token: string | null, repoId: string | null } {
+    public getCloudCredentials(): CloudCredentials {
         return { token: this.hfToken, repoId: this.hfRepoId };
     }
 
@@ -219,7 +250,7 @@ export class MemoryManager {
         return await this.hfStorage.validateToken(this.hfToken);
     }
 
-    public save(key: string, data: any): void {
+    public save(key: string, data: unknown): void {
         try {
             const serialized = JSON.stringify(data);
             localStorage.setItem(`${this.prefix}${this.currentProfile}-${key}`, serialized);
@@ -243,10 +274,11 @@ export class MemoryManager {
         localStorage.removeItem(`${this.prefix}${this.currentProfile}-${key}`);
     }
 
-    public saveEpisode(episodeId: string, data: any): void {
+    public saveEpisode(episodeId: string, data: StoredEpisode): void {
         // Update vector clock and timestamp
-        if (!data.vectorClock) data.vectorClock = {};
-        data.vectorClock[this.clientId] = (data.vectorClock[this.clientId] || 0) + 1;
+        const vectorClock = data.vectorClock ?? {};
+        vectorClock[this.clientId] = (vectorClock[this.clientId] || 0) + 1;
+        data.vectorClock = vectorClock;
         data.updatedAt = Date.now();
         data.timestamp = Date.now();
         this.save(`episode-${episodeId}`, data);
@@ -254,7 +286,7 @@ export class MemoryManager {
 
         // Save summary locally
         if (data.history && Array.isArray(data.history)) {
-             const lastFew = data.history.slice(-5).map((m: any) => `${m.role}: ${m.content}`).join('\n');
+             const lastFew = data.history.slice(-5).map((m) => `${m.role}: ${m.content}`).join('\n');
              localStorage.setItem(`${this.prefix}${this.currentProfile}-last-episode-summary`, lastFew);
         }
 
@@ -263,17 +295,26 @@ export class MemoryManager {
              if (data.history && data.history.length > 0) {
                  this.saveEpisodeDeltaToCloud(episodeId, data.history[data.history.length - 1])
                      .then(() => console.log(`Episode delta ${episodeId} synced to cloud.`))
-                     .catch(err => console.error(`Failed to sync episode delta ${episodeId} to cloud:`, err));
+                     .catch(err => {
+                         console.error(`Failed to sync episode delta ${episodeId} to cloud:`, err);
+                         this.notifySyncIssue('⚠️ Cloud sync failed — will retry in background');
+                     });
              } else {
                  this.saveEpisodeToCloud(episodeId, data)
                      .then(() => console.log(`Episode ${episodeId} synced to cloud.`))
-                     .catch(err => console.error(`Failed to sync episode ${episodeId} to cloud:`, err));
+                     .catch(err => {
+                         console.error(`Failed to sync episode ${episodeId} to cloud:`, err);
+                         this.notifySyncIssue('⚠️ Cloud sync failed — will retry in background');
+                     });
              }
 
              // Also update latest.json
              const content = JSON.stringify(data, null, 2);
              this.hfStorage.saveFile(this.hfToken, this.hfRepoId, 'episodes/latest.json', content)
-                 .catch(err => console.error(`Failed to update latest.json:`, err));
+                 .catch(err => {
+                     console.error(`Failed to update latest.json:`, err);
+                     this.notifySyncIssue('⚠️ Cloud sync failed to update latest episode summary');
+                 });
         }
     }
 
@@ -283,10 +324,10 @@ export class MemoryManager {
             try {
                 const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
                 if (content) {
-                    const data = JSON.parse(content);
+                    const data = JSON.parse(content) as StoredEpisode;
                     // Generate a simple summary from the last few messages
                     if (data.history && Array.isArray(data.history)) {
-                         const lastFew = data.history.slice(-5).map((m: any) => `${m.role}: ${m.content}`).join('\n');
+                         const lastFew = data.history.slice(-5).map((m) => `${m.role}: ${m.content}`).join('\n');
                          return `PREVIOUSLY ON THE JOKESTERS:\n${lastFew}`;
                     }
                 }
@@ -316,6 +357,7 @@ export class MemoryManager {
             console.log(`Successfully saved ${assetType} asset to cloud: ${filename}`);
         } catch (e) {
             console.error(`Failed to save episode asset to cloud (${assetType}/${assetName}):`, e);
+            this.notifySyncIssue(`⚠️ Failed to save ${assetType} "${assetName}" to cloud`);
         }
     }
 
@@ -334,7 +376,7 @@ export class MemoryManager {
         }
     }
 
-    public async saveEpisodeScriptToCloud(script: any, episodeId: string): Promise<void> {
+    public async saveEpisodeScriptToCloud(script: ScriptBeat[], episodeId: string): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/script.json`;
         const content = JSON.stringify(script, null, 2);
@@ -352,7 +394,7 @@ export class MemoryManager {
         try {
             const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
             if (content) {
-                const parsed = JSON.parse(content);
+                const parsed = JSON.parse(content) as StoredEpisode;
                 if (!this.cloudSummaryCache) {
                     this.cloudSummaryCache = { history: [] };
                 }
@@ -366,15 +408,15 @@ export class MemoryManager {
         }
     }
 
-    public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: any): Promise<void> {
+    public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: Message): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/delta-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;
         const content = JSON.stringify(newMessage, null, 2);
 
         // Push to local sync queue
         const queueKey = `sync-queue`;
-        const queueRaw = await this.idbGetQueue(queueKey);
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw || [];
+        const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
+        const queue: SyncQueueItem[] = queueRaw || [];
 
         // Generate a unique ID for this job to safely remove it later
         const jobId = Math.random().toString(36).substring(2, 15);
@@ -386,14 +428,14 @@ export class MemoryManager {
         this.processSyncQueue();
     }
 
-    public async saveEpisodeToCloud(episodeId: string, data: any): Promise<void> {
+    public async saveEpisodeToCloud(episodeId: string, data: StoredEpisode): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/episode.json`;
         const content = JSON.stringify(data, null, 2);
         // Push to local sync queue
         const queueKey = `sync-queue`;
-        const queueRaw = await this.idbGetQueue(queueKey);
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw || [];
+        const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
+        let queue: SyncQueueItem[] = queueRaw || [];
 
         // Remove existing item if updating same file
         queue = queue.filter(q => q.filename !== filename);
@@ -418,10 +460,10 @@ export class MemoryManager {
         if (this.isSyncing || !this.hfToken || !this.syncWorker) return;
 
         const queueKey = `sync-queue`;
-        const queueRaw = await this.idbGetQueue(queueKey);
+        const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
         if (!queueRaw) return;
 
-        let queue: { id: string, repoId?: string, filename: string, content: string }[] = queueRaw;
+        const queue: SyncQueueItem[] = queueRaw;
         if (queue.length === 0) return;
 
         if (this.syncStatusCallback) this.syncStatusCallback(`Syncing ${queue.length} item(s)...`);
@@ -437,12 +479,12 @@ export class MemoryManager {
         });
     }
 
-    public async loadEpisode(episodeId: string): Promise<any | null> {
+    public async loadEpisode(episodeId: string): Promise<StoredEpisode | null> {
         try {
-            const data = await this.idbGet(`episode-${episodeId}`);
+            const data = await this.idbGet<StoredEpisode>(`episode-${episodeId}`);
             if (data) return data;
         } catch(e) {}
-        return this.load(`episode-${episodeId}`);
+        return this.load<StoredEpisode>(`episode-${episodeId}`);
     }
 
     public async consolidateEpisodeDeltas(episodeId: string): Promise<void> {
@@ -473,12 +515,12 @@ export class MemoryManager {
         }, 60 * 60 * 1000); // Run every hour
     }
 
-    public async loadEpisodeFromCloud(episodeId: string): Promise<any | null> {
+    public async loadEpisodeFromCloud(episodeId: string): Promise<StoredEpisode | null> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/episode.json`;
         const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, filename);
         if (!content) return null;
-        return JSON.parse(content);
+        return JSON.parse(content) as StoredEpisode;
     }
 
     public async syncAllHistoryFromCloud(): Promise<void> {
@@ -495,9 +537,9 @@ export class MemoryManager {
                 headers: { 'Authorization': `Bearer ${this.hfToken}` }
             });
             if (treeResponse.ok) {
-                const files = await treeResponse.json();
+                const files = await treeResponse.json() as HFHistoryEntry[];
                 for (const file of files) {
-                    if (file.type === 'file' && file.path.endsWith('.json')) {
+                    if (file.type === 'file' && file.path?.endsWith('.json')) {
                         const filename = file.path;
                         // Extract episode ID from either format: episodes/episode-X.json or episodes/X/episode.json
                         let episodeId = "";
@@ -523,57 +565,20 @@ export class MemoryManager {
                             // Conflict resolution: Vector Clocks, fallback to Last-Writer-Wins (LWW)
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
-                                const cloudClock = cloudData.vectorClock || {};
-                                const localClock = localData.vectorClock || {};
+                                const { strategy, resolved } = resolveEpisodeConflict(cloudData, localData, this.clientId);
 
-                                // Check if cloud dominates local
-                                let cloudDominates = false;
-                                let localDominates = false;
-
-                                const allKeys = new Set([...Object.keys(cloudClock), ...Object.keys(localClock)]);
-                                for (const key of allKeys) {
-                                    const c = cloudClock[key] || 0;
-                                    const l = localClock[key] || 0;
-                                    if (c > l) cloudDominates = true;
-                                    if (l > c) localDominates = true;
-                                }
-
-                                if (cloudDominates && !localDominates) {
+                                if (strategy === 'cloud') {
                                     console.log(`Conflict resolved (Vector Clock): Cloud version of ${filename} is newer. Updating local data...`);
-                                    this.save(`episode-${episodeId}`, cloudData);
-                                    await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
-                                } else if (localDominates && !cloudDominates) {
+                                    this.save(`episode-${episodeId}`, resolved);
+                                    await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
+                                } else if (strategy === 'local') {
                                     console.log(`Conflict resolved (Vector Clock): Local version of ${filename} is newer. Queuing cloud update...`);
-                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
-                                } else if (cloudDominates && localDominates) {
-                                    // Concurrent changes - Merge histories based on timestamps
+                                    this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
+                                } else if (strategy === 'concurrent') {
                                     console.log(`Conflict resolved (Vector Clock): Concurrent changes detected for ${filename}. Merging...`);
-                                    const mergedHistory = [...cloudData.history, ...localData.history];
-
-                                    // Remove duplicates
-                                    const uniqueHistory = [];
-                                    const seen = new Set();
-                                    for (const msg of mergedHistory) {
-                                        const key = msg.role + ':' + msg.content;
-                                        if (!seen.has(key)) {
-                                            seen.add(key);
-                                            uniqueHistory.push(msg);
-                                        }
-                                    }
-
-                                    localData.history = uniqueHistory;
-
-                                    // Merge vector clocks by taking max
-                                    for (const key of allKeys) {
-                                        localData.vectorClock[key] = Math.max(cloudClock[key] || 0, localClock[key] || 0);
-                                    }
-                                    localData.vectorClock[this.clientId] = (localData.vectorClock[this.clientId] || 0) + 1;
-                                    localData.updatedAt = Date.now();
-                                    localData.timestamp = Date.now();
-
-                                    this.save(`episode-${episodeId}`, localData);
-                                    await this.idbSet(`episode-${episodeId}`, localData).catch(e => console.error(e));
-                                    this.saveEpisodeToCloud(episodeId, localData).catch(e => console.error(e));
+                                    this.save(`episode-${episodeId}`, resolved);
+                                    await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
+                                    this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
                                 } else {
                                     console.log(`${filename} is up to date.`);
                                 }
@@ -584,17 +589,18 @@ export class MemoryManager {
             }
         } catch (error) {
             console.error('Failed to sync all history from cloud:', error);
+            this.notifySyncIssue('⚠️ Cloud history sync failed — check your connection or credentials');
         }
     }
 
-    public async publishCommunityScript(communityRepoId: string, filename: string, scriptData: any): Promise<void> {
+    public async publishCommunityScript(communityRepoId: string, filename: string, scriptData: ScriptBeat[]): Promise<void> {
         if (!this.hfToken) throw new Error("Cloud credentials not configured.");
         const content = JSON.stringify(scriptData, null, 2);
 
         // Use a background queue similar to episodes
         const queueKey = `sync-queue`;
-        const queueRaw = await this.idbGetQueue(queueKey);
-        let queue: { id: string, repoId: string, filename: string, content: string }[] = queueRaw || [];
+        const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
+        const queue: SyncQueueItem[] = queueRaw || [];
 
         // Modify sync queue items to specify repo ID if it's different
         const jobId = Math.random().toString(36).substring(2, 15);
@@ -604,10 +610,10 @@ export class MemoryManager {
         this.processSyncQueue();
     }
 
-    public async loadCommunityScript(repoId: string, filename: string): Promise<any | null> {
+    public async loadCommunityScript(repoId: string, filename: string): Promise<ScriptBeat[] | null> {
         const content = await this.hfStorage.loadCommunityScript(repoId, filename);
         if (!content) return null;
-        return JSON.parse(content);
+        return JSON.parse(content) as ScriptBeat[];
     }
 
     public async listEpisodes(): Promise<string[]> {
@@ -631,8 +637,8 @@ export class MemoryManager {
         return episodes;
     }
 
-    public async searchLocalEpisodes(query: string): Promise<{ episodeId: string, snippet: string }[]> {
-        const results: { episodeId: string, snippet: string }[] = [];
+    public async searchLocalEpisodes(query: string): Promise<EpisodeSearchResult[]> {
+        const results: EpisodeSearchResult[] = [];
         const normalizedQuery = query.toLowerCase();
 
         try {
@@ -640,7 +646,7 @@ export class MemoryManager {
             for (const key of keys) {
                 if (key.startsWith('episode-')) {
                     const episodeId = key.replace('episode-', '');
-                    const content = await this.idbGet(key);
+                    const content = await this.idbGet<StoredEpisode>(key);
 
                     if (content && content.history && Array.isArray(content.history)) {
                         for (const msg of content.history) {
@@ -664,7 +670,7 @@ export class MemoryManager {
             const key = localStorage.key(i);
             if (key && key.startsWith(localPrefix)) {
                 const episodeId = key.replace(localPrefix, '');
-                const content = this.load<any>(`episode-${episodeId}`);
+                const content = this.load<StoredEpisode>(`episode-${episodeId}`);
 
                 if (content && content.history && Array.isArray(content.history)) {
                     for (const msg of content.history) {
@@ -686,15 +692,15 @@ export class MemoryManager {
         return results.slice(0, 3);
     }
 
-    public async saveUserProfile(profile: any): Promise<void> {
+    public async saveUserProfile(profile: UserProfile): Promise<void> {
         this.save('user_preferences', profile);
         if (this.hfToken && this.hfRepoId) {
             const filename = `profile/user_preferences.json`;
             const content = JSON.stringify(profile, null, 2);
 
             const queueKey = `sync-queue`;
-            const queueRaw = await this.idbGetQueue(queueKey);
-            let queue: { id: string, filename: string, content: string }[] = queueRaw || [];
+            const queueRaw = await this.idbGetQueue<SyncQueueItem[]>(queueKey);
+            let queue: SyncQueueItem[] = queueRaw || [];
 
             queue = queue.filter(q => q.filename !== filename);
             const jobId = Math.random().toString(36).substring(2, 15);
@@ -705,13 +711,13 @@ export class MemoryManager {
         }
     }
 
-    public async loadUserProfile(): Promise<any> {
-        let localProfile = this.load<any>('user_preferences');
+    public async loadUserProfile(): Promise<UserProfile | null> {
+        let localProfile = this.load<UserProfile>('user_preferences');
         if (this.hfToken && this.hfRepoId) {
             try {
                 const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'profile/user_preferences.json');
                 if (content) {
-                    localProfile = JSON.parse(content);
+                    localProfile = JSON.parse(content) as UserProfile;
                     this.save('user_preferences', localProfile);
                 }
             } catch (e) {
@@ -721,9 +727,9 @@ export class MemoryManager {
         return localProfile;
     }
 
-    private cloudSummaryCache: any = null;
+    private cloudSummaryCache: StoredEpisode | null = null;
 
-    public getCloudSummary(): any {
+    public getCloudSummary(): StoredEpisode | null {
         return this.cloudSummaryCache;
     }
 
@@ -735,7 +741,7 @@ export class MemoryManager {
         try {
             const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
             if (content) {
-                this.cloudSummaryCache = JSON.parse(content);
+                this.cloudSummaryCache = JSON.parse(content) as StoredEpisode;
             }
         } catch (e) {
             console.warn('Failed to fetch summary cache:', e);
@@ -797,7 +803,7 @@ export class MemoryManager {
         return SemanticSearch.searchMemories(query, summariesToSearch, topK);
     }
 
-    public async searchFetchedSummaries(query: string): Promise<{ episodeId: string, snippet: string }[]> {
+    public async searchFetchedSummaries(query: string): Promise<EpisodeSearchResult[]> {
         await this.ensureCloudSummaryCache();
 
         const results: { episodeId: string, snippet: string, score: number }[] = [];
@@ -839,20 +845,20 @@ export class MemoryManager {
     }
 
 
-    public async getEpisodeAnalytics(): Promise<{ totalEpisodes: number, totalTokensProxy: number, avgEpisodeLength: number, commonModes: { [key: string]: number } }> {
+    public async getEpisodeAnalytics(): Promise<EpisodeAnalytics> {
         await this.ensureCloudSummaryCache();
 
         let totalEpisodes = 0;
         let totalTokensProxy = 0;
         let avgEpisodeLength = 0;
-        const commonModes: { [key: string]: number } = {};
+        const commonModes: Record<string, number> = {};
 
         // Let's actually count local episodes from IndexedDB as well to get better metrics.
         const allKeys = await this.idbKeys();
         totalEpisodes = allKeys.length;
 
         for (const key of allKeys) {
-            const episode = await this.idbGet(key);
+            const episode = await this.idbGet<StoredEpisode>(key);
             if (episode && episode.history && Array.isArray(episode.history)) {
                 totalTokensProxy += JSON.stringify(episode.history).length;
             }
@@ -876,7 +882,7 @@ export class MemoryManager {
         return { totalEpisodes, totalTokensProxy, avgEpisodeLength, commonModes };
     }
 
-    public async getCloudHistory(): Promise<any[]> {
+    public async getCloudHistory(): Promise<HFHistoryEntry[]> {
         if (!this.hfToken || !this.hfRepoId) {
             console.warn("Cannot fetch cloud history without credentials.");
             return [];
@@ -884,7 +890,7 @@ export class MemoryManager {
         return await this.hfStorage.getDatasetHistory(this.hfToken, this.hfRepoId);
     }
 
-    public async getPendingDeltas(): Promise<any[]> {
+    public async getPendingDeltas(): Promise<PendingDelta[]> {
         if (!this.hfToken || !this.hfRepoId) {
             return [];
         }
@@ -893,15 +899,15 @@ export class MemoryManager {
             const history = await this.getCloudHistory();
             if (history && history.length > 0 && !history[0].commit && !history[0].oid) {
                 // Return files that contain "delta-"
-                return history.filter((item: any) => item.path && item.path.includes('delta-')).map((file: any) => {
-                    return {
-                        ...file,
+                return history
+                    .filter((item): item is HFHistoryEntry & { path: string } => !!item.path?.includes('delta-'))
+                    .map((file): PendingDelta => ({
                         id: file.path,
+                        path: file.path,
                         action: 'delta_merge',
                         cloudState: { fileInfo: file.path, size: file.size }, // Placeholder for now, real implementation would download it
-                        localState: {} // Placeholder
-                    };
-                });
+                        localState: {}, // Placeholder
+                    }));
             }
             return [];
         } catch (e) {
@@ -921,15 +927,16 @@ export class MemoryManager {
             }
 
             const cloudEpisodes = history
-                .filter((item: any) => item.path && item.path.startsWith('episodes/') && item.path.endsWith('/episode.json'))
-                .map((item: any) => item.path.replace('episodes/', '').replace('/episode.json', ''));
+                .filter((item): item is HFHistoryEntry & { path: string } =>
+                    !!item.path?.startsWith('episodes/') && item.path.endsWith('/episode.json'))
+                .map((item) => item.path.replace('episodes/', '').replace('/episode.json', ''));
 
             const localEpisodes = await this.listEpisodes();
 
             for (const localEpisode of localEpisodes) {
                 if (cloudEpisodes.includes(localEpisode)) {
                     // Check if there are any pending deltas for this episode
-                    const hasDeltas = history.some((item: any) => item.path && item.path.startsWith(`episodes/${localEpisode}/delta-`));
+                    const hasDeltas = history.some((item) => item.path && item.path.startsWith(`episodes/${localEpisode}/delta-`));
                     if (!hasDeltas) {
                         // Fully synced, we can safely remove the local copy to free up space
                         console.log(`Cache Invalidation: Removing fully synced local episode ${localEpisode}`);
@@ -944,16 +951,22 @@ export class MemoryManager {
     }
 
   // --- Cloud Persistence: Conflict Resolution UI ---
-  // This method would be hooked up to the #cloud-dashboard-modal to allow users to manually resolve conflicts.
-  public async resolveConflict(localState: any, cloudState: any, resolution: 'local' | 'cloud' | 'merge'): Promise<void> {
-    console.log(`[MemoryManager] Resolving conflict using strategy: ${resolution}`);
-    // Simulated conflict resolution
-    if (resolution === 'local') {
-      console.log("[MemoryManager] Keeping local state.");
-    } else if (resolution === 'cloud') {
-      console.log("[MemoryManager] Overwriting with cloud state.");
-    } else {
-      console.log("[MemoryManager] Attempting to merge states.");
+  // Hooked up to the #cloud-dashboard-modal Accept Local / Accept Cloud / Merge actions.
+  public async resolveConflict(
+    episodeId: string,
+    localState: StoredEpisode,
+    cloudState: StoredEpisode,
+    resolution: ConflictResolution,
+  ): Promise<StoredEpisode> {
+    console.log(`[MemoryManager] Resolving conflict for ${episodeId} using strategy: ${resolution}`);
+    const resolved = applyManualResolution(localState, cloudState, resolution, this.clientId);
+
+    this.save(`episode-${episodeId}`, resolved);
+    await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
+    if (resolution !== 'local') {
+      this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
     }
+
+    return resolved;
   }
 }

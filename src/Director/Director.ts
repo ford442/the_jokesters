@@ -365,9 +365,9 @@ export class Director {
                     const id = new Date().toISOString().replace(/[:.]/g, '-');
                     const history = this.manager.getHistory();
 
-                    // Legacy history blob (cloud / MemoryManager compatibility)
+                    // Legacy history blob (cloud / MemoryManager compatibility).
+                    // saveEpisode stamps its own timestamp/updatedAt (Date.now()), so none is passed here.
                     this.memoryManager.saveEpisode(id, {
-                        timestamp: new Date().toISOString(),
                         history: history,
                         scenario: this.currentScenario
                     });

@@ -481,13 +481,35 @@ Three.js scene management:
 - Professional stage lighting: three colored directional lights + rim light + ambient
 
 ### MemoryManager
-**File**: `src/Director/MemoryManager.ts`
+**Files**: `src/Director/MemoryManager.ts`, `src/Director/memoryTypes.ts`, `src/Director/memoryConflict.ts`
 
 Episode persistence system:
 - Local storage using IndexedDB with `jokesters-` prefix
 - Optional cloud sync to HuggingFace Hub via `HFStorageManager`
 - Episode search and recall functionality
 - Profile-based namespacing
+
+**Types** (`memoryTypes.ts`): `StoredEpisode` is the internal local/cloud sync record
+(`{ history: Message[], scenario?, vectorClock?, updatedAt?, timestamp? }`) — **not** the same as
+the portable `.jokesters.json` export format (`JokestersEpisode` in `src/episode/types.ts`, which
+stores rendered `turns`). The two never convert into each other; `MemoryManager` and `src/episode/`
+are independent persistence paths that both ultimately read from `GroupChatManager.getHistory()`.
+Also defined here: `SyncQueueItem`, `EpisodeSearchResult`, `EpisodeAnalytics`, `SyncState`,
+`CloudCredentials`, `HFHistoryEntry` (HF's dataset API answers with either a `paths-info` file
+listing or a `tree` listing — this type keeps every field optional rather than asserting a shape HF
+doesn't itself guarantee), `PendingDelta`, `ConflictResolution`.
+
+**Conflict resolution** (`memoryConflict.ts`, pure functions — no IDB/network, fully unit tested):
+- `compareVectorClocks` decides `'cloud' | 'local' | 'concurrent' | 'equal'` from two vector clocks
+- `mergeHistories` / `mergeVectorClocks` — the actual merge for the concurrent case
+- `resolveEpisodeConflict` — automatic strategy used by `syncAllHistoryFromCloud`'s two-way sync
+- `applyManualResolution` — backs `MemoryManager.resolveConflict`, the dashboard's user-driven
+  Accept Local / Accept Cloud / Merge choice (independent of the automatic vector-clock strategy)
+
+**Cloud failures surface UI, not just console**: `setSyncStatusCallback` (wired to `#settings-status`
+by `Director`) receives transient messages from the background sync worker *and* from
+`saveEpisode`/`saveEpisodeAssetToCloud`/`syncAllHistoryFromCloud`'s direct HF calls via the private
+`notifySyncIssue` helper — a failure no longer only lands in the console.
 
 ### CallbackEngine
 **File**: `src/comedy/callbackEngine.ts`
@@ -613,6 +635,16 @@ browser runs or chaos scripts:
   `MODE_LOADER_BY_ID`, so loading one mode never pulls in the whole Dream/Expanded corpus.
 
 GPU/TTS/Three.js stay out of these tests — audio/visual callbacks are no-op stubs.
+
+**MemoryManager coverage** (`tests/unit/memoryConflict.test.ts`, `tests/unit/memoryManagerRoundtrip.test.ts`):
+- `memoryConflict.ts`'s pure functions (`compareVectorClocks`, `mergeHistories`, `mergeVectorClocks`,
+  `resolveEpisodeConflict`, `applyManualResolution`) — no mocking needed, plain data in/out.
+- `MemoryManager` save→load roundtrip, repeated-save vector-clock bumping, list/search, and that a
+  cloud-sync failure reaches `setSyncStatusCallback` (not just the console) — against a minimal
+  in-memory fake `indexedDB` (open/transaction/objectStore/put/get/getAllKeys) and `localStorage`
+  built directly in the test file (`vi.stubGlobal`/`vi.unstubAllGlobals`), since neither exists in
+  Node. `Worker` is left undefined so the constructor's `typeof Worker !== 'undefined'` guard skips
+  sync-worker setup entirely — no need to mock `src/workers/hfSync.worker.ts`.
 
 **Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
 
