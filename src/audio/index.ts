@@ -1,20 +1,22 @@
 /**
  * Audio Module Exports
- * 
- * Provides both legacy and optimized TTS implementations.
- * Recommended: Use OptimizedAudioEngine for new code.
+ *
+ * Production bootstrap defaults to OptimizedAudioEngine (via OptimizedAudioEngineAdapter,
+ * which speaks SpeechQueue's plain Float32Array TtsEngine contract). Legacy AudioEngine
+ * remains available as an escape hatch (bootstrap's `?legacyAudio` query flag).
  */
 
-// Legacy exports (backward compatibility)
+// Legacy exports (fallback / benchmarking)
 export { AudioEngine } from './AudioEngine';
-export type { SynthesisOptions } from './AudioEngine';
+export type { SynthesisOptions, TtsEngine } from './AudioEngine';
 export { SpeechQueue } from './SpeechQueue';
 export { SupertonicPipeline, Style, UnicodeProcessor } from './SupertonicPipeline';
 export { SupertonicTTS } from './Supertonic';
 export { LipSync } from '../visuals/LipSync';
 
-// Optimized exports (recommended)
+// Optimized exports (default production TTS stack)
 export { OptimizedAudioEngine } from './OptimizedAudioEngine';
+export { OptimizedAudioEngineAdapter } from './OptimizedAudioEngineAdapter';
 export type { 
     SynthesisResult,
     SynthesisCallback,

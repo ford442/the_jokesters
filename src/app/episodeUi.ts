@@ -4,7 +4,7 @@ import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
 import type { ChatLogApi } from './chatLog'
 import { createAudioHelpers } from './chatController'
-import type { AudioEngine } from '../audio/AudioEngine'
+import type { TtsEngine } from '../audio/AudioEngine'
 import {
   buildEpisodeFromHistory,
   downloadEpisodeJson,
@@ -23,7 +23,7 @@ import { getSharedSfxManager } from '../audio/SfxManager'
 export interface EpisodeUiDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  audioEngine: AudioEngine
+  audioEngine: TtsEngine
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi

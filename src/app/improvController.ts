@@ -1,7 +1,7 @@
 import { GroupChatManager } from '../GroupChatManager'
 import type { Agent } from '../GroupChatManager'
 import type { SpeechQueue } from '../audio/SpeechQueue'
-import type { AudioEngine } from '../audio/AudioEngine'
+import type { TtsEngine } from '../audio/AudioEngine'
 import type { Stage } from '../visuals/Stage'
 import type { ChatLogApi } from './chatLog'
 import { CHARACTER_SPEEDS, createFeedbackControls } from './chatLog'
@@ -22,7 +22,7 @@ import { getAppDirector } from './directorBridge'
 export interface ImprovControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  audioEngine: AudioEngine
+  audioEngine: TtsEngine
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi
