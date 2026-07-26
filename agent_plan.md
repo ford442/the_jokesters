@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 1
 
 ## Process (P0)
 
@@ -65,7 +65,15 @@ Prioritize these over new premises:
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Existential Tech Support Mode:
+- Philosophical Debate Mode:
+  - Premise one-liner: Agents debate absurd philosophical dilemmas while trying to order fast food.
+  - LLM pairings: Phi-3 for the existential thinker, Comedian for the impatient fast food worker.
+
+- Sentient IDE Mode:
+  - Premise one-liner: The code editor gains sentience and refuses to compile code that lacks "emotional depth."
+  - LLM pairings: Qwen2.5 for the strict IDE, Hermes-3 for the confused programmer.
+
+- [x] Existential Tech Support Mode:
   - Premise one-liner: Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality.
   - LLM pairings: Phi-3 for the existential tech, Qwen2.5 for the frustrated user.
 
@@ -108,9 +116,10 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [ ] Authenticate with HF API: Use a user-provided Hugging Face API Token (write access). Verify it via `HFStorageManager.validateToken`.
-  - [ ] Push Finished Scripts: Serialize completed episode contexts to JSON and push them as a new file (e.g., `episodes/user_ep_1.json`) to a private HF Dataset using the inference API.
-  - [ ] Fetch Previous Summaries: On app boot or mode initialization, fetch the latest summaries from the HF dataset to seed the agents' cloud memory.
+  - [ ] Authenticate with HF API: Implement UI in `cloud-dashboard-modal` for users to enter their Hugging Face API Token (write access). Verify it via `HFStorageManager.validateToken` and persist locally.
+  - [ ] Push Finished Scripts: Refine `saveEpisodeScriptToCloud` to serialize completed episode contexts to JSON and push them as a new file (e.g., `episodes/{user_id}/ep_1.json`) to a private HF Dataset using the inference API.
+  - [ ] Fetch Previous Summaries: Enhance `fetchPreviousEpisodeSummaries` so on app boot or mode initialization, it fetches the latest summaries from the HF dataset to accurately seed the agents' cloud memory.
+
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.
   - [x] Expand the `storage_manager` backend to include episode assets like songs, patterns, and shaders for complete episode persistence.

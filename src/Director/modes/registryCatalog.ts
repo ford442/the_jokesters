@@ -313,9 +313,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'collaborative_musical_improv',
     title: 'Collaborative Musical Improv',
     category: 'dream',
-    description: 'A Collaborative Musical Improv scene.',
+    description: 'Agents try to write a musical together but keep genre-shifting unexpectedly.',
     tags: ['dream', 'collaborative', 'musical', 'improv'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'collaborative_sandbox_construction',
@@ -614,6 +614,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'existential_tech_support',
+    title: 'Existential Tech Support Mode',
+    category: 'dream',
+    description: 'Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality.',
+    tags: ['dream', 'existential', 'tech', 'support'],
+    showInPresets: true,
+  },
+  {
     id: 'floppy_disk_defenders',
     title: 'Floppy Disk Defenders',
     category: 'dream',
@@ -777,9 +785,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'heckler_interaction_pro',
     title: 'Heckler Interaction Pro',
     category: 'dream',
-    description: 'A Heckler Interaction Pro scene.',
+    description: 'The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.',
     tags: ['dream', 'heckler', 'interaction', 'pro'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'heist_planner',
@@ -1639,11 +1647,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'roast_battle_two',
-    title: 'Roast Battle Two',
+    title: 'Roast Battle Mode 2.0',
     category: 'dream',
-    description: 'A Roast Battle Two scene.',
+    description: 'An enhanced roast battle where agents bring up historical grudges from past episodes using cloud memory.',
     tags: ['dream', 'roast', 'battle', 'two'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'rpg_tavern_brawl',
