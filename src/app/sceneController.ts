@@ -1,6 +1,6 @@
 import type { Agent, ProfanityLevel } from '../GroupChatManager'
 import type { GroupChatManager } from '../GroupChatManager'
-import type { AudioEngine } from '../audio/AudioEngine'
+import type { TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
 import { createChatLog } from './chatLog'
@@ -17,7 +17,7 @@ import type { Director } from '../Director/Director'
 export interface SceneControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  audioEngine: AudioEngine
+  audioEngine: TtsEngine
   speechQueue: SpeechQueue
   stage: Stage
 }

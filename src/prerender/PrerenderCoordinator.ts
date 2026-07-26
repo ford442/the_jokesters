@@ -1,5 +1,5 @@
 import type { GroupChatManager } from '../GroupChatManager'
-import type { AudioEngine, SynthesisOptions } from '../audio/AudioEngine'
+import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/dynamicContext'
 import { stripSfxTokens } from '../audio/sfxTokens'
@@ -59,7 +59,7 @@ export class PrerenderCoordinator {
 
   constructor(
     private readonly manager: GroupChatManager,
-    private readonly audioEngine: AudioEngine,
+    private readonly audioEngine: TtsEngine,
     private readonly speechQueue: SpeechQueue,
   ) {}
 

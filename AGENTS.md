@@ -116,11 +116,12 @@ the_jokesters/
 │   │       ├── AlienMode.ts
 │   │       └── RapBattleVisualsMode.ts
 │   ├── audio/                     # Text-to-speech and audio systems
-│   │   ├── AudioEngine.ts         # TTS audio synthesis orchestration
-│   │   ├── OptimizedAudioEngine.ts # Optimized TTS with Web Workers, phoneme cache, viseme lookahead
+│   │   ├── AudioEngine.ts         # Legacy main-thread TTS synthesis (fallback behind ?legacyAudio)
+│   │   ├── OptimizedAudioEngine.ts # Default TTS: Web Worker synthesis, phoneme cache, viseme lookahead
+│   │   ├── OptimizedAudioEngineAdapter.ts # Adapts OptimizedAudioEngine to the plain TtsEngine contract
 │   │   ├── MusicEngine.ts         # Beat generation for musical mode
-│   │   ├── SpeechQueue.ts         # Speech playback queue management
-│   │   ├── OptimizedSpeechQueue.ts # Optimized speech queue
+│   │   ├── SpeechQueue.ts         # Speech playback queue, prerender cache, SFX ducking (engine-agnostic)
+│   │   ├── OptimizedSpeechQueue.ts # Standalone text-in queue — not wired into bootstrap (see below)
 │   │   ├── Supertonic.ts          # Core TTS ONNX inference (legacy)
 │   │   ├── SupertonicPipeline.ts  # TTS pipeline stages (current): text encoder, duration predictor, vector estimator, vocoder
 │   │   ├── VoiceInputManager.ts   # Web Speech API voice input
@@ -425,21 +426,47 @@ Handles per-agent LLM model assignment:
 - Reports progress during model swaps with scaled percentages
 
 ### AudioEngine / OptimizedAudioEngine
-**Files**: `src/audio/AudioEngine.ts`, `src/audio/OptimizedAudioEngine.ts`
+**Files**: `src/audio/AudioEngine.ts`, `src/audio/OptimizedAudioEngine.ts`,
+`src/audio/OptimizedAudioEngineAdapter.ts`, `src/audio/SpeechQueue.ts`
 
 Text-to-speech orchestration:
 - Maps agent IDs to voice styles (M1, M2, F1, F2)
 - Configurable speed (0.5-2.0) and quality (diffusion steps 1-50)
-- Loads voice styles from `./tts/voice_styles/`
-- Optimized version uses Web Workers for off-main-thread synthesis
+- Loads voice styles from `${VPS_STORAGE_URL}/tts/voice_styles/`
 - Viseme prediction lookahead (predict next 3 phonemes while speaking current)
 - Phoneme pre-cache for common sounds
-- Agent-to-voice mapping:
-  - Comedian → F1 (Female voice, fast)
+- Agent-to-voice mapping (`voiceMap` in each engine) — only 3 of the 5 agents have an
+  explicit entry; the rest fall through to `'default'` (F1):
+  - Comedian → F1 (Female voice)
   - Philosopher → M2 (Deep/slow male voice)
   - Scientist → M1 (Standard male voice)
-  - Tech Bro → M1 with speed boost
-  - Robot → M2 with robot-like pacing
+  - Tech Bro / Robot → F1 (`default`), with per-agent pacing only (`CHARACTER_SPEEDS` in `chatLog.ts`)
+
+**Default vs. legacy engine.** `bootstrap.ts` constructs `OptimizedAudioEngineAdapter` (wrapping
+`OptimizedAudioEngine`) by default: synthesis runs in `worker/tts.worker.ts` off the main thread,
+with phoneme caching and viseme-lookahead prediction. The adapter unwraps `OptimizedAudioEngine`'s
+richer `SynthesisResult` down to the plain `Promise<Float32Array>` shape (`TtsEngine` interface in
+`AudioEngine.ts`) that `SpeechQueue` / `PrerenderCoordinator` already depend on, so playback,
+prerendering, and SFX ducking (`SpeechQueue`'s `ttsGain` node) are all untouched — only the
+synthesis backend changed. `SpeechQueue` reads `engine.sampleRate` when the engine provides one
+(Optimized: 24kHz) and otherwise keeps its historical 44.1kHz buffer rate (legacy `AudioEngine`
+doesn't expose `sampleRate`, so its behavior is unchanged).
+
+Append `?legacyAudio` to the app URL to force the old main-thread `AudioEngine` instead, kept as a
+fallback for one release if the optimized path regresses on some device.
+
+`OptimizedSpeechQueue.ts` (a separate, text-in `enqueue()` queue with its own internal synthesis
+call) is **not** wired into bootstrap — its API isn't compatible with the existing prerender cache
+(`SpeechQueue.prerenderOne`/`synthesizeOrTakeCached`) that `PrerenderCoordinator` and the improv/mode
+loops depend on. Swapping to it would mean rewriting the prerender pipeline, not just the engine.
+
+**Gotcha:** `new Worker(new URL('./x.ts', import.meta.url), opts)` must have the `new URL(...)`
+inlined directly in the `Worker` constructor call for Vite's worker plugin to detect and bundle it.
+Hoisting it to a variable first (`const u = new URL(...); new Worker(u, ...)`) makes Vite copy the
+`.ts` file as a raw, unparsed asset — it 404s/syntax-errors as a Worker at runtime. This broke
+`OptimizedAudioEngine` once (invisible in `npm test`, since that never runs a production build) —
+`tests/unit/optimizedAudioEngineWorkerBundling.test.ts` guards the source pattern; `npm run build`
++ inspecting `dist/assets/tts.worker-*.js` (must be `.js`, not `.ts`) confirms it end-to-end.
 
 ### Stage
 **File**: `src/visuals/Stage.ts`
@@ -634,6 +661,15 @@ CI runner: `tests/perf/ci-runner.ts`
 5. **Reporter Mode**: Test topic fetching and discussion
 6. **Model Swapping**: Verify different models can be assigned to agents
 7. **TTS**: Verify speech synthesis works for all agents with lip-sync
+8. **Optimized audio engine** (default TTS stack, `OptimizedAudioEngineAdapter`):
+   - Fresh load, no query flags: confirm audio plays and DevTools → Network shows a `tts.worker-*.js`
+     request (not `.ts`) with a 200
+   - SFX still ducks/overlaps TTS during a scene with sound cues
+   - Lip-sync mouth animation still tracks speech for all 5 agents
+   - Reload with `?legacyAudio` appended to the URL: confirm audio still plays (fallback path) and
+     console logs `[Audio] ?legacyAudio present — using legacy main-thread AudioEngine`
+   - `npm run build && npx vite preview`, then in DevTools confirm
+     `dist/assets/tts.worker-*.js` is real JS (`node --check dist/assets/tts.worker-*.js`)
 8. **3D Visualization**: Verify actors animate when speaking
 9. **Voice Input**: Test microphone input (if supported)
 10. **Memory**: Save and load episodes, verify cloud sync

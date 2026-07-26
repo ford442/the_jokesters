@@ -1,6 +1,5 @@
 
-import { AudioEngine } from './AudioEngine';
-import type { SynthesisOptions } from './AudioEngine';
+import type { SynthesisOptions, TtsEngine } from './AudioEngine';
 
 function cacheKey(text: string, agentId: string, options: SynthesisOptions): string {
     const steps = options.steps ?? 10;
@@ -17,13 +16,13 @@ export class SpeechQueue {
     /** Gain inserted between TTS sources and the external destination (for SFX ducking). */
     private ttsGain: GainNode;
     private destinationNode: AudioNode;
-    private audioEngine: AudioEngine;
+    private audioEngine: TtsEngine;
     /** Keyed TTS cache so prerendered sentences are reused (no double synth). */
     private audioCache = new Map<string, Promise<Float32Array>>();
     /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
     private cacheEpoch = 0;
 
-    constructor(audioEngine: AudioEngine) {
+    constructor(audioEngine: TtsEngine) {
         this.audioEngine = audioEngine;
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         this.ttsGain = this.audioContext.createGain();
@@ -63,7 +62,10 @@ export class SpeechQueue {
         this.isPlaying = true;
         const audioData = this.queue.shift()!;
 
-        const buffer = this.audioContext.createBuffer(1, audioData.length, 44100);
+        // Legacy AudioEngine doesn't expose sampleRate — keep its historical (44.1kHz) buffer
+        // rate unchanged; engines that report a real rate (e.g. OptimizedAudioEngineAdapter) use it.
+        const sampleRate = this.audioEngine.sampleRate ?? 44100;
+        const buffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
         buffer.copyToChannel(audioData as any, 0);
 
         const source = this.audioContext.createBufferSource();

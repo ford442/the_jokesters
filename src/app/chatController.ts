@@ -1,6 +1,6 @@
 import { GroupChatManager } from '../GroupChatManager'
 import type { Agent } from '../GroupChatManager'
-import type { AudioEngine } from '../audio/AudioEngine'
+import type { TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
 import type { ChatLogApi } from './chatLog'
@@ -13,7 +13,7 @@ import { stripSfxTokens } from '../audio/sfxTokens'
 export interface ChatControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
-  audioEngine: AudioEngine
+  audioEngine: TtsEngine
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi
@@ -178,7 +178,7 @@ export type PrerenderAheadFn = (
 
 /** Shared audio helpers used by chat and improv modes. */
 export function createAudioHelpers(
-  _audioEngine: AudioEngine,
+  _audioEngine: TtsEngine,
   speechQueue: SpeechQueue,
   stage: Stage,
 ): { speakAndVisualize: SpeakAndVisualizeFn; prerenderAhead: PrerenderAheadFn } {

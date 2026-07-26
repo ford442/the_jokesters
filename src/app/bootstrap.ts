@@ -5,6 +5,8 @@ import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
 import { AudioEngine } from '../audio/AudioEngine'
+import type { TtsEngine } from '../audio/AudioEngine'
+import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
 import { SpeechQueue } from '../audio/SpeechQueue'
 import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
 import { MemoryManager } from '../Director/MemoryManager'
@@ -82,7 +84,14 @@ export async function initApp(): Promise<void> {
     groupChatManager.setVRAMConfig(vramConfig)
     groupChatManager.setMaxTokensPerTurn(chosenMaxTokens)
 
-    const audioEngine = new AudioEngine()
+    // Worker-based synthesis (phoneme cache + viseme lookahead) is the default TTS
+    // engine; append ?legacyAudio to the URL to force the old main-thread engine
+    // for one release if the optimized path regresses on a given device.
+    const useLegacyAudio = new URLSearchParams(window.location.search).has('legacyAudio')
+    const audioEngine: TtsEngine = useLegacyAudio ? new AudioEngine() : new OptimizedAudioEngineAdapter()
+    if (useLegacyAudio) {
+      console.log('[Audio] ?legacyAudio present — using legacy main-thread AudioEngine')
+    }
     const speechQueue = new SpeechQueue(audioEngine)
 
     const requestedRenderer = getRequestedRendererMode()

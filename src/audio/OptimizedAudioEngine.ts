@@ -17,6 +17,7 @@ import type {
 } from './worker/tts.worker';
 import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
+import { VPS_STORAGE_URL } from '../config/models';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -87,9 +88,10 @@ export class OptimizedAudioEngine {
             console.log('[OptimizedAudioEngine] Initializing...');
             const initStart = performance.now();
 
-            // Create worker
-            const workerUrl = new URL('./worker/tts.worker.ts', import.meta.url);
-            this.worker = new Worker(workerUrl, { type: 'module' });
+            // Create worker. The `new URL(...)` must be inlined here (not hoisted to a
+            // variable) for Vite's worker plugin to statically detect and bundle it —
+            // otherwise it's copied as a raw, unparsed .ts asset that fails to load.
+            this.worker = new Worker(new URL('./worker/tts.worker.ts', import.meta.url), { type: 'module' });
 
             // Set up message handler
             this.worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
@@ -357,7 +359,7 @@ export class OptimizedAudioEngine {
 
         for (const voice of voicesToLoad) {
             try {
-                const stylePath = `./tts/voice_styles/${voice}.json`;
+                const stylePath = `${VPS_STORAGE_URL}/tts/voice_styles/${voice}.json`;
                 const resp = await fetch(stylePath);
                 if (!resp.ok) continue;
 
@@ -385,7 +387,7 @@ export class OptimizedAudioEngine {
 
         // Load from file
         try {
-            const stylePath = `./tts/voice_styles/${voiceId}.json`;
+            const stylePath = `${VPS_STORAGE_URL}/tts/voice_styles/${voiceId}.json`;
             const resp = await fetch(stylePath);
             const json = await resp.json();
             

@@ -7,7 +7,19 @@ export interface SynthesisOptions {
     seed?: number;   // Optional deterministic seed
 }
 
-export class AudioEngine {
+/**
+ * Minimal contract SpeechQueue / PrerenderCoordinator need from a TTS engine.
+ * Satisfied by both the legacy AudioEngine and OptimizedAudioEngineAdapter, so
+ * bootstrap can swap engines without touching playback/prerender/ducking call sites.
+ */
+export interface TtsEngine {
+    init(modelPath?: string): Promise<void>;
+    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<Float32Array>;
+    /** Native sample rate of synthesized audio. Unset engines fall back to SpeechQueue's legacy default. */
+    readonly sampleRate?: number;
+}
+
+export class AudioEngine implements TtsEngine {
     private pipeline: SupertonicPipeline;
     private styles: Map<string, Style> = new Map();
     private isReady = false;
