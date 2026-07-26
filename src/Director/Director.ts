@@ -7,9 +7,18 @@ import { isComedyEnabled } from './modeConfig';
 import { loadModeLoop, getMode } from './modes/registry';
 import type { RegisteredModeId } from './modes/registry';
 import { getContextDepthForMode } from '../config/contextDepth';
-import { buildEpisodeFromHistory, setLastEpisode } from '../episode';
+import type { MemoryHint } from '../config/contextDepth';
+import { buildEpisodeFromHistory, setLastEpisode, SCENE_ARC_SCHEMA_VERSION } from '../episode';
 import type { JokestersEpisode } from '../episode';
 import type { AudienceFeedbackEvent } from '../comedy/audienceFeedback';
+import {
+    createSceneArc,
+    updateSceneArc,
+    advanceSceneAct,
+    buildArcPromptInjection,
+    estimateSceneTurnBudget,
+} from './sceneArc';
+import type { SceneArcState } from './sceneArc';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -202,6 +211,8 @@ export class Director {
     private memoryManager: MemoryManager | null = null;
     private broadcastChannel: BroadcastChannel | null = null;
     private comedySession: ComedySession | null = null;
+    /** Short rolling scene-arc summary — see src/Director/sceneArc.ts. Null before/after a scene. */
+    private sceneArc: SceneArcState | null = null;
     /** Registered by whichever controller owns the prerender queue (see setPrerenderInvalidator). */
     private prerenderInvalidator: (() => void) | null = null;
     /** Registered by the episode export UI (see setEpisodeReadyHandler). */
@@ -262,6 +273,27 @@ export class Director {
         this.episodeReadyHandler = fn;
     }
 
+    /** Current rolling scene-arc snapshot, or null before a scene starts / after it stops. */
+    public getSceneArc(): SceneArcState | null {
+        return this.sceneArc;
+    }
+
+    /**
+     * Apply a memory-hint-compatible arc action (currently only 'advance_act' affects the
+     * arc; depth hints like zoom_in/zoom_out/recall are handled by GroupChatManager instead).
+     */
+    public applyArcMemoryHint(hint: MemoryHint): void {
+        if (hint === 'advance_act' && this.sceneArc) {
+            this.sceneArc = advanceSceneAct(this.sceneArc);
+        }
+    }
+
+    /** Heuristic scene-arc update after a turn's text is finalized. No-op without an active arc. */
+    private recordSceneBeat(agentId: string, text: string): void {
+        if (!this.sceneArc || !text.trim()) return;
+        this.sceneArc = updateSceneArc(this.sceneArc, { agentId, text });
+    }
+
     /**
      * Creates the shared ModeContext passed to all mode loop functions.
      */
@@ -284,6 +316,8 @@ export class Director {
                     this.callbacks.onCallbackRecorded(agentId, jokeId, count, status);
                 }
             },
+            recordSceneBeat: (agentId: string, text: string) => this.recordSceneBeat(agentId, text),
+            getArcPromptInjection: () => (this.sceneArc ? buildArcPromptInjection(this.sceneArc) : null),
         };
     }
 
@@ -327,6 +361,7 @@ export class Director {
         this.manager.setSceneMemoryDepth(sceneDepth);
 
         this.initComedySession(scenario);
+        this.sceneArc = createSceneArc(scenario.title || scenario.description || scenario.type, estimateSceneTurnBudget(modeDef));
 
         try {
             const modeLoop = await loadModeLoop(scenario.type);
@@ -404,6 +439,15 @@ export class Director {
                             description: this.currentScenario?.description,
                             mode: this.currentScenario?.type,
                             chaosLevel: this.chaosLevel,
+                            sceneArc: this.sceneArc ? {
+                                version: SCENE_ARC_SCHEMA_VERSION,
+                                premise: this.sceneArc.premise,
+                                act: this.sceneArc.act,
+                                turnCount: this.sceneArc.turnCount,
+                                estimatedTurns: this.sceneArc.estimatedTurns,
+                                runningGags: this.sceneArc.runningGags,
+                                beats: this.sceneArc.beats,
+                            } : undefined,
                         },
                     });
                     setLastEpisode(episode);
@@ -422,6 +466,7 @@ export class Director {
 
             this.comedySession?.reset();
             this.comedySession = null;
+            this.sceneArc = null;
         }
     }
 
@@ -547,6 +592,13 @@ export class Director {
                 }
             }
 
+            if (this.sceneArc) {
+                const arcPrompt = buildArcPromptInjection(this.sceneArc);
+                if (arcPrompt) {
+                    effectivePrompt += ` ${arcPrompt}`;
+                }
+            }
+
             const characterSpeeds: Record<string, number> = {
                 'comedian': 1.5,
                 'philosopher': 0.6,
@@ -582,6 +634,7 @@ export class Director {
             if (this.comedySession && responseText.trim()) {
                 this.comedySession.handleAgentResponse(responseText.trim(), currentAgent.id);
             }
+            this.recordSceneBeat(currentAgent.id, responseText.trim());
 
             await this.callbacks.onTurnEnd();
 

@@ -579,6 +579,33 @@ Closes the loop from `QualityFilter.rateJoke` scores to `Stage.triggerAudienceRe
   `PerformanceMode.ts`'s crowd-work loop is gone; that mode's reactions now come from the same
   quality-scored `chatForAgentWithComedy` wiring as everything else.
 
+### Scene Arc Tracking
+**File**: `src/Director/sceneArc.ts` (pure logic), see also `docs/SCENE_ARC.md`
+
+Rolling, on-device scene summary so long scenes don't drift — no remote summarization, no extra
+LLM calls:
+- `SceneArcState { premise, beats[] (capped at MAX_TRACKED_BEATS=12), runningGags[], act, turnCount, estimatedTurns }`
+- `updateSceneArc` — heuristic per-turn update: `summarizeBeat` (first-sentence-or-truncated) +
+  `extractThemes` (reused from `ComedySession.ts`); `runningGags` recomputed only from themes
+  within the current rolling window (themes that scroll out stop counting)
+- `act` (`open`/`middle`/`close`) derives from `turnCount / estimatedTurns` (25%/75% fractions);
+  falls back to a fixed 2-turn open heuristic when a mode has no `estimatedTurns` budget
+- `advanceSceneAct` — monotonic act advance, exposed for the new `advance_act` `MemoryHint`
+  variant (`src/config/contextDepth.ts`) via `Director.applyArcMemoryHint`
+- `buildArcPromptInjection` — recall (premise + running gags) in `open`/`middle`, "wrap it up +
+  callback" instruction once `close`
+- **Wiring**: Director owns one `SceneArcState` per scene (created in `playScenario`, cleared in
+  `stopScene`) and exposes it via two `ModeContext` fields — `recordSceneBeat(agentId, text)` and
+  `getArcPromptInjection()`. Both `Director.processTurn()` (bare path) and
+  `comedyModeHelpers.ts`'s `chatForAgentWithComedy`/`withComedyPrompt` (the path most Dream/Expanded
+  modes use) call these; `processTurnWithComedy` inherits the wiring for free since it delegates
+  to `ctx.processTurn` internally.
+- **Episode export**: `stopScene()` writes a versioned snapshot to `sceneState.sceneArc`
+  (`EpisodeSceneArcSnapshot`, `SCENE_ARC_SCHEMA_VERSION` — independent of `EPISODE_FORMAT_VERSION`
+  since it's an additive optional field).
+- Out of scope: `GroupChatManager.getDirectorCritique()` ("Silent Coach") stays limited to the
+  legacy classic improv quick-start path; not wired into Director-mediated modes here.
+
 ### Service Worker
 **File**: `src/service-worker.ts`
 
@@ -684,6 +711,11 @@ browser runs or chaos scripts:
   `MODE_LOADER_BY_ID`, so loading one mode never pulls in the whole Dream/Expanded corpus.
 
 GPU/TTS/Three.js stay out of these tests — audio/visual callbacks are no-op stubs.
+
+**Scene arc coverage** (`tests/unit/sceneArc.test.ts`): pure-function tests for `src/Director/sceneArc.ts` —
+beat summarization/truncation, rolling-window cap (`MAX_TRACKED_BEATS`), running-gag recurrence detection,
+act-boundary transitions both with and without an `estimatedTurns` budget, `advanceSceneAct` monotonicity,
+and the prompt-injection builders. No GPU/LLM involved.
 
 **MemoryManager coverage** (`tests/unit/memoryConflict.test.ts`, `tests/unit/memoryManagerRoundtrip.test.ts`):
 - `memoryConflict.ts`'s pure functions (`compareVectorClocks`, `mergeHistories`, `mergeVectorClocks`,

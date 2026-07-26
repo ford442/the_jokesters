@@ -22,6 +22,10 @@ export interface ModeContext {
     comedy: ComedySession | null;
     /** Record a callback for visual feedback - triggers Actor visual effects */
     recordCallbackVisual: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
+    /** Heuristic scene-arc update after a turn's text is finalized (see src/Director/sceneArc.ts). No-op if the scene has no arc. */
+    recordSceneBeat: (agentId: string, text: string) => void;
+    /** Current act's prompt fragment (recall running gags, or close-act tag guidance) — null if nothing to inject yet. */
+    getArcPromptInjection: () => string | null;
 }
 
 export type ModeLoop = (scenario: Scenario, ctx: ModeContext) => Promise<void>;

@@ -9,9 +9,14 @@ export function withComedyPrompt(
   prompt: string,
   callbackChance = 0.3,
 ): string {
-  if (!ctx.comedy) return prompt;
-  const injection = ctx.comedy.maybeInjectCallbackPrompt(callbackChance);
-  return injection ? `${prompt} ${injection}` : prompt;
+  let result = prompt;
+  if (ctx.comedy) {
+    const injection = ctx.comedy.maybeInjectCallbackPrompt(callbackChance);
+    if (injection) result += ` ${injection}`;
+  }
+  const arcInjection = ctx.getArcPromptInjection();
+  if (arcInjection) result += ` ${arcInjection}`;
+  return result;
 }
 
 /**
@@ -104,6 +109,9 @@ export async function chatForAgentWithComedy(
 
   if (trimmed && ctx.comedy) {
     ctx.comedy.handleAgentResponse(trimmed, agentId);
+  }
+  if (trimmed) {
+    ctx.recordSceneBeat(agentId, trimmed);
   }
 
   // Fired after onTurnEnd (which waits for the line to actually finish playing), and
