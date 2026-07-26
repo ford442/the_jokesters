@@ -14,6 +14,7 @@ import { updateNextAgentUI } from './statusBar'
 
 export interface DirectorBridgeDeps {
   groupChatManager: GroupChatManager
+  memoryManager: MemoryManager | null
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi
@@ -25,11 +26,6 @@ export interface DirectorBridgeDeps {
 
 /** Create Director with app audio/visual callbacks (lazy mode loads happen in playScenario). */
 export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
-  const memoryManager: MemoryManager | null =
-    typeof (window as unknown as { getMemoryManager?: () => MemoryManager }).getMemoryManager === 'function'
-      ? (window as unknown as { getMemoryManager: () => MemoryManager }).getMemoryManager()
-      : null
-
   const callbacks: DirectorCallbacks = {
     onMessage: (sender, message, color) => deps.chatLog.addMessage(sender, message, color),
     onSpeak: async (sentence, agentId, options) => {
@@ -64,11 +60,5 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     },
   }
 
-  return new Director(deps.groupChatManager, callbacks, memoryManager ?? undefined)
-}
-
-export function getAppDirector(): Director | null {
-  return typeof (window as unknown as { getDirector?: () => Director }).getDirector === 'function'
-    ? (window as unknown as { getDirector: () => Director }).getDirector()
-    : null
+  return new Director(deps.groupChatManager, callbacks, deps.memoryManager ?? undefined)
 }

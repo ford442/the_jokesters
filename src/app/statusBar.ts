@@ -2,6 +2,7 @@ import type { GroupChatManager } from '../GroupChatManager'
 import { getModelDisplayName } from '../config/models'
 import { setProgress } from './loadingUi'
 import type { PrerenderMetricsSnapshot } from '../prerender/PrerenderCoordinator'
+import type { MemoryManager } from '../Director/MemoryManager'
 
 export function updateVRAMInfoBar(groupChatManager: GroupChatManager): void {
   const ctxInfoText = document.getElementById('ctx-info-text')
@@ -88,25 +89,22 @@ export function setReadyStatus(groupChatManager: GroupChatManager): void {
   setProgress(`Ready — ${getModelDisplayName(groupChatManager.getLoadedModelId())}`, 100)
 }
 
-export function updateSyncUI(): void {
+export async function updateSyncUI(getMemoryManager: () => MemoryManager | null): Promise<void> {
   const syncIcon = document.getElementById('sync-icon')
   const syncText = document.getElementById('sync-text')
   const syncContainer = document.getElementById('sync-status-indicator')
 
   if (!syncIcon || !syncText || !syncContainer) return
 
-  const getMemMgr = (window as any).getMemoryManager
-  if (!getMemMgr) {
+  const memoryManager = getMemoryManager()
+  if (!memoryManager) {
     syncContainer.style.display = 'none'
     return
   }
 
   syncContainer.style.display = 'flex'
 
-  const memoryManager = getMemMgr()
-  if (!memoryManager) return
-
-  const state = memoryManager.getSyncState()
+  const state = await memoryManager.getSyncState()
   if (state.syncError) {
     syncIcon.textContent = '❌'
     syncText.textContent = 'Sync Error'
@@ -135,9 +133,11 @@ export function updateSyncUI(): void {
   }
 }
 
-export function startSyncPolling(): void {
-  setInterval(updateSyncUI, 2000)
-  window.addEventListener('syncStatusUpdated', updateSyncUI)
+export function startSyncPolling(getMemoryManager: () => MemoryManager | null): void {
+  const poll = () => { void updateSyncUI(getMemoryManager) }
+
+  setInterval(poll, 2000)
+  window.addEventListener('syncStatusUpdated', poll)
 
   window.addEventListener('offline', () => {
     console.log('App is offline, sync will resume when online.')
@@ -145,8 +145,6 @@ export function startSyncPolling(): void {
 
   window.addEventListener('online', () => {
     console.log('App is back online, triggering MemoryManager sync retry...')
-    if ((window as any).getMemoryManager) {
-      (window as any).getMemoryManager().processSyncQueue()
-    }
+    getMemoryManager()?.processSyncQueue()
   })
 }

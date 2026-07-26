@@ -60,14 +60,12 @@ function makeCallbacks() {
 
 describe('Director orchestration', () => {
   beforeEach(() => {
-    // Director's constructor unconditionally does `(window as any).getDirector = () => this`,
-    // and touches `document` only when a memoryManager is supplied.
-    ;(globalThis as any).window = globalThis
+    // Director's constructor touches `document` only when a memoryManager is supplied
+    // (to wire a #settings-status sync-status label) — no `window` access at all.
     ;(globalThis as any).document = { getElementById: () => null }
   })
 
   afterEach(() => {
-    delete (globalThis as any).window
     delete (globalThis as any).document
     vi.restoreAllMocks()
   })

@@ -514,6 +514,23 @@ class QualityGate {
 3. Add to `getRandomJoke()` switch statement
 4. Update `JokeCategory` type
 
+## App Service Wiring
+
+`bootstrap.ts` constructs `GroupChatManager`, `MemoryManager`, `AudioEngine`/`SpeechQueue`, `Stage`,
+and `SfxManager` once and threads them into the controllers (`chatController`, `improvController`,
+`sceneController`, `episodeUi`, `directorBridge`) as explicit constructor/function parameters — no
+`window.getX` globals. `Director` stays fully decoupled from `app/`: it exposes
+`setPrerenderInvalidator(fn)` and `setEpisodeReadyHandler(fn)` hooks that `improvController` /
+`episodeUi` register into once their services exist, rather than Director reaching into app-layer
+globals to invalidate the prerender queue or show the episode export bar.
+
+Two entry points (`main.ts`'s `setupDashboard()` / `startSyncPolling()`) run synchronously before
+`initApp()`'s async body has constructed anything, so they can't receive services as ordinary
+parameters. They instead take a `getMemoryManager: () => MemoryManager | null` argument backed by a
+typed shared-instance module (`setSharedMemoryManager`/`getSharedMemoryManager` in
+`MemoryManager.ts`, mirroring the existing `SfxManager.ts` pattern) — populated once `bootstrap.ts`
+constructs the real instance. See AGENTS.md's "App service wiring" section for the full rationale.
+
 ## Related Documentation
 
 - [COMEDY_GUIDE.md](./COMEDY_GUIDE.md) - Detailed comedy system documentation
