@@ -21,7 +21,7 @@ export const CATEGORY_CONTEXT_DEPTH_DEFAULTS: Record<ModeCategory, number> = {
   dream: 12,
 };
 
-export type MemoryHint = 'zoom_in' | 'zoom_out' | `recall:${string}`;
+export type MemoryHint = 'zoom_in' | 'zoom_out' | 'advance_act' | `recall:${string}`;
 
 export function clampMemoryDepth(depth: number): number {
   return Math.max(MIN_MEMORY_DEPTH, Math.min(MAX_MEMORY_DEPTH, Math.round(depth)));
@@ -99,6 +99,7 @@ export function parseMemoryHint(raw: string): MemoryHint | null {
   const trimmed = raw.trim().toLowerCase();
   if (trimmed === 'zoom_in' || trimmed === 'zoom-in') return 'zoom_in';
   if (trimmed === 'zoom_out' || trimmed === 'zoom-out') return 'zoom_out';
+  if (trimmed === 'advance_act' || trimmed === 'advance-act') return 'advance_act';
   if (trimmed.startsWith('recall:')) {
     const theme = raw.trim().slice('recall:'.length).trim();
     if (theme) return `recall:${theme}` as MemoryHint;

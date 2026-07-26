@@ -81,12 +81,17 @@ Add a post-generation safety classifier to catch forbidden content that slips th
 
 ### Director Memory / Scene Arc Tracking
 **Priority:** Medium  
-**Status:** Idea
+**Status:** Implemented
 
-Track high-level scene beats and callbacks:
-- Director maintains a short "scene summary" that persists across turns
-- Can reference earlier jokes/moments for callbacks
-- Helps create satisfying narrative arcs in longer scenes
+Director maintains a rolling `SceneArcState` (`src/Director/sceneArc.ts`) across turns:
+- Heuristic beat summaries + theme extraction update the arc after every turn (no LLM call)
+- Running gags (recurring themes) feed prompt injections so agents can callback earlier moments
+- Act tracking (`open` / `middle` / `close`) forces close-act "wrap it up" guidance as a scene
+  approaches its estimated turn budget
+- Arc snapshot is included in episode exports (`sceneState.sceneArc`, versioned independently
+  via `SCENE_ARC_SCHEMA_VERSION`) for replay continuity
+
+See [docs/SCENE_ARC.md](./SCENE_ARC.md) for details.
 
 ---
 

@@ -54,6 +54,8 @@ describe('Dream mode comedy wiring (chatForAgentWithComedy)', () => {
       memoryManager: null,
       comedy,
       recordCallbackVisual: () => {},
+      recordSceneBeat: () => {},
+      getArcPromptInjection: () => null,
     }
 
     vi.spyOn(Math, 'random').mockReturnValue(0.1) // force the "chaotic judge" branch

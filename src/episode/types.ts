@@ -21,6 +21,21 @@ export interface EpisodeTurn {
   sfx?: string
 }
 
+/** Schema version for the sceneArc sub-object — independent of EPISODE_FORMAT_VERSION so
+ *  this additive, optional field can evolve without bumping the whole episode format. */
+export const SCENE_ARC_SCHEMA_VERSION = 1 as const
+
+/** Portable snapshot of Director's rolling scene-arc tracking (see src/Director/sceneArc.ts). */
+export interface EpisodeSceneArcSnapshot {
+  version: typeof SCENE_ARC_SCHEMA_VERSION
+  premise: string
+  act: 'open' | 'middle' | 'close'
+  turnCount: number
+  estimatedTurns: number | null
+  runningGags: string[]
+  beats: { turnIndex: number; agentId: string; summary: string; themes: string[] }[]
+}
+
 /** Optional scene metadata for context on import/replay. */
 export interface EpisodeSceneState {
   title?: string
@@ -28,6 +43,8 @@ export interface EpisodeSceneState {
   mode?: string
   chaosLevel?: number
   seed?: number
+  /** Rolling scene-arc snapshot at the moment the episode was captured, if the scene had one. */
+  sceneArc?: EpisodeSceneArcSnapshot
   /** Free-form bag for future fields; ignored by validators except type check. */
   [key: string]: unknown
 }

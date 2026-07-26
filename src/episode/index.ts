@@ -1,8 +1,9 @@
-export { EPISODE_FORMAT_VERSION } from './types'
+export { EPISODE_FORMAT_VERSION, SCENE_ARC_SCHEMA_VERSION } from './types'
 export type {
   EpisodeAgent,
   EpisodeTurn,
   EpisodeSceneState,
+  EpisodeSceneArcSnapshot,
   JokestersEpisode,
   EpisodeValidationResult,
   EpisodeValidationErrorCode,
