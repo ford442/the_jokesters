@@ -28,8 +28,8 @@ Position **The Jokesters** as a **live digital comedy show**, not only a single-
 | **Mode registry** | Stable mode IDs, metadata, `ModeContext` | ✅ `MODE_REGISTRY`, `validateRegistry` | Keep metadata complete; no orphan loops |
 | **SceneState export** | Shareable / resumable session payload | 🟡 `EpisodeSceneState` + `.jokesters.json` export/replay | Live **session** export (in-progress scene, not just post-episode transcript); versioned schema for import across devices |
 | **Reliable low-latency prerender** | No dead air between turns | ✅ `PrerenderCoordinator`, `adaptiveDepth` | Harden cancel/epoch edge cases; metrics-driven depth tuning under vote interrupts |
-| **SFX** | Rimshot, applause, stings | ✅ `SfxManager`, `sfxTokens`, whitelisted catalog | Wire quality/vote signals → SFX triggers (see laugh track) |
-| **Audience mesh reactions** | Visual crowd feedback | 🟡 `Stage.triggerAudienceReaction`, `audienceReaction` events | Tie to `QualityFilter` + votes, not keyword heuristics alone |
+| **SFX** | Rimshot, applause, stings | ✅ `SfxManager`, `sfxTokens`, whitelisted catalog | Wire vote signals → SFX triggers too (quality already wired, see laugh track) |
+| **Audience mesh reactions** | Visual crowd feedback | ✅ `Stage.triggerAudienceReaction` driven by `src/comedy/audienceFeedback.ts` (score→reaction, rate-limited) via `DirectorCallbacks.onAudienceReaction` | Tie to audience votes too, once party mode lands |
 | **Signaling** | Multi-device rooms | ❌ Not started | Optional new dependency; **not required for MVP** |
 
 Native compile / WASM policy unchanged: [ADR 0001](./adr/0001-native-cpp-boundary.md).
@@ -44,7 +44,7 @@ One keyboard, one screen, or a second browser tab on the same LAN — **no hoste
 
 - **Pass the mic / human turn injection** — chat input → `GroupChatManager.chat()`; modes use `ctx.waitForInput()` (e.g. audience heckler loop in `PerformanceMode.ts`).
 - **Director instructions** — `hiddenInstruction` on turns; Silent Coach critique path in improv.
-- **Crowd work prototype** — heckler mode dispatches `audienceReaction` (cheer/groan) from simple keyword sentiment.
+- **Crowd work + quality→SFX/mesh** — `src/comedy/audienceFeedback.ts` maps `QualityFilter` scores to cheer/neutral/groan + applause/rimshot/boo SFX, rate-limited, fired at actual speak time (works with prerender playback). Wired into `chatForAgentWithComedy`/`processTurnWithComedy` (any comedy-helper mode) and the classic improv quick-start's live + prerendered turn paths. The old keyword-sentiment `audienceReaction` dispatch in the heckler/crowd-work mode is gone — the crowd's mood now tracks whether the *joke* landed, not keyword-matching the user's own line.
 - **Episode capture** — export JSON/MD, TTS-only replay (`src/episode/`).
 
 ### MVP deliverables (when P3 opens)
@@ -93,5 +93,5 @@ See also: [ROADMAP.md](./ROADMAP.md) (general backlog), [plan.md](./plan.md) (UI
 
 - [ ] Two people at one machine: one runs scene, one taps votes; Director visibly steers within 1 turn.
 - [ ] Human line via chat or mic appears in history and gets a quality-gated agent response in crowd-work modes.
-- [ ] Strong joke (high `QualityFilter` score) triggers applause SFX + audience mesh cheer without manual keyword rules.
+- [x] Strong joke (high `QualityFilter` score) triggers applause SFX + audience mesh cheer without manual keyword rules (`src/comedy/audienceFeedback.ts`).
 - [ ] Scene can be exported mid-show and resumed on replay import (session fields documented in schema).

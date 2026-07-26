@@ -23,6 +23,7 @@ describe('Dream mode comedy wiring (chatForAgentWithComedy)', () => {
     }
 
     const spoken: string[] = []
+    const audienceReactions: Array<{ reaction: string; sfx: string | null; score: number }> = []
     let isRunningCalls = 0
 
     const ctx: ModeContext = {
@@ -34,6 +35,9 @@ describe('Dream mode comedy wiring (chatForAgentWithComedy)', () => {
         },
         onTurnStart: async () => {},
         onTurnEnd: async () => {},
+        onAudienceReaction: (event: { reaction: string; sfx: string | null; score: number }) => {
+          audienceReactions.push(event)
+        },
       } as any,
       chaosLevel: 0,
       interruptQueue: [],
@@ -68,5 +72,15 @@ describe('Dream mode comedy wiring (chatForAgentWithComedy)', () => {
     expect(rateSpy).toHaveBeenCalled()
     expect(chatCalls.some((c) => c.prompt.includes('(SYSTEM: punch it up!)'))).toBe(true)
     expect(spoken.length).toBeGreaterThanOrEqual(chatCalls.length)
+
+    // Audience feedback: each finished line fires onAudienceReaction with a real
+    // score→reaction mapping (see tests/unit/audienceFeedback.test.ts for the pure
+    // mapping rules) — the show reacts to comedy quality, not just callback plumbing.
+    expect(audienceReactions.length).toBeGreaterThan(0)
+    for (const event of audienceReactions) {
+      expect(['cheer', 'neutral', 'groan']).toContain(event.reaction)
+      expect(event.score).toBeGreaterThanOrEqual(1)
+      expect(event.score).toBeLessThanOrEqual(10)
+    }
   })
 })
