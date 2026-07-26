@@ -8,6 +8,7 @@ import { loadModeLoop, getMode } from './modes/registry';
 import type { RegisteredModeId } from './modes/registry';
 import { getContextDepthForMode } from '../config/contextDepth';
 import { buildEpisodeFromHistory, setLastEpisode } from '../episode';
+import type { JokestersEpisode } from '../episode';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -198,6 +199,10 @@ export class Director {
     private memoryManager: MemoryManager | null = null;
     private broadcastChannel: BroadcastChannel | null = null;
     private comedySession: ComedySession | null = null;
+    /** Registered by whichever controller owns the prerender queue (see setPrerenderInvalidator). */
+    private prerenderInvalidator: (() => void) | null = null;
+    /** Registered by the episode export UI (see setEpisodeReadyHandler). */
+    private episodeReadyHandler: ((episode: JokestersEpisode) => void) | null = null;
 
     constructor(manager: GroupChatManager, callbacks: DirectorCallbacks, memoryManager?: MemoryManager) {
         this.manager = manager;
@@ -210,10 +215,6 @@ export class Director {
                 this.memoryManager.setSyncStatusCallback((status: string) => { statusEl.textContent = status; });
             }
         }
-
-
-        // Expose globally for UI controls
-        (window as any).getDirector = () => this;
 
         try {
             if (typeof BroadcastChannel !== 'undefined') {
@@ -239,6 +240,23 @@ export class Director {
 
     public getCurrentScenario(): Scenario | null {
         return this.currentScenario;
+    }
+
+    /**
+     * Registered by whichever controller owns the LLM/TTS prerender queue (currently
+     * improvController's PrerenderCoordinator). Called on stopScene() to invalidate
+     * in-flight prerendered turns — Director never imports the prerender module directly.
+     */
+    public setPrerenderInvalidator(fn: (() => void) | null): void {
+        this.prerenderInvalidator = fn;
+    }
+
+    /**
+     * Registered by the episode export UI so Director can hand off a freshly
+     * auto-saved episode without importing app-layer UI code.
+     */
+    public setEpisodeReadyHandler(fn: ((episode: JokestersEpisode) => void) | null): void {
+        this.episodeReadyHandler = fn;
     }
 
     /**
@@ -351,8 +369,7 @@ export class Director {
 
             // Invalidate dialog prerender + TTS cache on scene stop / mode change
             try {
-                const coord = (window as any).getPrerenderCoordinator?.();
-                coord?.cancel('director stopScene');
+                this.prerenderInvalidator?.();
             } catch { /* optional */ }
 
             if (this.callbacks.musicControls) {
@@ -387,8 +404,7 @@ export class Director {
                         },
                     });
                     setLastEpisode(episode);
-                    const showBar = (window as any).__jokestersEpisode?.showBar;
-                    if (typeof showBar === 'function') showBar(episode);
+                    this.episodeReadyHandler?.(episode);
 
                     this.callbacks.onMessage('System', `💾 Episode auto-saved (ID: ${id}) — export ready`, '#4ecdc4');
                 } catch (e) {

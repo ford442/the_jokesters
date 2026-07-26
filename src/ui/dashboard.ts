@@ -1,3 +1,4 @@
+import type { MemoryManager } from '../Director/MemoryManager'
 
 function generateVisualDiff(localObj: any, cloudObj: any) {
   let diffHtml = '<div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 4px;">';
@@ -32,7 +33,7 @@ function generateVisualDiff(localObj: any, cloudObj: any) {
   return diffHtml + '</div>';
 }
 
-export const setupDashboard = () => {
+export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => {
     const dashboardBtn = document.getElementById('cloud-dashboard-btn');
     const reviewSyncBtn = document.getElementById('review-sync-btn');
     const dashboardModal = document.getElementById('cloud-dashboard-modal');
@@ -57,12 +58,11 @@ export const setupDashboard = () => {
 
     const loadHistory = async () => {
         historyList.innerHTML = '<div style="color: #888;">Loading history...</div>';
-        const getMemMgr = (window as any).getMemoryManager;
-        if (!getMemMgr) {
+        const memoryManager = getMemoryManager();
+        if (!memoryManager) {
             historyList.innerHTML = '<div style="color: #ff6b6b;">MemoryManager not available.</div>';
             return;
         }
-        const memoryManager = getMemMgr();
         const history = await memoryManager.getCloudHistory();
 
         historyList.innerHTML = '';
@@ -122,9 +122,8 @@ export const setupDashboard = () => {
 
     if (checkDeltasBtn && deltasContainer && deltasList) {
         checkDeltasBtn.addEventListener('click', async () => {
-            const getMemMgr = (window as any).getMemoryManager;
-            if (!getMemMgr) return;
-            const memoryManager = getMemMgr();
+            const memoryManager = getMemoryManager();
+            if (!memoryManager) return;
 
             if (deltasContainer.style.display === 'block') {
                 deltasContainer.style.display = 'none';
@@ -168,9 +167,8 @@ export const setupDashboard = () => {
 
     if (forceMergeBtn) {
         forceMergeBtn.addEventListener('click', async () => {
-            const getMemMgr = (window as any).getMemoryManager;
-            if (!getMemMgr) return;
-            const memoryManager = getMemMgr();
+            const memoryManager = getMemoryManager();
+            if (!memoryManager) return;
 
             try {
                 forceMergeBtn.textContent = 'Merging...';
@@ -191,9 +189,8 @@ export const setupDashboard = () => {
 
     if (checkDeltasBtn && deltasContainer && deltasList) {
         checkDeltasBtn.addEventListener('click', async () => {
-            const getMemMgr = (window as any).getMemoryManager;
-            if (!getMemMgr) return;
-            const memoryManager = getMemMgr();
+            const memoryManager = getMemoryManager();
+            if (!memoryManager) return;
 
             if (deltasContainer.style.display === 'block') {
                 deltasContainer.style.display = 'none';
@@ -264,11 +261,9 @@ export const setupDashboard = () => {
                             // Normally we would fetch the cloud content and local content,
                             // but since this is a delta, we'll just show the delta contents
                             // We need to fetch the file content from huggingface directly since HFStorageManager doesn't have getFileContent
-                            const getMemMgr = (window as any).getMemoryManager;
-                            if (getMemMgr) {
-                                const memoryManager = getMemMgr();
-                                const token = memoryManager.hfToken;
-                                const repoId = memoryManager.hfRepoId;
+                            const memoryManager = getMemoryManager();
+                            if (memoryManager) {
+                                const { token, repoId } = memoryManager.getCloudCredentials();
 
                                 if (token && repoId) {
                                     let cleanRepoId = repoId;
@@ -322,18 +317,12 @@ export const setupDashboard = () => {
 
     if (forceMergeBtn) {
         forceMergeBtn.addEventListener('click', async () => {
-             const getMemMgr = (window as any).getMemoryManager;
-             if (!getMemMgr) return;
-             const memoryManager = getMemMgr();
+             const memoryManager = getMemoryManager();
+            if (!memoryManager) return;
              try {
-                 // Triggers consolidation logic in worker
-                 const worker = (window as any).syncWorker;
-                 if (worker) {
-                     worker.postMessage({ action: 'consolidate_deltas', episodeId: 'latest' }); // simplification for demo
-                     alert("Merge requested. Check background worker.");
-                 } else {
-                     alert("Sync worker not available.");
-                 }
+                 // Triggers consolidation via MemoryManager's own sync worker.
+                 await memoryManager.consolidateEpisodeDeltas('latest');
+                 alert("Merge requested. Check background worker.");
              } catch(err) {
                  console.error(err);
                  alert("Failed to trigger merge.");
@@ -345,10 +334,8 @@ export const setupDashboard = () => {
     if (viewAnalyticsBtn && analyticsContainer && analyticsContent) {
         viewAnalyticsBtn.addEventListener('click', async () => {
 
-            const getMemMgr = (window as any).getMemoryManager;
-            if (!getMemMgr) return;
-
-            const memoryManager = getMemMgr();
+            const memoryManager = getMemoryManager();
+            if (!memoryManager) return;
 
             // Toggle visibility
             if (analyticsContainer.style.display === 'block') {
@@ -397,7 +384,9 @@ export const setupDashboard = () => {
 
     }
 
-(window as any).triggerAnalytics = async () => {
+// Explicit debug export (not a service getter) — lets a developer trigger analytics
+// from the browser console without clicking through the UI.
+;(window as any).triggerAnalytics = async () => {
     const btn = document.getElementById('view-analytics-btn');
     if (btn) btn.click();
 };

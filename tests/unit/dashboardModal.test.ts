@@ -39,7 +39,7 @@ describe('setupDashboard cold start', () => {
     ;(globalThis as any).window = globalThis
 
     const { setupDashboard } = await import('../../src/ui/dashboard')
-    setupDashboard()
+    setupDashboard(() => null)
 
     expect(dashboardModal.style.display).toBe('none')
 

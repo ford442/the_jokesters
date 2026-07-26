@@ -9,7 +9,7 @@ import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
 import { SpeechQueue } from '../audio/SpeechQueue'
 import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
-import { MemoryManager } from '../Director/MemoryManager'
+import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
 import { agents } from './agents'
 import { getAppTemplate } from './appTemplate'
@@ -78,7 +78,7 @@ export async function initApp(): Promise<void> {
 
   try {
     const memoryManager = new MemoryManager()
-    ;(window as any).getMemoryManager = () => memoryManager
+    setSharedMemoryManager(memoryManager)
 
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)
@@ -126,7 +126,6 @@ export async function initApp(): Promise<void> {
     await sfxManager.init(speechQueue.getAudioContext(), speechQueue.getTtsGainNode())
     sfxManager.setInterruptHandler(() => speechQueue.stop())
     setSharedSfxManager(sfxManager)
-    ;(window as any).getSfxManager = () => sfxManager
 
     currentInitState = 'BOOTING'
     setProgress('Setting up graphics...', 10)
@@ -174,6 +173,7 @@ export async function initApp(): Promise<void> {
     wireSceneController({
       agents,
       groupChatManager,
+      memoryManager,
       audioEngine,
       speechQueue,
       stage,

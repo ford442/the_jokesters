@@ -66,8 +66,6 @@ export function createChatLog(chatLog: HTMLElement, groupChatManager: GroupChatM
     attachCallbackBadgeToLastAgentMessage(chatLog, agentId, status, count)
   }
 
-  ;(window as any).attachComedyCallbackBadge = attachComedyCallbackBadge
-
   return { addMessage, attachComedyCallbackBadge }
 }
 

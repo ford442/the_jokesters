@@ -17,7 +17,6 @@ import { PrerenderCoordinator } from '../prerender/PrerenderCoordinator'
 import type { PrerenderedTurn } from '../prerender/PrerenderCoordinator'
 import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
-import { getAppDirector } from './directorBridge'
 
 export interface ImprovControllerDeps {
   agents: Agent[]
@@ -75,7 +74,9 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   } = deps
 
   const coordinator = new PrerenderCoordinator(groupChatManager, audioEngine, speechQueue)
-  ;(window as any).getPrerenderCoordinator = () => coordinator
+  // Director's stopScene() invalidates the queue via this hook instead of importing
+  // the prerender module directly (keeps Director decoupled from app-layer wiring).
+  getDirector()?.setPrerenderInvalidator(() => coordinator.cancel('director stopScene'))
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
   const sceneDescriptionInput = document.getElementById('scene-description') as HTMLTextAreaElement
@@ -510,7 +511,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     coordinator.cancel('user stop')
     speechQueue.stop()
     speechQueue.clearPrerendered()
-    const director = getAppDirector()
+    const director = getDirector()
     if (director?.isSceneRunning()) director.stopScene()
     chatLog.addMessage('System', '🎭 Scene stopped by user', '#ff6b6b')
     resetSceneUi()

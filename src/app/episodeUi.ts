@@ -19,6 +19,7 @@ import {
   type JokestersEpisode,
 } from '../episode'
 import { getSharedSfxManager } from '../audio/SfxManager'
+import type { Director } from '../Director/Director'
 
 export interface EpisodeUiDeps {
   agents: Agent[]
@@ -27,6 +28,7 @@ export interface EpisodeUiDeps {
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi
+  getDirector: () => Director | null
 }
 
 let activeReplay: EpisodeReplayHandle | null = null
@@ -81,7 +83,7 @@ export function hideEpisodeExportBar(): void {
 }
 
 export function wireEpisodeUi(deps: EpisodeUiDeps): void {
-  const { agents, groupChatManager, audioEngine, speechQueue, stage, chatLog } = deps
+  const { agents, groupChatManager, audioEngine, speechQueue, stage, chatLog, getDirector } = deps
   const { speakAndVisualize } = createAudioHelpers(audioEngine, speechQueue, stage)
 
   const bar = document.getElementById('episode-export-bar')
@@ -228,16 +230,7 @@ export function wireEpisodeUi(deps: EpisodeUiDeps): void {
   const alwaysImport = document.getElementById('import-episode-always-btn')
   alwaysImport?.addEventListener('click', () => importInput?.click())
 
-  // Expose for improvController / Director
-  ;(window as any).__jokestersEpisode = {
-    capture: (sceneState?: EpisodeSceneState) =>
-      captureEpisodeFromManager(groupChatManager, agents, sceneState),
-    showBar: showEpisodeExportBar,
-    hideBar: hideEpisodeExportBar,
-    setEpisode: (ep: JokestersEpisode) => {
-      setLastEpisode(ep)
-      showEpisodeExportBar(ep)
-    },
-    replay: startReplay,
-  }
+  // Director calls this after auto-saving a scene on stop, instead of reaching for
+  // a window global — see Director.setEpisodeReadyHandler.
+  getDirector()?.setEpisodeReadyHandler(showEpisodeExportBar)
 }

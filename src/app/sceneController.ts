@@ -13,10 +13,12 @@ import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
+import type { MemoryManager } from '../Director/MemoryManager'
 
 export interface SceneControllerDeps {
   agents: Agent[]
   groupChatManager: GroupChatManager
+  memoryManager: MemoryManager | null
   audioEngine: TtsEngine
   speechQueue: SpeechQueue
   stage: Stage
@@ -27,6 +29,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   const {
     agents,
     groupChatManager,
+    memoryManager,
     audioEngine,
     speechQueue,
     stage,
@@ -67,14 +70,11 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   dom.switchProfileBtn.addEventListener('click', () => {
     const newProfile = dom.userProfileInput.value.trim() || 'default'
 
-    if ((window as any).getDirector) {
-      const director = (window as any).getDirector()
-      if (director && director.memoryManager) {
-        director.memoryManager.switchProfile(newProfile)
-        chatLog.addMessage('System', `Switched to profile: ${newProfile}`, '#4ecdc4')
-      }
+    if (memoryManager) {
+      memoryManager.switchProfile(newProfile)
+      chatLog.addMessage('System', `Switched to profile: ${newProfile}`, '#4ecdc4')
     } else {
-      chatLog.addMessage('System', 'Profile switching requires Director to be running', '#ff6b6b')
+      chatLog.addMessage('System', 'Profile switching requires MemoryManager to be available', '#ff6b6b')
     }
   })
 
@@ -87,6 +87,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
 
   directorRef = createDirectorBridge({
     groupChatManager,
+    memoryManager,
     speechQueue,
     stage,
     chatLog,
@@ -155,6 +156,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     speechQueue,
     stage,
     chatLog,
+    getDirector,
   })
 
   wireSfxUi()

@@ -970,3 +970,20 @@ export class MemoryManager {
     return resolved;
   }
 }
+
+/**
+ * Shared app instance (set during bootstrap). Used only by entry points that wire up
+ * before the rest of the controller chain exists (dashboard.ts, statusBar.ts's sync
+ * polling — both run from main.ts ahead of initApp() resolving) and so can't receive
+ * MemoryManager via an ordinary constructor/parameter chain. Everything else should
+ * take MemoryManager as an explicit parameter instead of reading this.
+ */
+let sharedMemoryManager: MemoryManager | null = null;
+
+export function setSharedMemoryManager(mgr: MemoryManager | null): void {
+    sharedMemoryManager = mgr;
+}
+
+export function getSharedMemoryManager(): MemoryManager | null {
+    return sharedMemoryManager;
+}

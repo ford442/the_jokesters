@@ -511,6 +511,31 @@ by `Director`) receives transient messages from the background sync worker *and*
 `saveEpisode`/`saveEpisodeAssetToCloud`/`syncAllHistoryFromCloud`'s direct HF calls via the private
 `notifySyncIssue` helper — a failure no longer only lands in the console.
 
+### App service wiring
+
+Cross-cutting services (`Director`, `MemoryManager`, `SfxManager`, `PrerenderCoordinator`) used to be
+stitched together through `window.getX` globals, set in `bootstrap.ts` and read wherever needed —
+untyped, and impossible to unit-test without faking `window`. Two patterns replaced that:
+
+1. **Explicit parameters, most of the time.** Controllers (`chatController`, `improvController`,
+   `sceneController`, `episodeUi`, `directorBridge`) take services as constructor/function
+   parameters — `memoryManager`, `getDirector: () => Director | null`, etc. — threaded down from
+   `bootstrap.ts`'s single construction point. `Director` never imports from `app/`: it exposes
+   `setPrerenderInvalidator(fn)` / `setEpisodeReadyHandler(fn)` hooks that `improvController` /
+   `episodeUi` register into (via the `getDirector` param they already hold) once the coordinator /
+   export UI exist, instead of Director reaching upward into app-layer globals.
+2. **A typed shared-instance module, only for the two entry points that run before the controller
+   chain exists.** `main.ts` calls `setupDashboard()` and `startSyncPolling()` synchronously, before
+   `initApp()`'s async body has constructed anything — parameter-threading isn't possible there. Both
+   take a `getMemoryManager: () => MemoryManager | null` argument backed by
+   `setSharedMemoryManager`/`getSharedMemoryManager` (`MemoryManager.ts`), populated once
+   `bootstrap.ts` constructs the real instance — mirroring the same pattern `SfxManager.ts` already
+   used (`setSharedSfxManager`/`getSharedSfxManager`). No DI framework; every accessor pair lives
+   next to the class it serves.
+
+`(window as any).triggerAnalytics` in `dashboard.ts` is the one remaining `window` export, and it's
+deliberately a debug convenience (click a button from the console), not a service getter.
+
 ### CallbackEngine
 **File**: `src/comedy/callbackEngine.ts`
 
@@ -623,9 +648,8 @@ browser runs or chaos scripts:
   mode loop resolves, episode auto-save via a stubbed `MemoryManager`. Uses `vi.mock` on `Director/modes/registry`
   to swap in a trivial test-double mode loop (`ModeLoop`) instead of a real Dream/Improv mode, so the test is
   fast and only asserts Director's own contract. `GroupChatManager` + `MockLLMEngine.attachSessionForTests`
-  (no real model load) drive the chat turns. Director's constructor unconditionally touches
-  `(window as any).getDirector = …`, so stub `globalThis.window` (and `document` when passing a `memoryManager`)
-  before constructing it in Node.
+  (no real model load) drive the chat turns. Director never touches `window` (see "App service wiring"
+  below); stub `document` only when passing a `memoryManager` (it wires a `#settings-status` label).
 - `PrerenderCoordinator` — `fillInitial`/`refillInBackground` enqueue + `takeTurn` drain order, plus the
   cancel-mid-flight race: a manually-resolvable ("deferred") promise lets a test call `cancel()` while an LLM
   prerender call is still in flight, then resolve it late and assert the stale batch never reaches the queue
