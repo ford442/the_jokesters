@@ -1370,5 +1370,9 @@
   {
     "id": "existential_tech_support",
     "handler": "runExistentialTechSupportLoop"
+  },
+  {
+    "id": "philosophical_fast_food_debate",
+    "handler": "runPhilosophicalFastFoodDebateLoop"
   }
 ]

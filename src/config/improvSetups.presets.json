@@ -983,5 +983,10 @@
         "id": "existential_tech_support",
         "title": "Existential Tech Support Mode",
         "description": "Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality."
+    },
+    {
+        "id": "philosophical_fast_food_debate",
+        "title": "Philosophical Debate Mode",
+        "description": "Agents debate absurd philosophical dilemmas while trying to order fast food."
     }
 ]

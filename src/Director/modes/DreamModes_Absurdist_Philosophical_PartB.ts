@@ -580,3 +580,47 @@ export async function runPhilosophicalZombieLoop(_scenario: Scenario, ctx: ModeC
         await chatForAgentWithComedy(ctx, dualist, `(Reflect on the User's responses so far. Ask them another paradoxical or unanswerable question about the subjective experience of color, pain, or time. Conclude whether you think the lights are on but nobody's home.)`, async (s) => await ctx.callbacks.onSpeak(s, dualist, {}));
     }
 }
+
+/**
+ * Philosophical Fast Food Debate Mode
+ * Agents debate absurd philosophical dilemmas while trying to order fast food.
+ */
+export async function runPhilosophicalFastFoodDebateLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍔 PHILOSOPHICAL DEBATE: Sir, this is a Wendy's...`, '#f39c12');
+
+    const thinker = 'philosopher'; // Phi-3 for the existential thinker
+    const worker = 'comedian'; // Comedian for the impatient fast food worker
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(thinker);
+    await chatForAgentWithComedy(ctx, thinker, `(PHILOSOPHICAL DEBATE: You are at a fast food drive-thru. Instead of ordering, you are paralyzed by an existential crisis about the nature of choice and whether a "combo meal" truly brings fulfillment. State your philosophical dilemma to the drive-thru speaker.)`, async (s) => await ctx.callbacks.onSpeak(s, thinker, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(worker);
+    await chatForAgentWithComedy(ctx, worker, `(PHILOSOPHICAL DEBATE: You are the underpaid, exhausted fast food worker at the drive-thru. You do not care about philosophy. You just want them to order or drive forward. React with complete impatience and ask what they want to eat.)`, async (s) => await ctx.callbacks.onSpeak(s, worker, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    // 2. Loop
+    for (let i = 0; i < 2; i++) {
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(thinker);
+        await chatForAgentWithComedy(ctx, thinker, `(PHILOSOPHICAL DEBATE: The worker wants you to order. Deconstruct the menu items they suggested philosophically. E.g., What does the 'value' in the value menu actually mean in a meaningless universe? Never actually place an order.)`, async (s) => await ctx.callbacks.onSpeak(s, thinker, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(worker);
+        await chatForAgentWithComedy(ctx, worker, `(PHILOSOPHICAL DEBATE: The customer is STILL philosophizing. Threaten to call your manager, or aggressively list the ingredients of a burger to ground them in reality. Be extremely annoyed.)`, async (s) => await ctx.callbacks.onSpeak(s, worker, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+
+    // 3. Conclusion
+    if (ctx.isRunning()) {
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(thinker);
+        await chatForAgentWithComedy(ctx, thinker, `(PHILOSOPHICAL DEBATE: The worker has broken your concentration. Conclude that consumption is a trap and drive away without ordering, leaving them with one final cryptic philosophical quote.)`, async (s) => await ctx.callbacks.onSpeak(s, thinker, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        ctx.callbacks.onMessage('Director', `🚗 The existential crisis drives away.`, '#e74c3c');
+    }
+}
