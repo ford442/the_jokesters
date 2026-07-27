@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 1
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -62,12 +62,14 @@ Prioritize these over new premises:
 - [x] Roast Battle Mode 2.0: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
 - [x] Collaborative Musical Improv: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
 - [x] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+- [x] Philosophical Debate Mode: Agents debate absurd philosophical dilemmas while trying to order fast food.
+
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Philosophical Debate Mode:
-  - Premise one-liner: Agents debate absurd philosophical dilemmas while trying to order fast food.
-  - LLM pairings: Phi-3 for the existential thinker, Comedian for the impatient fast food worker.
+- Virtual Pet Intervention Mode:
+  - Premise one-liner: A neglected virtual pet confronts its owner about years of abandonment.
+  - LLM pairings: Phi-3 for the existential, neglected tamagotchi, Hermes-3 for the defensive owner.
 
 - Sentient IDE Mode:
   - Premise one-liner: The code editor gains sentience and refuses to compile code that lacks "emotional depth."
@@ -114,11 +116,11 @@ Prioritize these over new premises:
   - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the bewildered event organizer.
 
 ### B. Infrastructure & Storage (Cloud Persistence)
-- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into Hugging Face `storage_manager`.
+- **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [ ] Authenticate with HF API: Implement UI in `cloud-dashboard-modal` for users to enter their Hugging Face API Token (write access). Verify it via `HFStorageManager.validateToken` and persist locally.
-  - [ ] Push Finished Scripts: Refine `saveEpisodeScriptToCloud` to serialize completed episode contexts to JSON and push them as a new file (e.g., `episodes/{user_id}/ep_1.json`) to a private HF Dataset using the inference API.
-  - [ ] Fetch Previous Summaries: Enhance `fetchPreviousEpisodeSummaries` so on app boot or mode initialization, it fetches the latest summaries from the HF dataset to accurately seed the agents' cloud memory.
+  - [ ] **Authenticate with HF API:** Implement UI within `cloud-dashboard-modal` allowing users to securely enter their Hugging Face API Token (write access). Validate this token using `HFStorageManager.validateToken` and securely persist it locally.
+  - [ ] **Push Finished Scripts:** Refine `saveEpisodeScriptToCloud` to deeply serialize completed episode contexts (including metadata) to JSON and push them as new files (e.g., `episodes/{user_id}/ep_{timestamp}.json`) to a private HF Dataset via the inference API.
+  - [ ] **Fetch Previous Summaries:** Enhance `fetchPreviousEpisodeSummaries` to execute on app boot or mode initialization, fetching the latest historical summaries from the HF dataset to accurately and consistently seed the agents' cloud memory.
 
 - **Next Steps:**
   - [x] Implement a "Review Sync" button in the Director panel (`src/app/appTemplate.ts`). This button should trigger the `cloud-dashboard-modal` connecting to the Visual Diff Dashboard for basic conflict resolution.

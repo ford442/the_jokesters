@@ -179,6 +179,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'password_manager_council': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runPasswordManagerCouncilLoop,
   'pet_perspective': async () => (await import('./ExpandedRealityModes_Scifi')).runPetPerspectiveLoop,
   'philosopher': async () => (await import('./PhilosopherMode')).runPhilosopherLoop,
+  'philosophical_fast_food_debate': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runPhilosophicalFastFoodDebateLoop,
   'philosophical_pizza_debate': async () => (await import('./DreamModes_Food')).runPhilosophicalDebateOverPizzaToppingsLoop,
   'philosophical_zombie': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runPhilosophicalZombieLoop,
   'pirate_ship_board_meeting': async () => (await import('./DreamModes_Bureaucratic')).runPirateShipBoardMeetingLoop,

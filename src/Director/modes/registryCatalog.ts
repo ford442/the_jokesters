@@ -1398,6 +1398,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'philosophical_fast_food_debate',
+    title: 'Philosophical Debate Mode',
+    category: 'dream',
+    description: 'Agents debate absurd philosophical dilemmas while trying to order fast food.',
+    tags: ['dream', 'philosophical', 'fast', 'food', 'debate'],
+    showInPresets: true,
+  },
+  {
     id: 'philosophical_pizza_debate',
     title: 'Philosophical Debate Over Pizza',
     category: 'dream',
