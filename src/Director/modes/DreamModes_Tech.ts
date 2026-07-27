@@ -869,3 +869,32 @@ export async function runDebuggingTherapyModeLoop(_scenario: Scenario, ctx: Mode
     if (!ctx.isRunning()) break;
   }
 }
+
+
+/**
+ * Existential Tech Support Mode
+ * Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality.
+ */
+export async function runExistentialTechSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪐 EXISTENTIAL TECH SUPPORT: Please hold your existential dread...`, '#9b59b6');
+
+    const existentialTech = 'philosopher'; // Phi-3: Questions everything, including why computers even matter
+    const frustratedUser = 'scientist'; // Qwen2.5: Just wants their printer to work, extremely pedantic
+
+    await chatForAgentWithComedy(ctx, existentialTech, `(EXISTENTIAL TECH SUPPORT: You are a tech support agent, but you are deeply existential. A user is calling because their computer won't turn on. Instead of telling them to check the power cable, ask them why they feel the need to "turn on" anything in this meaningless void. Refuse to fix the issue until they confront their own mortality.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialTech, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Caller (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, frustratedUser, `(The caller just said: "${userInput}". You are another user on the line who accidentally got conferenced in. You are extremely frustrated and literal. Complain that the existential tech support agent is violating SLA (Service Level Agreements) and demand a supervisor. Threaten to switch to a competitor.)`, async (s) => await ctx.callbacks.onSpeak(s, frustratedUser, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, existentialTech, `(The caller just said: "${userInput}". Continue refusing to provide actual tech support. Pivot their complaint into a deep philosophical inquiry about the nature of existence, time, or consciousness. Suggest that a broken computer is actually a blessing that frees them from the digital panopticon.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialTech, {}));
+        }
+    }
+}

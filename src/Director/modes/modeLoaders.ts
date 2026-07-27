@@ -81,6 +81,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'escape_zoo': async () => (await import('./DreamModes_Scifi')).runEscapeZooLoop,
   'escaped_npc': async () => (await import('./DreamModes_Fantasy')).runEscapedNPCModeLoop,
   'excalibur_tech_support': async () => (await import('./DreamModes_Fantasy')).runExcaliburTechSupportLoop,
+  'existential_tech_support': async () => (await import('./DreamModes_Tech')).runExistentialTechSupportLoop,
   'floppy_disk_defenders': async () => (await import('./DreamModes_Tech')).runFloppyDiskDefendersLoop,
   'forbidden_spellbook': async () => (await import('./DreamModes_Fantasy')).runForbiddenSpellbookLoop,
   'fortune_teller': async () => (await import('./DreamModes_Absurdist_Philosophical_PartA')).runFortuneTellerLoop,
