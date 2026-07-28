@@ -1374,5 +1374,9 @@
   {
     "id": "philosophical_fast_food_debate",
     "handler": "runPhilosophicalFastFoodDebateLoop"
+  },
+  {
+    "id": "virtual_pet_intervention",
+    "handler": "runVirtualPetInterventionLoop"
   }
 ]

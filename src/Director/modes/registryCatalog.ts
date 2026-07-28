@@ -2502,6 +2502,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'virtual_pet_intervention',
+    title: 'Virtual Pet Intervention Mode',
+    category: 'dream',
+    description: 'A neglected virtual pet confronts its owner about years of abandonment.',
+    tags: ['dream', 'virtual', 'pet', 'intervention'],
+    showInPresets: true,
+  },
+  {
     id: 'vision',
     title: 'Vision',
     category: 'media',

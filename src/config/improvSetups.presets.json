@@ -988,5 +988,10 @@
         "id": "philosophical_fast_food_debate",
         "title": "Philosophical Debate Mode",
         "description": "Agents debate absurd philosophical dilemmas while trying to order fast food."
+    },
+    {
+        "id": "virtual_pet_intervention",
+        "title": "Virtual Pet Intervention Mode",
+        "description": "A neglected virtual pet confronts its owner about years of abandonment."
     }
 ]

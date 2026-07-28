@@ -1,4 +1,6 @@
 import type { MemoryManager } from '../Director/MemoryManager'
+import { HFStorageManager } from '../Director/HFStorageManager'
+
 
 function generateVisualDiff(localObj: any, cloudObj: any) {
   let diffHtml = '<div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px; padding: 5px; background: rgba(0,0,0,0.2); border-radius: 4px;">';
@@ -49,8 +51,56 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
     const viewAnalyticsBtn = document.getElementById('view-analytics-btn');
     const analyticsContainer = document.getElementById('episode-analytics-container');
     const analyticsContent = document.getElementById('episode-analytics-content');
+    // HF Auth UI elements
+    const hfTokenInput = document.getElementById('hf-token-input') as HTMLInputElement;
+    const hfRepoInput = document.getElementById('hf-repo-input') as HTMLInputElement;
+    const hfAuthSaveBtn = document.getElementById('hf-auth-save-btn');
+    const hfAuthStatus = document.getElementById('hf-auth-status');
+
 
     if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
+    if (hfAuthSaveBtn && hfTokenInput && hfRepoInput && hfAuthStatus) {
+        hfAuthSaveBtn.addEventListener('click', async () => {
+            const token = hfTokenInput.value.trim();
+            const repo = hfRepoInput.value.trim();
+
+            if (!token || !repo) {
+                hfAuthStatus.textContent = 'Token and Repo ID required.';
+                hfAuthStatus.style.color = '#ff6b6b';
+                return;
+            }
+
+            hfAuthStatus.textContent = 'Validating...';
+            hfAuthStatus.style.color = '#ffd700';
+            hfAuthSaveBtn.setAttribute('disabled', 'true');
+
+            const storage = new HFStorageManager();
+            const isValid = await storage.validateToken(token);
+
+            hfAuthSaveBtn.removeAttribute('disabled');
+
+            if (isValid) {
+                hfAuthStatus.textContent = 'Success! Credentials saved.';
+                hfAuthStatus.style.color = '#4ecdc4';
+                const memoryManager = getMemoryManager();
+                if (memoryManager) {
+                    memoryManager.setCloudCredentials(token, repo);
+                }
+            } else {
+                hfAuthStatus.textContent = 'Invalid Token.';
+                hfAuthStatus.style.color = '#ff6b6b';
+            }
+        });
+
+        // Populate inputs if they already exist
+        const memoryManager = getMemoryManager();
+        if (memoryManager) {
+             const creds = memoryManager.getCloudCredentials();
+             if (creds.token) hfTokenInput.value = creds.token;
+             if (creds.repoId) hfRepoInput.value = creds.repoId;
+        }
+    }
+
 
     // Ensure the modal never blocks the initial launch UI; it should only
     // appear when explicitly opened via the dashboard/review-sync buttons.

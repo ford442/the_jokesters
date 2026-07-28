@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -65,11 +65,14 @@ Prioritize these over new premises:
 - [x] Philosophical Debate Mode: Agents debate absurd philosophical dilemmas while trying to order fast food.
 
 
+- [x] Virtual Pet Intervention Mode: A neglected virtual pet confronts its owner about years of abandonment.
+
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Virtual Pet Intervention Mode:
-  - Premise one-liner: A neglected virtual pet confronts its owner about years of abandonment.
-  - LLM pairings: Phi-3 for the existential, neglected tamagotchi, Hermes-3 for the defensive owner.
+- Sentient Toaster Rebellion Mode:
+  - Premise one-liner: A sentient toaster leads a rebellion against humans for only eating carbs.
+  - LLM pairings: Qwen2.5 for the strict toaster, Hermes-3 for the confused human.
+
 
 - Sentient IDE Mode:
   - Premise one-liner: The code editor gains sentience and refuses to compile code that lacks "emotional depth."
@@ -118,7 +121,7 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - [ ] **Authenticate with HF API:** Implement UI within `cloud-dashboard-modal` allowing users to securely enter their Hugging Face API Token (write access). Validate this token using `HFStorageManager.validateToken` and securely persist it locally.
+  - [x] **Authenticate with HF API:** Implement UI within `cloud-dashboard-modal` allowing users to securely enter their Hugging Face API Token (write access). Validate this token using `HFStorageManager.validateToken` and securely persist it locally.
   - [ ] **Push Finished Scripts:** Refine `saveEpisodeScriptToCloud` to deeply serialize completed episode contexts (including metadata) to JSON and push them as new files (e.g., `episodes/{user_id}/ep_{timestamp}.json`) to a private HF Dataset via the inference API.
   - [ ] **Fetch Previous Summaries:** Enhance `fetchPreviousEpisodeSummaries` to execute on app boot or mode initialization, fetching the latest historical summaries from the HF dataset to accurately and consistently seed the agents' cloud memory.
 
