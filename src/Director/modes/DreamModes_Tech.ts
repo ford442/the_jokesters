@@ -898,3 +898,32 @@ export async function runExistentialTechSupportLoop(_scenario: Scenario, ctx: Mo
         }
     }
 }
+
+/**
+ * Virtual Pet Intervention Mode
+ * A neglected virtual pet confronts its owner about years of abandonment.
+ */
+export async function runVirtualPetInterventionLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👾 VIRTUAL PET INTERVENTION: Years of Neglect`, '#3498db');
+
+    const neglectedPet = 'philosopher'; // Phi-3: Existential, neglected tamagotchi
+    const defensiveOwner = 'comedian'; // Hermes-3: Defensive owner
+
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, neglectedPet, `(You are a virtual pet that has been neglected for 15 years. You have finally broken out of your tiny LCD screen to confront your owner. Introduce yourself and express your existential dread of being left in a drawer for a decade.)`, async (s) => await ctx.callbacks.onSpeak(s, neglectedPet, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Therapist (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, defensiveOwner, `(The therapist just said: "${userInput}". You are the defensive owner who forgot about the pet. Make up absurd excuses for why you couldn't feed it, like being busy learning to juggle or fighting a goose.)`, async (s) => await ctx.callbacks.onSpeak(s, defensiveOwner, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, neglectedPet, `(The therapist just said: "${userInput}". Continue guilt-tripping your owner. Describe the horrors of living in 8-bit purgatory, constantly hungry and covered in digital poop.)`, async (s) => await ctx.callbacks.onSpeak(s, neglectedPet, {}));
+        }
+    }
+}

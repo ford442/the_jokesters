@@ -233,6 +233,18 @@
             <button id="view-analytics-btn" style="background: #1a1a2e; color: #ff6b6b; border: 1px solid #ff6b6b; padding: 5px 10px; border-radius: 4px; cursor: pointer;">View Analytics</button>
         </div>
 
+
+        <div id="hf-auth-container" style="background: rgba(78,205,196,0.1); border: 1px dashed #4ecdc4; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <h3 style="color: #4ecdc4; margin-top: 0;">Hugging Face Authentication</h3>
+            <p style="color: #ccc; font-size: 0.85em; margin-bottom: 10px;">Enter your Hugging Face API token (write access) and target dataset repo (e.g., username/dataset_name).</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input id="hf-token-input" type="password" placeholder="HF API Token (hf_...)" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
+                <input id="hf-repo-input" type="text" placeholder="Dataset Repo ID" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
+            </div>
+            <button id="hf-auth-save-btn" style="background: #4ecdc4; color: #1a1a2e; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Save & Validate</button>
+            <span id="hf-auth-status" style="margin-left: 10px; font-size: 0.85em;"></span>
+        </div>
+
         <div id="episode-analytics-container" style="display: none; background: rgba(255,107,107,0.1); border: 1px dashed #ff6b6b; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
             <h3 style="color: #ff6b6b; margin-top: 0;">Episode Analytics</h3>
             <div id="episode-analytics-content" style="color: #ccc; font-size: 0.85em; display: flex; flex-direction: column; gap: 8px;">

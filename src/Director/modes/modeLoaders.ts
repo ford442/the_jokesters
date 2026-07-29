@@ -317,6 +317,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'undercover_boss_ai': async () => (await import('./DreamModes_Tech')).runUndercoverBossLoop,
   'universal_zoning_board': async () => (await import('./DreamModes_Bureaucratic')).runUniversalZoningBoardLoop,
   'virtual_assistant_strike': async () => (await import('./DreamModes_Tech')).runVirtualAssistantStrikeLoop,
+  'virtual_pet_intervention': async () => (await import('./DreamModes_Tech')).runVirtualPetInterventionLoop,
   'vision': async () => (await import('./MediaMode')).runVisionLoop,
   'visual_stage_destruction': async () => (await import('./PerformanceMode')).runVisualStageDestructionLoop,
   'whiteboard_erasers_regret': async () => (await import('./DreamModes_Absurdist_Everyday')).runWhiteboardErasersRegretLoop,
