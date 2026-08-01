@@ -388,48 +388,47 @@ export class MemoryManager {
             throw e;
         }
     }
+  
+public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void> {
+    if (!this.hfToken || !this.hfRepoId) return;
+    try {
+        const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
+        if (content) {
+            const parsed = JSON.parse(content) as StoredEpisode;
+            if (!this.cloudSummaryCache) {
+                this.cloudSummaryCache = { history: [] };
+            }
+            if (parsed.history && Array.isArray(parsed.history)) {
+                if (currentTopic) {
+                    // Prefer system messages as the searchable "memory" summaries
+                    const summariesToSearch: { episodeId: string; summary: string }[] = [];
+                    parsed.history.forEach((msg, index) => {
+                        if (msg.role === 'system' && msg.content && typeof msg.content === 'string') {
+                            summariesToSearch.push({
+                                episodeId: index.toString(),
+                                summary: msg.content
+                            });
+                        }
+                    });
 
-    public async fetchPreviousEpisodeSummaries(topic?: string): Promise<void> {
-        if (!this.hfToken || !this.hfRepoId) return;
-        try {
-            const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
-            if (content) {
-                const parsed = JSON.parse(content) as StoredEpisode;
-                if (!this.cloudSummaryCache) {
-                    this.cloudSummaryCache = { history: [] };
-                }
+                    const relevantSnippets = SemanticSearch.searchMemories(currentTopic, summariesToSearch, 10);
+                    const relevantIndices = new Set(relevantSnippets.map(s => parseInt(s.episodeId, 10)));
 
-                if (parsed.history && Array.isArray(parsed.history)) {
-                    if (topic) {
-                        // Use SemanticSearch to filter history based on topic
-                        const summariesToSearch: {episodeId: string, summary: string}[] = [];
-
-                        parsed.history.forEach((msg, index) => {
-                            if (msg.role === 'system' && msg.content && typeof msg.content === 'string') {
-                                summariesToSearch.push({
-                                    episodeId: index.toString(),
-                                    summary: msg.content
-                                });
-                            }
-                        });
-
-                        const relevantSnippets = SemanticSearch.searchMemories(topic, summariesToSearch, 10);
-                        const relevantIndices = new Set(relevantSnippets.map(s => parseInt(s.episodeId, 10)));
-
-                        // Keep relevant context and standard non-system messages
-                        this.cloudSummaryCache.history = parsed.history.filter((msg, index) =>
-                            msg.role !== 'system' || relevantIndices.has(index)
-                        );
-                    } else {
-                        // Prime the GroupChatManager context by injecting past history
-                        this.cloudSummaryCache.history = parsed.history;
-                    }
+                    // Keep relevant system context + all non-system messages
+                    this.cloudSummaryCache.history = parsed.history.filter((msg, index) =>
+                        msg.role !== 'system' || relevantIndices.has(index)
+                    );
+                } else {
+                    // No topic filter — inject the full previous history
+                    this.cloudSummaryCache.history = parsed.history;
                 }
             }
-        } catch (e) {
-            console.warn('Failed to fetch previous episode summaries:', e);
         }
+    } catch (e) {
+        console.warn('Failed to fetch previous episode summaries:', e);
     }
+}
+  
     public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: Message): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/delta-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;

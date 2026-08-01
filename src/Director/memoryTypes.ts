@@ -12,6 +12,7 @@ export interface StoredEpisode {
   history: Message[];
   scenario?: Scenario | null;
   vectorClock?: VectorClock;
+  yjsState?: string;
   updatedAt?: number;
   timestamp?: number;
 }
