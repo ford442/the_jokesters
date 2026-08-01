@@ -79,6 +79,7 @@ export async function initApp(): Promise<void> {
   try {
     const memoryManager = new MemoryManager()
     setSharedMemoryManager(memoryManager)
+    memoryManager.fetchPreviousEpisodeSummaries();
 
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)

@@ -169,7 +169,7 @@ export class HFStorageManager {
      * @param repoId The repository ID.
      */
     public async getDatasetHistory(token: string, repoId: string): Promise<HFHistoryEntry[]> {
-        if (!token || !repoId) throw new Error("Missing token or repoId");
+        if (!repoId) throw new Error("Missing repoId");
 
         let cleanRepoId = repoId;
         if (cleanRepoId.startsWith("datasets/")) {
@@ -178,18 +178,14 @@ export class HFStorageManager {
 
         const url = `${this.apiBase}/datasets/${cleanRepoId}/paths-info/main`;
         try {
-            const response = await fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const headers: HeadersInit = {};
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+            const response = await fetch(url, { headers });
             if (!response.ok) {
                 const treeUrl = `${this.apiBase}/datasets/${cleanRepoId}/tree/main`;
-                const treeResponse = await fetch(treeUrl, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const treeResponse = await fetch(treeUrl, { headers });
                 if (!treeResponse.ok) {
                     throw new Error(`HF History fetch failed: ${treeResponse.status}`);
                 }

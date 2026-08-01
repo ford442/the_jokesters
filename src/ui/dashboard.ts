@@ -381,6 +381,74 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
     }
 
 
+    const browsePublicBtn = document.getElementById('btn-browse-public');
+    const publicRepoInput = document.getElementById('public-repo-id') as HTMLInputElement;
+    const publicRepoResults = document.getElementById('public-repo-results');
+
+    if (browsePublicBtn && publicRepoInput && publicRepoResults) {
+        browsePublicBtn.addEventListener('click', async () => {
+            const repoId = publicRepoInput.value.trim();
+            if (!repoId) return;
+
+            publicRepoResults.innerHTML = '<div style="color: #ccc;">Loading...</div>';
+
+            try {
+                // Public dataset doesn't strictly need a token for history, but passing empty string.
+                const hfStorage = new HFStorageManager();
+                const history = await hfStorage.getDatasetHistory('', repoId);
+
+                publicRepoResults.innerHTML = '';
+                if (!history || history.length === 0) {
+                    publicRepoResults.innerHTML = '<div style="color: #ccc;">No public scripts found.</div>';
+                    return;
+                }
+
+                history.forEach((file: any) => {
+                    if (file.path && file.path.endsWith('.json')) {
+                        const fileDiv = document.createElement('div');
+                        fileDiv.style.background = 'rgba(255,255,255,0.05)';
+                        fileDiv.style.padding = '8px';
+                        fileDiv.style.borderRadius = '4px';
+                        fileDiv.style.display = 'flex';
+                        fileDiv.style.justifyContent = 'space-between';
+                        fileDiv.style.alignItems = 'center';
+
+                        const nameSpan = document.createElement('span');
+                        nameSpan.textContent = file.path;
+
+                        const viewBtn = document.createElement('button');
+                        viewBtn.textContent = 'View';
+                        viewBtn.style.background = '#4ecdc4';
+                        viewBtn.style.color = '#1a1a2e';
+                        viewBtn.style.border = 'none';
+                        viewBtn.style.padding = '4px 8px';
+                        viewBtn.style.borderRadius = '4px';
+                        viewBtn.style.cursor = 'pointer';
+                        viewBtn.onclick = async () => {
+                            viewBtn.textContent = '...';
+                            const content = await hfStorage.loadFile('', repoId, file.path);
+                            if (content) {
+                                alert(`Loaded content size: ${content.length} bytes.\nSee console for details.`);
+                                console.log(`[Public Script ${file.path}]`, JSON.parse(content));
+                            } else {
+                                alert('Failed to load script.');
+                            }
+                            viewBtn.textContent = 'View';
+                        };
+
+                        fileDiv.appendChild(nameSpan);
+                        fileDiv.appendChild(viewBtn);
+                        publicRepoResults.appendChild(fileDiv);
+                    }
+                });
+
+            } catch (err) {
+                console.error("Failed to fetch public repo history", err);
+                publicRepoResults.innerHTML = '<div style="color: #ff6b6b;">Error loading datasets.</div>';
+            }
+        });
+    }
+
     if (viewAnalyticsBtn && analyticsContainer && analyticsContent) {
         viewAnalyticsBtn.addEventListener('click', async () => {
 
