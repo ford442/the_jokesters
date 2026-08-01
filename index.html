@@ -278,6 +278,17 @@
         <div id="cloud-history-list" style="display: flex; flex-direction: column; gap: 10px;">
           <!-- History items injected here -->
         </div>
+
+        <div style="margin-top: 20px; border-top: 1px solid #4ecdc4; padding-top: 15px;">
+            <h3 style="color: #4ecdc4; margin-top: 0;">Browse Public Scripts</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input id="public-repo-id" type="text" placeholder="e.g. TheJokesters/community-scripts" style="flex: 1; padding: 5px; border-radius: 4px; border: 1px solid #ccc; background: #1a1a2e; color: white;">
+                <button id="btn-browse-public" style="background: #4ecdc4; color: #1a1a2e; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Browse</button>
+            </div>
+            <div id="public-repo-results" style="display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto;">
+                <!-- Public dataset items injected here -->
+            </div>
+        </div>
       </div>
     </div>
 </body>
