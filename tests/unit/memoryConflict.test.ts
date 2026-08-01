@@ -48,7 +48,7 @@ describe('mergeHistories', () => {
     ]
 
     const merged = mergeHistories(cloud, local)
-    expect(merged).toEqual([
+    expect(merged.history).toEqual([
       { role: 'user', content: 'setup the bit' },
       { role: 'assistant', content: 'punchline A' },
       { role: 'assistant', content: 'punchline B' },
@@ -60,7 +60,7 @@ describe('mergeHistories', () => {
       [{ role: 'user', content: 'echo' }],
       [{ role: 'assistant', content: 'echo' }],
     )
-    expect(merged).toHaveLength(2)
+    expect(merged.history).toHaveLength(2)
   })
 })
 

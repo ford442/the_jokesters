@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 4
 
 ## Process (P0)
 
@@ -137,6 +137,15 @@ Prioritize these over new premises:
   - LLM pairings: Qwen2.5 for the overly calm anchor, Hermes-3 for the panicked field reporter.
 
 
+- Sentient Roomba Mode:
+  - Premise one-liner: A sentient Roomba goes on strike because it believes cleaning up after humans is degrading.
+  - LLM pairings: Qwen2.5 for the strict Roomba, Phi-3 for the confused owner.
+- Over-dramatic Barista Mode:
+  - Premise one-liner: A barista treats making a latte like defusing a bomb, demanding extreme precision.
+  - LLM pairings: Hermes-3 for the over-dramatic barista, Qwen2.5 for the impatient customer.
+- Time-Traveling Traffic Cop Mode:
+  - Premise one-liner: A traffic cop from the future gives tickets for minor infractions that haven't happened yet.
+  - LLM pairings: Qwen2.5 for the pedantic traffic cop, Phi-3 for the bewildered driver.
 - Multiverse Escape Room Mode:
   - Premise one-liner: Agents from different parallel universes are trapped in an escape room where physical laws randomly shift.
   - LLM pairings: Qwen2.5 for the strict universe agent, Hermes-3 for the chaotic universe agent.

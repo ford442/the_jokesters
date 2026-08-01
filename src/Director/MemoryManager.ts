@@ -410,6 +410,28 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
                             });
                         }
                     });
+                  
+public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void> {
+    if (!this.hfToken || !this.hfRepoId) return;
+    try {
+        const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
+        if (content) {
+            const parsed = JSON.parse(content) as StoredEpisode;
+            if (!this.cloudSummaryCache) {
+                this.cloudSummaryCache = { history: [] };
+            }
+            if (parsed.history && Array.isArray(parsed.history)) {
+                if (currentTopic) {
+                    // Prefer system messages as the searchable "memory" summaries
+                    const summariesToSearch: { episodeId: string; summary: string }[] = [];
+                    parsed.history.forEach((msg, index) => {
+                        if (msg.role === 'system' && msg.content && typeof msg.content === 'string') {
+                            summariesToSearch.push({
+                                episodeId: index.toString(),
+                                summary: msg.content
+                            });
+                        }
+                    });
 
                     const relevantSnippets = SemanticSearch.searchMemories(currentTopic, summariesToSearch, 10);
                     const relevantIndices = new Set(relevantSnippets.map(s => parseInt(s.episodeId, 10)));

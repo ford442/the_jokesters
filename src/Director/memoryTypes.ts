@@ -15,6 +15,7 @@ export interface StoredEpisode {
   yjsState?: string;
   updatedAt?: number;
   timestamp?: number;
+  yjsState?: string; // base64 encoded Y.Doc state
 }
 
 /** Per-client logical clock: clientId -> monotonically increasing counter. */
