@@ -389,7 +389,7 @@ export class MemoryManager {
         }
     }
 
-    public async fetchPreviousEpisodeSummaries(): Promise<void> {
+    public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) return;
         try {
             const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
@@ -400,7 +400,19 @@ export class MemoryManager {
                 }
                 // Prime the GroupChatManager context by injecting past history
                 if (parsed.history && Array.isArray(parsed.history)) {
-                    this.cloudSummaryCache.history = parsed.history;
+
+                    if (currentTopic) {
+                        const summaries = parsed.history.map((msg, index) => ({
+                            episodeId: index.toString(),
+                            summary: msg.content
+                        }));
+                        const results = SemanticSearch.searchMemories(currentTopic, summaries, 5);
+                        const indices = new Set(results.map(r => parseInt(r.episodeId, 10)));
+                        this.cloudSummaryCache.history = parsed.history.filter((_, idx) => indices.has(idx));
+                    } else {
+                        this.cloudSummaryCache.history = parsed.history;
+                    }
+
                 }
             }
         } catch (e) {

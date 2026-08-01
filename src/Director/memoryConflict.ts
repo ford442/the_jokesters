@@ -1,7 +1,74 @@
+import * as Y from 'yjs';
 import type { Message } from '../types/chat';
 import type { StoredEpisode, VectorClock } from './memoryTypes';
 
 export type VectorClockComparison = 'cloud' | 'local' | 'concurrent' | 'equal';
+
+export function base64ToUint8Array(base64: string): Uint8Array {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+export function uint8ArrayToBase64(bytes: Uint8Array): string {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+/** Merges history into a Yjs Array and returns the merged result and updated Yjs state */
+export function mergeYjsHistory(localStateBase64?: string, cloudStateBase64?: string, localHistory: Message[] = [], cloudHistory: Message[] = []): { mergedHistory: Message[], yjsState: string } {
+    const ydoc = new Y.Doc();
+
+    // Apply existing states if available
+    if (localStateBase64) {
+        Y.applyUpdate(ydoc, base64ToUint8Array(localStateBase64));
+    }
+    if (cloudStateBase64) {
+        try {
+            Y.applyUpdate(ydoc, base64ToUint8Array(cloudStateBase64));
+        } catch (e) {
+            console.warn("Failed to apply cloud Yjs state, skipping.", e);
+        }
+    }
+
+    const yHistory = ydoc.getArray<any>('history');
+
+    // Yjs doesn't natively deduplicate if we just push.
+    // To ensure all history items are in the YArray, we can check what's there and append new ones.
+    const existing = yHistory.toArray();
+    const seen = new Set(existing.map((msg: any) => `${msg.role}:${msg.content}`));
+
+    // Proper Yjs CRDT involves inserting items at the correct sequence index.
+    // We'll iterate through both local and cloud histories and insert new elements
+    // where they belong relative to the Y.Array's current state.
+
+    // A simple, robust way to sync external arrays into a Y.Array:
+    const toAdd = [...localHistory, ...cloudHistory].filter(msg => {
+        const key = `${msg.role}:${msg.content}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            return true;
+        }
+        return false;
+    });
+
+    if (toAdd.length > 0) {
+        yHistory.push(toAdd);
+    }
+
+    return {
+        mergedHistory: yHistory.toArray() as Message[],
+        yjsState: uint8ArrayToBase64(Y.encodeStateAsUpdate(ydoc))
+    };
+}
 
 /**
  * Compares two vector clocks and decides which side (if either) causally
@@ -66,16 +133,25 @@ export function resolveEpisodeConflict(
   const localClock = localData.vectorClock ?? {};
   const strategy = compareVectorClocks(cloudClock, localClock);
 
-  if (strategy === 'cloud') return { strategy, resolved: cloudData };
-  if (strategy === 'local' || strategy === 'equal') return { strategy, resolved: localData };
+  // Still compute Vector Clocks for legacy support, but always merge via Yjs if both histories exist and conflict is concurrent.
+  if (strategy === 'cloud' && !localData.yjsState) return { strategy, resolved: cloudData };
+  if ((strategy === 'local' || strategy === 'equal') && !cloudData.yjsState) return { strategy, resolved: localData };
 
   const mergedVectorClock = mergeVectorClocks(cloudClock, localClock);
   mergedVectorClock[clientId] = (mergedVectorClock[clientId] || 0) + 1;
 
+  const { mergedHistory, yjsState } = mergeYjsHistory(
+      localData.yjsState,
+      cloudData.yjsState,
+      localData.history,
+      cloudData.history
+  );
+
   const resolved: StoredEpisode = {
     ...localData,
-    history: mergeHistories(cloudData.history, localData.history),
+    history: mergedHistory,
     vectorClock: mergedVectorClock,
+    yjsState,
     updatedAt: Date.now(),
     timestamp: Date.now(),
   };
@@ -99,10 +175,18 @@ export function applyManualResolution(
   const mergedVectorClock = mergeVectorClocks(cloudState.vectorClock ?? {}, localState.vectorClock ?? {});
   mergedVectorClock[clientId] = (mergedVectorClock[clientId] || 0) + 1;
 
+  const { mergedHistory, yjsState } = mergeYjsHistory(
+      localState.yjsState,
+      cloudState.yjsState,
+      localState.history,
+      cloudState.history
+  );
+
   return {
     ...localState,
-    history: mergeHistories(cloudState.history, localState.history),
+    history: mergedHistory,
     vectorClock: mergedVectorClock,
+    yjsState,
     updatedAt: Date.now(),
     timestamp: Date.now(),
   };
