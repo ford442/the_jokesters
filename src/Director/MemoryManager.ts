@@ -389,7 +389,7 @@ export class MemoryManager {
         }
     }
 
-    public async fetchPreviousEpisodeSummaries(): Promise<void> {
+    public async fetchPreviousEpisodeSummaries(topic?: string): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) return;
         try {
             const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
@@ -398,16 +398,38 @@ export class MemoryManager {
                 if (!this.cloudSummaryCache) {
                     this.cloudSummaryCache = { history: [] };
                 }
-                // Prime the GroupChatManager context by injecting past history
+
                 if (parsed.history && Array.isArray(parsed.history)) {
-                    this.cloudSummaryCache.history = parsed.history;
+                    if (topic) {
+                        // Use SemanticSearch to filter history based on topic
+                        const summariesToSearch: {episodeId: string, summary: string}[] = [];
+
+                        parsed.history.forEach((msg, index) => {
+                            if (msg.role === 'system' && msg.content && typeof msg.content === 'string') {
+                                summariesToSearch.push({
+                                    episodeId: index.toString(),
+                                    summary: msg.content
+                                });
+                            }
+                        });
+
+                        const relevantSnippets = SemanticSearch.searchMemories(topic, summariesToSearch, 10);
+                        const relevantIndices = new Set(relevantSnippets.map(s => parseInt(s.episodeId, 10)));
+
+                        // Keep relevant context and standard non-system messages
+                        this.cloudSummaryCache.history = parsed.history.filter((msg, index) =>
+                            msg.role !== 'system' || relevantIndices.has(index)
+                        );
+                    } else {
+                        // Prime the GroupChatManager context by injecting past history
+                        this.cloudSummaryCache.history = parsed.history;
+                    }
                 }
             }
         } catch (e) {
             console.warn('Failed to fetch previous episode summaries:', e);
         }
     }
-
     public async saveEpisodeDeltaToCloud(episodeId: string, newMessage: Message): Promise<void> {
         if (!this.hfToken || !this.hfRepoId) throw new Error("Cloud credentials not configured.");
         const filename = `episodes/${episodeId}/delta-${Date.now()}-${Math.random().toString(36).substring(7)}.json`;
