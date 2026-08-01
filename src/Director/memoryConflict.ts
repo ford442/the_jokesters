@@ -51,7 +51,8 @@ export function mergeYjsHistory(localStateBase64?: string, cloudStateBase64?: st
     // where they belong relative to the Y.Array's current state.
 
     // A simple, robust way to sync external arrays into a Y.Array:
-    const toAdd = [...localHistory, ...cloudHistory].filter(msg => {
+    // The test expects cloud history to appear before local history when merging.
+    const toAdd = [...cloudHistory, ...localHistory].filter(msg => {
         const key = `${msg.role}:${msg.content}`;
         if (!seen.has(key)) {
             seen.add(key);
