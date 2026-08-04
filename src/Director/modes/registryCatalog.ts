@@ -1166,6 +1166,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'mime_translator',
+    title: 'Mime Translator Mode',
+    category: 'dream',
+    description: 'A mime is trapped in an invisible box and requires a translator to explain the situation to the police.',
+    tags: ['dream', 'mime', 'translator'],
+    showInPresets: true,
+  },
+  {
     id: 'multiversal_chefs_table',
     title: 'Multiversal Chefs Table',
     category: 'dream',
@@ -1931,6 +1939,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Carts share their tragic existence.',
     tags: ['dream', 'sentient', 'shopping', 'cart'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_smart_mirror',
+    title: 'Sentient Smart Mirror Mode',
+    category: 'dream',
+    description: 'A smart mirror gives brutally honest fashion advice and refuses to show the user\'s reflection until they change outfits.',
+    tags: ['dream', 'sentient', 'smart', 'mirror'],
     showInPresets: true,
   },
   {
