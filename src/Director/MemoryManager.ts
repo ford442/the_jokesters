@@ -410,28 +410,6 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
                             });
                         }
                     });
-                  
-public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void> {
-    if (!this.hfToken || !this.hfRepoId) return;
-    try {
-        const content = await this.hfStorage.loadFile(this.hfToken, this.hfRepoId, 'episodes/latest.json');
-        if (content) {
-            const parsed = JSON.parse(content) as StoredEpisode;
-            if (!this.cloudSummaryCache) {
-                this.cloudSummaryCache = { history: [] };
-            }
-            if (parsed.history && Array.isArray(parsed.history)) {
-                if (currentTopic) {
-                    // Prefer system messages as the searchable "memory" summaries
-                    const summariesToSearch: { episodeId: string; summary: string }[] = [];
-                    parsed.history.forEach((msg, index) => {
-                        if (msg.role === 'system' && msg.content && typeof msg.content === 'string') {
-                            summariesToSearch.push({
-                                episodeId: index.toString(),
-                                summary: msg.content
-                            });
-                        }
-                    });
 
                     const relevantSnippets = SemanticSearch.searchMemories(currentTopic, summariesToSearch, 10);
                     const relevantIndices = new Set(relevantSnippets.map(s => parseInt(s.episodeId, 10)));
@@ -605,20 +583,20 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
                                 await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
                         } else {
-                            // Conflict resolution: Vector Clocks, fallback to Last-Writer-Wins (LWW)
+                            // Conflict resolution: CRDT via Yjs and Vector Clocks
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
                                 const { strategy, resolved } = resolveEpisodeConflict(cloudData, localData, this.clientId);
 
                                 if (strategy === 'cloud') {
-                                    console.log(`Conflict resolved (Vector Clock): Cloud version of ${filename} is newer. Updating local data...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Cloud version of ${filename} is newer. Updating local data...`);
                                     this.save(`episode-${episodeId}`, resolved);
                                     await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'local') {
-                                    console.log(`Conflict resolved (Vector Clock): Local version of ${filename} is newer. Queuing cloud update...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Local version of ${filename} is newer. Queuing cloud update...`);
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'concurrent') {
-                                    console.log(`Conflict resolved (Vector Clock): Concurrent changes detected for ${filename}. Merging...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Concurrent changes detected for ${filename}. Merging...`);
                                     this.save(`episode-${episodeId}`, resolved);
                                     await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));

@@ -381,9 +381,9 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
     }
 
 
-    const browsePublicBtn = document.getElementById('btn-browse-public');
-    const publicRepoInput = document.getElementById('public-repo-id') as HTMLInputElement;
-    const publicRepoResults = document.getElementById('public-repo-results');
+    const browsePublicBtn = document.getElementById('browse-public-dataset-btn');
+    const publicRepoInput = document.getElementById('public-dataset-repo-input') as HTMLInputElement;
+    const publicRepoResults = document.getElementById('public-dataset-results');
 
     if (browsePublicBtn && publicRepoInput && publicRepoResults) {
         browsePublicBtn.addEventListener('click', async () => {
@@ -426,12 +426,17 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
                         viewBtn.style.cursor = 'pointer';
                         viewBtn.onclick = async () => {
                             viewBtn.textContent = '...';
-                            const content = await hfStorage.loadFile('', repoId, file.path);
-                            if (content) {
-                                alert(`Loaded content size: ${content.length} bytes.\nSee console for details.`);
-                                console.log(`[Public Script ${file.path}]`, JSON.parse(content));
+                            const manager = getMemoryManager();
+                            if (manager) {
+                                const script = await manager.loadCommunityScript(repoId, file.path);
+                                if (script) {
+                                    alert('Script imported successfully!');
+                                    console.log(`[Public Script ${file.path}]`, script);
+                                } else {
+                                    alert('Failed to load script.');
+                                }
                             } else {
-                                alert('Failed to load script.');
+                                alert('Memory manager not found.');
                             }
                             viewBtn.textContent = 'View';
                         };
