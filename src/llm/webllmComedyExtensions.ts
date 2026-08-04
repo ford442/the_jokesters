@@ -17,7 +17,7 @@ type ComedyLogitProcessorCtor = new (options?: {
 export function buildComedyLogitProcessorRegistry(
   modelId: string,
 ): Map<string, unknown> | undefined {
-  const ComedyLP = (webllm as { ComedyLogitProcessor?: ComedyLogitProcessorCtor })
+  const ComedyLP = (webllm as any)
     .ComedyLogitProcessor
   if (typeof ComedyLP !== 'function') {
     return undefined

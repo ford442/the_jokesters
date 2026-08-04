@@ -1378,5 +1378,21 @@
   {
     "id": "virtual_pet_intervention",
     "handler": "runVirtualPetInterventionLoop"
+  },
+  {
+    "id": "mime_translator",
+    "handler": "runMimeTranslatorLoop"
+  },
+  {
+    "id": "sentient_smart_mirror",
+    "handler": "runSentientSmartMirrorLoop"
+  },
+  {
+    "id": "sentient_roomba",
+    "handler": "runSentientRoombaLoop"
+  },
+  {
+    "id": "doomsday_weather_anchor",
+    "handler": "runDoomsdayWeatherAnchorLoop"
   }
 ]

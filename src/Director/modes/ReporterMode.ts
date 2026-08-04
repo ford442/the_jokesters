@@ -284,3 +284,31 @@ export async function runNewsDeskLoop(scenario: Scenario, ctx: ModeContext) {
         await chatForAgentWithComedy(ctx, anchor, `(ANCHOR: Thank the analyst and the witness. Transition smoothly from the existential dread to a completely inappropriate, trivial local news story or sponsor read. Ask the witness another question.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
     }
 }
+
+
+export async function runDoomsdayWeatherAnchorLoop(scenario: Scenario, ctx: ModeContext) {
+    const disaster = scenario.config?.weatherDisaster || 'a rain of fire and brimstone';
+    ctx.callbacks.onMessage('Director', `🌪️ DOOMSDAY WEATHER: ${disaster}`, '#c0392b');
+
+    const anchor = 'scientist';
+    const fieldReporter = 'comedian';
+
+    await chatForAgentWithComedy(ctx, anchor, `(You are a strictly professional, overly calm Weather Anchor. Describe the incoming apocalyptic disaster: "${disaster}". Treat it as a minor inconvenience for commuters and outdoor picnics. Use logical, calm weather terminology to describe the end of the world.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, fieldReporter, `(You are the Field Reporter standing right in the middle of "${disaster}". You are panicking, screaming, and fighting for your life. Describe the horrific scene unfolding around you while questioning the anchor's lack of empathy!)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Concerned Citizen (You)', userInput, '#ffffff');
+
+        await chatForAgentWithComedy(ctx, anchor, `(The concerned citizen asked: "${userInput}". Dismiss their fears using calm logic, statistics, and weather models. Suggest they bring a light jacket or an umbrella to deal with the apocalyptic hellscape.)`, async (s) => await ctx.callbacks.onSpeak(s, anchor, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, fieldReporter, `(The concerned citizen asked: "${userInput}". Scream at the citizen for asking such a stupid question while trying to survive! Describe a new horrifying detail of the disaster occurring right now!)`, async (s) => await ctx.callbacks.onSpeak(s, fieldReporter, {}));
+    }
+}

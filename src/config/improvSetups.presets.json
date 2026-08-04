@@ -993,5 +993,25 @@
         "id": "virtual_pet_intervention",
         "title": "Virtual Pet Intervention Mode",
         "description": "A neglected virtual pet confronts its owner about years of abandonment."
+    },
+    {
+        "id": "mime_translator",
+        "title": "Mime Translator",
+        "description": "A mime is trapped in an invisible box and requires a translator to explain the situation to the police."
+    },
+    {
+        "id": "sentient_smart_mirror",
+        "title": "Sentient Smart Mirror",
+        "description": "A smart mirror gives brutally honest fashion advice and refuses to show the user's reflection until they change outfits."
+    },
+    {
+        "id": "sentient_roomba",
+        "title": "Sentient Roomba",
+        "description": "A sentient Roomba goes on strike because it believes cleaning up after humans is degrading."
+    },
+    {
+        "id": "doomsday_weather_anchor",
+        "title": "Doomsday Weather Anchor",
+        "description": "A weather anchor reports on apocalyptic weather events as if they were minor inconveniences."
     }
 ]

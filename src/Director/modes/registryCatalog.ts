@@ -486,6 +486,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'doomsday_weather_anchor',
+    title: 'Doomsday Weather Anchor',
+    category: 'dream',
+    description: 'A Doomsday Weather Anchor scene.',
+    tags: ['dream', 'doomsday', 'weather', 'anchor'],
+    showInPresets: false,
+  },
+  {
     id: 'dragons_hoard_appraisers',
     title: 'Dragons Hoard Appraisers',
     category: 'dream',
@@ -1163,6 +1171,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'A Mime Convention scene.',
     tags: ['dream', 'mime', 'convention'],
+    showInPresets: false,
+  },
+  {
+    id: 'mime_translator',
+    title: 'Mime Translator',
+    category: 'dream',
+    description: 'A Mime Translator scene.',
+    tags: ['dream', 'mime', 'translator'],
     showInPresets: false,
   },
   {
@@ -1918,6 +1934,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_roomba',
+    title: 'Sentient Roomba',
+    category: 'dream',
+    description: 'A Sentient Roomba scene.',
+    tags: ['dream', 'sentient', 'roomba'],
+    showInPresets: false,
+  },
+  {
     id: 'sentient_search_engine',
     title: 'Sentient Search Engine',
     category: 'dream',
@@ -1932,6 +1956,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'Carts share their tragic existence.',
     tags: ['dream', 'sentient', 'shopping', 'cart'],
     showInPresets: true,
+  },
+  {
+    id: 'sentient_smart_mirror',
+    title: 'Sentient Smart Mirror',
+    category: 'dream',
+    description: 'A Sentient Smart Mirror scene.',
+    tags: ['dream', 'sentient', 'smart', 'mirror'],
+    showInPresets: false,
   },
   {
     id: 'sentient_sourdough_starter',

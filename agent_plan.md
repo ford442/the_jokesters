@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -124,20 +124,20 @@ Prioritize these over new premises:
   - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the bewildered event organizer.
 
 
-- Mime Translator Mode:
+- [x] Mime Translator Mode:
   - Premise one-liner: A mime is trapped in an invisible box and requires a translator to explain the situation to the police.
   - LLM pairings: Qwen2.5 for the literal police officer, Hermes-3 for the overly dramatic mime translator.
 
-- Sentient Smart Mirror Mode:
+- [x] Sentient Smart Mirror Mode:
   - Premise one-liner: A smart mirror gives brutally honest fashion advice and refuses to show the user's reflection until they change outfits.
   - LLM pairings: Hermes-3 for the sassy mirror, Phi-3 for the insecure user.
 
-- Doomsday Weather Anchor Mode:
+- [x] Doomsday Weather Anchor Mode:
   - Premise one-liner: A weather anchor reports on apocalyptic weather events as if they were minor inconveniences.
   - LLM pairings: Qwen2.5 for the overly calm anchor, Hermes-3 for the panicked field reporter.
 
 
-- Sentient Roomba Mode:
+- [x] Sentient Roomba Mode:
   - Premise one-liner: A sentient Roomba goes on strike because it believes cleaning up after humans is degrading.
   - LLM pairings: Qwen2.5 for the strict Roomba, Phi-3 for the confused owner.
 - Over-dramatic Barista Mode:
@@ -159,9 +159,18 @@ Prioritize these over new premises:
   - Premise one-liner: The ghosts form a union and refuse to haunt the house until they get better working conditions.
   - LLM pairings: Hermes-3 for the aggressive union rep ghost, Phi-3 for the distressed real estate agent.
 
+
+- Collaborative Mystery Solver:
+  - Premise one-liner: Agents are mismatched detectives (one purely logical, one purely chaotic) trying to solve a bizarre crime together.
+  - LLM pairings: Phi-3 for the logical detective, Hermes-3 for the chaotic partner.
+
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
+  - Authenticating with the HF API.
+  - Pushing finished "Episode Scripts" to a private Dataset.
+  - Fetching "Previous Episode Summaries" at boot for continuity.
+
   - [x] **Authenticate with HF API:** Implement UI within `cloud-dashboard-modal` allowing users to securely enter their Hugging Face API Token (write access). Validate this token using `HFStorageManager.validateToken` and securely persist it locally.
   - [x] **Push Finished Scripts:** Refine `saveEpisodeScriptToCloud` to deeply serialize completed episode contexts (including metadata) to JSON and push them as new files (e.g., `episodes/{user_id}/ep_{timestamp}.json`) to a private HF Dataset via the inference API.
   - [x] **Fetch Previous Summaries:** Enhance `fetchPreviousEpisodeSummaries` to execute on app boot or mode initialization, fetching the latest historical summaries from the HF dataset to accurately and consistently seed the agents' cloud memory.
