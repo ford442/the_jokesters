@@ -583,20 +583,20 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
                                 await this.idbSet(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
                         } else {
-                            // Conflict resolution: Vector Clocks, fallback to Last-Writer-Wins (LWW)
+                            // Conflict resolution: CRDT via Yjs and Vector Clocks
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
                                 const { strategy, resolved } = resolveEpisodeConflict(cloudData, localData, this.clientId);
 
                                 if (strategy === 'cloud') {
-                                    console.log(`Conflict resolved (Vector Clock): Cloud version of ${filename} is newer. Updating local data...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Cloud version of ${filename} is newer. Updating local data...`);
                                     this.save(`episode-${episodeId}`, resolved);
                                     await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'local') {
-                                    console.log(`Conflict resolved (Vector Clock): Local version of ${filename} is newer. Queuing cloud update...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Local version of ${filename} is newer. Queuing cloud update...`);
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'concurrent') {
-                                    console.log(`Conflict resolved (Vector Clock): Concurrent changes detected for ${filename}. Merging...`);
+                                    console.log(`Conflict resolved (CRDT / Yjs): Concurrent changes detected for ${filename}. Merging...`);
                                     this.save(`episode-${episodeId}`, resolved);
                                     await this.idbSet(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));

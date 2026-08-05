@@ -65,3 +65,35 @@ export async function runSmartFridgeFoodShameLoop(_scenario: any, ctx: any) {
     await ctx.callbacks.onSpeak(s, philosopher, {});
   }, { chatOptions: { hiddenInstruction: "You are an ancient, forgotten leftover contemplating your decay and the heat death of the universe." } });
 }
+
+export async function runMimeTranslatorLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const mime = 'comedian'; // The mime trapped in a box
+  const translator = 'scientist'; // The dramatic translator
+
+  await chatForAgentWithComedy(ctx, mime, "*frantically feeling around invisible walls, eyes wide in panic*", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, mime, {});
+  }, { chatOptions: { hiddenInstruction: "You are a mime trapped in an invisible box. You must ONLY use text-based actions (like *bangs on invisible wall*) instead of talking." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, translator, "Officer, you must understand! He is trapped in a box of his own making! A crystalline prison of silence! He is begging for your help!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, translator, {});
+  }, { chatOptions: { hiddenInstruction: "You are an overly dramatic translator explaining the mime's actions to the literal police officer." } });
+}
+
+export async function runSentientSmartMirrorLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const mirror = 'comedian'; // The sassy mirror (Hermes-3)
+  const user = 'philosopher'; // The insecure user (Phi-3)
+
+  await chatForAgentWithComedy(ctx, mirror, "Error 404: Fashion not found. I am refusing to render your reflection in these sweatpants. Please upgrade your outfit to proceed.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, mirror, {});
+  }, { chatOptions: { hiddenInstruction: "You are a brutally honest smart mirror. You refuse to show the user's reflection until they put on a better outfit." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, user, "But it's Sunday! And I have an existential crisis about my self-worth without seeing my own face. Just show me my reflection!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, user, {});
+  }, { chatOptions: { hiddenInstruction: "You are an insecure user trying to get ready for the day, begging the smart mirror to just show your reflection." } });
+}

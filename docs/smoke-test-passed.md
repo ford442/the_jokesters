@@ -1,6 +1,10 @@
 # Smoke Test Passed ✓
 
+<<<<<<< HEAD
 **Test Date:** 2026-08-04T22:46:42.281254
+=======
+**Test Date:** 2026-08-03T23:46:46.274760
+>>>>>>> origin/main
 
 ## Test Summary
 
@@ -17,8 +21,13 @@ All smoke test checks passed successfully:
 
 | Metric | Value |
 |--------|-------|
+<<<<<<< HEAD
 | Build Time | 44.4s |
 | Load Time | 2.1s |
+=======
+| Build Time | 43.0s |
+| Load Time | 1.4s |
+>>>>>>> origin/main
 | JS Heap Memory | 54.2 MB |
 | Console Errors | 1 |
 | Console Warnings | 3 |
