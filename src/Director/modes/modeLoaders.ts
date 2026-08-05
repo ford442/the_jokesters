@@ -65,6 +65,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'debugging_therapy': async () => (await import('./DreamModes_Tech')).runDebuggingTherapyModeLoop,
   'disaster_movie_president': async () => (await import('./DreamModes_Absurdist_Philosophical_PartA')).runDisasterMoviePresidentLoop,
   'dmv_interpreter': async () => (await import('./ExpandedRealityModes_Scifi')).runDMVInterpreterLoop,
+  'doomsday_weather_anchor': async () => (await import('./ReporterMode')).runDoomsdayWeatherAnchorLoop,
   'dragons_hoard_appraisers': async () => (await import('./DreamModes_Fantasy')).runDragonsHoardAppraisersLoop,
   'dragons_hoard_consultant': async () => (await import('./DreamModes_Fantasy')).runDragonsHoardConsultantLoop,
   'dream': async () => (await import('./PerformanceMode')).runDreamLoop,
@@ -150,7 +151,11 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'memory_defrag': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runMemoryDefragLoop,
   'microwave_critics': async () => (await import('./DreamModes_Absurdist_Philosophical_PartB')).runMicrowaveCriticsLoop,
   'mime_convention': async () => (await import('./DreamModes_Absurdist_Philosophical_PartA')).runMimeConventionLoop,
+<<<<<<< HEAD
+  'mime_translator': async () => (await import('./PerformanceMode')).runMimeTranslatorLoop,
+=======
   'mime_translator': async () => (await import('./ExpandedRealityModes')).runMimeTranslatorLoop,
+>>>>>>> origin/main
   'multiversal_chefs_table': async () => (await import('./DreamModes_Food')).runMultiversalChefsTableLoop,
   'multiversal_dmv': async () => (await import('./DreamModes_Bureaucratic')).runMultiversalDMVLoop,
   'multiverse_escape_room': async () => (await import('./DreamModes_Scifi')).runMultiverseEscapeRoomLoop,
@@ -245,9 +250,14 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'sentient_paint_colors': async () => (await import('./DreamModes_Sentient')).runSentientPaintColorsLoop,
   'sentient_plant': async () => (await import('./ExpandedRealityModes_Misc')).runSentientPlantLoop,
   'sentient_plant_negotiation': async () => (await import('./DreamModes_Sentient')).runSentientPlantNegotiationModeLoop,
+  'sentient_roomba': async () => (await import('./DreamModes_Sentient')).runSentientRoombaLoop,
   'sentient_search_engine': async () => (await import('./DreamModes_Sentient')).runSentientSearchEngineLoop,
   'sentient_shopping_cart': async () => (await import('./DreamModes_Sentient')).runSentientShoppingCartLoop,
+<<<<<<< HEAD
+  'sentient_smart_mirror': async () => (await import('./DreamModes_Sentient')).runSentientSmartMirrorLoop,
+=======
   'sentient_smart_mirror': async () => (await import('./ExpandedRealityModes')).runSentientSmartMirrorLoop,
+>>>>>>> origin/main
   'sentient_sourdough_starter': async () => (await import('./DreamModes_Sentient')).runSentientSourdoughStarterLoop,
   'sentient_spam_folder': async () => (await import('./DreamModes_Sentient')).runSentientSpamFolderLoop,
   'sentient_spellbook': async () => (await import('./DreamModes_Sentient')).runSentientSpellbookLoop,

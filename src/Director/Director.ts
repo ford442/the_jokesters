@@ -89,6 +89,7 @@ export interface Scenario {
         standupTopic?: string;
         meltdownTopic?: string;
         newsroomTopic?: string;
+        weatherDisaster?: string;
         courtCase?: string;
         gameShowTopic?: string;
         breakingNews?: string;

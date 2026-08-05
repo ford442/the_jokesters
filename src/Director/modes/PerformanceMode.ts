@@ -845,3 +845,30 @@ export async function runHecklerInteractionProLoop(_scenario: Scenario, ctx: Mod
         });
     }
 }
+
+
+export async function runMimeTranslatorLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎭 MIME TRANSLATOR: A mime is trapped in an invisible box!`, '#ff6b6b');
+
+    const policeOfficer = 'scientist';
+    const mimeTranslator = 'comedian';
+
+    await chatForAgentWithComedy(ctx, mimeTranslator, `(You are an overly dramatic Mime Translator. You translate the invisible actions of a mime who is trapped in an invisible box. The mime is panicked. Explain the situation to the police officer with extreme emotion and theatrical flair.)`, async (s) => await ctx.callbacks.onSpeak(s, mimeTranslator, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, policeOfficer, `(You are a literal, no-nonsense Police Officer. The Mime Translator just explained that someone is trapped in an invisible box. Demand physical evidence. Refuse to acknowledge "invisible walls" as a valid crime scene.)`, async (s) => await ctx.callbacks.onSpeak(s, policeOfficer, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Bystander (You)', userInput, '#ffffff');
+
+        await chatForAgentWithComedy(ctx, mimeTranslator, `(The bystander said: "${userInput}". Translate a new, elaborate mime gesture reacting to the bystander. Make it incredibly dramatic and specific!)`, async (s) => await ctx.callbacks.onSpeak(s, mimeTranslator, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, policeOfficer, `(The bystander said: "${userInput}" and the Mime Translator described some invisible nonsense. Threaten to arrest someone for wasting police time or ask the bystander for a logical explanation.)`, async (s) => await ctx.callbacks.onSpeak(s, policeOfficer, {}));
+    }
+}

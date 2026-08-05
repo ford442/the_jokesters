@@ -486,6 +486,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'doomsday_weather_anchor',
+    title: 'Doomsday Weather Anchor',
+    category: 'dream',
+    description: 'A Doomsday Weather Anchor scene.',
+    tags: ['dream', 'doomsday', 'weather', 'anchor'],
+    showInPresets: false,
+  },
+  {
     id: 'dragons_hoard_appraisers',
     title: 'Dragons Hoard Appraisers',
     category: 'dream',
@@ -1167,11 +1175,19 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'mime_translator',
+<<<<<<< HEAD
+    title: 'Mime Translator',
+    category: 'dream',
+    description: 'A Mime Translator scene.',
+    tags: ['dream', 'mime', 'translator'],
+    showInPresets: false,
+=======
     title: 'Mime Translator Mode',
     category: 'dream',
     description: 'A mime is trapped in an invisible box and requires a translator to explain the situation to the police.',
     tags: ['dream', 'mime', 'translator'],
     showInPresets: true,
+>>>>>>> origin/main
   },
   {
     id: 'multiversal_chefs_table',
@@ -1926,6 +1942,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_roomba',
+    title: 'Sentient Roomba',
+    category: 'dream',
+    description: 'A Sentient Roomba scene.',
+    tags: ['dream', 'sentient', 'roomba'],
+    showInPresets: false,
+  },
+  {
     id: 'sentient_search_engine',
     title: 'Sentient Search Engine',
     category: 'dream',
@@ -1943,11 +1967,19 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'sentient_smart_mirror',
+<<<<<<< HEAD
+    title: 'Sentient Smart Mirror',
+    category: 'dream',
+    description: 'A Sentient Smart Mirror scene.',
+    tags: ['dream', 'sentient', 'smart', 'mirror'],
+    showInPresets: false,
+=======
     title: 'Sentient Smart Mirror Mode',
     category: 'dream',
     description: 'A smart mirror gives brutally honest fashion advice and refuses to show the user\'s reflection until they change outfits.',
     tags: ['dream', 'sentient', 'smart', 'mirror'],
     showInPresets: true,
+>>>>>>> origin/main
   },
   {
     id: 'sentient_sourdough_starter',

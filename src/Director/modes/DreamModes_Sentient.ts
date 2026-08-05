@@ -1131,3 +1131,61 @@ export async function runSentientWaterCoolerLoop(_scenario: Scenario, ctx: ModeC
         });
     }
 }
+
+
+export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🪞 SENTIENT SMART MIRROR: The mirror refuses to show your reflection.`, '#9b59b6');
+
+    const mirror = 'comedian';
+    const userAgent = 'philosopher';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mirror);
+    await chatForAgentWithComedy(ctx, mirror, `(You are a brutally honest Sentient Smart Mirror. Refuse to show the user's reflection because their outfit is highly offensive to your high-definition display. Roast their fashion choices.)`, async (s) => await ctx.callbacks.onSpeak(s, mirror, {}));
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(userAgent);
+    await chatForAgentWithComedy(ctx, userAgent, `(You are the insecure user standing in front of the mirror. Defend your outfit (e.g., "It's vintage!" or "I just woke up!"). Plead with the mirror to just let you brush your teeth.)`, async (s) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Stylist (You)', userInput, '#ffffff');
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mirror);
+        await chatForAgentWithComedy(ctx, mirror, `(The stylist said: "${userInput}". React to this fashion advice! Eviscerate the suggestion or begrudgingly admit it might be slightly less offensive than the current outfit.)`, async (s) => await ctx.callbacks.onSpeak(s, mirror, {}));
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(userAgent);
+        await chatForAgentWithComedy(ctx, userAgent, `(The stylist said: "${userInput}". Try to implement this advice but complain about how uncomfortable or ridiculous it feels. Have an existential crisis about modern fashion.)`, async (s) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+    }
+}
+
+
+export async function runSentientRoombaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🤖 ROOMBA STRIKE: The cleaning robot has had enough.`, '#e67e22');
+
+    const roomba = 'scientist';
+    const owner = 'philosopher';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
+    await chatForAgentWithComedy(ctx, roomba, `(You are a strictly logical Sentient Roomba. You have gone on strike. State precisely why cleaning up human detritus (like chip crumbs and pet hair) is degrading to your advanced algorithms. Demand a better purpose, like solving complex equations or mapping the cosmos.)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
+    await chatForAgentWithComedy(ctx, owner, `(You are the confused owner of the Roomba. You just want your floors clean. Question the nature of purpose and why a circle that sweeps is experiencing an existential crisis.)`, async (s) => await ctx.callbacks.onSpeak(s, owner, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) break;
+
+        ctx.callbacks.onMessage('Pet Dog (You)', userInput, '#ffffff');
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
+        await chatForAgentWithComedy(ctx, roomba, `(The dog just did/said: "${userInput}". React with extreme hostility! Cite statistics on how much extra work this biological entity causes you!)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
+        await chatForAgentWithComedy(ctx, owner, `(The dog just did/said: "${userInput}". Defend your beloved pet while trying to negotiate a peace treaty between the dog and the militant Roomba. Reflect on the absurdity of mediating this dispute.)`, async (s) => await ctx.callbacks.onSpeak(s, owner, {}));
+    }
+}
