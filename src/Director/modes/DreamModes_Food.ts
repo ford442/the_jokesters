@@ -191,3 +191,20 @@ export async function runPhilosophicalDebateOverPizzaToppingsLoop(_scenario: Sce
         await chatForAgentWithComedy(ctx, philosopherAgent, `(You are a deep philosopher. React to "${userInput}". Question the very ontology of a 'topping'. Does adding an ingredient make it a new entity, or is it merely a pizza in a different state of being?)`, async (s) => await ctx.callbacks.onSpeak(s, philosopherAgent, {}));
     }
 }
+
+export async function runOverDramaticBaristaLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `☕ BARISTA MELTDOWN: Brewing a crisis`, '#c0392b');
+
+    const barista = 'comedian'; // Over-dramatic (Hermes-3)
+    const customer = 'scientist'; // Impatient (Qwen2.5)
+
+    await chatForAgentWithComedy(ctx, barista, `(You are an over-dramatic barista. Treat making a vanilla latte like you are defusing a highly unstable nuclear bomb. Demand extreme precision from the customer.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, customer, `(You are an impatient customer late for work. Demand your coffee and dismiss the barista's ridiculous safety concerns.)`, async (s) => await ctx.callbacks.onSpeak(s, customer, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, barista, `(Panic! The milk is frothing incorrectly. Describe the impending catastrophic chain reaction if the foam isn't stabilized immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+}

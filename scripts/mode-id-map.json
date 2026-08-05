@@ -1386,7 +1386,6 @@
   {
     "id": "sentient_smart_mirror",
     "handler": "runSentientSmartMirrorLoop"
-<<<<<<< HEAD
   },
   {
     "id": "sentient_roomba",
@@ -1395,7 +1394,13 @@
   {
     "id": "doomsday_weather_anchor",
     "handler": "runDoomsdayWeatherAnchorLoop"
-=======
->>>>>>> origin/main
+  },
+  {
+    "id": "over_dramatic_barista",
+    "handler": "runOverDramaticBaristaLoop"
+  },
+  {
+    "id": "time_traveling_traffic_cop",
+    "handler": "runTimeTravelingTrafficCopLoop"
   }
 ]

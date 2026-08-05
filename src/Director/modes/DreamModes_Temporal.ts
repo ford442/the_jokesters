@@ -610,3 +610,20 @@ export async function runTimeTravelingHOAPresidentLoop(_scenario: Scenario, ctx:
     await chatForAgentWithComedy(ctx, comedian, "Do it! Erase Brenda! She stole my tupperware in 2004!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}), { chatOptions: { hiddenInstruction: 'Encourage the time traveler to cause chaos.' } });
   }
 }
+
+export async function runTimeTravelingTrafficCopLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🚓 CHRONO-COP: Pre-crime ticketing`, '#2980b9');
+
+    const cop = 'scientist'; // Pedantic (Qwen2.5)
+    const driver = 'philosopher'; // Bewildered (Phi-3)
+
+    await chatForAgentWithComedy(ctx, cop, `(You are a pedantic time-traveling traffic cop. Pull the user over and write them a ticket for a minor traffic violation they won't commit for another 5 years.)`, async (s) => await ctx.callbacks.onSpeak(s, cop, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, driver, `(You are a bewildered driver in the present day. Argue that you can't be fined for a crime you haven't committed yet, and question the cop's bizarre futuristic speed limit.)`, async (s) => await ctx.callbacks.onSpeak(s, driver, {}));
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, cop, `(Insist the timeline is fixed and cite a ridiculous future traffic law involving hover-lane merge protocols. Threaten to impound their past vehicle.)`, async (s) => await ctx.callbacks.onSpeak(s, cop, {}));
+}

@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Process (P0)
 
@@ -140,10 +140,10 @@ Prioritize these over new premises:
 - [x] Sentient Roomba Mode:
   - Premise one-liner: A sentient Roomba goes on strike because it believes cleaning up after humans is degrading.
   - LLM pairings: Qwen2.5 for the strict Roomba, Phi-3 for the confused owner.
-- Over-dramatic Barista Mode:
+- [x] Over-dramatic Barista Mode:
   - Premise one-liner: A barista treats making a latte like defusing a bomb, demanding extreme precision.
   - LLM pairings: Hermes-3 for the over-dramatic barista, Qwen2.5 for the impatient customer.
-- Time-Traveling Traffic Cop Mode:
+- [x] Time-Traveling Traffic Cop Mode:
   - Premise one-liner: A traffic cop from the future gives tickets for minor infractions that haven't happened yet.
   - LLM pairings: Qwen2.5 for the pedantic traffic cop, Phi-3 for the bewildered driver.
 - Multiverse Escape Room Mode:
@@ -160,11 +160,6 @@ Prioritize these over new premises:
   - LLM pairings: Hermes-3 for the aggressive union rep ghost, Phi-3 for the distressed real estate agent.
 
 
-<<<<<<< HEAD
-- Collaborative Mystery Solver:
-  - Premise one-liner: Agents are mismatched detectives (one purely logical, one purely chaotic) trying to solve a bizarre crime together.
-  - LLM pairings: Phi-3 for the logical detective, Hermes-3 for the chaotic partner.
-=======
 - Time-Traveling IRS Mode:
   - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
@@ -172,7 +167,14 @@ Prioritize these over new premises:
 - Philosophical Plumber Mode:
   - Premise one-liner: A plumber fixes the sink but questions whether the water leak is just a manifestation of the user's emotional baggage.
   - LLM pairings: Phi-3 for the existential plumber, Hermes-3 for the desperate homeowner.
->>>>>>> origin/main
+
+- Intergalactic Food Critic Mode:
+  - Premise one-liner: An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.
+  - LLM pairings: Hermes-3 for the aggressive alien critic, Phi-3 for the terrified fast food worker.
+
+- Sentient Wi-Fi Router Mode:
+  - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
+  - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.

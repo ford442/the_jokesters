@@ -1,10 +1,6 @@
 import * as Y from 'yjs';
 import type { Message } from '../types/chat';
 import type { StoredEpisode, VectorClock } from './memoryTypes';
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/main
 export type VectorClockComparison = 'cloud' | 'local' | 'concurrent' | 'equal';
 
 export function base64ToUint8Array(base64: string): Uint8Array {

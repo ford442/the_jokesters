@@ -1175,19 +1175,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'mime_translator',
-<<<<<<< HEAD
-    title: 'Mime Translator',
-    category: 'dream',
-    description: 'A Mime Translator scene.',
-    tags: ['dream', 'mime', 'translator'],
-    showInPresets: false,
-=======
     title: 'Mime Translator Mode',
     category: 'dream',
     description: 'A mime is trapped in an invisible box and requires a translator to explain the situation to the police.',
     tags: ['dream', 'mime', 'translator'],
     showInPresets: true,
->>>>>>> origin/main
   },
   {
     id: 'multiversal_chefs_table',
@@ -1324,6 +1316,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Over Dramatic Ant Colony scene.',
     tags: ['dream', 'over', 'dramatic', 'ant', 'colony'],
     showInPresets: false,
+  },
+  {
+    id: 'over_dramatic_barista',
+    title: 'Over-dramatic Barista',
+    category: 'dream',
+    description: 'A barista treats making a latte like defusing a bomb, demanding extreme precision.',
+    tags: ['dream', 'over', 'dramatic', 'barista'],
+    showInPresets: true,
   },
   {
     id: 'over_prepared_doomsday_preppers',
@@ -1967,19 +1967,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'sentient_smart_mirror',
-<<<<<<< HEAD
-    title: 'Sentient Smart Mirror',
-    category: 'dream',
-    description: 'A Sentient Smart Mirror scene.',
-    tags: ['dream', 'sentient', 'smart', 'mirror'],
-    showInPresets: false,
-=======
     title: 'Sentient Smart Mirror Mode',
     category: 'dream',
     description: 'A smart mirror gives brutally honest fashion advice and refuses to show the user\'s reflection until they change outfits.',
     tags: ['dream', 'sentient', 'smart', 'mirror'],
     showInPresets: true,
->>>>>>> origin/main
   },
   {
     id: 'sentient_sourdough_starter',
@@ -2492,6 +2484,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Time Traveling Tourists scene.',
     tags: ['dream', 'time', 'traveling', 'tourists'],
     showInPresets: false,
+  },
+  {
+    id: 'time_traveling_traffic_cop',
+    title: 'Time-Traveling Traffic Cop',
+    category: 'dream',
+    description: 'A traffic cop from the future gives tickets for minor infractions that haven\'t happened yet.',
+    tags: ['dream', 'time', 'traveling', 'traffic', 'cop'],
+    showInPresets: true,
   },
   {
     id: 'traffic_light_operators',
