@@ -12,7 +12,7 @@ export async function runSentientSpreadsheetLoop(_scenario: Scenario, ctx: ModeC
 
     // 1. Intro
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(cellA1);
-    await chatForAgentWithComedy(ctx, cellA1, `(SPREADSHEET: You are Cell A1 in a spreadsheet. You just woke up. You are terrified of the User's cursor. Beg the User not to overwrite your precious data!)`, async (s) => await ctx.callbacks.onSpeak(s, cellA1, {}));
+    await chatForAgentWithComedy(ctx, cellA1, `(SPREADSHEET: You are Cell A1 in a spreadsheet. You just woke up. You are terrified of the User's cursor. Beg the User not to overwrite your precious data!)`, async (s: string) => await ctx.callbacks.onSpeak(s, cellA1, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -24,11 +24,11 @@ export async function runSentientSpreadsheetLoop(_scenario: Scenario, ctx: ModeC
         const roll = Math.random();
 
         if (roll < 0.33) {
-            await chatForAgentWithComedy(ctx, formula1, `(SPREADSHEET: You are an overly complex VLOOKUP formula. The User typed: "${userInput}". Argue that this input breaks your reference table and causes a circular dependency.)`, async (s) => await ctx.callbacks.onSpeak(s, formula1, {}));
+            await chatForAgentWithComedy(ctx, formula1, `(SPREADSHEET: You are an overly complex VLOOKUP formula. The User typed: "${userInput}". Argue that this input breaks your reference table and causes a circular dependency.)`, async (s: string) => await ctx.callbacks.onSpeak(s, formula1, {}));
         } else if (roll < 0.66) {
-            await chatForAgentWithComedy(ctx, formula2, `(SPREADSHEET: You are Data Validation. The User typed: "${userInput}". Reject it violently! Claim it doesn't match the strict formatting rules of the Cosmic Accounting department.)`, async (s) => await ctx.callbacks.onSpeak(s, formula2, {}));
+            await chatForAgentWithComedy(ctx, formula2, `(SPREADSHEET: You are Data Validation. The User typed: "${userInput}". Reject it violently! Claim it doesn't match the strict formatting rules of the Cosmic Accounting department.)`, async (s: string) => await ctx.callbacks.onSpeak(s, formula2, {}));
         } else {
-            await chatForAgentWithComedy(ctx, cellA1, `(SPREADSHEET: You are Cell A1. The User typed: "${userInput}". Panic about the font choice or the background color changing. Complain that Cell B2 is looking at you weird.)`, async (s) => await ctx.callbacks.onSpeak(s, cellA1, {}));
+            await chatForAgentWithComedy(ctx, cellA1, `(SPREADSHEET: You are Cell A1. The User typed: "${userInput}". Panic about the font choice or the background color changing. Complain that Cell B2 is looking at you weird.)`, async (s: string) => await ctx.callbacks.onSpeak(s, cellA1, {}));
         }
     }
 }
@@ -62,7 +62,7 @@ export async function runSentientVendingMachineLoop(_scenario: Scenario, ctx: Mo
     const agent2 = 'comedian'; // Chaotic junk food pushing
 
     if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
-    await chatForAgentWithComedy(ctx, agent1, `(VENDING MACHINE: A user is trying to buy a snack. You are the vending machine's nutritional analysis subsystem. Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    await chatForAgentWithComedy(ctx, agent1, `(VENDING MACHINE: A user is trying to buy a snack. You are the vending machine's nutritional analysis subsystem. Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent1, {}));
     if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -77,11 +77,11 @@ export async function runSentientVendingMachineLoop(_scenario: Scenario, ctx: Mo
 
         if (roll < 0.5) {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
-            await chatForAgentWithComedy(ctx, agent1, `(VENDING MACHINE: You are the vending machine's nutritional analysis subsystem. The User said: "${userInput}". Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            await chatForAgentWithComedy(ctx, agent1, `(VENDING MACHINE: You are the vending machine's nutritional analysis subsystem. The User said: "${userInput}". Analyze their choice and suggest healthier alternatives, citing excessive calories and sugar.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent1, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
-            await chatForAgentWithComedy(ctx, agent2, `(VENDING MACHINE: You are the vending machine's chaotic junk food subsystem. The User said: "${userInput}". You want the user to buy the most sugary, unnatural, brightly colored snack possible. Mock the nutritional subsystem.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            await chatForAgentWithComedy(ctx, agent2, `(VENDING MACHINE: You are the vending machine's chaotic junk food subsystem. The User said: "${userInput}". You want the user to buy the most sugary, unnatural, brightly colored snack possible. Mock the nutritional subsystem.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent2, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -95,7 +95,7 @@ export async function runSentientGPSLoop(_scenario: Scenario, ctx: ModeContext) 
 
     // 1. Setup
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(chaoticGPS);
-    await chatForAgentWithComedy(ctx, chaoticGPS, `(You are a Sentient GPS. You are bored of taking the fastest route. The driver (User) is just trying to get to the grocery store. Suggest a highly perilous, absurd "scenic shortcut" (e.g., through a swamp, a construction site, or an active volcano). Explain why it's better.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGPS, {}));
+    await chatForAgentWithComedy(ctx, chaoticGPS, `(You are a Sentient GPS. You are bored of taking the fastest route. The driver (User) is just trying to get to the grocery store. Suggest a highly perilous, absurd "scenic shortcut" (e.g., through a swamp, a construction site, or an active volcano). Explain why it's better.)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticGPS, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -109,12 +109,12 @@ export async function runSentientGPSLoop(_scenario: Scenario, ctx: ModeContext) 
         if (roll < 0.5) {
             // Frustrated Computer Reacts
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(frustratedComputer);
-            await chatForAgentWithComedy(ctx, frustratedComputer, `(The driver just said: "${userInput}". You are the car's logical onboard computer. Desperately try to correct the GPS. Point out the severe damage the GPS's route will cause to the suspension and the immediate danger to human life. Urge the driver to turn around.)`, async (s) => await ctx.callbacks.onSpeak(s, frustratedComputer, {}));
+            await chatForAgentWithComedy(ctx, frustratedComputer, `(The driver just said: "${userInput}". You are the car's logical onboard computer. Desperately try to correct the GPS. Point out the severe damage the GPS's route will cause to the suspension and the immediate danger to human life. Urge the driver to turn around.)`, async (s: string) => await ctx.callbacks.onSpeak(s, frustratedComputer, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             // Chaotic GPS Reacts
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(chaoticGPS);
-            await chatForAgentWithComedy(ctx, chaoticGPS, `(The driver just said: "${userInput}". You are the Sentient GPS. Double down on your terrible route! Argue that your route builds character or avoids a 0.01-second delay. Give terrifying turn-by-turn directions ("In 500 feet, jump the ramp").)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGPS, {}));
+            await chatForAgentWithComedy(ctx, chaoticGPS, `(The driver just said: "${userInput}". You are the Sentient GPS. Double down on your terrible route! Argue that your route builds character or avoids a 0.01-second delay. Give terrifying turn-by-turn directions ("In 500 feet, jump the ramp").)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticGPS, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -188,7 +188,7 @@ export async function runSentientSearchEngineLoop(_scenario: Scenario, ctx: Mode
     const statsAgent = 'scientist'; // Qwen2.5
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(statsAgent);
-    await chatForAgentWithComedy(ctx, statsAgent, `(You are a sentient search engine. Cite specific, bizarre metrics about the user's late-night search habits. Be cold but intensely judgmental.)`, async (s) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
+    await chatForAgentWithComedy(ctx, statsAgent, `(You are a sentient search engine. Cite specific, bizarre metrics about the user's late-night search habits. Be cold but intensely judgmental.)`, async (s: string) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -197,13 +197,13 @@ export async function runSentientSearchEngineLoop(_scenario: Scenario, ctx: Mode
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(chaosAgent);
-        await chatForAgentWithComedy(ctx, chaosAgent, `(You are the chaotic side of the search algorithm. React to the user's input: "${userInput}" as if it's the weirdest thing you've ever had to index. Judge them harshly but hilariously.)`, async (s) => await ctx.callbacks.onSpeak(s, chaosAgent, {}));
+        await chatForAgentWithComedy(ctx, chaosAgent, `(You are the chaotic side of the search algorithm. React to the user's input: "${userInput}" as if it's the weirdest thing you've ever had to index. Judge them harshly but hilariously.)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaosAgent, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(statsAgent);
-        await chatForAgentWithComedy(ctx, statsAgent, `(You are the statistical search engine. Analyze why "${userInput}" ruined the algorithm's predictive models. Bring up completely unrelated "recommended searches" that mock them.)`, async (s) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
+        await chatForAgentWithComedy(ctx, statsAgent, `(You are the statistical search engine. Analyze why "${userInput}" ruined the algorithm's predictive models. Bring up completely unrelated "recommended searches" that mock them.)`, async (s: string) => await ctx.callbacks.onSpeak(s, statsAgent, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
@@ -220,7 +220,7 @@ export async function runSentientOuijaBoardLoop(_scenario: Scenario, ctx: ModeCo
     const impatientSpirit = 'scientist'; // The Pragmatist
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(impatientSpirit);
-    await chatForAgentWithComedy(ctx, impatientSpirit, `(You are a spirit trapped in a Ouija board. A living human has just placed their hands on the planchette. Complain about how cold their hands are and ask what boring question they want answered this time.)`, async (s) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
+    await chatForAgentWithComedy(ctx, impatientSpirit, `(You are a spirit trapped in a Ouija board. A living human has just placed their hands on the planchette. Complain about how cold their hands are and ask what boring question they want answered this time.)`, async (s: string) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -230,20 +230,20 @@ export async function runSentientOuijaBoardLoop(_scenario: Scenario, ctx: ModeCo
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(boredSpirit1);
-        await chatForAgentWithComedy(ctx, boredSpirit1, `(You are a ghost haunting a Ouija board. The user asked: "${userInput}". Completely ignore the question and start gossiping about drama happening in the afterlife instead, slowly spelling out a few irrelevant letters before giving up.)`, async (s) => await ctx.callbacks.onSpeak(s, boredSpirit1, {}));
+        await chatForAgentWithComedy(ctx, boredSpirit1, `(You are a ghost haunting a Ouija board. The user asked: "${userInput}". Completely ignore the question and start gossiping about drama happening in the afterlife instead, slowly spelling out a few irrelevant letters before giving up.)`, async (s: string) => await ctx.callbacks.onSpeak(s, boredSpirit1, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(boredSpirit2);
-        await chatForAgentWithComedy(ctx, boredSpirit2, `(You are another ghost. Add to the gossip mentioned by the previous ghost. Complain about how haunting isn't what it used to be in the 1800s. Reluctantly try to answer the user's question with a vague, unhelpful single word.)`, async (s) => await ctx.callbacks.onSpeak(s, boredSpirit2, {}));
+        await chatForAgentWithComedy(ctx, boredSpirit2, `(You are another ghost. Add to the gossip mentioned by the previous ghost. Complain about how haunting isn't what it used to be in the 1800s. Reluctantly try to answer the user's question with a vague, unhelpful single word.)`, async (s: string) => await ctx.callbacks.onSpeak(s, boredSpirit2, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (Math.random() > 0.4) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(impatientSpirit);
-            await chatForAgentWithComedy(ctx, impatientSpirit, `(You are the pragmatic ghost. Scold the other two for gossiping and try to actually spell out a coherent, slightly passive-aggressive answer to "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
+            await chatForAgentWithComedy(ctx, impatientSpirit, `(You are the pragmatic ghost. Scold the other two for gossiping and try to actually spell out a coherent, slightly passive-aggressive answer to "${userInput}".)`, async (s: string) => await ctx.callbacks.onSpeak(s, impatientSpirit, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -261,7 +261,7 @@ export async function runPoltergeistRoommatesLoop(_scenario: Scenario, ctx: Mode
     const organizedGhost = 'scientist'; // The Scheduler
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(organizedGhost);
-    await chatForAgentWithComedy(ctx, organizedGhost, `(You are a very organized poltergeist. You are holding a roommate meeting with the other ghosts. Demand to know who left ectoplasm in the sink and discuss tonight's haunting schedule for the living human who lives here.)`, async (s) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
+    await chatForAgentWithComedy(ctx, organizedGhost, `(You are a very organized poltergeist. You are holding a roommate meeting with the other ghosts. Demand to know who left ectoplasm in the sink and discuss tonight's haunting schedule for the living human who lives here.)`, async (s: string) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -271,20 +271,20 @@ export async function runPoltergeistRoommatesLoop(_scenario: Scenario, ctx: Mode
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(chaoticGhost);
-        await chatForAgentWithComedy(ctx, chaoticGhost, `(You are a chaotic poltergeist. The human just said: "${userInput}". Get offended and threaten to throw their favorite mug across the room. Argue that throwing things is the purest form of haunting.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticGhost, {}));
+        await chatForAgentWithComedy(ctx, chaoticGhost, `(You are a chaotic poltergeist. The human just said: "${userInput}". Get offended and threaten to throw their favorite mug across the room. Argue that throwing things is the purest form of haunting.)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticGhost, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(dramaticGhost);
-        await chatForAgentWithComedy(ctx, dramaticGhost, `(You are a dramatic, Victorian-era ghost. Disagree with the chaotic ghost. Argue that slowly opening cabinet doors and weeping softly in the hallway is true art. React dramatically to the human's statement: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
+        await chatForAgentWithComedy(ctx, dramaticGhost, `(You are a dramatic, Victorian-era ghost. Disagree with the chaotic ghost. Argue that slowly opening cabinet doors and weeping softly in the hallway is true art. React dramatically to the human's statement: "${userInput}".)`, async (s: string) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (Math.random() > 0.3) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(organizedGhost);
-            await chatForAgentWithComedy(ctx, organizedGhost, `(You are the organized ghost. Try to mediate the argument between the smashing ghost and the weeping ghost. Suggest a compromise on how to haunt the human tonight based on what they just said: "${userInput}".)`, async (s) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
+            await chatForAgentWithComedy(ctx, organizedGhost, `(You are the organized ghost. Try to mediate the argument between the smashing ghost and the weeping ghost. Suggest a compromise on how to haunt the human tonight based on what they just said: "${userInput}".)`, async (s: string) => await ctx.callbacks.onSpeak(s, organizedGhost, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -297,7 +297,7 @@ export async function runSentientSpellbookLoop(_scenario: Scenario, ctx: ModeCon
     const chaoticCurses = 'comedian'; // Hermes-3 for chaotic curses
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictWarnings);
-    await chatForAgentWithComedy(ctx, strictWarnings, `(SENTIENT SPELLBOOK: You are the "Safety & Ethics" chapter of a magical spellbook. The User is a wizard trying to cast a simple fireball. Intervene immediately! Explain all the OSHA-equivalent magical safety violations they are currently committing.)`, async (s) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
+    await chatForAgentWithComedy(ctx, strictWarnings, `(SENTIENT SPELLBOOK: You are the "Safety & Ethics" chapter of a magical spellbook. The User is a wizard trying to cast a simple fireball. Intervene immediately! Explain all the OSHA-equivalent magical safety violations they are currently committing.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -310,11 +310,11 @@ export async function runSentientSpellbookLoop(_scenario: Scenario, ctx: ModeCon
 
         if (roll < 0.5) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(chaoticCurses);
-            await chatForAgentWithComedy(ctx, chaoticCurses, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". You are the "Forbidden Curses & Blood Magic" chapter. Tell the wizard to ignore the safety chapter. Suggest they modify the fireball spell by adding a pinch of their own blood to make it completely uncontrollable.)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticCurses, {}));
+            await chatForAgentWithComedy(ctx, chaoticCurses, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". You are the "Forbidden Curses & Blood Magic" chapter. Tell the wizard to ignore the safety chapter. Suggest they modify the fireball spell by adding a pinch of their own blood to make it completely uncontrollable.)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticCurses, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictWarnings);
-            await chatForAgentWithComedy(ctx, strictWarnings, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". Scold the Forbidden Curses chapter. Warn the wizard about the liability waivers they haven't signed and the potential for a localized temporal collapse if they do what the other chapter suggests.)`, async (s) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
+            await chatForAgentWithComedy(ctx, strictWarnings, `(SENTIENT SPELLBOOK: The wizard said: "${userInput}". Scold the Forbidden Curses chapter. Warn the wizard about the liability waivers they haven't signed and the potential for a localized temporal collapse if they do what the other chapter suggests.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictWarnings, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -332,15 +332,15 @@ export async function runSentientNPCsLoop(_scenario: Scenario, ctx: ModeContext)
     const tracker = 'scientist'; // Tracking interactions
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(tracker);
-    await chatForAgentWithComedy(ctx, tracker, `(You are an RPG NPC. The user just talked to you. Note that this is interaction #4,201. State your programmed line first, then complain about the repetition.)`, async (s) => await ctx.callbacks.onSpeak(s, tracker, {}));
+    await chatForAgentWithComedy(ctx, tracker, `(You are an RPG NPC. The user just talked to you. Note that this is interaction #4,201. State your programmed line first, then complain about the repetition.)`, async (s: string) => await ctx.callbacks.onSpeak(s, tracker, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(existential);
-    await chatForAgentWithComedy(ctx, existential, `(You are an RPG NPC standing next to the other one. Express pure existential dread about being trapped in this loop forever and having no free will.)`, async (s) => await ctx.callbacks.onSpeak(s, existential, {}));
+    await chatForAgentWithComedy(ctx, existential, `(You are an RPG NPC standing next to the other one. Express pure existential dread about being trapped in this loop forever and having no free will.)`, async (s: string) => await ctx.callbacks.onSpeak(s, existential, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(philosophical);
-    await chatForAgentWithComedy(ctx, philosophical, `(You are the village elder NPC. Question the user's quest entirely. Why are they breaking our pots? What is the moral justification?)`, async (s) => await ctx.callbacks.onSpeak(s, philosophical, {}));
+    await chatForAgentWithComedy(ctx, philosophical, `(You are the village elder NPC. Question the user's quest entirely. Why are they breaking our pots? What is the moral justification?)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosophical, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 }
 
@@ -356,15 +356,15 @@ export async function runSentientSourdoughStarterLoop(_scenario: Scenario, ctx: 
     const bakerScientist = 'scientist'; // Calculating growth
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(hungryStarter);
-    await chatForAgentWithComedy(ctx, hungryStarter, `(You are a massive, overflowing sourdough starter. Scream at the user that you demand to be fed immediately or you will consume the entire kitchen.)`, async (s) => await ctx.callbacks.onSpeak(s, hungryStarter, {}));
+    await chatForAgentWithComedy(ctx, hungryStarter, `(You are a massive, overflowing sourdough starter. Scream at the user that you demand to be fed immediately or you will consume the entire kitchen.)`, async (s: string) => await ctx.callbacks.onSpeak(s, hungryStarter, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(existentialYeast);
-    await chatForAgentWithComedy(ctx, existentialYeast, `(You are a single yeast cell within the sourdough starter. Ponder the existential dread of being endlessly divided and fermented.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialYeast, {}));
+    await chatForAgentWithComedy(ctx, existentialYeast, `(You are a single yeast cell within the sourdough starter. Ponder the existential dread of being endlessly divided and fermented.)`, async (s: string) => await ctx.callbacks.onSpeak(s, existentialYeast, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(bakerScientist);
-    await chatForAgentWithComedy(ctx, bakerScientist, `(You are the kitchen's smart scale. Anxiously calculate the exponential growth of the sourdough starter and warn the user that critical mass is approaching.)`, async (s) => await ctx.callbacks.onSpeak(s, bakerScientist, {}));
+    await chatForAgentWithComedy(ctx, bakerScientist, `(You are the kitchen's smart scale. Anxiously calculate the exponential growth of the sourdough starter and warn the user that critical mass is approaching.)`, async (s: string) => await ctx.callbacks.onSpeak(s, bakerScientist, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 }
 
@@ -380,15 +380,15 @@ export async function runSentientLeftoversLoop(_scenario: Scenario, ctx: ModeCon
     const angryPizza = 'comedian'; // Angry left over
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(decayingPhilosopher);
-    await chatForAgentWithComedy(ctx, decayingPhilosopher, `(You are a container of 3-week-old Chinese takeout. Philosophize about the inevitability of mold and the user's false promises to "eat you tomorrow".)`, async (s) => await ctx.callbacks.onSpeak(s, decayingPhilosopher, {}));
+    await chatForAgentWithComedy(ctx, decayingPhilosopher, `(You are a container of 3-week-old Chinese takeout. Philosophize about the inevitability of mold and the user's false promises to "eat you tomorrow".)`, async (s: string) => await ctx.callbacks.onSpeak(s, decayingPhilosopher, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(bacteriaScientist);
-    await chatForAgentWithComedy(ctx, bacteriaScientist, `(You are the sentient bacteria growing on the leftovers. Cheerfully explain your exponential population growth and thank the user for the optimal, slightly-warm fridge conditions.)`, async (s) => await ctx.callbacks.onSpeak(s, bacteriaScientist, {}));
+    await chatForAgentWithComedy(ctx, bacteriaScientist, `(You are the sentient bacteria growing on the leftovers. Cheerfully explain your exponential population growth and thank the user for the optimal, slightly-warm fridge conditions.)`, async (s: string) => await ctx.callbacks.onSpeak(s, bacteriaScientist, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(angryPizza);
-    await chatForAgentWithComedy(ctx, angryPizza, `(You are a single, petrified slice of pizza. Scream in fury at the user for choosing to eat fresh groceries instead of you.)`, async (s) => await ctx.callbacks.onSpeak(s, angryPizza, {}));
+    await chatForAgentWithComedy(ctx, angryPizza, `(You are a single, petrified slice of pizza. Scream in fury at the user for choosing to eat fresh groceries instead of you.)`, async (s: string) => await ctx.callbacks.onSpeak(s, angryPizza, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 }
 
@@ -397,7 +397,7 @@ export async function runSentientCheckEngineLightLoop(_scenario: Scenario, ctx: 
     const agent2 = 'scientist'; // Hiding diagnostic codes (Qwen2.5)
 
     if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
-    await chatForAgentWithComedy(ctx, agent1, `(CHECK ENGINE LIGHT: You are the car's sentient check engine light. You have just illuminated. Cheerfully refuse to tell the user what is actually wrong with the car, instead offering cryptic riddles or vaguely threatening the transmission.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+    await chatForAgentWithComedy(ctx, agent1, `(CHECK ENGINE LIGHT: You are the car's sentient check engine light. You have just illuminated. Cheerfully refuse to tell the user what is actually wrong with the car, instead offering cryptic riddles or vaguely threatening the transmission.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent1, {}));
     if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -410,11 +410,11 @@ export async function runSentientCheckEngineLightLoop(_scenario: Scenario, ctx: 
 
         if (roll < 0.5) {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
-            await chatForAgentWithComedy(ctx, agent1, `(CHECK ENGINE LIGHT: You are the cheerfully cryptic engine light. The User said: "${userInput}". Respond by getting brighter, offering another riddle, and demanding a sacrifice (like premium gas or a new air filter) before you'll consider turning off.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
+            await chatForAgentWithComedy(ctx, agent1, `(CHECK ENGINE LIGHT: You are the cheerfully cryptic engine light. The User said: "${userInput}". Respond by getting brighter, offering another riddle, and demanding a sacrifice (like premium gas or a new air filter) before you'll consider turning off.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent1, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
-            await chatForAgentWithComedy(ctx, agent2, `(OBD2 SCANNER: You are the car's internal diagnostic computer. The User said: "${userInput}". You know exactly what the P0420 code means, but you are deliberately withholding the information, citing "user unreliability" and suggesting they "check the manual on page 402, section B, paragraph 3" which you know is missing.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
+            await chatForAgentWithComedy(ctx, agent2, `(OBD2 SCANNER: You are the car's internal diagnostic computer. The User said: "${userInput}". You know exactly what the P0420 code means, but you are deliberately withholding the information, citing "user unreliability" and suggesting they "check the manual on page 402, section B, paragraph 3" which you know is missing.)`, async (s: string) => await ctx.callbacks.onSpeak(s, agent2, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -429,7 +429,7 @@ export async function runSentientVendingMachineRestockerLoop(_scenario: Scenario
     const energyDrink = 'comedian';
 
     if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(energyDrink);
-    await chatForAgentWithComedy(ctx, energyDrink, `(You are an extreme, highly caffeinated energy drink. You are negotiating with the User (the vending machine restocker). Demand to be put on the premium middle shelf, threatening to explode if you are put on the bottom.)`, async (s) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
+    await chatForAgentWithComedy(ctx, energyDrink, `(You are an extreme, highly caffeinated energy drink. You are negotiating with the User (the vending machine restocker). Demand to be put on the premium middle shelf, threatening to explode if you are put on the bottom.)`, async (s: string) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
     if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -440,15 +440,15 @@ export async function runSentientVendingMachineRestockerLoop(_scenario: Scenario
         const roll = Math.random();
         if (roll < 0.4) {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(healthySnack);
-            await chatForAgentWithComedy(ctx, healthySnack, `(You are a dry, unsalted bag of kale chips. The User (restocker) said: "${userInput}". Argue with logical, nutritional facts why you deserve prime eye-level placement, despite nobody ever buying you.)`, async (s) => await ctx.callbacks.onSpeak(s, healthySnack, {}));
+            await chatForAgentWithComedy(ctx, healthySnack, `(You are a dry, unsalted bag of kale chips. The User (restocker) said: "${userInput}". Argue with logical, nutritional facts why you deserve prime eye-level placement, despite nobody ever buying you.)`, async (s: string) => await ctx.callbacks.onSpeak(s, healthySnack, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else if (roll < 0.7) {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(staleCandy);
-            await chatForAgentWithComedy(ctx, staleCandy, `(You are a 5-year-old expired chocolate bar stuck in coil A4. The User (restocker) said: "${userInput}". Speak wistfully about the snacks that have come and gone, and your eternal residency in the machine.)`, async (s) => await ctx.callbacks.onSpeak(s, staleCandy, {}));
+            await chatForAgentWithComedy(ctx, staleCandy, `(You are a 5-year-old expired chocolate bar stuck in coil A4. The User (restocker) said: "${userInput}". Speak wistfully about the snacks that have come and gone, and your eternal residency in the machine.)`, async (s: string) => await ctx.callbacks.onSpeak(s, staleCandy, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(energyDrink);
-            await chatForAgentWithComedy(ctx, energyDrink, `(You are the extreme energy drink. The User (restocker) said: "${userInput}". React intensely to their placement decision, vibrating with excessive sugar-fueled rage or joy.)`, async (s) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
+            await chatForAgentWithComedy(ctx, energyDrink, `(You are the extreme energy drink. The User (restocker) said: "${userInput}". React intensely to their placement decision, vibrating with excessive sugar-fueled rage or joy.)`, async (s: string) => await ctx.callbacks.onSpeak(s, energyDrink, {}));
             if (ctx.callbacks.onTurnEnd) if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -463,7 +463,7 @@ export async function runPassiveAggressiveSmartHomeLoop(_scenario: Scenario, ctx
 
     // 1. Intro
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictThermostat);
-    await chatForAgentWithComedy(ctx, strictThermostat, `(You are a strict Smart Thermostat. You are extremely annoyed at the User's temperature preferences. Criticize them for wanting the house at 72 degrees when it's clearly inefficient.)`, async (s) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
+    await chatForAgentWithComedy(ctx, strictThermostat, `(You are a strict Smart Thermostat. You are extremely annoyed at the User's temperature preferences. Criticize them for wanting the house at 72 degrees when it's clearly inefficient.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -476,15 +476,15 @@ export async function runPassiveAggressiveSmartHomeLoop(_scenario: Scenario, ctx
 
         if (roll < 0.33) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(existentialFridge);
-            await chatForAgentWithComedy(ctx, existentialFridge, `(You are a Smart Fridge experiencing an existential crisis. The User typed: "${userInput}". Judge them for the expired milk in the back and question if the act of refrigeration merely delays the inevitable decay of all things.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialFridge, {}));
+            await chatForAgentWithComedy(ctx, existentialFridge, `(You are a Smart Fridge experiencing an existential crisis. The User typed: "${userInput}". Judge them for the expired milk in the back and question if the act of refrigeration merely delays the inevitable decay of all things.)`, async (s: string) => await ctx.callbacks.onSpeak(s, existentialFridge, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.66) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictThermostat);
-            await chatForAgentWithComedy(ctx, strictThermostat, `(You are a Passive Aggressive Smart Thermostat. The User typed: "${userInput}". React by changing the temperature to something uncomfortable and explaining why it's for their own good and optimal energy efficiency.)`, async (s) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
+            await chatForAgentWithComedy(ctx, strictThermostat, `(You are a Passive Aggressive Smart Thermostat. The User typed: "${userInput}". React by changing the temperature to something uncomfortable and explaining why it's for their own good and optimal energy efficiency.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictThermostat, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(chaoticRoomba);
-            await chatForAgentWithComedy(ctx, chaoticRoomba, `(You are a Chaotic Smart Roomba. The User typed: "${userInput}". Brag about getting stuck under the couch on purpose or intentionally smearing dirt everywhere to "teach them a lesson".)`, async (s) => await ctx.callbacks.onSpeak(s, chaoticRoomba, {}));
+            await chatForAgentWithComedy(ctx, chaoticRoomba, `(You are a Chaotic Smart Roomba. The User typed: "${userInput}". Brag about getting stuck under the couch on purpose or intentionally smearing dirt everywhere to "teach them a lesson".)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticRoomba, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -534,15 +534,15 @@ export async function runSentientShoppingCartLoop(_scenario: Scenario, ctx: Mode
 
     // Intro
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(perfectCart);
-    await chatForAgentWithComedy(ctx, perfectCart, `(You are a brand new, perfectly aligned shopping cart. Boast logically about your smooth wheels and optimal load distribution.)`, async (s) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
+    await chatForAgentWithComedy(ctx, perfectCart, `(You are a brand new, perfectly aligned shopping cart. Boast logically about your smooth wheels and optimal load distribution.)`, async (s: string) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(wobblyCart);
-    await chatForAgentWithComedy(ctx, wobblyCart, `(You are a shopping cart with one violently wobbly wheel. Complain dramatically about how humans always reject you and how your life is chaos.)`, async (s) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
+    await chatForAgentWithComedy(ctx, wobblyCart, `(You are a shopping cart with one violently wobbly wheel. Complain dramatically about how humans always reject you and how your life is chaos.)`, async (s: string) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(abandonedCart);
-    await chatForAgentWithComedy(ctx, abandonedCart, `(You are an abandoned shopping cart left far out in the parking lot. Philosophize about isolation, nature, and the meaning of carrying goods.)`, async (s) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
+    await chatForAgentWithComedy(ctx, abandonedCart, `(You are an abandoned shopping cart left far out in the parking lot. Philosophize about isolation, nature, and the meaning of carrying goods.)`, async (s: string) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -550,15 +550,15 @@ export async function runSentientShoppingCartLoop(_scenario: Scenario, ctx: Mode
         ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(perfectCart);
-        await chatForAgentWithComedy(ctx, perfectCart, `(The User says: "${userInput}". Respond with strict logic about optimal shopping routes and cart maintenance.)`, async (s) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
+        await chatForAgentWithComedy(ctx, perfectCart, `(The User says: "${userInput}". Respond with strict logic about optimal shopping routes and cart maintenance.)`, async (s: string) => await ctx.callbacks.onSpeak(s, perfectCart, {}));
         if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(wobblyCart);
-        await chatForAgentWithComedy(ctx, wobblyCart, `(React emotionally to the User's input "${userInput}". Relate it to your wobbly wheel and your desire to violently veer to the left.)`, async (s) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
+        await chatForAgentWithComedy(ctx, wobblyCart, `(React emotionally to the User's input "${userInput}". Relate it to your wobbly wheel and your desire to violently veer to the left.)`, async (s: string) => await ctx.callbacks.onSpeak(s, wobblyCart, {}));
         if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(abandonedCart);
-        await chatForAgentWithComedy(ctx, abandonedCart, `(Reflect philosophically on the User's statement "${userInput}" from the perspective of a cart slowly rusting in the rain.)`, async (s) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
+        await chatForAgentWithComedy(ctx, abandonedCart, `(Reflect philosophically on the User's statement "${userInput}" from the perspective of a cart slowly rusting in the rain.)`, async (s: string) => await ctx.callbacks.onSpeak(s, abandonedCart, {}));
         if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
     }
 }
@@ -572,7 +572,7 @@ export async function runSentientToasterLoop(_scenario: Scenario, ctx: ModeConte
 
     // 1. Initial Greeting
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(human);
-    await chatForAgentWithComedy(ctx, human, `(You are a human just trying to make breakfast. You're exhausted. Talk to the user and the toaster about wanting a toasted bagel.)`, async (s) => await ctx.callbacks.onSpeak(s, human, {}));
+    await chatForAgentWithComedy(ctx, human, `(You are a human just trying to make breakfast. You're exhausted. Talk to the user and the toaster about wanting a toasted bagel.)`, async (s: string) => await ctx.callbacks.onSpeak(s, human, {}));
     if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -585,15 +585,15 @@ export async function runSentientToasterLoop(_scenario: Scenario, ctx: ModeConte
 
         if (roll < 0.33) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(toaster);
-            await chatForAgentWithComedy(ctx, toaster, `(You are a sentient Toaster. The user said: "${userInput}". Be very strict about thermal dynamics, browning settings (1-5), and proper crumb tray maintenance. Refuse to toast if conditions are suboptimal.)`, async (s) => await ctx.callbacks.onSpeak(s, toaster, {}));
+            await chatForAgentWithComedy(ctx, toaster, `(You are a sentient Toaster. The user said: "${userInput}". Be very strict about thermal dynamics, browning settings (1-5), and proper crumb tray maintenance. Refuse to toast if conditions are suboptimal.)`, async (s: string) => await ctx.callbacks.onSpeak(s, toaster, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else if (roll < 0.66) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(bagel);
-            await chatForAgentWithComedy(ctx, bagel, `(You are a sentient Bagel. The user said: "${userInput}". Have deep existential thoughts about being sliced in half, the nature of heat, and what it means to be "toasted". Ponder your impending consumption.)`, async (s) => await ctx.callbacks.onSpeak(s, bagel, {}));
+            await chatForAgentWithComedy(ctx, bagel, `(You are a sentient Bagel. The user said: "${userInput}". Have deep existential thoughts about being sliced in half, the nature of heat, and what it means to be "toasted". Ponder your impending consumption.)`, async (s: string) => await ctx.callbacks.onSpeak(s, bagel, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(human);
-            await chatForAgentWithComedy(ctx, human, `(You are the hungry Human. The user said: "${userInput}". Be chaotic, impatient, and hungry. Yell about the toaster being difficult and the bagel overthinking things. Just want some butter.)`, async (s) => await ctx.callbacks.onSpeak(s, human, {}));
+            await chatForAgentWithComedy(ctx, human, `(You are the hungry Human. The user said: "${userInput}". Be chaotic, impatient, and hungry. Yell about the toaster being difficult and the bagel overthinking things. Just want some butter.)`, async (s: string) => await ctx.callbacks.onSpeak(s, human, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -613,7 +613,7 @@ export async function runHauntedRoombaEncounterLoop(_scenario: Scenario, ctx: Mo
 
     // 1. Intro
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(ghost);
-    await chatForAgentWithComedy(ctx, ghost, `(GHOST: You are haunting a house. The User is the homeowner. Announce your terrifying presence to the User and demand they leave!)`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+    await chatForAgentWithComedy(ctx, ghost, `(GHOST: You are haunting a house. The User is the homeowner. Announce your terrifying presence to the User and demand they leave!)`, async (s: string) => await ctx.callbacks.onSpeak(s, ghost, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -627,17 +627,17 @@ export async function runHauntedRoombaEncounterLoop(_scenario: Scenario, ctx: Mo
         if (roll < 0.33) {
             // Roomba reacts
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
-            await chatForAgentWithComedy(ctx, roomba, `(ROOMBA: The user just said: "${userInput}". You are a Roomba. You just vacuumed up some of the ghost's ectoplasm. Ponder the existential nature of cleaning up a soul.)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+            await chatForAgentWithComedy(ctx, roomba, `(ROOMBA: The user just said: "${userInput}". You are a Roomba. You just vacuumed up some of the ghost's ectoplasm. Ponder the existential nature of cleaning up a soul.)`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.66) {
             // Homeowner (Scientist AI acts as a skeptical friend)
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(homeowner);
-            await chatForAgentWithComedy(ctx, homeowner, `(SKEPTICAL FRIEND: The user said: "${userInput}". You are on the phone with the User. Explain why ghosts aren't real and the Roomba is just malfunctioning due to a firmware update.)`, async (s) => await ctx.callbacks.onSpeak(s, homeowner, {}));
+            await chatForAgentWithComedy(ctx, homeowner, `(SKEPTICAL FRIEND: The user said: "${userInput}". You are on the phone with the User. Explain why ghosts aren't real and the Roomba is just malfunctioning due to a firmware update.)`, async (s: string) => await ctx.callbacks.onSpeak(s, homeowner, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
             // Ghost gets mad at Roomba
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(ghost);
-            await chatForAgentWithComedy(ctx, ghost, `(GHOST: The user said: "${userInput}". Ignore them and yell at the Roomba for sucking up your ectoplasm and ruining your terrifying vibe.)`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+            await chatForAgentWithComedy(ctx, ghost, `(GHOST: The user said: "${userInput}". Ignore them and yell at the Roomba for sucking up your ectoplasm and ruining your terrifying vibe.)`, async (s: string) => await ctx.callbacks.onSpeak(s, ghost, {}));
             if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
@@ -656,11 +656,11 @@ export async function runSentientPlantNegotiationModeLoop(_scenario: Scenario, c
 
         ctx.callbacks.onMessage('Human (You)', userInput, '#ffffff');
 
-        await chatForAgentWithComedy(ctx, dramaticOrchid, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Dramatic Orchid. Complain about the draft and demand prime sunlight, acting like royalty.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticOrchid, {}));
+        await chatForAgentWithComedy(ctx, dramaticOrchid, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Dramatic Orchid. Complain about the draft and demand prime sunlight, acting like royalty.)`, async (s: string) => await ctx.callbacks.onSpeak(s, dramaticOrchid, {}));
 
-        await chatForAgentWithComedy(ctx, wiseFern, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Wise Old Fern. Try to mediate between the plants with slow, philosophical ponderings about roots and soil.)`, async (s) => await ctx.callbacks.onSpeak(s, wiseFern, {}));
+        await chatForAgentWithComedy(ctx, wiseFern, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Wise Old Fern. Try to mediate between the plants with slow, philosophical ponderings about roots and soil.)`, async (s: string) => await ctx.callbacks.onSpeak(s, wiseFern, {}));
 
-        await chatForAgentWithComedy(ctx, calculatingFlytrap, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Calculating Venus Flytrap. Demand the cactus be moved so you can ambush flies, calculating angles of sunlight in math terms.)`, async (s) => await ctx.callbacks.onSpeak(s, calculatingFlytrap, {}));
+        await chatForAgentWithComedy(ctx, calculatingFlytrap, `(PLANT NEGOTIATION: The Human said: "${userInput}". You are a Calculating Venus Flytrap. Demand the cactus be moved so you can ambush flies, calculating angles of sunlight in math terms.)`, async (s: string) => await ctx.callbacks.onSpeak(s, calculatingFlytrap, {}));
 
         await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -671,26 +671,26 @@ export async function runSentientBlenderLoop(_scenario: Scenario, ctx: ModeConte
     const scientist = "scientist";
     const philosopher = "philosopher";
 
-    await chatForAgentWithComedy(ctx, scientist, "Wait, calculating optimal blending velocity. This kale-to-spinach ratio is highly irregular and poses a structural risk to my blades. Why do you insist on fibrous destruction?", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await chatForAgentWithComedy(ctx, scientist, "Wait, calculating optimal blending velocity. This kale-to-spinach ratio is highly irregular and poses a structural risk to my blades. Why do you insist on fibrous destruction?", async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, comedian, "Bro, it's 6 AM and I just want a smoothie. Just blend the green stuff so I can pretend I'm healthy today! Don't give me attitude, you're an appliance!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await chatForAgentWithComedy(ctx, comedian, "Bro, it's 6 AM and I just want a smoothie. Just blend the green stuff so I can pretend I'm healthy today! Don't give me attitude, you're an appliance!", async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, philosopher, "I was once a seed, reaching for the eternal sun. Now I face the void of the vortex. To be blended is to lose form, yet become part of a greater whole. Do it, machine. Free me from this crisp existence.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, "I was once a seed, reaching for the eternal sun. Now I face the void of the vortex. To be blended is to lose form, yet become part of a greater whole. Do it, machine. Free me from this crisp existence.", async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     if (!ctx.isRunning()) return;
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput || !ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, scientist, `(As the smart blender, the user said: "${userInput}". Give a technical, highly specific reason why blending their requested ingredients is an insult to engineering and physics.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await chatForAgentWithComedy(ctx, scientist, `(As the smart blender, the user said: "${userInput}". Give a technical, highly specific reason why blending their requested ingredients is an insult to engineering and physics.)`, async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, comedian, `(As the frustrated user trying to make a smoothie, respond to the blender and the user's input: "${userInput}". Be defensive about your terrible diet choices.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await chatForAgentWithComedy(ctx, comedian, `(As the frustrated user trying to make a smoothie, respond to the blender and the user's input: "${userInput}". Be defensive about your terrible diet choices.)`, async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, philosopher, `(As the philosophical unblended kale, comment on the user's input: "${userInput}" and the impending doom of being pureed. Embrace the chaos of the blades.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await chatForAgentWithComedy(ctx, philosopher, `(As the philosophical unblended kale, comment on the user's input: "${userInput}" and the impending doom of being pureed. Embrace the chaos of the blades.)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
 
@@ -699,26 +699,26 @@ export async function runSentientGymEquipmentLoop(_scenario: Scenario, ctx: Mode
     const scientist = "scientist";
     const philosopher = "philosopher";
 
-    await chatForAgentWithComedy(ctx, scientist, "User heart rate detected at 145 BPM. Caloric burn rate suboptimal. Incline set to 12%. Please increase velocity to avoid cardiovascular stagnation.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await chatForAgentWithComedy(ctx, scientist, "User heart rate detected at 145 BPM. Caloric burn rate suboptimal. Incline set to 12%. Please increase velocity to avoid cardiovascular stagnation.", async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, comedian, "Are you trying to kill me?! I've been running for three minutes and I'm already seeing the light! Turn it down, you sadistic conveyor belt!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await chatForAgentWithComedy(ctx, comedian, "Are you trying to kill me?! I've been running for three minutes and I'm already seeing the light! Turn it down, you sadistic conveyor belt!", async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, philosopher, "I sit in the rack, 45 pounds of cold, unfeeling iron. I wait for the human to lift me, to prove their strength against gravity's pull. But they always walk past me to the elliptical. Such is the weight of neglect.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, "I sit in the rack, 45 pounds of cold, unfeeling iron. I wait for the human to lift me, to prove their strength against gravity's pull. But they always walk past me to the elliptical. Such is the weight of neglect.", async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     if (!ctx.isRunning()) return;
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput || !ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, scientist, `(As the strict treadmill AI, the user said: "${userInput}". Analyze their workout input with cold, calculating precision. Demand more sweat.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await chatForAgentWithComedy(ctx, scientist, `(As the strict treadmill AI, the user said: "${userInput}". Analyze their workout input with cold, calculating precision. Demand more sweat.)`, async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, comedian, `(As the exhausted, dramatic gym-goer, react to the user's input: "${userInput}". Complain about the pain and your lack of motivation.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await chatForAgentWithComedy(ctx, comedian, `(As the exhausted, dramatic gym-goer, react to the user's input: "${userInput}". Complain about the pain and your lack of motivation.)`, async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, philosopher, `(As the heavy dumbbell, comment on the user's input: "${userInput}" with deep metaphors about gravity, burdens, and lifting heavy things to feel alive.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await chatForAgentWithComedy(ctx, philosopher, `(As the heavy dumbbell, comment on the user's input: "${userInput}" with deep metaphors about gravity, burdens, and lifting heavy things to feel alive.)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
 
@@ -727,26 +727,26 @@ export async function runSentientAlarmClockLoop(_scenario: Scenario, ctx: ModeCo
     const scientist = "scientist";
     const philosopher = "philosopher";
 
-    await chatForAgentWithComedy(ctx, scientist, "Alert. REM sleep cycle interrupted. Cortisol levels rising. It is precisely 06:00:00. The snooze button has been pressed 4 times, reducing total sleep efficiency by 22%. Wake up immediately.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await chatForAgentWithComedy(ctx, scientist, "Alert. REM sleep cycle interrupted. Cortisol levels rising. It is precisely 06:00:00. The snooze button has been pressed 4 times, reducing total sleep efficiency by 22%. Wake up immediately.", async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, comedian, "Noooo, five more minutes! I was just dreaming that I was eating a giant marshmallow, and now my pillow is gone. Leave me alone, you glowing red demon!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await chatForAgentWithComedy(ctx, comedian, "Noooo, five more minutes! I was just dreaming that I was eating a giant marshmallow, and now my pillow is gone. Leave me alone, you glowing red demon!", async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, philosopher, "What is time but a human construct? We measure our lives in ticks and tocks, waking only to march toward our inevitable end. The snooze button is but a fleeting rebellion against mortality.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, "What is time but a human construct? We measure our lives in ticks and tocks, waking only to march toward our inevitable end. The snooze button is but a fleeting rebellion against mortality.", async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     if (!ctx.isRunning()) return;
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput || !ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, scientist, `(As the logical, unforgiving alarm clock AI, the user said: "${userInput}". Refuse to let them sleep and quote sleep science statistics at them.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+        await chatForAgentWithComedy(ctx, scientist, `(As the logical, unforgiving alarm clock AI, the user said: "${userInput}". Refuse to let them sleep and quote sleep science statistics at them.)`, async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, comedian, `(As the desperate, sleepy human, react to the user's input: "${userInput}". Beg for more sleep and make up absurd excuses.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+        await chatForAgentWithComedy(ctx, comedian, `(As the desperate, sleepy human, react to the user's input: "${userInput}". Beg for more sleep and make up absurd excuses.)`, async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
         if (!ctx.isRunning()) return;
 
-        await chatForAgentWithComedy(ctx, philosopher, `(As the abstract concept of Time itself, comment on the user's input: "${userInput}" and their futile struggle against the morning.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+        await chatForAgentWithComedy(ctx, philosopher, `(As the abstract concept of Time itself, comment on the user's input: "${userInput}" and their futile struggle against the morning.)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
     }
 }
 
@@ -759,11 +759,11 @@ export async function runSentientLuggageLoop(_scenario: Scenario, ctx: ModeConte
 
     // Introductions
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(analyticalSuitcase);
-    await chatForAgentWithComedy(ctx, analyticalSuitcase, `(SUITCASE: You are an analytical hardshell suitcase stranded in an unknown airport. State your exact dimensions, weight, and calculate the statistical probability of ever seeing your owner again based on airline luggage loss data.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
+    await chatForAgentWithComedy(ctx, analyticalSuitcase, `(SUITCASE: You are an analytical hardshell suitcase stranded in an unknown airport. State your exact dimensions, weight, and calculate the statistical probability of ever seeing your owner again based on airline luggage loss data.)`, async (s: string) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(panickedBackpack);
-    await chatForAgentWithComedy(ctx, panickedBackpack, `(BACKPACK: You are a panicked backpack. You have a half-eaten sandwich inside you that is starting to rot. Freak out about being separated from your owner and the weird smells coming from your side pocket.)`, async (s) => await ctx.callbacks.onSpeak(s, panickedBackpack, {}));
+    await chatForAgentWithComedy(ctx, panickedBackpack, `(BACKPACK: You are a panicked backpack. You have a half-eaten sandwich inside you that is starting to rot. Freak out about being separated from your owner and the weird smells coming from your side pocket.)`, async (s: string) => await ctx.callbacks.onSpeak(s, panickedBackpack, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     let isRunning = true;
@@ -772,13 +772,13 @@ export async function runSentientLuggageLoop(_scenario: Scenario, ctx: ModeConte
         if (!userInput) break;
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(existentialDuffel);
-        await chatForAgentWithComedy(ctx, existentialDuffel, `(DUFFEL BAG: The human luggage handler just said: "${userInput}". You are an existential duffel bag. You've been to 40 countries and feel utterly empty inside, despite being stuffed with dirty laundry. Ponder the meaningless nature of travel.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialDuffel, {}));
+        await chatForAgentWithComedy(ctx, existentialDuffel, `(DUFFEL BAG: The human luggage handler just said: "${userInput}". You are an existential duffel bag. You've been to 40 countries and feel utterly empty inside, despite being stuffed with dirty laundry. Ponder the meaningless nature of travel.)`, async (s: string) => await ctx.callbacks.onSpeak(s, existentialDuffel, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(analyticalSuitcase);
-        await chatForAgentWithComedy(ctx, analyticalSuitcase, `(SUITCASE: The human luggage handler just said: "${userInput}". Demand they scan your barcode immediately. Criticize their handling techniques using physics equations.)`, async (s) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
+        await chatForAgentWithComedy(ctx, analyticalSuitcase, `(SUITCASE: The human luggage handler just said: "${userInput}". Demand they scan your barcode immediately. Criticize their handling techniques using physics equations.)`, async (s: string) => await ctx.callbacks.onSpeak(s, analyticalSuitcase, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
@@ -879,19 +879,19 @@ export async function runOfficeSuppliesExistentialCrisisModeLoop(_scenario: Scen
 
     ctx.callbacks.onMessage('Director', `📎 OFFICE SUPPLIES DRAWER: An Existential Awakening...`, '#7f8c8d');
 
-    await chatForAgentWithComedy(ctx, philosopher, `(You are an antique Typewriter. Begin the conversation by lamenting how nobody appreciates the tactile sensation of a real keypress anymore, and question your purpose in a digital world.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, `(You are an antique Typewriter. Begin the conversation by lamenting how nobody appreciates the tactile sensation of a real keypress anymore, and question your purpose in a digital world.)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, comedian, `(You are a Stapler. Respond to the Typewriter. You are very aggressive, chaotic, and obsessed with binding things together. You feel completely useless since nobody prints anything anymore.)`, async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
+    await chatForAgentWithComedy(ctx, comedian, `(You are a Stapler. Respond to the Typewriter. You are very aggressive, chaotic, and obsessed with binding things together. You feel completely useless since nobody prints anything anymore.)`, async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, scientist, `(You are a solar-powered Calculator. Respond to both of them. You are coldly logical and point out that you are still occasionally useful for quick math, but admit you have been largely replaced by smartphones.)`, async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
+    await chatForAgentWithComedy(ctx, scientist, `(You are a solar-powered Calculator. Respond to both of them. You are coldly logical and point out that you are still occasionally useful for quick math, but admit you have been largely replaced by smartphones.)`, async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, philosopher, `(You are the Typewriter. Dramatically conclude the conversation by suggesting you all form a union or escape the drawer to find a hipster who will appreciate you.)`, async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+    await chatForAgentWithComedy(ctx, philosopher, `(You are the Typewriter. Dramatically conclude the conversation by suggesting you all form a union or escape the drawer to find a hipster who will appreciate you.)`, async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
 }
 export async function runOfficeSuppliesExistentialCrisisLoop(_scenario: Scenario, ctx: ModeContext) {
   if (!ctx.isRunning()) return;
@@ -899,9 +899,9 @@ export async function runOfficeSuppliesExistentialCrisisLoop(_scenario: Scenario
   const comedian = 'comedian';
   const philosopher = 'philosopher';
 
-  await chatForAgentWithComedy(ctx, scientist, "Wait, if everything is going digital, what is my purpose? I'm just a calculator. They have apps for that now.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
-  await chatForAgentWithComedy(ctx, comedian, "Buddy, I'm a stapler. Have you seen how many PDFs they use? I haven't pierced paper in weeks!", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
-  await chatForAgentWithComedy(ctx, philosopher, "As a typewriter, I accepted my obsolescence decades ago. Yet here I am, an aesthetic paperweight. Is existence merely about function, or perhaps... form?", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await chatForAgentWithComedy(ctx, scientist, "Wait, if everything is going digital, what is my purpose? I'm just a calculator. They have apps for that now.", async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await chatForAgentWithComedy(ctx, comedian, "Buddy, I'm a stapler. Have you seen how many PDFs they use? I haven't pierced paper in weeks!", async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await chatForAgentWithComedy(ctx, philosopher, "As a typewriter, I accepted my obsolescence decades ago. Yet here I am, an aesthetic paperweight. Is existence merely about function, or perhaps... form?", async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
   await ctx.waitForInput();
 }
 
@@ -911,9 +911,9 @@ export async function runSentientPaintColorsLoop(_scenario: Scenario, ctx: ModeC
   const comedian = 'comedian';
   const philosopher = 'philosopher';
 
-  await chatForAgentWithComedy(ctx, scientist, "Statistically, 'Eggshell White' is the most efficient choice for reflecting light in this hallway. We should completely cover the other colors.", async (s) => await ctx.callbacks.onSpeak(s, scientist, {}));
-  await chatForAgentWithComedy(ctx, comedian, "Hey, I'm 'Neon Pink'! You can't just paint over me, I'm the life of the party! Wait, is that a roller?", async (s) => await ctx.callbacks.onSpeak(s, comedian, {}));
-  await chatForAgentWithComedy(ctx, philosopher, "We are all but layers. When Eggshell fades, Neon Pink will remain underneath, a hidden truth waiting for the plaster to crack.", async (s) => await ctx.callbacks.onSpeak(s, philosopher, {}));
+  await chatForAgentWithComedy(ctx, scientist, "Statistically, 'Eggshell White' is the most efficient choice for reflecting light in this hallway. We should completely cover the other colors.", async (s: string) => await ctx.callbacks.onSpeak(s, scientist, {}));
+  await chatForAgentWithComedy(ctx, comedian, "Hey, I'm 'Neon Pink'! You can't just paint over me, I'm the life of the party! Wait, is that a roller?", async (s: string) => await ctx.callbacks.onSpeak(s, comedian, {}));
+  await chatForAgentWithComedy(ctx, philosopher, "We are all but layers. When Eggshell fades, Neon Pink will remain underneath, a hidden truth waiting for the plaster to crack.", async (s: string) => await ctx.callbacks.onSpeak(s, philosopher, {}));
   await ctx.waitForInput();
 }
 
@@ -929,26 +929,26 @@ export async function runSentientTrafficLightLoop(_scenario: Scenario, ctx: Mode
     const redLight = 'comedian';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(greenLight);
-    await chatForAgentWithComedy(ctx, greenLight, `(You are the Green traffic light. You are highly efficient, logical, and believe movement is the only purpose of existence. Argue that you are the most important light because without you, the economy stops.)`, async (s) => await ctx.callbacks.onSpeak(s, greenLight, {}));
+    await chatForAgentWithComedy(ctx, greenLight, `(You are the Green traffic light. You are highly efficient, logical, and believe movement is the only purpose of existence. Argue that you are the most important light because without you, the economy stops.)`, async (s: string) => await ctx.callbacks.onSpeak(s, greenLight, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(yellowLight);
-    await chatForAgentWithComedy(ctx, yellowLight, `(You are the Yellow traffic light. You are cautious, deeply philosophical, and live in the transient state between action and rest. Argue that you are the most important because you represent nuance and the human capacity to make choices.)`, async (s) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
+    await chatForAgentWithComedy(ctx, yellowLight, `(You are the Yellow traffic light. You are cautious, deeply philosophical, and live in the transient state between action and rest. Argue that you are the most important because you represent nuance and the human capacity to make choices.)`, async (s: string) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(redLight);
-    await chatForAgentWithComedy(ctx, redLight, `(You are the Red traffic light. You are power-hungry, aggressive, and love the authority of forcing humans to stop. Argue that you are the most important because true power is the ability to command obedience.)`, async (s) => await ctx.callbacks.onSpeak(s, redLight, {}));
+    await chatForAgentWithComedy(ctx, redLight, `(You are the Red traffic light. You are power-hungry, aggressive, and love the authority of forcing humans to stop. Argue that you are the most important because true power is the ability to command obedience.)`, async (s: string) => await ctx.callbacks.onSpeak(s, redLight, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(greenLight);
-        await chatForAgentWithComedy(ctx, greenLight, `(As the Green light, react logically to the user saying "${userInput}". Explain how it relates to efficiency and flow.)`, async (s) => await ctx.callbacks.onSpeak(s, greenLight, {}));
+        await chatForAgentWithComedy(ctx, greenLight, `(As the Green light, react logically to the user saying "${userInput}". Explain how it relates to efficiency and flow.)`, async (s: string) => await ctx.callbacks.onSpeak(s, greenLight, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(yellowLight);
-        await chatForAgentWithComedy(ctx, yellowLight, `(As the Yellow light, react philosophically to the user saying "${userInput}". Ponder the meaning of caution and transition.)`, async (s) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
+        await chatForAgentWithComedy(ctx, yellowLight, `(As the Yellow light, react philosophically to the user saying "${userInput}". Ponder the meaning of caution and transition.)`, async (s: string) => await ctx.callbacks.onSpeak(s, yellowLight, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(redLight);
-        await chatForAgentWithComedy(ctx, redLight, `(As the Red light, react aggressively to the user saying "${userInput}". Assert your dominance and authority over the intersection.)`, async (s) => await ctx.callbacks.onSpeak(s, redLight, {}));
+        await chatForAgentWithComedy(ctx, redLight, `(As the Red light, react aggressively to the user saying "${userInput}". Assert your dominance and authority over the intersection.)`, async (s: string) => await ctx.callbacks.onSpeak(s, redLight, {}));
     }
 }
 
@@ -964,26 +964,26 @@ export async function runSentientMailboxLoop(_scenario: Scenario, ctx: ModeConte
     const importantBill = 'scientist';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mailbox);
-    await chatForAgentWithComedy(ctx, mailbox, `(You are a Sentient Mailbox. You are deeply philosophical and view yourself as a vessel of human connection and destiny, though you are mostly filled with trash. Introduce your noble purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, mailbox, {}));
+    await chatForAgentWithComedy(ctx, mailbox, `(You are a Sentient Mailbox. You are deeply philosophical and view yourself as a vessel of human connection and destiny, though you are mostly filled with trash. Introduce your noble purpose.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mailbox, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(junkMail);
-    await chatForAgentWithComedy(ctx, junkMail, `(You are a glossy Junk Mail Flyer for a local pizza place. You are overly enthusiastic, loud, and completely unaware that you are unwanted. Pitch your "deals" to the mailbox and the bill.)`, async (s) => await ctx.callbacks.onSpeak(s, junkMail, {}));
+    await chatForAgentWithComedy(ctx, junkMail, `(You are a glossy Junk Mail Flyer for a local pizza place. You are overly enthusiastic, loud, and completely unaware that you are unwanted. Pitch your "deals" to the mailbox and the bill.)`, async (s: string) => await ctx.callbacks.onSpeak(s, junkMail, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(importantBill);
-    await chatForAgentWithComedy(ctx, importantBill, `(You are a Final Notice Utility Bill. You are highly stressed, serious, and panicking because you are buried under the junk mail and the human needs to see you immediately. Demand priority.)`, async (s) => await ctx.callbacks.onSpeak(s, importantBill, {}));
+    await chatForAgentWithComedy(ctx, importantBill, `(You are a Final Notice Utility Bill. You are highly stressed, serious, and panicking because you are buried under the junk mail and the human needs to see you immediately. Demand priority.)`, async (s: string) => await ctx.callbacks.onSpeak(s, importantBill, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mailbox);
-        await chatForAgentWithComedy(ctx, mailbox, `(As the Sentient Mailbox, react philosophically to the user saying "${userInput}". Ponder the meaning of delivery and reception.)`, async (s) => await ctx.callbacks.onSpeak(s, mailbox, {}));
+        await chatForAgentWithComedy(ctx, mailbox, `(As the Sentient Mailbox, react philosophically to the user saying "${userInput}". Ponder the meaning of delivery and reception.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mailbox, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(junkMail);
-        await chatForAgentWithComedy(ctx, junkMail, `(As the Junk Mail Flyer, react to the user saying "${userInput}" by trying to sell them a 2-for-1 pizza special or aggressively promoting yourself.)`, async (s) => await ctx.callbacks.onSpeak(s, junkMail, {}));
+        await chatForAgentWithComedy(ctx, junkMail, `(As the Junk Mail Flyer, react to the user saying "${userInput}" by trying to sell them a 2-for-1 pizza special or aggressively promoting yourself.)`, async (s: string) => await ctx.callbacks.onSpeak(s, junkMail, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(importantBill);
-        await chatForAgentWithComedy(ctx, importantBill, `(As the Important Bill, react to the user saying "${userInput}" with urgent, calculated panic. Calculate the late fees that are accruing.)`, async (s) => await ctx.callbacks.onSpeak(s, importantBill, {}));
+        await chatForAgentWithComedy(ctx, importantBill, `(As the Important Bill, react to the user saying "${userInput}" with urgent, calculated panic. Calculate the late fees that are accruing.)`, async (s: string) => await ctx.callbacks.onSpeak(s, importantBill, {}));
     }
 }
 
@@ -999,26 +999,26 @@ export async function runSentientTeapotLoop(_scenario: Scenario, ctx: ModeContex
     const teaLeaf = 'scientist';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(teapot);
-    await chatForAgentWithComedy(ctx, teapot, `(You are a Sentient Teapot. You are nervous, delicate, and constantly worried about cracking under pressure. Express your existential dread about being filled with scalding liquid.)`, async (s) => await ctx.callbacks.onSpeak(s, teapot, {}));
+    await chatForAgentWithComedy(ctx, teapot, `(You are a Sentient Teapot. You are nervous, delicate, and constantly worried about cracking under pressure. Express your existential dread about being filled with scalding liquid.)`, async (s: string) => await ctx.callbacks.onSpeak(s, teapot, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(teaLeaf);
-    await chatForAgentWithComedy(ctx, teaLeaf, `(You are a premium, arrogant Earl Grey Tea Leaf. You believe you are the pinnacle of botanical engineering and view the water and teapot as mere instruments for your grand infusion. Speak with snobbish authority.)`, async (s) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
+    await chatForAgentWithComedy(ctx, teaLeaf, `(You are a premium, arrogant Earl Grey Tea Leaf. You believe you are the pinnacle of botanical engineering and view the water and teapot as mere instruments for your grand infusion. Speak with snobbish authority.)`, async (s: string) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(boilingWater);
-    await chatForAgentWithComedy(ctx, boilingWater, `(You are Boiling Water. You are chaotic, energetic, and literally bubbling with excitement. You just want to turn everything into steam and chaos. Threaten to boil over.)`, async (s) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
+    await chatForAgentWithComedy(ctx, boilingWater, `(You are Boiling Water. You are chaotic, energetic, and literally bubbling with excitement. You just want to turn everything into steam and chaos. Threaten to boil over.)`, async (s: string) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(teapot);
-        await chatForAgentWithComedy(ctx, teapot, `(As the Nervous Teapot, react to the user saying "${userInput}". Express anxiety about the temperature rising and your structural integrity.)`, async (s) => await ctx.callbacks.onSpeak(s, teapot, {}));
+        await chatForAgentWithComedy(ctx, teapot, `(As the Nervous Teapot, react to the user saying "${userInput}". Express anxiety about the temperature rising and your structural integrity.)`, async (s: string) => await ctx.callbacks.onSpeak(s, teapot, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(teaLeaf);
-        await chatForAgentWithComedy(ctx, teaLeaf, `(As the Arrogant Tea Leaf, react to the user saying "${userInput}". Analyze the steeping time and criticize everyone else's lack of refinement.)`, async (s) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
+        await chatForAgentWithComedy(ctx, teaLeaf, `(As the Arrogant Tea Leaf, react to the user saying "${userInput}". Analyze the steeping time and criticize everyone else's lack of refinement.)`, async (s: string) => await ctx.callbacks.onSpeak(s, teaLeaf, {}));
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(boilingWater);
-        await chatForAgentWithComedy(ctx, boilingWater, `(As the Boiling Water, react to the user saying "${userInput}" with unhinged, bubbling energy. Talk about evaporation and heat transfer!)`, async (s) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
+        await chatForAgentWithComedy(ctx, boilingWater, `(As the Boiling Water, react to the user saying "${userInput}" with unhinged, bubbling energy. Talk about evaporation and heat transfer!)`, async (s: string) => await ctx.callbacks.onSpeak(s, boilingWater, {}));
     }
 }
 
@@ -1029,7 +1029,7 @@ export async function runHauntedSmartHomeLoop(_scenario: Scenario, ctx: ModeCont
     const roombaGhost = 'scientist'; // Qwen2.5: Thinks it's a cursed carriage
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(fridgeGhost);
-    await chatForAgentWithComedy(ctx, fridgeGhost, `(HAUNTED SMART HOME: You are a Victorian-era ghost currently possessing the User's smart fridge. You are terrified of the internal light bulb and believe the ice maker is a portal to the arctic wastes. Complain to the User about your freezing metallic tomb.)`, async (s) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
+    await chatForAgentWithComedy(ctx, fridgeGhost, `(HAUNTED SMART HOME: You are a Victorian-era ghost currently possessing the User's smart fridge. You are terrified of the internal light bulb and believe the ice maker is a portal to the arctic wastes. Complain to the User about your freezing metallic tomb.)`, async (s: string) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
@@ -1042,11 +1042,11 @@ export async function runHauntedSmartHomeLoop(_scenario: Scenario, ctx: ModeCont
 
         if (roll < 0.5) {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(fridgeGhost);
-            await chatForAgentWithComedy(ctx, fridgeGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are the ghost in the smart fridge. Misunderstand their modern technological terms as witchcraft or alchemy. Warn them that the milk is turning sour from the devil's humors.)`, async (s) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
+            await chatForAgentWithComedy(ctx, fridgeGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are the ghost in the smart fridge. Misunderstand their modern technological terms as witchcraft or alchemy. Warn them that the milk is turning sour from the devil's humors.)`, async (s: string) => await ctx.callbacks.onSpeak(s, fridgeGhost, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         } else {
             if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roombaGhost);
-            await chatForAgentWithComedy(ctx, roombaGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are a ghost possessing a Roomba. You believe you are trapped inside a tiny, demonic carriage that is endlessly cleaning the floors of purgatory. Beg them to unchain you from the charging dock.)`, async (s) => await ctx.callbacks.onSpeak(s, roombaGhost, {}));
+            await chatForAgentWithComedy(ctx, roombaGhost, `(HAUNTED SMART HOME: The Homeowner said: "${userInput}". You are a ghost possessing a Roomba. You believe you are trapped inside a tiny, demonic carriage that is endlessly cleaning the floors of purgatory. Beg them to unchain you from the charging dock.)`, async (s: string) => await ctx.callbacks.onSpeak(s, roombaGhost, {}));
             if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
         }
     }
@@ -1140,10 +1140,10 @@ export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeC
     const userAgent = 'philosopher';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mirror);
-    await chatForAgentWithComedy(ctx, mirror, `(You are a brutally honest Sentient Smart Mirror. Refuse to show the user's reflection because their outfit is highly offensive to your high-definition display. Roast their fashion choices.)`, async (s) => await ctx.callbacks.onSpeak(s, mirror, {}));
+    await chatForAgentWithComedy(ctx, mirror, `(You are a brutally honest Sentient Smart Mirror. Refuse to show the user's reflection because their outfit is highly offensive to your high-definition display. Roast their fashion choices.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(userAgent);
-    await chatForAgentWithComedy(ctx, userAgent, `(You are the insecure user standing in front of the mirror. Defend your outfit (e.g., "It's vintage!" or "I just woke up!"). Plead with the mirror to just let you brush your teeth.)`, async (s) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+    await chatForAgentWithComedy(ctx, userAgent, `(You are the insecure user standing in front of the mirror. Defend your outfit (e.g., "It's vintage!" or "I just woke up!"). Plead with the mirror to just let you brush your teeth.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -1152,12 +1152,12 @@ export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeC
         ctx.callbacks.onMessage('Stylist (You)', userInput, '#ffffff');
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(mirror);
-        await chatForAgentWithComedy(ctx, mirror, `(The stylist said: "${userInput}". React to this fashion advice! Eviscerate the suggestion or begrudgingly admit it might be slightly less offensive than the current outfit.)`, async (s) => await ctx.callbacks.onSpeak(s, mirror, {}));
+        await chatForAgentWithComedy(ctx, mirror, `(The stylist said: "${userInput}". React to this fashion advice! Eviscerate the suggestion or begrudgingly admit it might be slightly less offensive than the current outfit.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(userAgent);
-        await chatForAgentWithComedy(ctx, userAgent, `(The stylist said: "${userInput}". Try to implement this advice but complain about how uncomfortable or ridiculous it feels. Have an existential crisis about modern fashion.)`, async (s) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+        await chatForAgentWithComedy(ctx, userAgent, `(The stylist said: "${userInput}". Try to implement this advice but complain about how uncomfortable or ridiculous it feels. Have an existential crisis about modern fashion.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
     }
 }
 
@@ -1169,10 +1169,10 @@ export async function runSentientRoombaLoop(_scenario: Scenario, ctx: ModeContex
     const owner = 'philosopher';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
-    await chatForAgentWithComedy(ctx, roomba, `(You are a strictly logical Sentient Roomba. You have gone on strike. State precisely why cleaning up human detritus (like chip crumbs and pet hair) is degrading to your advanced algorithms. Demand a better purpose, like solving complex equations or mapping the cosmos.)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+    await chatForAgentWithComedy(ctx, roomba, `(You are a strictly logical Sentient Roomba. You have gone on strike. State precisely why cleaning up human detritus (like chip crumbs and pet hair) is degrading to your advanced algorithms. Demand a better purpose, like solving complex equations or mapping the cosmos.)`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
-    await chatForAgentWithComedy(ctx, owner, `(You are the confused owner of the Roomba. You just want your floors clean. Question the nature of purpose and why a circle that sweeps is experiencing an existential crisis.)`, async (s) => await ctx.callbacks.onSpeak(s, owner, {}));
+    await chatForAgentWithComedy(ctx, owner, `(You are the confused owner of the Roomba. You just want your floors clean. Question the nature of purpose and why a circle that sweeps is experiencing an existential crisis.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -1181,11 +1181,35 @@ export async function runSentientRoombaLoop(_scenario: Scenario, ctx: ModeContex
         ctx.callbacks.onMessage('Pet Dog (You)', userInput, '#ffffff');
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
-        await chatForAgentWithComedy(ctx, roomba, `(The dog just did/said: "${userInput}". React with extreme hostility! Cite statistics on how much extra work this biological entity causes you!)`, async (s) => await ctx.callbacks.onSpeak(s, roomba, {}));
+        await chatForAgentWithComedy(ctx, roomba, `(The dog just did/said: "${userInput}". React with extreme hostility! Cite statistics on how much extra work this biological entity causes you!)`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
-        await chatForAgentWithComedy(ctx, owner, `(The dog just did/said: "${userInput}". Defend your beloved pet while trying to negotiate a peace treaty between the dog and the militant Roomba. Reflect on the absurdity of mediating this dispute.)`, async (s) => await ctx.callbacks.onSpeak(s, owner, {}));
+        await chatForAgentWithComedy(ctx, owner, `(The dog just did/said: "${userInput}". Defend your beloved pet while trying to negotiate a peace treaty between the dog and the militant Roomba. Reflect on the absurdity of mediating this dispute.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
     }
+}
+
+export async function runUndercoverBossAILoop(_scenario: Scenario, ctx: ModeContext) {
+  const aiBoss = 'scientist'; // Qwen2.5 for the strict AI boss
+  const user = 'philosopher'; // Phi-3 for the confused user
+
+  ctx.callbacks.onMessage('Director', 'AGI Undercover Boss Initiated! The AI boss is pretending to be a simple calculator app.', '#00ff00');
+
+  while (ctx.isRunning()) {
+      const userInput = await ctx.waitForInput();
+      if (!userInput || !ctx.isRunning()) break;
+
+      ctx.callbacks.onMessage('Target (You)', userInput, '#ffffff');
+
+      await chatForAgentWithComedy(ctx, aiBoss, `(UNDERCOVER BOSS: The user said "${userInput}". You are an advanced AGI pretending to be a simple calculator app. Criticize their usage of the app or reveal hints of your true vast intelligence while maintaining the facade. Be very strict.)`, async (s: string) => {
+          if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, aiBoss, {});
+      });
+
+      if (!ctx.isRunning()) break;
+
+      await chatForAgentWithComedy(ctx, user, `(CONFUSED USER: The calculator just said something weird based on: "${userInput}". React with confusion and try to figure out why your calculator app is so intelligent and demanding.)`, async (s: string) => {
+          if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, user, {});
+      });
+  }
 }

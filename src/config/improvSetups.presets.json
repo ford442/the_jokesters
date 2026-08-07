@@ -1023,5 +1023,15 @@
     "id": "time_traveling_traffic_cop",
     "title": "Time-Traveling Traffic Cop",
     "description": "A traffic cop from the future gives tickets for minor infractions that haven't happened yet."
+  },
+  {
+    "id": "paranormal_real_estate_two",
+    "title": "Paranormal Real Estate Agent 2.0",
+    "description": "The ghosts form a union and refuse to haunt the house until they get better working conditions."
+  },
+  {
+    "id": "philosophical_plumber",
+    "title": "Philosophical Plumber Mode",
+    "description": "A plumber fixes the sink but questions whether the water leak is just a manifestation of the user's emotional baggage."
   }
 ]
