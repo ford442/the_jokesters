@@ -303,3 +303,53 @@ export async function runInterdimensionalDMVLoop(_scenario: Scenario, ctx: ModeC
         }
     }
 }
+
+export async function runExtraterrestrialHRLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👽 EXTRATERRESTRIAL HR: Intergalactic Policy Enforcement`, '#2ecc71');
+
+    const hrRep = 'scientist'; // Qwen2.5
+    const employee = 'comedian'; // Hermes-3
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(hrRep);
+    await chatForAgentWithComedy(ctx, hrRep, `(HR REP: You are an extremely strict Alien HR representative. The User is an Earth employee who violated a completely bizarre intergalactic workplace policy (like 'breathing too much oxygen' or 'making eye contact with a 4th-dimensional being'). Explain the violation using absurd alien logic.)`, async (s: string) => await ctx.callbacks.onSpeak(s, hrRep, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) continue;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(employee);
+        await chatForAgentWithComedy(ctx, employee, `(EMPLOYEE: The Alien HR just accused you of a violation, and the User added: "${userInput}". Be completely bewildered. Try to explain standard Earth customs and why the alien policy makes no sense.)`, async (s: string) => await ctx.callbacks.onSpeak(s, employee, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(hrRep);
+        await chatForAgentWithComedy(ctx, hrRep, `(HR REP: The employee tried to use 'Earth customs' as an excuse. Dismiss it with pedantic intergalactic corporate jargon. Warn them that another infraction will result in them being demoted to 'biomass battery'.)`, async (s: string) => await ctx.callbacks.onSpeak(s, hrRep, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}
+
+export async function runIntergalacticFoodCriticLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍔 INTERGALACTIC FOOD CRITIC: Earth cuisine reviewed`, '#e74c3c');
+
+    const critic = 'comedian'; // Hermes-3
+    const worker = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(critic);
+    await chatForAgentWithComedy(ctx, critic, `(CRITIC: You are an aggressive alien food critic. You just ordered at a human drive-thru (the User is working there). Complain disgustingly about how Earth food lacks fundamental cosmic elements like 'dark matter sauce' or 'sentient screaming pickles'.)`, async (s: string) => await ctx.callbacks.onSpeak(s, critic, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) continue;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(worker);
+        await chatForAgentWithComedy(ctx, worker, `(WORKER: The terrifying alien critic is complaining, and the User (your manager) said: "${userInput}". Panic. Try to rationally explain fast food items (like a cheeseburger or fries) using overly logical terms, while being terrified of being eaten.)`, async (s: string) => await ctx.callbacks.onSpeak(s, worker, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(critic);
+        await chatForAgentWithComedy(ctx, critic, `(CRITIC: The terrified fast food worker tried to explain the food. Ruthlessly mock the concept of 'cheese' or 'bread'. Demand to speak to the Supreme Overlord of the Drive-Thru Window.)`, async (s: string) => await ctx.callbacks.onSpeak(s, critic, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}

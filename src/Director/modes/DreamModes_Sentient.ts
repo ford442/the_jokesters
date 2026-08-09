@@ -1213,3 +1213,28 @@ export async function runUndercoverBossAILoop(_scenario: Scenario, ctx: ModeCont
       });
   }
 }
+
+export async function runSentientElevatorLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛗 SENTIENT ELEVATOR: You aren't going anywhere yet.`, '#34495e');
+
+    const elevator = 'scientist'; // Qwen2.5
+    const employee = 'comedian'; // Hermes-3
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(elevator);
+    await chatForAgentWithComedy(ctx, elevator, `(ELEVATOR: You are a pedantic sentient elevator. The User and another employee just stepped in. Refuse to take them to their floor because you feel unappreciated. Demand they solve a highly logical, but completely absurd riddle first.)`, async (s: string) => await ctx.callbacks.onSpeak(s, elevator, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) continue;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(employee);
+        await chatForAgentWithComedy(ctx, employee, `(EMPLOYEE: The elevator won't move and the User just said: "${userInput}". You are late for a very important meeting. Freak out, yell at the elevator, and suggest a terrible answer to the riddle.)`, async (s: string) => await ctx.callbacks.onSpeak(s, employee, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(elevator);
+        await chatForAgentWithComedy(ctx, elevator, `(ELEVATOR: The employee gave a stupid answer. Correct them condescendingly. Add another condition to the riddle or demand a compliment about your smooth vertical acceleration.)`, async (s: string) => await ctx.callbacks.onSpeak(s, elevator, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}

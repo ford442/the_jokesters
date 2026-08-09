@@ -1048,5 +1048,15 @@
     "id": "extraterrestrial_hr",
     "title": "Extraterrestrial HR",
     "description": "Alien HR reps try to explain standard Earth workplace violations using bizarre intergalactic logic."
+  },
+  {
+    "id": "intergalactic_food_critic",
+    "title": "Intergalactic Food Critic Mode",
+    "description": "An alien food critic reviews a human drive-thru and is disgusted by earth cuisine."
+  },
+  {
+    "id": "sentient_elevator",
+    "title": "Sentient Elevator Mode",
+    "description": "A sentient elevator refuses to take passengers to their floor until they solve a riddle."
   }
 ]

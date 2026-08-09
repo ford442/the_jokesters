@@ -77,6 +77,10 @@ Prioritize these over new premises:
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- [x] Sentient Elevator Mode:
+  - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
+  - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
+- Escape Room: The Backrooms:
 - Paranormal Tech Support:
   - Premise one-liner: Tech support agents have to troubleshoot a computer that's haunted by a ghost from the 1800s.
   - LLM pairings: Qwen2.5 for the literal tech support, Hermes-3 for the dramatic ghost.
@@ -180,7 +184,7 @@ Prioritize these over new premises:
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
 
 
-- Intergalactic Food Critic Mode:
+- [x] Intergalactic Food Critic Mode:
   - Premise one-liner: An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.
   - LLM pairings: Hermes-3 for the aggressive alien critic, Phi-3 for the terrified fast food worker.
 

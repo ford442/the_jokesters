@@ -356,3 +356,28 @@ export async function runGameShowLoop(scenario: Scenario, ctx: ModeContext) {
         await chatForAgentWithComedy(ctx, host, `(HOST: Judge the human's answer and the other contestants' interruptions. Award meaningless points based on a flawed scientific formula. Ask the human the next question.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
     }
 }
+
+export async function runRealityTVSentientFurnitureLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📺 REALITY TV: Sentient Furniture Judges You`, '#9b59b6');
+
+    const couch = 'comedian'; // Hermes-3
+    const owner = 'philosopher'; // Phi-3
+
+    // 1. Intro
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(couch);
+    await chatForAgentWithComedy(ctx, couch, `(COUCH: You are a sassy, judgmental couch on a reality TV show. The User is the messy owner who just sat on you with outside clothes. Confront them about their lifestyle choices and the crumbs between your cushions.)`, async (s: string) => await ctx.callbacks.onSpeak(s, couch, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput) continue;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
+        await chatForAgentWithComedy(ctx, owner, `(OWNER: The sassy couch just complained to you and the User said: "${userInput}". Try to defend your messy habits using convoluted philosophical arguments about entropy and lived-in spaces.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(couch);
+        await chatForAgentWithComedy(ctx, couch, `(COUCH: The owner just made a ridiculous excuse. Roast them for it. Threaten to swallow their remote control or keys if they don't clean up.)`, async (s: string) => await ctx.callbacks.onSpeak(s, couch, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}

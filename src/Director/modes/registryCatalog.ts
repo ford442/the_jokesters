@@ -982,6 +982,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'intergalactic_food_critic',
+    title: 'Intergalactic Food Critic Mode',
+    category: 'dream',
+    description: 'An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.',
+    tags: ['dream', 'intergalactic', 'food', 'critic'],
+    showInPresets: true,
+  },
+  {
     id: 'intergalactic_gig_economy',
     title: 'Intergalactic Gig Economy',
     category: 'dream',
@@ -1843,6 +1851,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Words arguing about their definitions and modern usage.',
     tags: ['dream', 'sentient', 'dictionary'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_elevator',
+    title: 'Sentient Elevator Mode',
+    category: 'dream',
+    description: 'A sentient elevator refuses to take passengers to their floor until they solve a riddle.',
+    tags: ['dream', 'sentient', 'elevator'],
     showInPresets: true,
   },
   {
