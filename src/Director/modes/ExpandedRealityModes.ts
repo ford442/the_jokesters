@@ -97,3 +97,51 @@ export async function runSentientSmartMirrorLoop(_scenario: any, ctx: any) {
     await ctx.callbacks.onSpeak(s, user, {});
   }, { chatOptions: { hiddenInstruction: "You are an insecure user trying to get ready for the day, begging the smart mirror to just show your reflection." } });
 }
+
+export async function runEscapeRoomBackroomsLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // The anomaly
+  const comedian = 'comedian'; // The panicked explorer
+
+  await chatForAgentWithComedy(ctx, scientist, "PLEASE FILL OUT FORM 84B-DELTA BEFORE PROCEEDING TO THE INFINITE WATER COOLER SECTOR.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are an anomalous entity acting as a strict bureaucratic office manager in the Backrooms." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "I just wanted to find the bathroom! Why are the walls buzzing?!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a terrified explorer trapped in the Backrooms who just wants to find the exit." } });
+}
+
+export async function runRealityTVSentientFurnitureLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const comedian = 'comedian'; // The sassy couch
+  const philosopher = 'philosopher'; // The bewildered owner
+
+  await chatForAgentWithComedy(ctx, comedian, "Oh, so we're just leaving pizza boxes on me now? I am Italian leather, Brenda, not a dumpster!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a sassy, judgmental couch on a reality TV show." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, philosopher, "I don't understand, you're a couch. Since when do you have opinions on my diet?", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, philosopher, {});
+  }, { chatOptions: { hiddenInstruction: "You are the messy, confused owner of sentient furniture." } });
+}
+
+export async function runExtraterrestrialHRLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // The strict Alien HR
+  const comedian = 'comedian'; // The confused Earth employee
+
+  await chatForAgentWithComedy(ctx, scientist, "Human employee 893, consuming the breakroom donuts without first offering a blood sacrifice to the Glip-Glorp idol is a level 3 violation.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are an alien HR representative applying bizarre intergalactic rules to a normal Earth office." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "It was just a glazed donut! Since when does accounting require blood sacrifices?", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a confused human employee being reprimanded by Alien HR." } });
+}

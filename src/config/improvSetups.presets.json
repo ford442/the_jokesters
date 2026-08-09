@@ -1035,6 +1035,11 @@
     "description": "A plumber fixes the sink but questions whether the water leak is just a manifestation of the user's emotional baggage."
   },
   {
+    "id": "escape_room_backrooms",
+    "title": "Escape Room: The Backrooms",
+    "description": "Agents are trapped in an infinite, non-euclidean office space and must negotiate with anomalous entities to find an exit."
+  },
+  {
     "id": "reality_tv_sentient_furniture",
     "title": "Reality TV: Sentient Furniture",
     "description": "A reality TV show where the house's furniture judges the messy owners."

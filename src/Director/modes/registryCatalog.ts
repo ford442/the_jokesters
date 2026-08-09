@@ -590,6 +590,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'escape_room_backrooms',
+    title: 'Escape Room: The Backrooms',
+    category: 'dream',
+    description: 'Agents are trapped in an infinite, non-euclidean office space and must negotiate with anomalous entities to find an exit.',
+    tags: ['dream', 'escape', 'room', 'backrooms'],
+    showInPresets: true,
+  },
+  {
     id: 'escape_room_game_master',
     title: 'Escape Room Game Master Mode',
     category: 'interactive',

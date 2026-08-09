@@ -78,6 +78,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'enhanced_roast': async () => (await import('./PerformanceMode')).runEnhancedRoastLoop,
   'escape_backrooms': async () => (await import('./ExpandedRealityModes_Supernatural')).runEscapeBackroomsLoop,
   'escape_room': async () => (await import('./ExpandedRealityModes_Supernatural')).runEscapeRoomLoop,
+  'escape_room_backrooms': async () => (await import('./ExpandedRealityModes')).runEscapeRoomBackroomsLoop,
   'escape_room_game_master': async () => (await import('./InteractiveMode')).runEscapeRoomGameMasterLoop,
   'escape_zoo': async () => (await import('./DreamModes_Scifi')).runEscapeZooLoop,
   'escaped_npc': async () => (await import('./DreamModes_Fantasy')).runEscapedNPCModeLoop,
