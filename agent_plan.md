@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Process (P0)
 
@@ -77,13 +77,16 @@ Prioritize these over new premises:
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- [x] Sentient Elevator Mode:
+  - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
+  - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
 - Escape Room: The Backrooms:
   - Premise one-liner: Agents are trapped in an infinite, non-euclidean office space and must negotiate with anomalous entities to find an exit.
   - LLM pairings: Qwen2.5 for the strict anomalous entity, Hermes-3 for the panicked explorer.
-- Reality TV: Sentient Furniture:
+- [x] Reality TV: Sentient Furniture:
   - Premise one-liner: A reality TV show where the house's furniture judges the messy owners.
   - LLM pairings: Hermes-3 for the sassy couch, Phi-3 for the bewildered owner.
-- Extraterrestrial HR:
+- [x] Extraterrestrial HR:
   - Premise one-liner: Alien HR reps try to explain standard Earth workplace violations using bizarre intergalactic logic.
   - LLM pairings: Qwen2.5 for the strict Alien HR, Hermes-3 for the confused Earth employee.
 - [x] Sentient Toaster Rebellion Mode:
@@ -171,7 +174,7 @@ Prioritize these over new premises:
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
 
 
-- Intergalactic Food Critic Mode:
+- [x] Intergalactic Food Critic Mode:
   - Premise one-liner: An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.
   - LLM pairings: Hermes-3 for the aggressive alien critic, Phi-3 for the terrified fast food worker.
 

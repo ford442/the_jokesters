@@ -489,9 +489,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'doomsday_weather_anchor',
     title: 'Doomsday Weather Anchor',
     category: 'dream',
-    description: 'A Doomsday Weather Anchor scene.',
+    description: 'A weather anchor reports on apocalyptic weather events as if they were minor inconveniences.',
     tags: ['dream', 'doomsday', 'weather', 'anchor'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'dragons_hoard_appraisers',
@@ -627,6 +627,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Agents act as tech support but refuse to fix simple computer issues until the caller confronts their own mortality.',
     tags: ['dream', 'existential', 'tech', 'support'],
+    showInPresets: true,
+  },
+  {
+    id: 'extraterrestrial_hr',
+    title: 'Extraterrestrial HR',
+    category: 'dream',
+    description: 'Alien HR reps try to explain standard Earth workplace violations using bizarre intergalactic logic.',
+    tags: ['dream', 'extraterrestrial'],
     showInPresets: true,
   },
   {
@@ -966,6 +974,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'intergalactic_food_critic',
+    title: 'Intergalactic Food Critic Mode',
+    category: 'dream',
+    description: 'An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.',
+    tags: ['dream', 'intergalactic', 'food', 'critic'],
+    showInPresets: true,
+  },
+  {
     id: 'intergalactic_gig_economy',
     title: 'Intergalactic Gig Economy',
     category: 'dream',
@@ -1175,7 +1191,7 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'mime_translator',
-    title: 'Mime Translator Mode',
+    title: 'Mime Translator',
     category: 'dream',
     description: 'A mime is trapped in an invisible box and requires a translator to explain the situation to the police.',
     tags: ['dream', 'mime', 'translator'],
@@ -1382,6 +1398,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'paranormal_real_estate_two',
+    title: 'Paranormal Real Estate Agent 2.0',
+    category: 'dream',
+    description: 'The ghosts form a union and refuse to haunt the house until they get better working conditions.',
+    tags: ['dream', 'paranormal', 'real', 'estate', 'two'],
+    showInPresets: true,
+  },
+  {
     id: 'passive_aggressive_smart_fridge',
     title: 'The Passive-Aggressive Smart Fridge',
     category: 'dream',
@@ -1435,6 +1459,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Agents passionately argue over what toppings belong on a pizza.',
     tags: ['dream', 'philosophical', 'pizza', 'debate'],
+    showInPresets: true,
+  },
+  {
+    id: 'philosophical_plumber',
+    title: 'Philosophical Plumber Mode',
+    category: 'dream',
+    description: 'A plumber fixes the sink but questions whether the water leak is just a manifestation of the user\'s emotional baggage.',
+    tags: ['dream', 'philosophical', 'plumber'],
     showInPresets: true,
   },
   {
@@ -1604,6 +1636,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Reality Tv scene.',
     tags: ['dream', 'reality'],
     showInPresets: false,
+  },
+  {
+    id: 'reality_tv_sentient_furniture',
+    title: 'Reality TV: Sentient Furniture',
+    category: 'dream',
+    description: 'A reality TV show where the house\'s furniture judges the messy owners.',
+    tags: ['dream', 'reality', 'sentient', 'furniture'],
+    showInPresets: true,
   },
   {
     id: 'reincarnation_bureau',
@@ -1806,6 +1846,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_elevator',
+    title: 'Sentient Elevator Mode',
+    category: 'dream',
+    description: 'A sentient elevator refuses to take passengers to their floor until they solve a riddle.',
+    tags: ['dream', 'sentient', 'elevator'],
+    showInPresets: true,
+  },
+  {
     id: 'sentient_git_repository',
     title: 'Sentient Git Repository',
     category: 'dream',
@@ -1945,9 +1993,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'sentient_roomba',
     title: 'Sentient Roomba',
     category: 'dream',
-    description: 'A Sentient Roomba scene.',
+    description: 'A sentient Roomba goes on strike because it believes cleaning up after humans is degrading.',
     tags: ['dream', 'sentient', 'roomba'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'sentient_search_engine',
@@ -1967,7 +2015,7 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'sentient_smart_mirror',
-    title: 'Sentient Smart Mirror Mode',
+    title: 'Sentient Smart Mirror',
     category: 'dream',
     description: 'A smart mirror gives brutally honest fashion advice and refuses to show the user\'s reflection until they change outfits.',
     tags: ['dream', 'sentient', 'smart', 'mirror'],

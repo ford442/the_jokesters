@@ -1410,5 +1410,21 @@
   {
     "id": "philosophical_plumber",
     "handler": "runPhilosophicalPlumberLoop"
+  },
+  {
+    "id": "reality_tv_sentient_furniture",
+    "handler": "runRealityTVSentientFurnitureLoop"
+  },
+  {
+    "id": "extraterrestrial_hr",
+    "handler": "runExtraterrestrialHRLoop"
+  },
+  {
+    "id": "intergalactic_food_critic",
+    "handler": "runIntergalacticFoodCriticLoop"
+  },
+  {
+    "id": "sentient_elevator",
+    "handler": "runSentientElevatorLoop"
   }
 ]
