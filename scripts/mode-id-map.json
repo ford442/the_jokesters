@@ -1410,5 +1410,17 @@
   {
     "id": "philosophical_plumber",
     "handler": "runPhilosophicalPlumberLoop"
+  },
+  {
+    "id": "escape_room_backrooms",
+    "handler": "runEscapeRoomBackroomsLoop"
+  },
+  {
+    "id": "reality_tv_sentient_furniture",
+    "handler": "runRealityTVSentientFurnitureLoop"
+  },
+  {
+    "id": "extraterrestrial_hr",
+    "handler": "runExtraterrestrialHRLoop"
   }
 ]
