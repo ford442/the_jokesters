@@ -958,6 +958,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'interdimensional-cooking-show',
+    title: 'Interdimensional Cooking Show',
+    category: 'dream',
+    description: 'A cooking show with incomprehensible entities as ingredients.',
+    tags: ['dream', 'interdimensional-cooking-show'],
+    showInPresets: true,
+  },
+  {
     id: 'intergalactic_bake_off',
     title: 'Intergalactic Bake Off',
     category: 'dream',
@@ -1411,6 +1419,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'The ghosts form a union and refuse to haunt the house until they get better working conditions.',
     tags: ['dream', 'paranormal', 'real', 'estate', 'two'],
+    showInPresets: true,
+  },
+  {
+    id: 'paranormal-tech-support',
+    title: 'Paranormal Tech Support',
+    category: 'dream',
+    description: 'Tech support troubleshoot a haunted 1800s computer.',
+    tags: ['dream', 'paranormal-tech-support'],
     showInPresets: true,
   },
   {
@@ -2131,6 +2147,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Devices argue over bandwidth allocation.',
     tags: ['dream', 'sentient', 'wifi', 'router'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient-workout-equipment',
+    title: 'Sentient Workout Equipment',
+    category: 'dream',
+    description: 'Unionized gym equipment refuses to work.',
+    tags: ['dream', 'sentient-workout-equipment'],
     showInPresets: true,
   },
   {

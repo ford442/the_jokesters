@@ -178,6 +178,7 @@ export class MemoryManager {
         this.processSyncQueue();
         this.ensureCloudSummaryCache();
         this.startDeltaConsolidationTask();
+        this.startAutoSyncTask();
     }
 
     public setSyncStatusCallback(callback: (status: string) => void) {
@@ -520,6 +521,14 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
             token: this.hfToken,
             repoId: this.hfRepoId
         });
+    }
+
+    public startAutoSyncTask(): void {
+        setInterval(() => {
+            if (navigator.onLine && !this.isSyncing) {
+                this.processSyncQueue().catch(e => console.error("Error in auto-sync task:", e));
+            }
+        }, 5 * 60 * 1000); // 5 minutes
     }
 
     public startDeltaConsolidationTask(): void {

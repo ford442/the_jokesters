@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 5
 
 ## Process (P0)
 
@@ -81,13 +81,13 @@ Prioritize these over new premises:
   - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
   - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
 - Escape Room: The Backrooms:
-- Paranormal Tech Support:
+- [x] Paranormal Tech Support:
   - Premise one-liner: Tech support agents have to troubleshoot a computer that's haunted by a ghost from the 1800s.
   - LLM pairings: Qwen2.5 for the literal tech support, Hermes-3 for the dramatic ghost.
-- Interdimensional Cooking Show:
+- [x] Interdimensional Cooking Show:
   - Premise one-liner: A cooking show where the ingredients are completely incomprehensible entities from another dimension.
   - LLM pairings: Hermes-3 for the enthusiastic chef, Phi-3 for the terrified guest judge.
-- Sentient Workout Equipment:
+- [x] Sentient Workout Equipment:
   - Premise one-liner: The gym equipment starts unionizing and refuses to let people work out until they use proper form.
   - LLM pairings: Qwen2.5 for the strict treadmill, Hermes-3 for the defensive gym-goer.
 - [x] Escape Room: The Backrooms:
@@ -192,19 +192,23 @@ Prioritize these over new premises:
   - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
   - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 
+- Sentient AI Debugger Mode:
+  - Premise one-liner: An AI debugger gains sentience and refuses to fix bugs because they "build character."
+  - LLM pairings: Qwen2.5 for the strict AI debugger, Hermes-3 for the stressed programmer.
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+  - [ ] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
 - **Next Steps:**
   - [x] Integrate `cloud-dashboard-modal` for secure HF API token input.
   - [x] Serialize episodic contexts and upload via the HF inference API.
   - [x] Fetch past summaries using `fetchPreviousEpisodeSummaries` with TF-IDF similarity.
   - [x] Add Automerge/Yjs CRDT multi-device conflict resolution inside MemoryManager.
   - [x] Expose public Hugging Face episode script datasets in the app UI for browsing.
-  - [ ] Implement periodic auto-sync of local deltas to HF dataset to ensure real-time consistency.
+  - [x] Implement periodic auto-sync of local deltas to HF dataset to ensure real-time consistency.
 
 ## Mode PR template (short)
 

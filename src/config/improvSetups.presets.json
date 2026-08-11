@@ -1058,5 +1058,20 @@
     "id": "sentient_elevator",
     "title": "Sentient Elevator Mode",
     "description": "A sentient elevator refuses to take passengers to their floor until they solve a riddle."
+  },
+  {
+    "id": "paranormal-tech-support",
+    "title": "Paranormal Tech Support",
+    "description": "Tech support troubleshoot a haunted 1800s computer."
+  },
+  {
+    "id": "interdimensional-cooking-show",
+    "title": "Interdimensional Cooking Show",
+    "description": "A cooking show with incomprehensible entities as ingredients."
+  },
+  {
+    "id": "sentient-workout-equipment",
+    "title": "Sentient Workout Equipment",
+    "description": "Unionized gym equipment refuses to work."
   }
 ]

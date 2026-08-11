@@ -1430,5 +1430,17 @@
   {
     "id": "sentient_elevator",
     "handler": "runSentientElevatorLoop"
+  },
+  {
+    "id": "paranormal-tech-support",
+    "handler": "runParanormalTechSupportLoop"
+  },
+  {
+    "id": "interdimensional-cooking-show",
+    "handler": "runInterdimensionalCookingShowLoop"
+  },
+  {
+    "id": "sentient-workout-equipment",
+    "handler": "runSentientWorkoutEquipmentLoop"
   }
 ]
