@@ -178,6 +178,7 @@ export class MemoryManager {
         this.processSyncQueue();
         this.ensureCloudSummaryCache();
         this.startDeltaConsolidationTask();
+        this.startAutoSyncTask();
         this.startPeriodicAutoSync();
     }
 
@@ -523,7 +524,14 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
         });
     }
 
-
+    public startAutoSyncTask(): void {
+        setInterval(() => {
+            if (navigator.onLine && !this.isSyncing) {
+                this.processSyncQueue().catch(e => console.error("Error in auto-sync task:", e));
+            }
+        }, 5 * 60 * 1000); // 5 minutes
+    }
+  
     public startPeriodicAutoSync(): void {
         setInterval(() => {
             if (navigator.onLine && !this.isSyncing) {

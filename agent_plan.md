@@ -198,6 +198,9 @@ Prioritize these over new premises:
   - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
   - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 
+- Sentient AI Debugger Mode:
+  - Premise one-liner: An AI debugger gains sentience and refuses to fix bugs because they "build character."
+  - LLM pairings: Qwen2.5 for the strict AI debugger, Hermes-3 for the stressed programmer.
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
@@ -206,6 +209,7 @@ Prioritize these over new premises:
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+  - [ ] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
 - **Next Steps:**
   - [x] Integrate `cloud-dashboard-modal` for secure HF API token input.
   - [x] Serialize episodic contexts and upload via the HF inference API.
