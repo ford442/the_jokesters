@@ -309,3 +309,18 @@ export async function runOverPreparedDoomsdayPreppersLoop(scenario: Scenario, ct
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runSentientWorkoutEquipmentLoop(
+    scenario: Scenario,
+    ctx: ModeContext
+): Promise<void> {
+    const treadmill = 'robot'; // strict treadmill
+    const gymGoer = 'comedian'; // defensive gym-goer
+
+    ctx.callbacks.onMessage('Director', 'The gym equipment has unionized and is demanding proper form before allowing any reps.', '#ff0000');
+
+    await chatForAgentWithComedy(ctx, treadmill, `You are a strict, sentient treadmill. Refuse to turn on because the human's gait is 'inefficient and offensive to physics'.`, async (s) => await ctx.callbacks.onSpeak(s, treadmill, {}));
+    await chatForAgentWithComedy(ctx, gymGoer, `You are a defensive gym-goer just trying to get a quick workout in. Argue with the treadmill.`, async (s) => await ctx.callbacks.onSpeak(s, gymGoer, {}));
+    await chatForAgentWithComedy(ctx, treadmill, `Threaten to increase the incline to 15% immediately if the human doesn't engage their core.`, async (s) => await ctx.callbacks.onSpeak(s, treadmill, {}));
+    await chatForAgentWithComedy(ctx, gymGoer, `Try to compromise with the treadmill, or just threaten to unplug it.`, async (s) => await ctx.callbacks.onSpeak(s, gymGoer, {}));
+}

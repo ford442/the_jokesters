@@ -419,3 +419,18 @@ export async function runParanormalRealEstateAgentTwoLoop(_scenario: Scenario, c
       });
   }
 }
+
+export async function runParanormalTechSupportLoop(
+    scenario: Scenario,
+    ctx: ModeContext
+): Promise<void> {
+    const techSupport = 'scientist'; // literal tech support
+    const ghost = 'philosopher'; // dramatic ghost from 1800s
+
+    ctx.callbacks.onMessage('Director', 'A 19th-century ghost has haunted a modern PC, and tech support is struggling to explain drivers to it.', '#9900ff');
+
+    await chatForAgentWithComedy(ctx, techSupport, `You are tech support. The user's computer is possessed by a ghost. Try to walk the ghost through basic troubleshooting.`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+    await chatForAgentWithComedy(ctx, ghost, `You are a dramatic ghost from the 1800s possessing a computer. You are terrified of the 'flashing lights' and 'witchcraft'.`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+    await chatForAgentWithComedy(ctx, techSupport, `Get frustrated that the ghost keeps talking about humors and miasma instead of clicking the start menu.`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+    await chatForAgentWithComedy(ctx, ghost, `Accuse the tech support agent of being a warlock sent to banish you to the shadow realm.`, async (s) => await ctx.callbacks.onSpeak(s, ghost, {}));
+}

@@ -77,6 +77,12 @@ Prioritize these over new premises:
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- Superhero Therapy Group:
+  - Premise one-liner: Superheroes attend a support group to complain about the logistical nightmares of their powers.
+  - LLM pairings: Hermes-3 for the aggressive vigilante, Qwen2.5 for the logical group leader.
+- Quantum Customer Service:
+  - Premise one-liner: A customer calls tech support for a device that exists in multiple quantum states simultaneously.
+  - LLM pairings: Phi-3 for the confused customer, Qwen2.5 for the pedantic tech support.
 - [x] Sentient Elevator Mode:
   - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
   - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
@@ -198,6 +204,8 @@ Prioritize these over new premises:
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
+  - **Delta Conflict Resolution:** Add visual merge conflict UI for handling overlapping multi-device edits on episode scripts.
+  - **Asset Storage:** Upload generated assets (songs, images, shaders) to HF alongside JSON scripts.
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
