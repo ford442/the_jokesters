@@ -2,7 +2,9 @@
 
 **Priority:** P3 — large addition. **Do not start audience/room work until foundation is solid.**
 
-Foundation gates (work here first): [agent_plan.md](../agent_plan.md) · [MODE_QUALITY_BAR.md](./MODE_QUALITY_BAR.md)
+Foundation gates (work here first): [agent_plan.md](../agent_plan.md) · [MODE_QUALITY_BAR.md](./MODE_QUALITY_BAR.md) · [FOUNDATION_NEXT.md](./FOUNDATION_NEXT.md)
+
+**Tracking issue:** [#307](https://github.com/ford442/the_jokesters/issues/307) (blocked on Vicuna load P0 [#302](https://github.com/ford442/the_jokesters/issues/302)–[#304](https://github.com/ford442/the_jokesters/issues/304) + [#305](https://github.com/ford442/the_jokesters/issues/305)/[#306](https://github.com/ford442/the_jokesters/issues/306)).
 
 ---
 
