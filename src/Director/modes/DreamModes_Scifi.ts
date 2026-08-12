@@ -773,3 +773,54 @@ export async function runEscapeZooLoop(_scenario: Scenario, ctx: ModeContext) {
         }
     }
 }
+
+
+export async function runQuantumCustomerServiceLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `⚛️ QUANTUM CUSTOMER SERVICE: Existing in multiple states.`, '#3498db');
+
+    const confusedCustomer = 'philosopher';
+    const pedanticTech = 'scientist';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(pedanticTech);
+    await chatForAgentWithComedy(ctx, pedanticTech, `(You are a pedantic tech support agent for a company that sells quantum devices. Ask the customer to observe their device to collapse its wavefunction.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticTech, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Caller (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, confusedCustomer, `(You are a highly confused customer. The user just said: "${userInput}". Complain that your device is simultaneously working and on fire, and you aren't sure which reality is real.)`, async (s: string) => await ctx.callbacks.onSpeak(s, confusedCustomer, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, pedanticTech, `(You are the pedantic quantum tech support. The user said: "${userInput}". Explain that according to the multiverse interpretation, this isn't covered by their warranty in this specific universe.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticTech, {}));
+        }
+    }
+}
+
+export async function runTimeTravelingIRSLoop_Scifi(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING IRS: Auditing your ancestors.`, '#2ecc71');
+
+    const pedanticAuditor = 'scientist';
+    const confusedUser = 'philosopher';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(pedanticAuditor);
+    await chatForAgentWithComedy(ctx, pedanticAuditor, `(You are a time-traveling IRS auditor from the year 3050. Demand that the user pays the taxes owed by their 18th-century ancestor in obscure futuristic currency.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticAuditor, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Taxpayer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, pedanticAuditor, `(You are the time-traveling auditor. The user said: "${userInput}". Cite an absurd futuristic tax code and threaten to repossess their timeline.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticAuditor, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, confusedUser, `(You are another taxpayer from a parallel timeline. The user said: "${userInput}". Panic about how paying these taxes will cause a grandfather paradox.)`, async (s: string) => await ctx.callbacks.onSpeak(s, confusedUser, {}));
+        }
+    }
+}

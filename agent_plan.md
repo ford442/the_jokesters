@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 5
+tasks_per_run: 6
 
 ## Process (P0)
 
@@ -77,10 +77,20 @@ Prioritize these over new premises:
 
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Superhero Therapy Group:
+- Escape Room: The Backrooms (Phase 2 Expansion):
+  - Premise one-liner: Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws.
+  - LLM pairings: Qwen2.5 for the strict zoning inspector, Hermes-3 for the panicked explorer.
+- Sentient AI Therapist Mode:
+  - Premise one-liner: A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions.
+  - LLM pairings: Phi-3 for the existential AI therapist, Qwen2.5 for the logical user trying to fix it.
+- Cloud Persistence Expansion:
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+- [x] Superhero Therapy Group:
   - Premise one-liner: Superheroes attend a support group to complain about the logistical nightmares of their powers.
   - LLM pairings: Hermes-3 for the aggressive vigilante, Qwen2.5 for the logical group leader.
-- Quantum Customer Service:
+- [x] Quantum Customer Service:
   - Premise one-liner: A customer calls tech support for a device that exists in multiple quantum states simultaneously.
   - LLM pairings: Phi-3 for the confused customer, Qwen2.5 for the pedantic tech support.
 - [x] Sentient Elevator Mode:
@@ -144,7 +154,7 @@ Prioritize these over new premises:
   - LLM pairings: Qwen2.5 for the strict AI coffee table, Phi-3 for the confused user.
 
 
-- Sentient Codebase Mode:
+- [x] Sentient Codebase Mode:
   - Premise one-liner: The codebase itself achieves sentience and complains to the developers about spaghetti code.
   - LLM pairings: Qwen2.5 for the overly strict linter personality, Hermes-3 for the chaotic junior developer.
 - Audience Heckler Mode:
@@ -185,7 +195,7 @@ Prioritize these over new premises:
   - LLM pairings: Phi-3 for the compiler, Hermes-3 for the programmer.
 
 
-- Time-Traveling IRS Mode:
+- [x] Time-Traveling IRS Mode:
   - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
 
@@ -194,7 +204,7 @@ Prioritize these over new premises:
   - Premise one-liner: An alien food critic reviews a human drive-thru and is disgusted by earth cuisine.
   - LLM pairings: Hermes-3 for the aggressive alien critic, Phi-3 for the terrified fast food worker.
 
-- Sentient Wi-Fi Router Mode:
+- [x] Sentient Wi-Fi Router Mode:
   - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
   - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 

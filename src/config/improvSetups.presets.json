@@ -1073,5 +1073,30 @@
     "id": "sentient-workout-equipment",
     "title": "Sentient Workout Equipment",
     "description": "The gym equipment starts unionizing and refuses to let people work out until they use proper form."
+  },
+  {
+    "id": "superhero_therapy_group",
+    "title": "Superhero Therapy Group",
+    "description": "Superheroes attend a support group to complain about the logistical nightmares of their powers."
+  },
+  {
+    "id": "quantum_customer_service",
+    "title": "Quantum Customer Service",
+    "description": "A customer calls tech support for a device that exists in multiple quantum states simultaneously."
+  },
+  {
+    "id": "time_traveling_irs",
+    "title": "Time-Traveling IRS Mode",
+    "description": "An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency."
+  },
+  {
+    "id": "sentient_codebase",
+    "title": "Sentient Codebase Mode",
+    "description": "The codebase itself achieves sentience and complains to the developers about spaghetti code."
+  },
+  {
+    "id": "sentient_wifi_router",
+    "title": "Sentient Wi-Fi Router Mode",
+    "description": "A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions."
   }
 ]

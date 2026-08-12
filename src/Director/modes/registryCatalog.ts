@@ -1582,6 +1582,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'quantum_customer_service',
+    title: 'Quantum Customer Service',
+    category: 'dream',
+    description: 'A customer calls tech support for a device that exists in multiple quantum states simultaneously.',
+    tags: ['dream', 'quantum', 'customer', 'service'],
+    showInPresets: true,
+  },
+  {
     id: 'quantum_mechanics_cooking_show',
     title: '⚛️ Quantum Mechanics Cooking Show',
     category: 'dream',
@@ -1839,11 +1847,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'sentient_codebase',
-    title: 'Sentient Codebase',
+    title: 'Sentient Codebase Mode',
     category: 'dream',
-    description: 'A Sentient Codebase scene.',
+    description: 'The codebase itself achieves sentience and complains to the developers about spaghetti code.',
     tags: ['dream', 'sentient', 'codebase'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'sentient_coffee_machine',
@@ -2143,9 +2151,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'sentient_wifi_router',
-    title: 'Sentient Wi-Fi Router',
+    title: 'Sentient Wi-Fi Router Mode',
     category: 'dream',
-    description: 'Devices argue over bandwidth allocation.',
+    description: 'A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.',
     tags: ['dream', 'sentient', 'wifi', 'router'],
     showInPresets: true,
   },
@@ -2308,6 +2316,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Superhero Therapy scene.',
     tags: ['interactive', 'superhero', 'therapy'],
     showInPresets: false,
+  },
+  {
+    id: 'superhero_therapy_group',
+    title: 'Superhero Therapy Group',
+    category: 'dream',
+    description: 'Superheroes attend a support group to complain about the logistical nightmares of their powers.',
+    tags: ['dream', 'superhero', 'therapy', 'group'],
+    showInPresets: true,
   },
   {
     id: 'supervillain_brainstorming_session',
@@ -2527,11 +2543,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'time_traveling_irs',
-    title: 'Time Traveling Irs',
+    title: 'Time-Traveling IRS Mode',
     category: 'dream',
-    description: 'A Time Traveling Irs scene.',
+    description: 'An IRS auditor from the future comes back to audit the user\'s ancestors, demanding payment in obscure futuristic currency.',
     tags: ['dream', 'time', 'traveling', 'irs'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'time_traveling_qa_engineer',

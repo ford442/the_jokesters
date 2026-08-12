@@ -320,3 +320,29 @@ export async function runEscapedNPCModeLoop(_scenario: Scenario, ctx: ModeContex
         }
     }
 }
+
+
+export async function runSuperheroTherapyGroupLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🦸‍♂️ SUPERHERO THERAPY GROUP: The burden of saving the world.`, '#e74c3c');
+
+    const aggressiveVigilante = 'comedian';
+    const logicalLeader = 'scientist';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(logicalLeader);
+    await chatForAgentWithComedy(ctx, logicalLeader, `(You are the logical, level-headed leader of a superhero therapy group. Welcome everyone and ask the aggressive vigilante to share their feelings without destroying the room.)`, async (s: string) => await ctx.callbacks.onSpeak(s, logicalLeader, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Civilian (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, aggressiveVigilante, `(You are an overly aggressive vigilante superhero. The user just said: "${userInput}". React by explaining how this minor inconvenience makes you want to punch a villain through a building.)`, async (s: string) => await ctx.callbacks.onSpeak(s, aggressiveVigilante, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, logicalLeader, `(You are the logical superhero leader. The user said: "${userInput}". Try to de-escalate the situation using overly complex and boring logistics about collateral damage and superhero insurance.)`, async (s: string) => await ctx.callbacks.onSpeak(s, logicalLeader, {}));
+        }
+    }
+}
