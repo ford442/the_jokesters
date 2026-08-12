@@ -381,3 +381,18 @@ export async function runRealityTVSentientFurnitureLoop(_scenario: Scenario, ctx
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runInterdimensionalCookingShowLoop(
+    scenario: Scenario,
+    ctx: ModeContext
+): Promise<void> {
+    const chef = 'comedian'; // enthusiastic chef
+    const judge = 'techBro'; // terrified guest judge
+
+    ctx.callbacks.onMessage('Director', 'Welcome to the Interdimensional Cooking Show! Today\'s secret ingredient: Non-Euclidean Biomass.', '#ff9900');
+
+    await chatForAgentWithComedy(ctx, chef, `You are an enthusiastic cooking show host. Introduce today's ingredient: a writhing, multi-dimensional entity that defies physics.`, async (s) => await ctx.callbacks.onSpeak(s, chef, {}));
+    await chatForAgentWithComedy(ctx, judge, `You are a normal human guest judge. You are absolutely terrified of the ingredient and want to leave.`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+    await chatForAgentWithComedy(ctx, chef, `Ignore the judge's fear. Start cooking the entity, explaining that the screaming is just how you know it's fresh.`, async (s) => await ctx.callbacks.onSpeak(s, chef, {}));
+    await chatForAgentWithComedy(ctx, judge, `Refuse to eat the final dish because it's staring at you. Have a complete breakdown.`, async (s) => await ctx.callbacks.onSpeak(s, judge, {}));
+}
