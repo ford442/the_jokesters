@@ -12,6 +12,8 @@ This document tracks planned enhancements, feature ideas, and technical improvem
 
 **GroupChat facade (P1):** [GROUP_CHAT_FACADE.md](./GROUP_CHAT_FACADE.md) — `ConversationStore` + `ModelSession`; standardized engine interrupt/context API.
 
+**Next foundation (2026-08):** [FOUNDATION_NEXT.md](./FOUNDATION_NEXT.md) — Vicuna load P0 issues [#302](https://github.com/ford442/the_jokesters/issues/302)–[#304](https://github.com/ford442/the_jokesters/issues/304), wasm/VRAM [#305](https://github.com/ford442/the_jokesters/issues/305), download diagnostics [#306](https://github.com/ford442/the_jokesters/issues/306), live party MVP [#307](https://github.com/ford442/the_jokesters/issues/307) (gated).
+
 ---
 
 ## ✅ Implemented Features

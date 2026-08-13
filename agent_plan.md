@@ -17,17 +17,23 @@ tasks_per_run: 5
 
 ## Foundation issues (work here first)
 
-Prioritize these over new premises:
+Prioritize these over new premises. **Do not add Dream modes until Vicuna load reliability and download/VRAM foundations land.**
 
 | Area | Goal |
 |------|------|
-| **Mode registry** | Keep `MODE_REGISTRY` / `validateRegistry` healthy; metadata complete for new entries |
+| **Vicuna / model load (P0)** | [#302](https://github.com/ford442/the_jokesters/issues/302) dual-domain striped chunks · [#303](https://github.com/ford442/the_jokesters/issues/303) paid CDN eval · [#304](https://github.com/ford442/the_jokesters/issues/304) HF dedicated failover |
+| **VRAM / compile (P1)** | [#305](https://github.com/ford442/the_jokesters/issues/305) ship ctx512/1024 `model_lib` (closes gap in [#216](https://github.com/ford442/the_jokesters/issues/216)); ADR 0001 — TS-first, no C++ thrash |
+| **Download stack (P1)** | [#306](https://github.com/ford442/the_jokesters/issues/306) unify SW vs `ParallelDownloadManager`, load diagnostics, align blessed/fallback ladders |
+| **Live show (P3, gated)** | [#307](https://github.com/ford442/the_jokesters/issues/307) local party-mode MVP after load foundation — [LIVE_SHOW_VISION.md](./docs/LIVE_SHOW_VISION.md) |
+| **Mode registry** | Keep `MODE_REGISTRY` / `validateRegistry` healthy; split god-files [#289](https://github.com/ford442/the_jokesters/issues/289) [#290](https://github.com/ford442/the_jokesters/issues/290) |
 | **Mode browser** | Search, categories, featured 8, lazy loaders — [MODE_BROWSER.md](./docs/MODE_BROWSER.md) |
 | **Comedy wiring** | ✅ Dream/Expanded + featured-8 loops route agent turns through `comedyModeHelpers` (callbacks, quality gate). Keep new modes wired — see `tests/unit/modeChatForAgentWiring.test.ts`. |
 | **App / main split** | Onboarding, export, prerender, SFX, guided load stay solid |
 | **GroupChat facade** | `ConversationStore` + `ModelSession` — [GROUP_CHAT_FACADE.md](./docs/GROUP_CHAT_FACADE.md) |
 | **Tests + typecheck** | CI green (`npm run typecheck`, `npm test`); no silent debt |
 | **Context accuracy** | VRAM probe, memory depth, blessed presets, real download estimates |
+
+Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while weights + Llama-2 ctx4k lib exist — silent `model_lib_fallback` undoes low-VRAM presets. See [docs/FOUNDATION_NEXT.md](./docs/FOUNDATION_NEXT.md).
 
 ## Implementation Roadmap
 - [x] Undercover Boss: Sentient AI: An advanced AGI goes undercover as a simple calculator app to see how users treat rudimentary software.
