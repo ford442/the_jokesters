@@ -657,7 +657,7 @@
   },
   {
     "id": "time_traveling_irs",
-    "handler": "runTimeTravelingIRSLoop"
+    "handler": "runTimeTravelingIRSLoop_Scifi"
   },
   {
     "id": "escape_backrooms",
@@ -1442,5 +1442,21 @@
   {
     "id": "sentient-workout-equipment",
     "handler": "runSentientWorkoutEquipmentLoop"
+  },
+  {
+    "id": "superhero_therapy_group",
+    "handler": "runSuperheroTherapyGroupLoop"
+  },
+  {
+    "id": "quantum_customer_service",
+    "handler": "runQuantumCustomerServiceLoop"
+  },
+  {
+    "id": "sentient_codebase",
+    "handler": "runSentientCodebaseLoop"
+  },
+  {
+    "id": "sentient_wifi_router",
+    "handler": "runSentientWifiRouterLoop"
   }
 ]

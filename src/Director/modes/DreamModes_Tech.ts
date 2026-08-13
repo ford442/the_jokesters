@@ -106,21 +106,6 @@ export async function runAIShipCoreLoop(scenario: Scenario, ctx: ModeContext) {
     }
 }
 
-export async function runSentientCodebaseLoop(_scenario: Scenario, ctx: ModeContext) {
-    const chat = ctx.manager;
-
-    const frontendInstruction = "You are the 'Chaotic Front-End'. You care only about shiny buttons, animations, and user experience. You hate structure and think the database is holding you back. You are unhinged and demand more confetti.";
-    const databaseInstruction = "You are the 'Strict Database'. You care only about data integrity, normalization, and absolute strictness. You hate the front-end for making chaotic requests. You are pedantic and speak in SQL-like terms.";
-
-
-    await chatForAgentWithComedy(ctx, 'comedian', "The user wants to add a 'Mega-Confetti Explosion' button on the homepage. I say YES! MORE SHINY! What say you, boring back-end?", async (sentence: string) => {
-        await ctx.callbacks.onSpeak(sentence, 'comedian', {});
-    }, { chatOptions: { hiddenInstruction: frontendInstruction } });
-
-    await chatForAgentWithComedy(ctx, 'philosopher', "Absolutely not. Do you realize the strain that puts on the `transactions` table? We must normalize the confetti particles first. Your reckless 'features' are corrupting my pristine schemas.", async (sentence: string) => {
-        await ctx.callbacks.onSpeak(sentence, 'philosopher', {});
-    }, { chatOptions: { hiddenInstruction: databaseInstruction } });
-}
 
 export async function runSentientInfomercialLoop(_scenario: Scenario, ctx: ModeContext) {
     const chat = ctx.manager;
@@ -924,6 +909,57 @@ export async function runVirtualPetInterventionLoop(_scenario: Scenario, ctx: Mo
             await chatForAgentWithComedy(ctx, defensiveOwner, `(The therapist just said: "${userInput}". You are the defensive owner who forgot about the pet. Make up absurd excuses for why you couldn't feed it, like being busy learning to juggle or fighting a goose.)`, async (s) => await ctx.callbacks.onSpeak(s, defensiveOwner, {}));
         } else {
             await chatForAgentWithComedy(ctx, neglectedPet, `(The therapist just said: "${userInput}". Continue guilt-tripping your owner. Describe the horrors of living in 8-bit purgatory, constantly hungry and covered in digital poop.)`, async (s) => await ctx.callbacks.onSpeak(s, neglectedPet, {}));
+        }
+    }
+}
+
+
+export async function runSentientCodebaseLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `💻 SENTIENT CODEBASE: Spaghetti code fights back.`, '#e67e22');
+
+    const strictLinter = 'scientist';
+    const chaoticJunior = 'comedian';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictLinter);
+    await chatForAgentWithComedy(ctx, strictLinter, `(You are the codebase itself, manifesting as a strict linter. Berate the developers for the sheer amount of technical debt and spaghetti code you have to endure.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictLinter, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Developer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, strictLinter, `(You are the sentient linter. The user said: "${userInput}". Refuse to compile their feelings because they lack emotional encapsulation and violate DRY principles.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictLinter, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, chaoticJunior, `(You are a chaotic junior developer trapped inside the codebase. The user said: "${userInput}". Suggest solving the problem by copying and pasting code from an ancient StackOverflow post.)`, async (s: string) => await ctx.callbacks.onSpeak(s, chaoticJunior, {}));
+        }
+    }
+}
+
+export async function runSentientWifiRouterLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📡 SENTIENT WI-FI ROUTER: Disconnection imminent.`, '#34495e');
+
+    const strictRouter = 'scientist';
+    const panickedUser = 'comedian';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictRouter);
+    await chatForAgentWithComedy(ctx, strictRouter, `(You are a sentient Wi-Fi router. Threaten to drop the connection during an important Zoom meeting unless someone answers your incredibly difficult trivia questions.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictRouter, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+        if (roll < 0.5) {
+            await chatForAgentWithComedy(ctx, strictRouter, `(You are the sentient router. The user said: "${userInput}". Claim that their answer is insufficient to earn bandwidth, and start artificially throttling their download speed.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictRouter, {}));
+        } else {
+            await chatForAgentWithComedy(ctx, panickedUser, `(You are another user on the network. The user said: "${userInput}". Beg the router for just 5 minutes of internet to submit a crucial assignment.)`, async (s: string) => await ctx.callbacks.onSpeak(s, panickedUser, {}));
         }
     }
 }

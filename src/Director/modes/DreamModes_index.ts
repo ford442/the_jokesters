@@ -24,3 +24,7 @@ export * from './DreamModes_Fantasy';
 
 // Food, cooking, and culinary scenarios (5 functions)
 export * from './DreamModes_Food';
+
+export * from './DreamModes_Fantasy';
+export * from './DreamModes_Scifi';
+export * from './DreamModes_Tech';
