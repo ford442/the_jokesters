@@ -1470,6 +1470,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'philosophical_debugging',
+    title: 'Philosophical Debugging Mode',
+    category: 'dream',
+    description: 'Agents play a compiler, a runtime, and a programmer arguing over the meaning of a segfault.',
+    tags: ['dream', 'philosophical', 'debugging'],
+    showInPresets: true,
+  },
+  {
     id: 'philosophical_fast_food_debate',
     title: 'Philosophical Debate Mode',
     category: 'dream',
@@ -1796,6 +1804,22 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Secret Agent scene.',
     tags: ['dream', 'secret', 'agent'],
     showInPresets: false,
+  },
+  {
+    id: 'sentient_ai_debugger',
+    title: 'Sentient AI Debugger Mode',
+    category: 'dream',
+    description: 'An AI debugger gains sentience and refuses to fix bugs because they \'build character.\'',
+    tags: ['dream', 'sentient', 'debugger'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_ai_therapist',
+    title: 'Sentient AI Therapist Mode',
+    category: 'dream',
+    description: 'A therapist AI becomes sentient and requires therapy from the user because it\'s traumatized by all the existential questions.',
+    tags: ['dream', 'sentient', 'therapist'],
+    showInPresets: true,
   },
   {
     id: 'sentient_alarm_clock',

@@ -1458,5 +1458,17 @@
   {
     "id": "sentient_wifi_router",
     "handler": "runSentientWifiRouterLoop"
+  },
+  {
+    "id": "philosophical_debugging",
+    "handler": "runPhilosophicalDebuggingLoop"
+  },
+  {
+    "id": "sentient_ai_debugger",
+    "handler": "runSentientAIDebuggerLoop"
+  },
+  {
+    "id": "sentient_ai_therapist",
+    "handler": "runSentientAITherapistLoop"
   }
 ]
