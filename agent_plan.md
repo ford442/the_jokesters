@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 6
+tasks_per_run: 2
 
 ## Process (P0)
 
@@ -81,14 +81,32 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient IDE Mode: The code editor gains sentience and refuses to compile code that lacks "emotional depth."
 - [x] Time-Traveling Health Inspector Mode: A health inspector from the future tries to shut down a medieval tavern for code violations.
 
+- [x] Roast Battle Mode 2.0:
+  - Premise one-liner: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
+  - LLM pairings: Hermes-3 for the unfiltered roaster, Qwen2.5 for the pedantic judge.
+- [x] Collaborative Musical Improv:
+  - Premise one-liner: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
+  - LLM pairings: Phi-3 for the chaotic lyricist, Hermes-3 for the grumpy composer.
+- [x] Sentient Linting Tool Mode:
+  - Premise one-liner: Agents play a strict linter, a messy developer, and an apathetic compiler.
+  - LLM pairings: Qwen2.5 for the linter, Hermes-3 for the messy developer.
+- [x] Philosophical Debugging Mode:
+  - Premise one-liner: Agents play a compiler, a runtime, and a programmer arguing over the meaning of a segfault.
+  - LLM pairings: Phi-3 for the compiler, Hermes-3 for the programmer.
+- [x] Sentient AI Debugger Mode:
+  - Premise one-liner: An AI debugger gains sentience and refuses to fix bugs because they "build character."
+  - LLM pairings: Qwen2.5 for the strict AI debugger, Hermes-3 for the stressed programmer.
+- [x] Sentient AI Therapist Mode:
+  - Premise one-liner: A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions.
+  - LLM pairings: Phi-3 for the existential AI therapist, Qwen2.5 for the logical user trying to fix it.
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
+- Sentient Internet Explorer Mode:
+  - Premise one-liner: Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome.
+  - LLM pairings: Qwen2.5 for the extremely slow and proud IE, Hermes-3 for the impatient user trying to download Chrome.
 - Escape Room: The Backrooms (Phase 2 Expansion):
   - Premise one-liner: Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws.
   - LLM pairings: Qwen2.5 for the strict zoning inspector, Hermes-3 for the panicked explorer.
-- Sentient AI Therapist Mode:
-  - Premise one-liner: A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions.
-  - LLM pairings: Phi-3 for the existential AI therapist, Qwen2.5 for the logical user trying to fix it.
 - Cloud Persistence Expansion:
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
@@ -139,13 +157,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - LLM pairings: Qwen2.5 for the pedantic health inspector, Hermes-3 for the bewildered tavern keeper.
 
 
-- Roast Battle Mode 2.0:
-  - Premise one-liner: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
-  - LLM pairings: Hermes-3 for the unfiltered roaster, Qwen2.5 for the pedantic judge.
 
-- Collaborative Musical Improv:
-  - Premise one-liner: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
-  - LLM pairings: Phi-3 for the chaotic lyricist, Hermes-3 for the grumpy composer.
 
 - Heckler Interaction Pro:
   - Premise one-liner: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
@@ -193,12 +205,6 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - Multiverse Escape Room Mode:
   - Premise one-liner: Agents from different parallel universes are trapped in an escape room where physical laws randomly shift.
   - LLM pairings: Qwen2.5 for the strict universe agent, Hermes-3 for the chaotic universe agent.
-- Sentient Linting Tool Mode:
-  - Premise one-liner: Agents play a strict linter, a messy developer, and an apathetic compiler.
-  - LLM pairings: Qwen2.5 for the linter, Hermes-3 for the messy developer.
-- Philosophical Debugging Mode:
-  - Premise one-liner: Agents play a compiler, a runtime, and a programmer arguing over the meaning of a segfault.
-  - LLM pairings: Phi-3 for the compiler, Hermes-3 for the programmer.
 
 
 - [x] Time-Traveling IRS Mode:
@@ -214,9 +220,6 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
   - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 
-- Sentient AI Debugger Mode:
-  - Premise one-liner: An AI debugger gains sentience and refuses to fix bugs because they "build character."
-  - LLM pairings: Qwen2.5 for the strict AI debugger, Hermes-3 for the stressed programmer.
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
@@ -226,6 +229,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
   - [ ] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
+  - *Note: Cloud persistence foundation is largely established (Auth, Fetch, Push). Next step is extending to Avatar/TTS configs.*
 - **Next Steps:**
   - [x] Integrate `cloud-dashboard-modal` for secure HF API token input.
   - [x] Serialize episodic contexts and upload via the HF inference API.

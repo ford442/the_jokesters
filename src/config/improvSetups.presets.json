@@ -17,7 +17,7 @@
   {
     "id": "philosophical_debugging",
     "title": "Philosophical Debugging Mode",
-    "description": "Agents play a compiler, a runtime, and a programmer arguing over the meaning of a segfault."
+    "description": "Agents play a strict compiler, a panicking runtime, and a philosophical programmer arguing over the meaning of a segfault."
   },
   {
     "id": "alien_abduction_support_group",
@@ -1098,5 +1098,15 @@
     "id": "sentient_wifi_router",
     "title": "Sentient Wi-Fi Router Mode",
     "description": "A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions."
+  },
+  {
+    "id": "sentient_ai_debugger",
+    "title": "Sentient AI Debugger Mode",
+    "description": "An AI debugger gains sentience and refuses to fix bugs because they 'build character.'"
+  },
+  {
+    "id": "sentient_ai_therapist",
+    "title": "Sentient AI Therapist Mode",
+    "description": "A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions."
   }
 ]

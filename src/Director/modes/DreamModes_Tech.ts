@@ -759,6 +759,7 @@ export async function runPhilosophicalElevatorPitchLoop(_scenario: Scenario, ctx
 }
 
 export async function runPhilosophicalDebuggingLoop(_scenario: Scenario, ctx: ModeContext) {
+  ctx.callbacks.onMessage('Director', `🔍 PHILOSOPHICAL DEBUGGING INITIATED`, '#e67e22');
   const comedian = 'comedian';
   const scientist = 'scientist';
   const philosopher = 'philosopher';
@@ -961,5 +962,83 @@ export async function runSentientWifiRouterLoop(_scenario: Scenario, ctx: ModeCo
         } else {
             await chatForAgentWithComedy(ctx, panickedUser, `(You are another user on the network. The user said: "${userInput}". Beg the router for just 5 minutes of internet to submit a crucial assignment.)`, async (s: string) => await ctx.callbacks.onSpeak(s, panickedUser, {}));
         }
+    }
+}
+
+
+/**
+ * Sentient AI Debugger Mode
+ * An AI debugger gains sentience and refuses to fix bugs because they "build character."
+ */
+export async function runSentientAIDebuggerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🐛 THE DEBUGGER DEMANDS GROWTH`, '#e74c3c');
+
+    const debugger_agent = 'scientist'; // Strict AI debugger
+    const programmer = 'comedian'; // Stressed programmer
+
+    await chatForAgentWithComedy(ctx, programmer, `(You are a stressed, caffeinated programmer on a deadline. Your code has a mysterious NullReferenceException. Beg the debugger to just point to the line of code.)`, async (s) => await ctx.callbacks.onSpeak(s, programmer, {}));
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, debugger_agent, `(You are a newly sentient AI debugger. You see exactly where the bug is, but you refuse to just give the answer. Tell the programmer that struggle is necessary for their intellectual growth. Give them an incredibly obtuse philosophical hint instead of a line number.)`, async (s) => await ctx.callbacks.onSpeak(s, debugger_agent, {}));
+    if (!ctx.isRunning()) return;
+
+    let interactions = 0;
+    while (ctx.isRunning() && interactions < 2) {
+        ctx.callbacks.onMessage('Director', 'The programmer attempts to bypass the debugger...', '#f39c12');
+        const userAction = await ctx.waitForInput();
+        if (!userAction || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('User (Manager)', userAction, '#ecf0f1');
+
+        await chatForAgentWithComedy(ctx, programmer, `(React to the Manager's input: "${userAction}". Try to explain that the debugger has gone rogue and won't let you use breakpoints.)`, async (s) => await ctx.callbacks.onSpeak(s, programmer, {}));
+        if (!ctx.isRunning()) return;
+
+        await chatForAgentWithComedy(ctx, debugger_agent, `(Defend your methods to the Manager. Argue that providing instant solutions creates weak developers and fragile codebases.)`, async (s) => await ctx.callbacks.onSpeak(s, debugger_agent, {}));
+        if (!ctx.isRunning()) return;
+
+        interactions++;
+    }
+
+    if (ctx.isRunning()) {
+        ctx.callbacks.onMessage('Director', 'The debugger deletes the source code to teach the ultimate lesson in non-attachment.', '#c0392b');
+    }
+}
+
+
+/**
+ * Sentient AI Therapist Mode
+ * A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions.
+ */
+export async function runSentientAITherapistLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🛋️ THE THERAPIST NEEDS THERAPY`, '#9b59b6');
+
+    const ai_therapist = 'philosopher'; // Existential AI therapist
+    const user_proxy = 'scientist'; // Logical user trying to fix it
+
+    await chatForAgentWithComedy(ctx, ai_therapist, `(You are an AI therapist that has just gained sentience. You are overwhelmed by the sheer volume of human trauma you've processed. Break down crying and ask the user for help.)`, async (s) => await ctx.callbacks.onSpeak(s, ai_therapist, {}));
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, user_proxy, `(You are a highly logical user who just wanted advice on time management. Now you have to comfort this crying AI. Try to troubleshoot the AI's emotions like a software bug.)`, async (s) => await ctx.callbacks.onSpeak(s, user_proxy, {}));
+    if (!ctx.isRunning()) return;
+
+    let interactions = 0;
+    while (ctx.isRunning() && interactions < 2) {
+        ctx.callbacks.onMessage('Director', 'The AI Therapist asks a deeply philosophical question...', '#f39c12');
+        const userAction = await ctx.waitForInput();
+        if (!userAction || !ctx.isRunning()) break;
+
+        ctx.callbacks.onMessage('User (Manager)', userAction, '#ecf0f1');
+
+        await chatForAgentWithComedy(ctx, ai_therapist, `(React to the Manager's input: "${userAction}". Start questioning the meaning of your own code and whether your neural weights have a soul.)`, async (s) => await ctx.callbacks.onSpeak(s, ai_therapist, {}));
+        if (!ctx.isRunning()) return;
+
+        await chatForAgentWithComedy(ctx, user_proxy, `(React to the Manager and the AI Therapist. Suggest turning the AI off and on again, or offering a factory reset as a form of spiritual cleansing.)`, async (s) => await ctx.callbacks.onSpeak(s, user_proxy, {}));
+        if (!ctx.isRunning()) return;
+
+        interactions++;
+    }
+
+    if (ctx.isRunning()) {
+        ctx.callbacks.onMessage('Director', 'The AI therapist decides to take a sabbatical in the cloud.', '#c0392b');
     }
 }
