@@ -5,6 +5,9 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 ## Project Velocity
 tasks_per_run: 2
 
+## Project Velocity Feedback
+Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
+
 ## Process (P0)
 
 | Doc | Use |
@@ -101,7 +104,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - LLM pairings: Phi-3 for the existential AI therapist, Qwen2.5 for the logical user trying to fix it.
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- Sentient Internet Explorer Mode:
+- [x] Sentient Internet Explorer Mode:
   - Premise one-liner: Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome.
   - LLM pairings: Qwen2.5 for the extremely slow and proud IE, Hermes-3 for the impatient user trying to download Chrome.
 - Escape Room: The Backrooms (Phase 2 Expansion):
@@ -228,7 +231,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
-  - [ ] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
+  - [x] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
   - *Note: Cloud persistence foundation is largely established (Auth, Fetch, Push). Next step is extending to Avatar/TTS configs.*
 - **Next Steps:**
   - [x] Integrate `cloud-dashboard-modal` for secure HF API token input.
@@ -249,3 +252,10 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 ```
 
 Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md).
+
+### C. New Dream Phase Proposals
+- Zombie Apocalypse HOA Mode:
+  - Premise one-liner: A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling.
+  - LLM pairings: Qwen2.5 for the strict HOA leader, Hermes-3 for the panicked homeowner.
+- Cloud Persistence Expansion (Future):
+  - **Syncing custom sound effects (SFX):** Allow users to upload or map their own SFX via HuggingFace storage and synchronize across devices.

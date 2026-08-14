@@ -750,6 +750,24 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
         }
     }
 
+
+    public async saveAvatarConfigToCloud(config: Record<string, unknown>): Promise<void> {
+        let currentProfile = await this.loadUserProfile();
+        if (!currentProfile) {
+            currentProfile = {} as Record<string, unknown>;
+        }
+        currentProfile.avatar_tts_config = config;
+        await this.saveUserProfile(currentProfile);
+    }
+
+    public async loadAvatarConfigFromCloud(): Promise<Record<string, unknown> | null> {
+        const currentProfile = await this.loadUserProfile();
+        if (currentProfile && currentProfile.avatar_tts_config) {
+            return currentProfile.avatar_tts_config as Record<string, unknown>;
+        }
+        return null;
+    }
+
     public async loadUserProfile(): Promise<UserProfile | null> {
         let localProfile = this.load<UserProfile>('user_preferences');
         if (this.hfToken && this.hfRepoId) {

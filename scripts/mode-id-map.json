@@ -1470,5 +1470,9 @@
   {
     "id": "sentient_ai_therapist",
     "handler": "runSentientAITherapistLoop"
+  },
+  {
+    "id": "sentient_internet_explorer",
+    "handler": "runSentientInternetExplorerLoop"
   }
 ]

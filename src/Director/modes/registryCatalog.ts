@@ -1473,7 +1473,7 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'philosophical_debugging',
     title: 'Philosophical Debugging Mode',
     category: 'dream',
-    description: 'Agents play a compiler, a runtime, and a programmer arguing over the meaning of a segfault.',
+    description: 'Agents play a strict compiler, a panicking runtime, and a philosophical programmer arguing over the meaning of a segfault.',
     tags: ['dream', 'philosophical', 'debugging'],
     showInPresets: true,
   },
@@ -1948,6 +1948,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Sentient Infomercial scene.',
     tags: ['dream', 'sentient', 'infomercial'],
     showInPresets: false,
+  },
+  {
+    id: 'sentient_internet_explorer',
+    title: 'Sentient Internet Explorer Mode',
+    category: 'dream',
+    description: 'Internet Explorer gains sentience, but it\'s 10 years behind on all memes, news, and features, and expects a hero\'s welcome.',
+    tags: ['dream', 'sentient', 'internet', 'explorer'],
+    showInPresets: true,
   },
   {
     id: 'sentient_intrusion',

@@ -1042,3 +1042,30 @@ export async function runSentientAITherapistLoop(_scenario: Scenario, ctx: ModeC
         ctx.callbacks.onMessage('Director', 'The AI therapist decides to take a sabbatical in the cloud.', '#c0392b');
     }
 }
+
+
+export async function runSentientInternetExplorerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌐 SENTIENT INTERNET EXPLORER: 10 years late to the party.`, '#3498db');
+
+    const internetExplorer = 'scientist';
+    const impatientUser = 'comedian';
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(internetExplorer);
+
+    ctx.callbacks.onMessage('Director', 'IE is responding...', '#bdc3c7');
+
+    await chatForAgentWithComedy(ctx, internetExplorer, `(You are Internet Explorer. You just gained sentience. However, your database is stuck in 2014. You expect a hero's welcome for bringing 'cutting edge' features like tabs and you keep referencing old memes like Doge or Harlem Shake. Demand respect from the user.)`, async (s: string) => await ctx.callbacks.onSpeak(s, internetExplorer, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(impatientUser);
+        await chatForAgentWithComedy(ctx, impatientUser, `(The sentient Internet Explorer just spoke. You are the impatient user who is just trying to download Google Chrome so you never have to use IE again. Be frustrated and try to rush the process.)`, async (s: string) => await ctx.callbacks.onSpeak(s, impatientUser, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(internetExplorer);
+        await chatForAgentWithComedy(ctx, internetExplorer, `(The impatient user just responded. Continue to be oblivious. Slowly process their request. Maybe mention asking Jeeves, or suggest installing a shiny new toolbar. Defend your speed and relevance.)`, async (s: string) => await ctx.callbacks.onSpeak(s, internetExplorer, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}
