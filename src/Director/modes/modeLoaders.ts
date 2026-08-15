@@ -248,6 +248,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'sentient_gym_equipment': async () => (await import('./DreamModes_Sentient')).runSentientGymEquipmentLoop,
   'sentient_ide': async () => (await import('./DreamModes_Tech')).runSentientIDELoop,
   'sentient_infomercial': async () => (await import('./DreamModes_Tech')).runSentientInfomercialLoop,
+  'sentient_internet_explorer': async () => (await import('./DreamModes_Tech')).runSentientInternetExplorerLoop,
   'sentient_intrusion': async () => (await import('./DreamModes_Sentient')).runSentientIntrusionLoop,
   'sentient_left_sock': async () => (await import('./DreamModes_Sentient')).runSentientLeftSockLoop,
   'sentient_leftovers': async () => (await import('./DreamModes_Sentient')).runSentientLeftoversLoop,

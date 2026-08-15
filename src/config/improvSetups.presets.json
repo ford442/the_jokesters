@@ -1108,5 +1108,10 @@
     "id": "sentient_ai_therapist",
     "title": "Sentient AI Therapist Mode",
     "description": "A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions."
+  },
+  {
+    "id": "sentient_internet_explorer",
+    "title": "Sentient Internet Explorer Mode",
+    "description": "Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome."
   }
 ]
