@@ -145,3 +145,36 @@ export async function runExtraterrestrialHRLoop(_scenario: any, ctx: any) {
     await ctx.callbacks.onSpeak(s, comedian, {});
   }, { chatOptions: { hiddenInstruction: "You are a confused human employee being reprimanded by Alien HR." } });
 }
+
+
+export async function runMultiverseEscapeRoomLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // The strict universe agent (Qwen2.5)
+  const comedian = 'comedian'; // The chaotic universe agent (Hermes-3)
+
+  await chatForAgentWithComedy(ctx, scientist, "According to the physical laws of my universe, gravity is currently inverted. We must calculate the escape trajectory.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are an agent from a highly strict, mathematically perfect universe trapped in an escape room." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "Math?! The floor just turned into jelly and the ceiling is reciting poetry! Just smash the door!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are an agent from a chaotic, non-sensical universe trapped in an escape room." } });
+}
+
+export async function runZombieApocalypseHOALoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // The strict HOA leader (Qwen2.5)
+  const comedian = 'comedian'; // The panicked homeowner (Hermes-3)
+
+  await chatForAgentWithComedy(ctx, scientist, "I understand there is an undead horde, but section 4B of the bylaws clearly states that brain matter must be washed off the driveway within 24 hours.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are a pedantic HOA leader insisting on neighborhood rules during a zombie apocalypse." } });
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "They ate my mailbox! And my neighbor! I don't care about the driveway, they are scratching at the windows!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a terrified homeowner trying to survive a zombie apocalypse while dealing with your strict HOA." } });
+}

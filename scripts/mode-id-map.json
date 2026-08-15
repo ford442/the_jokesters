@@ -1474,5 +1474,9 @@
   {
     "id": "sentient_internet_explorer",
     "handler": "runSentientInternetExplorerLoop"
+  },
+  {
+    "id": "zombie_apocalypse_hoa",
+    "handler": "runZombieApocalypseHOALoop"
   }
 ]

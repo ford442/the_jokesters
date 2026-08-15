@@ -1113,5 +1113,10 @@
     "id": "sentient_internet_explorer",
     "title": "Sentient Internet Explorer Mode",
     "description": "Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome."
+  },
+  {
+    "id": "zombie_apocalypse_hoa",
+    "title": "Zombie Apocalypse HOA",
+    "description": "A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling."
   }
 ]
