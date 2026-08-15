@@ -158,7 +158,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'mime_translator': async () => (await import('./PerformanceMode')).runMimeTranslatorLoop,
   'multiversal_chefs_table': async () => (await import('./DreamModes_Food')).runMultiversalChefsTableLoop,
   'multiversal_dmv': async () => (await import('./DreamModes_Bureaucratic')).runMultiversalDMVLoop,
-  'multiverse_escape_room': async () => (await import('./DreamModes_Scifi')).runMultiverseEscapeRoomLoop,
+  'multiverse_escape_room': async () => (await import('./ExpandedRealityModes')).runMultiverseEscapeRoomLoop,
   'multiverse_support': async () => (await import('./DreamModes_Scifi')).runMultiverseSupportLoop,
   'multiverse_support_hotline': async () => (await import('./DreamModes_Scifi')).runMultiverseSupportHotlineLoop,
   'museum_tour': async () => (await import('./ExpandedRealityModes_ShowGames')).runMuseumTourLoop,
@@ -347,5 +347,6 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'wizards_it_department': async () => (await import('./DreamModes_Fantasy')).runWizardsITDepartmentLoop,
   'worst_roommate': async () => (await import('./ExpandedRealityModes_ShowGames')).runWorstRoommateLoop,
   'y2k_bug_survivor': async () => (await import('./DreamModes_Tech')).runY2KBugSurvivorLoop,
+  'zombie_apocalypse_hoa': async () => (await import('./ExpandedRealityModes')).runZombieApocalypseHOALoop,
   'zombie_survival_negotiators': async () => (await import('./DreamModes_Scifi')).runZombieSurvivalNegotiatorsLoop,
 };

@@ -5,6 +5,10 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 ## Project Velocity
 tasks_per_run: 2
 
+- [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
+- [x] Execute: Implement the next set of features.
+- [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
+
 ## Project Velocity Feedback
 Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
 
@@ -205,7 +209,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Time-Traveling Traffic Cop Mode:
   - Premise one-liner: A traffic cop from the future gives tickets for minor infractions that haven't happened yet.
   - LLM pairings: Qwen2.5 for the pedantic traffic cop, Phi-3 for the bewildered driver.
-- Multiverse Escape Room Mode:
+- [x] Multiverse Escape Room Mode:
   - Premise one-liner: Agents from different parallel universes are trapped in an escape room where physical laws randomly shift.
   - LLM pairings: Qwen2.5 for the strict universe agent, Hermes-3 for the chaotic universe agent.
 
@@ -226,11 +230,11 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 ### B. Infrastructure & Storage (Cloud Persistence)
 - **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Roadmap Steps:**
-  - **Delta Conflict Resolution:** Add visual merge conflict UI for handling overlapping multi-device edits on episode scripts.
-  - **Asset Storage:** Upload generated assets (songs, images, shaders) to HF alongside JSON scripts.
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+  - **Delta Conflict Resolution:** Add visual merge conflict UI for handling overlapping multi-device edits on episode scripts.
+  - **Asset Storage:** Upload generated assets (songs, images, shaders) to HF alongside JSON scripts.
   - [x] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
   - *Note: Cloud persistence foundation is largely established (Auth, Fetch, Push). Next step is extending to Avatar/TTS configs.*
 - **Next Steps:**
@@ -254,7 +258,13 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md).
 
 ### C. New Dream Phase Proposals
-- Zombie Apocalypse HOA Mode:
+- Heckler Interaction:
+  - Premise one-liner: The audience aggressively heckles the agents via a simulated audience sentiment meter, and agents must ruthlessly roast them back while trying to finish their sets.
+  - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the panicking MC.
+- Collaborative Storytelling:
+  - Premise one-liner: Agents try to tell a cohesive story together, but keep trying to radically change the genre halfway through.
+  - LLM pairings: Qwen2.5 for the strict fantasy author, Hermes-3 for the chaotic sci-fi fan.
+- [x] Zombie Apocalypse HOA Mode:
   - Premise one-liner: A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling.
   - LLM pairings: Qwen2.5 for the strict HOA leader, Hermes-3 for the panicked homeowner.
 - Cloud Persistence Expansion (Future):

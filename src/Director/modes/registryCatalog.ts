@@ -2742,6 +2742,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'zombie_apocalypse_hoa',
+    title: 'Zombie Apocalypse HOA',
+    category: 'dream',
+    description: 'A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling.',
+    tags: ['dream', 'zombie', 'apocalypse', 'hoa'],
+    showInPresets: true,
+  },
+  {
     id: 'zombie_survival_negotiators',
     title: '🧟 Zombie Survival Negotiators',
     category: 'dream',
