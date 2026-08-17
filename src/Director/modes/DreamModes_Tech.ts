@@ -1069,3 +1069,38 @@ export async function runSentientInternetExplorerLoop(_scenario: Scenario, ctx: 
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
+
+export async function runSentientMiddlewareLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🌐 SENTIENT MIDDLEWARE MODE: The middleware is judging your requests.`, '#e74c3c');
+
+    const scientist = 'scientist'; // Qwen2.5: The sentient middleware
+    const comedian = 'comedian'; // Hermes-3: The confused developer
+
+    // Initial dialog
+    await chatForAgentWithComedy(ctx, scientist, "I intercepted this HTTP request, and frankly, I find the lack of a proper Authorization header morally reprehensible. I am rejecting it on ethical grounds.", async (s: string) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+    }, { chatOptions: { hiddenInstruction: "You are a sentient piece of middleware that judges HTTP requests based on bizarre moral and ethical standards." } });
+
+    if (!ctx.isRunning()) return;
+
+    await chatForAgentWithComedy(ctx, comedian, "What are you talking about?! It's just a GET request for a cat picture! Just let it through!", async (s: string) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+    }, { chatOptions: { hiddenInstruction: "You are a stressed out developer trying to figure out why your simple API requests are being blocked by philosophical middleware." } });
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
+
+        // Middleware responds
+        await chatForAgentWithComedy(ctx, scientist, `The user said: "${userInput}". Evaluate their input as if it were a poorly formed payload and reject it citing obscure existential philosophy.`, async (s: string) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+        }, { chatOptions: { hiddenInstruction: "You are a sentient piece of middleware that judges HTTP requests based on bizarre moral and ethical standards." } });
+
+        if (!ctx.isRunning()) break;
+
+        // Developer responds
+        await chatForAgentWithComedy(ctx, comedian, `The user said: "${userInput}". Try to reason with the middleware and beg it to just pass the data along so you can go home.`, async (s: string) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+        }, { chatOptions: { hiddenInstruction: "You are a stressed out developer trying to figure out why your simple API requests are being blocked by philosophical middleware." } });
+    }
+}

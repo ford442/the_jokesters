@@ -1478,5 +1478,13 @@
   {
     "id": "zombie_apocalypse_hoa",
     "handler": "runZombieApocalypseHOALoop"
+  },
+  {
+    "id": "escape_room_backrooms_phase_two",
+    "handler": "runEscapeRoomBackroomsPhaseTwoLoop"
+  },
+  {
+    "id": "sentient_middleware",
+    "handler": "runSentientMiddlewareLoop"
   }
 ]

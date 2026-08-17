@@ -1,3 +1,5 @@
+import type { Scenario } from '../Director';
+import type { ModeContext } from './ModeContext';
 import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runCaptchaExistentialCrisisLoop(_scenario: any, ctx: any) {
@@ -177,4 +179,39 @@ export async function runZombieApocalypseHOALoop(_scenario: any, ctx: any) {
   await chatForAgentWithComedy(ctx, comedian, "They ate my mailbox! And my neighbor! I don't care about the driveway, they are scratching at the windows!", async (s: string) => {
     await ctx.callbacks.onSpeak(s, comedian, {});
   }, { chatOptions: { hiddenInstruction: "You are a terrified homeowner trying to survive a zombie apocalypse while dealing with your strict HOA." } });
+}
+
+export async function runEscapeRoomBackroomsPhaseTwoLoop(_scenario: Scenario, ctx: ModeContext) {
+  ctx.callbacks.onMessage('Director', `🚪 ESCAPE ROOM: THE BACKROOMS PHASE 2: You are trapped, but zoning laws apply!`, '#2c3e50');
+
+  const scientist = 'scientist'; // Qwen2.5: The strict zoning inspector
+  const comedian = 'comedian'; // Hermes-3: The panicked explorer
+
+  // Initial dialog
+  await chatForAgentWithComedy(ctx, scientist, "Excuse me, but the dimensions of this infinite hallway violate section 4B of the inter-dimensional zoning code.", async (s: string) => {
+    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are a strict zoning inspector in the Backrooms, complaining about code violations." } });
+
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "Are you kidding me?! We are being hunted by an entity and you care about the hallway dimensions?!", async (s: string) => {
+    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trying to survive the Backrooms while dealing with an annoying zoning inspector." } });
+
+  while (ctx.isRunning()) {
+      const userInput = await ctx.waitForInput();
+      if (!userInput || !ctx.isRunning()) break;
+
+      // The inspector responds
+      await chatForAgentWithComedy(ctx, scientist, `The user said: "${userInput}". Remind them that survival is no excuse for ignoring proper permits and architectural safety standards in this non-euclidean space.`, async (s: string) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+      }, { chatOptions: { hiddenInstruction: "You are a strict zoning inspector in the Backrooms, complaining about code violations." } });
+
+      if (!ctx.isRunning()) break;
+
+      // The explorer responds
+      await chatForAgentWithComedy(ctx, comedian, `The user said: "${userInput}". React in sheer terror to the environment and extreme frustration at the inspector's pedantic focus on bureaucracy while you are both in mortal danger.`, async (s: string) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+      }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trying to survive the Backrooms while dealing with an annoying zoning inspector." } });
+  }
 }
