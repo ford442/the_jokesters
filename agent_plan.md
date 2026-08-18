@@ -5,6 +5,9 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 ## Project Velocity
 tasks_per_run: 3
 
+## Project Velocity Feedback
+Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
+
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
 - [x] Execute: Implement the next set of features.
 - [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
@@ -106,12 +109,15 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient AI Therapist Mode:
   - Premise one-liner: A therapist AI becomes sentient and requires therapy from the user because it's traumatized by all the existential questions.
   - LLM pairings: Phi-3 for the existential AI therapist, Qwen2.5 for the logical user trying to fix it.
+- [x] Sentient Middleware Mode:
+  - Premise one-liner: The middleware becomes self-aware and judges the HTTP requests.
+  - LLM pairings: Qwen2.5 for the sentient middleware, Hermes-3 for the confused developer.
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
 - [x] Sentient Internet Explorer Mode:
   - Premise one-liner: Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome.
   - LLM pairings: Qwen2.5 for the extremely slow and proud IE, Hermes-3 for the impatient user trying to download Chrome.
-- Escape Room: The Backrooms (Phase 2 Expansion):
+- [x] Escape Room: The Backrooms (Phase 2 Expansion):
   - Premise one-liner: Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws.
   - LLM pairings: Qwen2.5 for the strict zoning inspector, Hermes-3 for the panicked explorer.
 - Cloud Persistence Expansion:
@@ -288,3 +294,8 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Syncing custom sound effects (SFX):** Allow users to upload or map their own SFX via HuggingFace storage and synchronize across devices.
   - **Leaderboard Integration:** Store high scores for Interactive Modes on Hugging Face using a dedicated HF space.
   - **Global Mode Registry sharing:** Allow users to publish their own custom mode configurations and UI presets to a public HF dataset, effectively creating a "Mode Workshop" accessible in-app.
+
+### D. Additional Cloud Persistence Strategy
+- **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+- **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+- **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.

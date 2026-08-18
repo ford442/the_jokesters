@@ -1,0 +1,23 @@
+# Gradio ZeroGPU Space — clean venv (no Colab preinstalls).
+# Pin carefully: Kimi remote code wants transformers 4.51.x; Optimum 2.x uses optimum-onnx.
+
+gradio>=5.0.0,<6.0.0
+spaces>=0.30.0
+
+# Torch is required; ZeroGPU injects CUDA only inside @spaces.GPU
+torch>=2.5.0,<2.7.0
+
+transformers==4.51.3
+accelerate>=0.27.0,<1.0
+huggingface_hub>=0.30.0,<1.0
+hf_transfer>=0.1.8
+safetensors>=0.4.0
+sentencepiece>=0.2.0
+protobuf>=4.25.0
+pillow>=10.0.0
+numpy>=1.24.0,<2.0
+
+# Optimum 2.x ONNX export (not optimum[exporters])
+# Use CPU onnxruntime wheels in requirements; GPU export uses torch/cuda from ZeroGPU.
+optimum-onnx[onnxruntime]==0.1.0
+onnx>=1.16.0,<1.18.0

@@ -606,6 +606,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'escape_room_backrooms_phase_two',
+    title: 'Escape Room: The Backrooms Phase 2',
+    category: 'dream',
+    description: 'Agents are trapped in the backrooms, but they can\'t stop arguing about architectural zoning laws.',
+    tags: ['dream', 'escape', 'room', 'backrooms', 'phase', 'two'],
+    showInPresets: true,
+  },
+  {
     id: 'escape_room_game_master',
     title: 'Escape Room Game Master Mode',
     category: 'interactive',
@@ -2019,6 +2027,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Agents play a philosophical mailbox, an enthusiastic junk mail flyer, and an important, panicked bill.',
     tags: ['dream', 'sentient', 'mailbox'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_middleware',
+    title: 'Sentient Middleware Mode',
+    category: 'dream',
+    description: 'The middleware becomes self-aware and judges the HTTP requests.',
+    tags: ['dream', 'sentient', 'middleware'],
     showInPresets: true,
   },
   {

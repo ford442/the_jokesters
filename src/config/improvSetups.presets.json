@@ -1128,5 +1128,14 @@
     "id": "historical_tech_support",
     "title": "Historical Tech Support",
     "description": "Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick."
+  },
+  {    "id": "escape_room_backrooms_phase_two",
+    "title": "Escape Room: The Backrooms Phase 2",
+    "description": "Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws."
+  },
+  {
+    "id": "sentient_middleware",
+    "title": "Sentient Middleware Mode",
+    "description": "The middleware becomes self-aware and judges the HTTP requests."
   }
 ]

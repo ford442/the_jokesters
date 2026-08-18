@@ -1486,5 +1486,12 @@
   {
     "id": "historical_tech_support",
     "handler": "runHistoricalTechSupportLoop"
+  },
+  {    "id": "escape_room_backrooms_phase_two",
+    "handler": "runEscapeRoomBackroomsPhaseTwoLoop"
+  },
+  {
+    "id": "sentient_middleware",
+    "handler": "runSentientMiddlewareLoop"
   }
 ]
