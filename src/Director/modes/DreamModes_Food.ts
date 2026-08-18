@@ -208,3 +208,27 @@ export async function runOverDramaticBaristaLoop(_scenario: Scenario, ctx: ModeC
 
     await chatForAgentWithComedy(ctx, barista, `(Panic! The milk is frothing incorrectly. Describe the impending catastrophic chain reaction if the foam isn't stabilized immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
 }
+
+
+export async function runCookingShowInterdimensionalIngredientsLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍳 INTERDIMENSIONAL COOKING SHOW: The secret ingredient is unstable radioactive materials from a parallel dimension!`, '#e67e22');
+
+    const strictChef = 'scientist'; // Qwen2.5 interdimensional chef
+    const panickedContestant = 'comedian'; // Hermes-3 panicked contestant
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictChef);
+    await chatForAgentWithComedy(ctx, strictChef, `(You are a strict interdimensional chef hosting a cooking show. Introduce the secret ingredient: unstable radioactive materials from a parallel dimension. Demand perfection from the contestant.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictChef, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(panickedContestant);
+        await chatForAgentWithComedy(ctx, panickedContestant, `(The strict chef just introduced the radioactive secret ingredient. You are the panicked contestant. Complain about the extreme danger and how the ingredient is literally glowing and phasing through the counter.)`, async (s: string) => await ctx.callbacks.onSpeak(s, panickedContestant, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictChef);
+        await chatForAgentWithComedy(ctx, strictChef, `(The contestant just complained. Dismiss their fears entirely. Give them highly specific, bizarre instructions on how to prepare the radioactive material without collapsing the local spacetime continuum.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictChef, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}

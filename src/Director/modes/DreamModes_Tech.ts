@@ -1069,3 +1069,27 @@ export async function runSentientInternetExplorerLoop(_scenario: Scenario, ctx: 
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
+
+
+export async function runHistoricalTechSupportLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `📜 HISTORICAL TECH SUPPORT: Explaining a smartphone to someone from the past.`, '#3498db');
+
+    const historicalFigure = 'philosopher'; // Hermes-3 bewildered historical figure
+    const techSupport = 'scientist'; // Phi-3 extremely patient tech support
+
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(techSupport);
+    await chatForAgentWithComedy(ctx, techSupport, `(You are an extremely patient tech support agent. You are trying to explain how to use a smartphone to a historical figure from the 1800s. Start by gently explaining what a touchscreen is.)`, async (s: string) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(historicalFigure);
+        await chatForAgentWithComedy(ctx, historicalFigure, `(The tech support just tried to explain a smartphone. You are a bewildered historical figure from the 1800s. You think this device is a 'glowing magic brick' containing tiny trapped demons. Be very confused and slightly terrified by their explanation.)`, async (s: string) => await ctx.callbacks.onSpeak(s, historicalFigure, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+        if (!ctx.isRunning()) break;
+
+        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(techSupport);
+        await chatForAgentWithComedy(ctx, techSupport, `(The historical figure thinks the phone is magic. Patiently but exhaustingly try to use modern analogies to explain electricity and apps without terrifying them further.)`, async (s: string) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+}

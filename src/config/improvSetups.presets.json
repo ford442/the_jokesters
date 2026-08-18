@@ -1118,5 +1118,15 @@
     "id": "zombie_apocalypse_hoa",
     "title": "Zombie Apocalypse HOA",
     "description": "A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling."
+  },
+  {
+    "id": "cooking_show_interdimensional",
+    "title": "Cooking Show: Interdimensional Ingredients",
+    "description": "A cooking competition where the secret ingredients are unstable radioactive materials from a parallel dimension."
+  },
+  {
+    "id": "historical_tech_support",
+    "title": "Historical Tech Support",
+    "description": "Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick."
   }
 ]

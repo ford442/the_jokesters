@@ -1478,5 +1478,13 @@
   {
     "id": "zombie_apocalypse_hoa",
     "handler": "runZombieApocalypseHOALoop"
+  },
+  {
+    "id": "cooking_show_interdimensional",
+    "handler": "runCookingShowInterdimensionalIngredientsLoop"
+  },
+  {
+    "id": "historical_tech_support",
+    "handler": "runHistoricalTechSupportLoop"
   }
 ]
