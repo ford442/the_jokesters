@@ -1118,5 +1118,15 @@
     "id": "zombie_apocalypse_hoa",
     "title": "Zombie Apocalypse HOA",
     "description": "A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling."
+  },
+  {
+    "id": "escape_room_backrooms_phase_two",
+    "title": "Escape Room: The Backrooms Phase 2",
+    "description": "Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws."
+  },
+  {
+    "id": "sentient_middleware",
+    "title": "Sentient Middleware Mode",
+    "description": "The middleware becomes self-aware and judges the HTTP requests."
   }
 ]
