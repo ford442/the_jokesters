@@ -374,6 +374,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'cooking_show_interdimensional',
+    title: 'Cooking Show Interdimensional',
+    category: 'dream',
+    description: 'A Cooking Show Interdimensional scene.',
+    tags: ['dream', 'cooking', 'show', 'interdimensional'],
+    showInPresets: false,
+  },
+  {
     id: 'corporate_jargon_translator',
     title: 'Corporate Jargon Translator',
     category: 'dream',
@@ -868,6 +876,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'Historical figures haunt the same building and attend a support group to complain about how the modern world interprets their legacies.',
     tags: ['dream', 'historical', 'ghost', 'support', 'group'],
     showInPresets: true,
+  },
+  {
+    id: 'historical_tech_support',
+    title: 'Historical Tech Support',
+    category: 'dream',
+    description: 'A Historical Tech Support scene.',
+    tags: ['dream', 'historical', 'tech', 'support'],
+    showInPresets: false,
   },
   {
     id: 'hoa_board_meeting',

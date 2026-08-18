@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Project Velocity Feedback
 Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
@@ -13,7 +13,7 @@ Today's friction was low; the tasks were straightforward, so we keep `tasks_per_
 - [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
 
 ## Project Velocity Feedback
-Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
+Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 3.
 
 ## Process (P0)
 
@@ -80,7 +80,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 - [x] Roast Battle Mode 2.0: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
 - [x] Collaborative Musical Improv: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
-- [x] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+- Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
 - [x] Philosophical Debate Mode: Agents debate absurd philosophical dilemmas while trying to order fast food.
 
 
@@ -263,7 +263,24 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md).
 
+
 ### C. New Dream Phase Proposals
+- Time-Traveling IRS Audit Mode:
+  - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
+  - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
+- Sentient Codebase Therapy:
+  - Premise one-liner: A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched.
+  - LLM pairings: Hermes-3 for the traumatized codebase, Qwen2.5 for the logical therapist.
+- [x] Cooking Show: Interdimensional Ingredients:
+  - Premise one-liner: A cooking competition where the secret ingredients are unstable radioactive materials from a parallel dimension.
+  - LLM pairings: Qwen2.5 for the strict interdimensional chef, Hermes-3 for the panicked contestant.
+- [x] Historical Tech Support:
+  - Premise one-liner: Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick.
+  - LLM pairings: Hermes-3 for the bewildered historical figure, Phi-3 for the extremely patient tech support.
+- [ ] Superhero HR Department:
+  - Premise one-liner: HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.
+  - LLM pairings: Qwen2.5 for the strict superhero HR, Hermes-3 for the defensive superhero.
+
 - Heckler Interaction:
   - Premise one-liner: The audience aggressively heckles the agents via a simulated audience sentiment meter, and agents must ruthlessly roast them back while trying to finish their sets.
   - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the panicking MC.
@@ -275,6 +292,8 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - LLM pairings: Qwen2.5 for the strict HOA leader, Hermes-3 for the panicked homeowner.
 - Cloud Persistence Expansion (Future):
   - **Syncing custom sound effects (SFX):** Allow users to upload or map their own SFX via HuggingFace storage and synchronize across devices.
+  - **Leaderboard Integration:** Store high scores for Interactive Modes on Hugging Face using a dedicated HF space.
+  - **Global Mode Registry sharing:** Allow users to publish their own custom mode configurations and UI presets to a public HF dataset, effectively creating a "Mode Workshop" accessible in-app.
 
 ### D. Additional Cloud Persistence Strategy
 - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
