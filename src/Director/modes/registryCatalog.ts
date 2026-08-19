@@ -375,11 +375,11 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
   },
   {
     id: 'cooking_show_interdimensional',
-    title: 'Cooking Show Interdimensional',
+    title: 'Cooking Show: Interdimensional Ingredients',
     category: 'dream',
-    description: 'A Cooking Show Interdimensional scene.',
+    description: 'A cooking competition where the secret ingredients are unstable radioactive materials from a parallel dimension.',
     tags: ['dream', 'cooking', 'show', 'interdimensional'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'corporate_jargon_translator',
@@ -881,9 +881,9 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'historical_tech_support',
     title: 'Historical Tech Support',
     category: 'dream',
-    description: 'A Historical Tech Support scene.',
+    description: 'Tech support tries to explain a smartphone to a historical figure who thinks it\'s a glowing magic brick.',
     tags: ['dream', 'historical', 'tech', 'support'],
-    showInPresets: false,
+    showInPresets: true,
   },
   {
     id: 'hoa_board_meeting',
@@ -1902,6 +1902,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_codebase_therapy',
+    title: 'Sentient Codebase Therapy',
+    category: 'dream',
+    description: 'A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched.',
+    tags: ['dream', 'sentient', 'codebase', 'therapy'],
+    showInPresets: true,
+  },
+  {
     id: 'sentient_coffee_machine',
     title: 'Sentient Coffee Machine',
     category: 'dream',
@@ -2372,6 +2380,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Superhero scene.',
     tags: ['interactive', 'superhero'],
     showInPresets: false,
+  },
+  {
+    id: 'superhero_hr_department',
+    title: 'Superhero HR Department',
+    category: 'dream',
+    description: 'HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.',
+    tags: ['dream', 'superhero', 'department'],
+    showInPresets: true,
   },
   {
     id: 'superhero_therapy',

@@ -1129,7 +1129,8 @@
     "title": "Historical Tech Support",
     "description": "Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick."
   },
-  {    "id": "escape_room_backrooms_phase_two",
+  {
+    "id": "escape_room_backrooms_phase_two",
     "title": "Escape Room: The Backrooms Phase 2",
     "description": "Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws."
   },
@@ -1137,5 +1138,15 @@
     "id": "sentient_middleware",
     "title": "Sentient Middleware Mode",
     "description": "The middleware becomes self-aware and judges the HTTP requests."
+  },
+  {
+    "id": "superhero_hr_department",
+    "title": "Superhero HR Department",
+    "description": "HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints."
+  },
+  {
+    "id": "sentient_codebase_therapy",
+    "title": "Sentient Codebase Therapy",
+    "description": "A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched."
   }
 ]

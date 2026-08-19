@@ -218,3 +218,35 @@ export async function runHOABoardMeetingLoop(_scenario: Scenario, ctx: ModeConte
     await chatForAgentWithComedy(ctx, existentialBoardMember, `(You are a dramatic HOA board member. Explain how the user's unkempt petunias are single-handedly destroying the fabric of the entire community.)`, async (s) => await ctx.callbacks.onSpeak(s, existentialBoardMember, {}));
 }
 
+
+
+/**
+ * Superhero HR Department Mode
+ * HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.
+ */
+export async function runSuperheroHRDepartmentLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '🦸 SUPERHERO HR DEPARTMENT: Dealing with collateral damage', '#e74c3c');
+
+    const strictHR = 'scientist'; // Qwen2.5 for the strict superhero HR
+    const defensiveHero = 'comedian'; // Hermes-3 for the defensive superhero
+
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, strictHR, `(SUPERHERO HR: You are the strict HR representative for a superhero team. The User is a civilian filing a complaint. Welcome them, then immediately call in the superhero responsible for the collateral damage to answer for their actions.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Civilian (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Defensive Superhero Reacts
+            await chatForAgentWithComedy(ctx, defensiveHero, `(SUPERHERO HR: The civilian just complained: "${userInput}". You are the defensive superhero. Deny responsibility, blame supervillains, or claim the destruction of their car was "necessary for the greater good".)`, async (s) => await ctx.callbacks.onSpeak(s, defensiveHero, {}));
+        } else {
+            // Strict HR Intervenes
+            await chatForAgentWithComedy(ctx, strictHR, `(SUPERHERO HR: The civilian said: "${userInput}". You are the strict HR representative. Validate their complaint using overly bureaucratic corporate jargon, then scold the superhero for violating the "Minimal Property Damage Clause" of their contract.)`, async (s) => await ctx.callbacks.onSpeak(s, strictHR, {}));
+        }
+    }
+}
