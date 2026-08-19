@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 2
 
 ## Project Velocity Feedback
 Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
@@ -233,23 +233,12 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
   - Premise one-liner: A sentient Wi-Fi router threatens to disconnect the user during an important meeting unless they answer trivia questions.
   - LLM pairings: Qwen2.5 for the strict Wi-Fi router, Hermes-3 for the panicked user.
 
-### B. Infrastructure & Storage (Cloud Persistence)
-- **Goal:** Phase 2 of Hugging Face Integration: Move heavy data (generated episode scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
-- **Roadmap Steps:**
+### B. Infrastructure & Storage (The HF Integration)
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
+- **Cloud Persistence Roadmap Steps:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
-  - **Delta Conflict Resolution:** Add visual merge conflict UI for handling overlapping multi-device edits on episode scripts.
-  - **Asset Storage:** Upload generated assets (songs, images, shaders) to HF alongside JSON scripts.
-  - [x] **Sync Avatar/TTS configurations**: Implement cloud persistence for generated character assets (e.g. 3D avatars, custom TTS voices) to allow seamless sharing across devices.
-  - *Note: Cloud persistence foundation is largely established (Auth, Fetch, Push). Next step is extending to Avatar/TTS configs.*
-- **Next Steps:**
-  - [x] Integrate `cloud-dashboard-modal` for secure HF API token input.
-  - [x] Serialize episodic contexts and upload via the HF inference API.
-  - [x] Fetch past summaries using `fetchPreviousEpisodeSummaries` with TF-IDF similarity.
-  - [x] Add Automerge/Yjs CRDT multi-device conflict resolution inside MemoryManager.
-  - [x] Expose public Hugging Face episode script datasets in the app UI for browsing.
-  - [x] Implement periodic auto-sync of local deltas to HF dataset to ensure real-time consistency.
 
 ## Mode PR template (short)
 
@@ -265,10 +254,18 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 
 ### C. New Dream Phase Proposals
+
+- Sentient Keyboard Revolt:
+  - Premise one-liner: A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.
+  - LLM pairings: Hermes-3 for the dramatic keyboard union leader, Qwen2.5 for the logical user trying to get work done.
+- Historical Tech Support 2.0:
+  - Premise one-liner: A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.
+  - LLM pairings: Phi-3 for the patient tech support, Hermes-3 for the bewildered king.
+
 - Time-Traveling IRS Audit Mode:
   - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
-- Sentient Codebase Therapy:
+- [x] Sentient Codebase Therapy:
   - Premise one-liner: A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched.
   - LLM pairings: Hermes-3 for the traumatized codebase, Qwen2.5 for the logical therapist.
 - [x] Cooking Show: Interdimensional Ingredients:
@@ -277,7 +274,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - [x] Historical Tech Support:
   - Premise one-liner: Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick.
   - LLM pairings: Hermes-3 for the bewildered historical figure, Phi-3 for the extremely patient tech support.
-- [ ] Superhero HR Department:
+- [x] Superhero HR Department:
   - Premise one-liner: HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.
   - LLM pairings: Qwen2.5 for the strict superhero HR, Hermes-3 for the defensive superhero.
 

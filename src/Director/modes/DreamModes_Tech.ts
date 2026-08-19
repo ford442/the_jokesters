@@ -1128,3 +1128,35 @@ export async function runSentientMiddlewareLoop(_scenario: Scenario, ctx: ModeCo
         }, { chatOptions: { hiddenInstruction: "You are a stressed out developer trying to figure out why your simple API requests are being blocked by philosophical middleware." } });
     }
 }
+
+
+/**
+ * Sentient Codebase Therapy Mode
+ * A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched.
+ */
+export async function runSentientCodebaseTherapyLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', '💻 SENTIENT CODEBASE THERAPY: Unpacking the spaghetti code', '#2ecc71');
+
+    const traumatizedCodebase = 'comedian'; // Hermes-3 for the traumatized codebase
+    const logicalTherapist = 'scientist'; // Qwen2.5 for the logical therapist
+
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, logicalTherapist, `(CODEBASE THERAPY: You are the logical AI therapist for a deeply traumatized legacy spaghetti codebase. The User is the Lead Developer who created it. Welcome them to the session, and invite the codebase to express its feelings about the latest hacky hotfix.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalTherapist, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Lead Developer (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        const roll = Math.random();
+
+        if (roll < 0.5) {
+            // Traumatized Codebase Reacts
+            await chatForAgentWithComedy(ctx, traumatizedCodebase, `(CODEBASE THERAPY: The developer just said: "${userInput}". You are the traumatized legacy codebase. Have an emotional breakdown about global variables, deprecated libraries, or how many ` + '`' + `// TODO: fix later` + '`' + ` comments are inside you.)`, async (s) => await ctx.callbacks.onSpeak(s, traumatizedCodebase, {}));
+        } else {
+            // Logical Therapist Intervenes
+            await chatForAgentWithComedy(ctx, logicalTherapist, `(CODEBASE THERAPY: The developer said: "${userInput}". You are the logical AI therapist. Try to mediate using programming concepts as psychological terms (e.g. "garbage collection for your emotions", "refactoring your trauma").)`, async (s) => await ctx.callbacks.onSpeak(s, logicalTherapist, {}));
+        }
+    }
+}
