@@ -46,6 +46,9 @@ Prioritize these over new premises. **Do not add Dream modes until Vicuna load r
 Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while weights + Llama-2 ctx4k lib exist — silent `model_lib_fallback` undoes low-VRAM presets. See [docs/FOUNDATION_NEXT.md](./docs/FOUNDATION_NEXT.md).
 
 ## Implementation Roadmap
+
+- [ ] Implement HF dedicated failover (#304) to improve Vicuna / model load reliability.
+- [ ] Implement dual-domain striped chunk downloads for model loading (#302).
 - [x] Undercover Boss: Sentient AI: An advanced AGI goes undercover as a simple calculator app to see how users treat rudimentary software.
 - [x] Paranormal Real Estate Agent 2.0: The ghosts form a union and refuse to haunt the house until they get better working conditions.
 - [x] Philosophical Plumber Mode: A plumber fixes the sink but questions whether the water leak is just a manifestation of the user's emotional baggage.
@@ -80,7 +83,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 - [x] Roast Battle Mode 2.0: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
 - [x] Collaborative Musical Improv: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
-- Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+- [x] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
 - [x] Philosophical Debate Mode: Agents debate absurd philosophical dilemmas while trying to order fast food.
 
 
