@@ -69,6 +69,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "custom", "vicuna", "fp32"],
     source: "vps",
     notes: "Custom ford442 Vicuna build",
+    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
   },
 
   /**
@@ -96,6 +97,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
     source: "vps",
     notes: "JS-only ultra-low preset — generic ctx4k .wasm + sliding window. Prefer VPS_VICUNA_7B_CTX512 when custom .wasm is hosted.",
+    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
   },
 
   /**
@@ -121,6 +123,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
     notes: "Custom 512-ctx .wasm — lowest peak VRAM for Vicuna 7B on 4 GB GPUs.",
+    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
   },
 
   /**
@@ -145,6 +148,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
     notes: "Custom 1024-ctx .wasm — more history than ctx512, still below generic 4K peak.",
+    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
   },
 
   /**

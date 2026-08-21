@@ -35,6 +35,7 @@ export interface DynamicModelConfig {
   model_lib: string;
   /** Generic 4K .wasm used when custom model_lib is not yet hosted on VPS */
   model_lib_fallback?: string;
+  hf_fallback_url?: string;
   overrides?: Record<string, unknown>;
   vram_required_MB?: number;
 }
@@ -687,6 +688,23 @@ export async function loadModelWithDynamicContext(
     cleanup();
     
     const errorMsg = error?.message || String(error);
+
+    // HF Failover for Network / Fetch errors (VPS down or CORS issue)
+    if (modelConfig.hf_fallback_url && modelConfig.model !== modelConfig.hf_fallback_url && (errorMsg.toLowerCase().includes('fetch') || errorMsg.toLowerCase().includes('network') || errorMsg.toLowerCase().includes('failed to fetch'))) {
+      console.warn(`[DynamicContext] Primary model load failed: ${errorMsg}. Failing over to HF fallback: ${modelConfig.hf_fallback_url}`);
+      onProgress?.({
+        progress: 0,
+        timeElapsed: 0,
+        text: 'Primary server unreachable. Failing over to Hugging Face CDN...',
+      });
+      // Swap the model URL to the HF fallback and retry
+      return loadModelWithDynamicContext(
+        { ...modelConfig, model: modelConfig.hf_fallback_url },
+        contextSize,
+        onProgress,
+        vramConfig
+      );
+    }
 
     // On OOM, retry with smaller context and optionally force KV cache quantization
     if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
