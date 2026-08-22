@@ -3,10 +3,10 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 3
 
 ## Project Velocity Feedback
-Today's friction was low; the tasks were straightforward, so we keep `tasks_per_run` at 2.
+Today was low friction so increased tasks_per_run to 3.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
 - [x] Execute: Implement the next set of features.
@@ -47,8 +47,8 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 ## Implementation Roadmap
 
-- [ ] Implement HF dedicated failover (#304) to improve Vicuna / model load reliability.
-- [ ] Implement dual-domain striped chunk downloads for model loading (#302).
+- [x] Implement HF dedicated failover (#304) to improve Vicuna / model load reliability.
+- [x] Implement dual-domain striped chunk downloads for model loading (#302).
 - [x] Undercover Boss: Sentient AI: An advanced AGI goes undercover as a simple calculator app to see how users treat rudimentary software.
 - [x] Paranormal Real Estate Agent 2.0: The ghosts form a union and refuse to haunt the house until they get better working conditions.
 - [x] Philosophical Plumber Mode: A plumber fixes the sink but questions whether the water leak is just a manifestation of the user's emotional baggage.
@@ -257,6 +257,18 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 
 ### C. New Dream Phase Proposals
+
+- **New Mode Idea:**
+  - Sentient Router Mutiny Mode:
+  - Premise one-liner: A sentient Wi-Fi router gets tired of people streaming bad reality TV and throttles connections until they answer classical trivia.
+  - LLM pairings: Qwen2.5 for the strict elitist router, Hermes-3 for the panicked user trying to watch a show.
+
+- **Infrastructure / Storage Roadmap:**
+  - Authenticating with the HF API.
+  - Pushing finished "Episode Scripts" to a private Dataset.
+  - Fetching "Previous Episode Summaries" at boot for continuity.
+  - *Cloud Persistence Roadmap Updates Added*
+
 
 - Sentient Keyboard Revolt:
   - Premise one-liner: A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.
