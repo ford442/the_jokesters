@@ -6,14 +6,7 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 tasks_per_run: 3
 
 ## Project Velocity Feedback
-Today was low friction so increased tasks_per_run to 3.
-
-- [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
-- [x] Execute: Implement the next set of features.
-- [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
-
-## Project Velocity Feedback
-Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 3.
+Today's run was smooth and frictionless. The tasks were clear, and we efficiently added multiple modes without any major blockers. Therefore, we maintain `tasks_per_run: 3` for a consistent, sustainable pace.
 
 ## Process (P0)
 
@@ -258,8 +251,16 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 ### C. New Dream Phase Proposals
 
+- **Project Velocity Feedback:** Today was a smooth run, keeping tasks_per_run at 3.
+
 - **New Mode Idea:**
-  - Sentient Router Mutiny Mode:
+  - Alien Customer Support Mode:
+  - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter.
+  - LLM pairings: Qwen2.5 for the literal alien, Hermes-3 for the panicked human.
+
+
+- **New Mode Idea:**
+  - [x] Sentient Router Mutiny Mode:
   - Premise one-liner: A sentient Wi-Fi router gets tired of people streaming bad reality TV and throttles connections until they answer classical trivia.
   - LLM pairings: Qwen2.5 for the strict elitist router, Hermes-3 for the panicked user trying to watch a show.
 
@@ -270,10 +271,10 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - *Cloud Persistence Roadmap Updates Added*
 
 
-- Sentient Keyboard Revolt:
+- [x] Sentient Keyboard Revolt:
   - Premise one-liner: A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.
   - LLM pairings: Hermes-3 for the dramatic keyboard union leader, Qwen2.5 for the logical user trying to get work done.
-- Historical Tech Support 2.0:
+- [x] Historical Tech Support 2.0:
   - Premise one-liner: A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.
   - LLM pairings: Phi-3 for the patient tech support, Hermes-3 for the bewildered king.
 
@@ -311,3 +312,22 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
 - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
 - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+
+
+## Phase 2: Architectural Expansion (The "Dream" Phase)
+
+### A. Creative Expansion (New Modes)
+- **New Mode Idea:** Alien Customer Support Mode
+  - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter using intergalactic troubleshooting steps.
+  - LLM pairings: Qwen2.5 for the strict alien rep, Hermes-3 for the panicked human.
+
+### B. Infrastructure & Storage (The HF Integration)
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
+- **Cloud Persistence Roadmap Steps:**
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+### C. Self-Regulation
+- **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.

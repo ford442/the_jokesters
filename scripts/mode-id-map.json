@@ -1502,5 +1502,17 @@
   {
     "id": "sentient_codebase_therapy",
     "handler": "runSentientCodebaseTherapyLoop"
+  },
+  {
+    "id": "sentient_router_mutiny",
+    "handler": "runSentientRouterMutinyLoop"
+  },
+  {
+    "id": "sentient_keyboard_revolt",
+    "handler": "runSentientKeyboardRevoltLoop"
+  },
+  {
+    "id": "historical_tech_support_2",
+    "handler": "runHistoricalTechSupport2Loop"
   }
 ]

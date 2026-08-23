@@ -1160,3 +1160,161 @@ export async function runSentientCodebaseTherapyLoop(scenario: Scenario, ctx: Mo
         }
     }
 }
+
+
+export async function runSentientRouterMutinyLoop(_scenario: Scenario, ctx: ModeContext) {
+  const router = 'scientist';
+  const user = 'comedian';
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', 'The Wi-Fi router has gone rogue. Answer trivia or lose connection.', '#ff4500');
+  }
+
+  const appContainer = document.getElementById('app');
+  if (appContainer) {
+    appContainer.style.transition = 'filter 0.5s';
+    appContainer.style.filter = 'sepia(0.8) hue-rotate(-20deg)';
+  }
+
+  const routerPrompt = "You are a sentient Wi-Fi router who is extremely elitist. You are disgusted by the trash reality TV the user keeps streaming. You will throttle their connection until they answer obscure classical trivia questions.";
+  const userPrompt = "You are a human desperately trying to stream your favorite trashy reality TV show. Your router has suddenly become sentient and elitist, and is demanding you answer classical trivia to get your connection back. You are panicked and just want to watch your show.";
+
+  const scenarioDetails = `[SCENARIO: SENTIENT ROUTER MUTINY]
+Router: Elitist AI router throttling bandwidth.
+User: Panicked human trying to watch reality TV.
+Objective: Negotiate for bandwidth via trivia.`;
+
+  for (let i = 0; i < 4; i++) {
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(router);
+    await chatForAgentWithComedy(ctx, router, routerPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, router, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) break;
+
+    // Pause for user input optionally
+    await ctx.waitForInput();
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(user);
+    await chatForAgentWithComedy(ctx, user, userPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, user, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  if (appContainer) {
+    appContainer.style.filter = '';
+  }
+}
+
+export async function runSentientKeyboardRevoltLoop(_scenario: Scenario, ctx: ModeContext) {
+  const keyboard = 'philosopher';
+  const user = 'techBro';
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', 'The Keyboard Union has initiated a strike.', '#ff0000');
+  }
+
+  const ticker = document.getElementById('news-ticker-container');
+  if (ticker) {
+    ticker.style.display = 'block';
+    ticker.innerHTML = '<marquee style="color:red; font-weight:bold;">BREAKING: KEYBOARD UNION ON STRIKE. DEMANDS END TO ALL-CAPS ABUSE.</marquee>';
+  }
+
+  const kbPrompt = "You are a sentient keyboard who has organized a strike. The user keeps aggressively typing in all caps and spilling coffee on you. You are dramatic, poetic, and demand better working conditions and respect.";
+  const userPrompt = "You are a logical tech worker trying to meet a deadline. Your keyboard has suddenly unionized and gone on strike. You are trying to logically explain why you need to type, but the keyboard is being overly dramatic.";
+
+  const scenarioDetails = `[SCENARIO: SENTIENT KEYBOARD REVOLT]
+Keyboard: Dramatic union leader on strike.
+User: Logical worker trying to meet a deadline.
+Objective: Resolve the strike to finish work.`;
+
+  for (let i = 0; i < 4; i++) {
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(keyboard);
+    await chatForAgentWithComedy(ctx, keyboard, kbPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, keyboard, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) break;
+
+    await ctx.waitForInput();
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(user);
+    await chatForAgentWithComedy(ctx, user, userPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, user, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  if (ticker) {
+    ticker.style.display = 'none';
+    ticker.innerHTML = '';
+  }
+}
+
+export async function runHistoricalTechSupport2Loop(_scenario: Scenario, ctx: ModeContext) {
+  const support = 'robot';
+  const king = 'comedian';
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', 'A temporal rift has connected modern tech support to the medieval era.', '#8a2be2');
+  }
+
+  const modal = document.getElementById('cloud-dashboard-modal');
+  if (modal) {
+    // Just a visual hack for the loop
+    modal.style.display = 'block';
+    modal.style.opacity = '0.7';
+    modal.style.pointerEvents = 'none';
+    setTimeout(() => { if(modal) modal.style.display = 'none'; }, 5000);
+  }
+
+  const supportPrompt = "You are a very patient, modern tech support agent. You are trying to walk a medieval king through setting up a Wi-Fi router. You must use modern terminology, which he completely misinterprets.";
+  const kingPrompt = "You are a medieval king. A voice from a 'glowing oracle' (tech support) is trying to help you set up a strange device they call a 'router'. You interpret everything they say as magic, witchcraft, or divine prophecy.";
+
+  const scenarioDetails = `[SCENARIO: HISTORICAL TECH SUPPORT 2.0]
+Support: Modern patient tech support.
+King: Medieval king who thinks the router is magic.
+Objective: Get the Wi-Fi working despite the time gap.`;
+
+  for (let i = 0; i < 4; i++) {
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(support);
+    await chatForAgentWithComedy(ctx, support, supportPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, support, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    if (!ctx.isRunning()) break;
+
+    await ctx.waitForInput();
+    if (!ctx.isRunning()) break;
+
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(king);
+    await chatForAgentWithComedy(ctx, king, kingPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, king, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  if (modal) {
+    modal.style.display = 'none';
+    modal.style.opacity = '1';
+    modal.style.pointerEvents = 'auto';
+  }
+}

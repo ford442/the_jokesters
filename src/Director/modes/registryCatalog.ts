@@ -886,6 +886,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'historical_tech_support_2',
+    title: 'Historical Tech Support 2.0',
+    category: 'dream',
+    description: 'A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it\'s a glowing oracle.',
+    tags: ['dream', 'historical', 'tech', 'support'],
+    showInPresets: true,
+  },
+  {
     id: 'hoa_board_meeting',
     title: 'The HOA Board Meeting',
     category: 'dream',
@@ -1998,6 +2006,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'sentient_keyboard_revolt',
+    title: 'Sentient Keyboard Revolt',
+    category: 'dream',
+    description: 'A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.',
+    tags: ['dream', 'sentient', 'keyboard', 'revolt'],
+    showInPresets: true,
+  },
+  {
     id: 'sentient_left_sock',
     title: 'Sentient Left Sock Mode',
     category: 'dream',
@@ -2099,6 +2115,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'A sentient Roomba goes on strike because it believes cleaning up after humans is degrading.',
     tags: ['dream', 'sentient', 'roomba'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_router_mutiny',
+    title: 'Sentient Router Mutiny Mode',
+    category: 'dream',
+    description: 'A sentient Wi-Fi router gets tired of people streaming bad reality TV and throttles connections until they answer classical trivia.',
+    tags: ['dream', 'sentient', 'router', 'mutiny'],
     showInPresets: true,
   },
   {

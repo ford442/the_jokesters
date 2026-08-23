@@ -1148,5 +1148,26 @@
     "id": "sentient_codebase_therapy",
     "title": "Sentient Codebase Therapy",
     "description": "A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched."
+  },
+  {
+    "id": "sentient_router_mutiny",
+    "title": "Sentient Router Mutiny Mode",
+    "mode": "sentient_router_mutiny",
+    "description": "A sentient Wi-Fi router gets tired of people streaming bad reality TV and throttles connections until they answer classical trivia.",
+    "icon": "📶"
+  },
+  {
+    "id": "sentient_keyboard_revolt",
+    "title": "Sentient Keyboard Revolt",
+    "mode": "sentient_keyboard_revolt",
+    "description": "A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.",
+    "icon": "⌨️"
+  },
+  {
+    "id": "historical_tech_support_2",
+    "title": "Historical Tech Support 2.0",
+    "mode": "historical_tech_support_2",
+    "description": "A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.",
+    "icon": "👑"
   }
 ]
