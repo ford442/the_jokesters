@@ -3,17 +3,17 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Project Velocity Feedback
-Today was low friction so increased tasks_per_run to 3.
+Today was low friction so increased tasks_per_run to 4.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
 - [x] Execute: Implement the next set of features.
 - [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
 
 ## Project Velocity Feedback
-Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 3.
+Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 4.
 
 ## Process (P0)
 
@@ -270,14 +270,14 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - *Cloud Persistence Roadmap Updates Added*
 
 
-- Sentient Keyboard Revolt:
+- [x] Sentient Keyboard Revolt:
   - Premise one-liner: A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.
   - LLM pairings: Hermes-3 for the dramatic keyboard union leader, Qwen2.5 for the logical user trying to get work done.
-- Historical Tech Support 2.0:
+- [x] Historical Tech Support 2.0:
   - Premise one-liner: A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.
   - LLM pairings: Phi-3 for the patient tech support, Hermes-3 for the bewildered king.
 
-- Time-Traveling IRS Audit Mode:
+- [x] Time-Traveling IRS Audit Mode:
   - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
 - [x] Sentient Codebase Therapy:
@@ -311,3 +311,17 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
 - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
 - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+### E. New Dream Phase Ideas
+- **New Mode Ideas:**
+  - Roasting AI Debate Mode:
+    - Premise one-liner: Two AI agents participate in a formal debate but instead of arguing facts, they just brutally roast each other's processing speed and training data.
+    - LLM pairings: Hermes-3 for the aggressive debater, Qwen2.5 for the overly defensive debater.
+  - Musical Improv Heckler Mode:
+    - Premise one-liner: An agent tries to perform a musical number, but the audience (user or another agent) keeps interrupting to change the genre mid-song.
+    - LLM pairings: Phi-3 for the determined performer, Qwen2.5 for the pedantic heckler.
+
+- **Infrastructure / Storage Roadmap (Hugging Face `storage_manager` Integration):**
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
