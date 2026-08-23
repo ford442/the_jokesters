@@ -336,6 +336,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'time_traveling_heist_planners': async () => (await import('./DreamModes_Temporal')).runTimeTravelingHeistPlannersLoop,
   'time_traveling_hoa': async () => (await import('./DreamModes_Temporal')).runTimeTravelingHOALoop,
   'time_traveling_irs': async () => (await import('./DreamModes_Scifi')).runTimeTravelingIRSLoop_Scifi,
+  'time_traveling_irs_audit': async () => (await import('./ExpandedRealityModes')).runTimeTravelingIRSAuditLoop,
   'time_traveling_qa_engineer': async () => (await import('./DreamModes_Tech')).runTimeTravelingQAEngineerLoop,
   'time_traveling_real_estate': async () => (await import('./DreamModes_Temporal')).runTimeTravelingRealEstateLoop,
   'time_traveling_tech_support': async () => (await import('./DreamModes_Temporal')).runTimeTravelingTechSupportLoop,

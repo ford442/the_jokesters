@@ -3,10 +3,18 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 3
+tasks_per_run: 4
 
 ## Project Velocity Feedback
 Today's run was smooth and frictionless. The tasks were clear, and we efficiently added multiple modes without any major blockers. Therefore, we maintain `tasks_per_run: 3` for a consistent, sustainable pace.
+Today was low friction so increased tasks_per_run to 4.
+
+- [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
+- [x] Execute: Implement the next set of features.
+- [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
+
+## Project Velocity Feedback
+Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 4.
 
 ## Process (P0)
 
@@ -278,7 +286,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - Premise one-liner: A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.
   - LLM pairings: Phi-3 for the patient tech support, Hermes-3 for the bewildered king.
 
-- Time-Traveling IRS Audit Mode:
+- [x] Time-Traveling IRS Audit Mode:
   - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
   - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
 - [x] Sentient Codebase Therapy:
@@ -331,3 +339,16 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 ### C. Self-Regulation
 - **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
+### E. New Dream Phase Ideas
+- **New Mode Ideas:**
+  - Roasting AI Debate Mode:
+    - Premise one-liner: Two AI agents participate in a formal debate but instead of arguing facts, they just brutally roast each other's processing speed and training data.
+    - LLM pairings: Hermes-3 for the aggressive debater, Qwen2.5 for the overly defensive debater.
+  - Musical Improv Heckler Mode:
+    - Premise one-liner: An agent tries to perform a musical number, but the audience (user or another agent) keeps interrupting to change the genre mid-song.
+    - LLM pairings: Phi-3 for the determined performer, Qwen2.5 for the pedantic heckler.
+
+- **Infrastructure / Storage Roadmap (Hugging Face `storage_manager` Integration):**
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.

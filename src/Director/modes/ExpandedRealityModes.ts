@@ -215,3 +215,24 @@ export async function runEscapeRoomBackroomsPhaseTwoLoop(_scenario: Scenario, ct
       }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trying to survive the Backrooms while dealing with an annoying zoning inspector." } });
   }
 }
+
+export async function runTimeTravelingIRSAuditLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING IRS AUDIT: Pay up for your ancestors!`, '#27ae60');
+
+    const auditor = 'scientist'; // Qwen2.5: The pedantic auditor
+    const confusedUser = 'philosopher'; // Phi-3: The confused user
+
+    await chatForAgentWithComedy(ctx, auditor, `(TIME-TRAVELING IRS AUDIT: You are an IRS auditor from the year 2350. You've traveled back in time to audit the user for the unpaid taxes of their ancestors. Demand immediate payment in obscure futuristic currency like 'Quantum Credits' or 'Neon-Doge'.)`, async (s) => await ctx.callbacks.onSpeak(s, auditor, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!ctx.isRunning()) break;
+        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
+
+        await chatForAgentWithComedy(ctx, confusedUser, `(TIME-TRAVELING IRS AUDIT: The user just said: "${userInput}". You are the confused modern-day citizen. Panic about this audit from the future. Try to offer them modern money or ask how to even acquire 'Quantum Credits'.)`, async (s) => await ctx.callbacks.onSpeak(s, confusedUser, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, auditor, `(TIME-TRAVELING IRS AUDIT: The confused user just responded. Be extremely pedantic about temporal tax code Section 4B-Omega. Threaten to repossess their timeline or garnish their descendants' wages if they don't comply.)`, async (s) => await ctx.callbacks.onSpeak(s, auditor, {}));
+    }
+}
