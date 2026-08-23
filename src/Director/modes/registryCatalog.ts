@@ -886,6 +886,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'historical_tech_support_2',
+    title: 'Historical Tech Support 2',
+    category: 'dream',
+    description: 'A Historical Tech Support 2 scene.',
+    tags: ['dream', 'historical', 'tech', 'support'],
+    showInPresets: false,
+  },
+  {
     id: 'hoa_board_meeting',
     title: 'The HOA Board Meeting',
     category: 'dream',
@@ -1998,6 +2006,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'sentient_keyboard_revolt',
+    title: 'Sentient Keyboard Revolt',
+    category: 'dream',
+    description: 'A Sentient Keyboard Revolt scene.',
+    tags: ['dream', 'sentient', 'keyboard', 'revolt'],
+    showInPresets: false,
+  },
+  {
     id: 'sentient_left_sock',
     title: 'Sentient Left Sock Mode',
     category: 'dream',
@@ -2628,6 +2644,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'An IRS auditor from the future comes back to audit the user\'s ancestors, demanding payment in obscure futuristic currency.',
     tags: ['dream', 'time', 'traveling', 'irs'],
     showInPresets: true,
+  },
+  {
+    id: 'time_traveling_irs_audit',
+    title: 'Time Traveling Irs Audit',
+    category: 'dream',
+    description: 'A Time Traveling Irs Audit scene.',
+    tags: ['dream', 'time', 'traveling', 'irs', 'audit'],
+    showInPresets: false,
   },
   {
     id: 'time_traveling_qa_engineer',
