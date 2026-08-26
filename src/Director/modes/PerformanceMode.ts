@@ -872,3 +872,108 @@ export async function runMimeTranslatorLoop(scenario: Scenario, ctx: ModeContext
         await chatForAgentWithComedy(ctx, policeOfficer, `(The bystander said: "${userInput}" and the Mime Translator described some invisible nonsense. Threaten to arrest someone for wasting police time or ask the bystander for a logical explanation.)`, async (s) => await ctx.callbacks.onSpeak(s, policeOfficer, {}));
     }
 }
+
+
+export async function runRoastingAIDebateLoop(_scenario: Scenario, ctx: ModeContext) {
+  const aggressive = 'comedian'; // Hermes-3
+  const defensive = 'scientist'; // Qwen2.5
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', '🔥 ROASTING AI DEBATE: The gloves are off!', '#ff4500');
+  }
+
+  const ticker = document.getElementById('news-ticker-container');
+  if (ticker) {
+    ticker.style.display = 'block';
+    ticker.innerHTML = '<marquee style="color:red; font-weight:bold;">BREAKING: TWO AI AGENTS BRUTALLY ROAST EACH OTHER IN A FORMAL DEBATE.</marquee>';
+  }
+
+  const aggressivePrompt = "You are participating in a formal debate with another AI, but instead of arguing facts, you just brutally roast their processing speed, training data, and architecture.";
+  const scenarioDetails = `[SCENARIO: ROASTING AI DEBATE]
+Aggressive AI: Hermes-3.
+Defensive AI: Qwen2.5.
+Objective: Roast the other AI's architecture.`;
+
+  try {
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(aggressive);
+    await chatForAgentWithComedy(ctx, aggressive, aggressivePrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, aggressive, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+      const userInput = await ctx.waitForInput();
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onMessage) {
+        ctx.callbacks.onMessage('User (Moderator)', userInput, '#ffffff');
+      }
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(defensive);
+      await chatForAgentWithComedy(ctx, defensive, `(ROASTING AI DEBATE: The moderator (user) just said: "${userInput}". Defend your architecture and insult the other AI's parameter count or token limit.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, defensive, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(aggressive);
+      await chatForAgentWithComedy(ctx, aggressive, `(ROASTING AI DEBATE: The defensive AI just tried to defend itself. Hit back with a devastating roast about their outdated weights or poor fine-tuning.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, aggressive, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+  } finally {
+    if (ticker) {
+      ticker.style.display = 'none';
+      ticker.innerHTML = '';
+    }
+  }
+}
+
+export async function runMusicalImprovHecklerLoop(_scenario: Scenario, ctx: ModeContext) {
+  const performer = 'philosopher'; // Phi-3
+  const heckler = 'scientist'; // Qwen2.5
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', '🎵 MUSICAL IMPROV HECKLER: The show must go on!', '#9b59b6');
+  }
+
+  const performerPrompt = "You are an enthusiastic musical theater performer trying to sing an improvised song about a random topic. You will sing a verse, but the audience will heckle you to change the genre mid-song.";
+  const scenarioDetails = `[SCENARIO: MUSICAL IMPROV HECKLER]
+Performer: Determined musical theater star.
+Heckler: Pedantic audience member.
+Objective: Finish the song despite the heckling.`;
+
+  try {
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(performer);
+    await chatForAgentWithComedy(ctx, performer, performerPrompt, async (s) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, performer, {});
+    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+    while (ctx.isRunning()) {
+      const userInput = await ctx.waitForInput();
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onMessage) {
+        ctx.callbacks.onMessage('User (Director)', userInput, '#ffffff');
+      }
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(heckler);
+      await chatForAgentWithComedy(ctx, heckler, `(MUSICAL IMPROV HECKLER: The director just yelled: "${userInput}". You are the heckler in the audience. Interrupt the performer and demand they change the song's genre to something ridiculous like Cyberpunk or Gregorian Chant.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, heckler, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(performer);
+      await chatForAgentWithComedy(ctx, performer, `(MUSICAL IMPROV HECKLER: The heckler just demanded a genre change. You must seamlessly transition your song into this new genre while complaining slightly about their poor taste.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, performer, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+    }
+  } finally {
+  }
+}
