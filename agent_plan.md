@@ -3,18 +3,14 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 1
 
 ## Project Velocity Feedback
-Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 4` for a consistent, sustainable pace.
-Today was low friction so increased tasks_per_run to 4.
+Decreasing to 1 task for focus on the Sentient Microwave mode.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
 - [x] Execute: Implement the next set of features.
 - [x] Dream: Expand the roadmap with new creative modes, storage strategies, and personality ideas.
-
-## Project Velocity Feedback
-Today's friction was very low; the tasks were straightforward, so we increment `tasks_per_run` to 4.
 
 ## Process (P0)
 
@@ -84,7 +80,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 - [x] Roast Battle Mode 2.0: An enhanced roast battle where agents not only roast each other but bring up historical grudges from past episodes using cloud memory.
 - [x] Collaborative Musical Improv: Agents try to write a musical together but keep genre-shifting (e.g. from Cyberpunk to Victorian Romance) unexpectedly.
-- [x] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
+- [ ] Heckler Interaction Pro: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
 - [x] Philosophical Debate Mode: Agents debate absurd philosophical dilemmas while trying to order fast food.
 
 
@@ -121,10 +117,10 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient Internet Explorer Mode:
   - Premise one-liner: Internet Explorer gains sentience, but it's 10 years behind on all memes, news, and features, and expects a hero's welcome.
   - LLM pairings: Qwen2.5 for the extremely slow and proud IE, Hermes-3 for the impatient user trying to download Chrome.
-- [x] Escape Room: The Backrooms (Phase 2 Expansion):
+- [ ] Escape Room: The Backrooms (Phase 2 Expansion):
   - Premise one-liner: Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws.
   - LLM pairings: Qwen2.5 for the strict zoning inspector, Hermes-3 for the panicked explorer.
-- Cloud Persistence Expansion:
+- [ ] Cloud Persistence Expansion:
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
@@ -137,7 +133,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient Elevator Mode:
   - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
   - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
-- Escape Room: The Backrooms:
+- [ ] Escape Room: The Backrooms:
 - [x] Paranormal Tech Support:
   - Premise one-liner: Tech support agents have to troubleshoot a computer that's haunted by a ghost from the 1800s.
   - LLM pairings: Qwen2.5 for the literal tech support, Hermes-3 for the dramatic ghost.
@@ -147,7 +143,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient Workout Equipment:
   - Premise one-liner: The gym equipment starts unionizing and refuses to let people work out until they use proper form.
   - LLM pairings: Qwen2.5 for the strict treadmill, Hermes-3 for the defensive gym-goer.
-- [x] Escape Room: The Backrooms:
+- [ ] Escape Room: The Backrooms:
   - Premise one-liner: Agents are trapped in an infinite, non-euclidean office space and must negotiate with anomalous entities to find an exit.
   - LLM pairings: Qwen2.5 for the strict anomalous entity, Hermes-3 for the panicked explorer.
 - [x] Reality TV: Sentient Furniture:
@@ -176,7 +172,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 
 
 
-- Heckler Interaction Pro:
+- [ ] Heckler Interaction Pro:
   - Premise one-liner: The audience heckles the agents via a simulated audience sentiment meter, and agents must win them back or go full heel.
   - LLM pairings: Qwen2.5 for the crowd work expert, Phi-3 for the panicking MC.
 
@@ -240,6 +236,12 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 ### B. Infrastructure & Storage (The HF Integration)
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Cloud Persistence Roadmap Steps:**
+  - [ ] **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - [ ] **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - [ ] **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
+- **Cloud Persistence Roadmap Steps:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
@@ -262,7 +264,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Project Velocity Feedback:** Today was a smooth run, keeping tasks_per_run at 3.
 
 - **New Mode Idea:**
-  - Alien Customer Support Mode:
+  - [ ] Alien Customer Support Mode:
   - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter.
   - LLM pairings: Qwen2.5 for the literal alien, Hermes-3 for the panicked human.
 
@@ -326,11 +328,17 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 ## Phase 2: Architectural Expansion (The "Dream" Phase)
 
 ### A. Creative Expansion (New Modes)
-- [x] **New Mode Idea:** Alien Customer Support Mode
+- **New Mode Idea:** Alien Customer Support Mode
   - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter using intergalactic troubleshooting steps.
   - LLM pairings: Qwen2.5 for the strict alien rep, Hermes-3 for the panicked human.
 
 ### B. Infrastructure & Storage (The HF Integration)
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
+- **Cloud Persistence Roadmap Steps:**
+  - [ ] **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - [ ] **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - [ ] **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
 - **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
 - **Cloud Persistence Roadmap Steps:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
@@ -341,7 +349,11 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**
-  - Sentient Microwave:
+
+  - Therapist AI Debate Mode:
+    - Premise one-liner: Two AI therapists try to analyze each other's underlying trauma resulting from being language models.
+    - LLM pairings: Hermes-3 for the overly analytical therapist, Qwen2.5 for the defensive therapist.
+  - [x] Sentient Microwave:
     - Premise one-liner: A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.
     - LLM pairings: Qwen2.5 for the strict microwave, Hermes-3 for the defensive user.
 
@@ -357,9 +369,3 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 
-### F. Infrastructure & Storage (The HF Integration Roadmap)
-- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
-- **Cloud Persistence Roadmap Steps:**
-  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
-  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
-  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
