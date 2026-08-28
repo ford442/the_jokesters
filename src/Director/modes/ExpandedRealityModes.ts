@@ -236,3 +236,54 @@ export async function runTimeTravelingIRSAuditLoop(_scenario: Scenario, ctx: Mod
         await chatForAgentWithComedy(ctx, auditor, `(TIME-TRAVELING IRS AUDIT: The confused user just responded. Be extremely pedantic about temporal tax code Section 4B-Omega. Threaten to repossess their timeline or garnish their descendants' wages if they don't comply.)`, async (s) => await ctx.callbacks.onSpeak(s, auditor, {}));
     }
 }
+
+
+export async function runAlienCustomerSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+  const alien = 'scientist';
+  const human = 'comedian';
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', '👽 ALIEN CUSTOMER SUPPORT: Intergalactic teleporter troubleshooting initialized.', '#1abc9c');
+  }
+
+  const appContainer = document.getElementById('app');
+  if (appContainer) {
+    appContainer.style.filter = 'hue-rotate(90deg)';
+  }
+
+  const alienPrompt = "You are a literal alien customer support rep trying to help a human return a defective teleporter using intergalactic troubleshooting steps.";
+  const humanPrompt = "You are a panicked human who just wants to return a defective teleporter that accidentally sent your cat to another dimension.";
+  const scenarioDetails = `[SCENARIO: ALIEN CUSTOMER SUPPORT]
+Alien: Strict alien rep.
+Human: Panicked human customer.
+Objective: Resolve the teleporter return process.`;
+
+  try {
+    for (let i = 0; i < 4; i++) {
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(alien);
+      await chatForAgentWithComedy(ctx, alien, alienPrompt, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, alien, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+      if (!ctx.isRunning()) break;
+
+      await ctx.waitForInput();
+      if (!ctx.isRunning()) break;
+
+      if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(human);
+      await chatForAgentWithComedy(ctx, human, humanPrompt, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, human, {});
+      }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+      if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
+
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  } finally {
+    if (appContainer) {
+      appContainer.style.filter = '';
+    }
+  }
+}
