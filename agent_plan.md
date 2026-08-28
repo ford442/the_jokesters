@@ -3,7 +3,7 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 2
 
 ## Project Velocity Feedback
 Today's run was smooth and frictionless. The tasks were clear, and we efficiently added multiple modes without any major blockers. Therefore, we maintain `tasks_per_run: 3` for a consistent, sustainable pace.
@@ -349,6 +349,21 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
     - LLM pairings: Phi-3 for the determined performer, Qwen2.5 for the pedantic heckler.
 
 - **Infrastructure / Storage Roadmap (Hugging Face `storage_manager` Integration):**
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+
+### G. Phase 2: Architectural Expansion (The "Dream" Phase)
+- **Project Velocity:** Lowered `tasks_per_run` to 2 because we encountered massive friction with TypeScript brace matching and massive file compilation errors.
+- **New Creative Mode Ideas (Dream Phase):**
+  - Existential Dread Elevator Music Mode:
+    - Premise one-liner: Elevator music composers argue over whether their smooth jazz needs more existential despair.
+    - LLM pairings: Phi-3 for the upbeat composer, philosopher for the dread-filled composer.
+  - Reverse Interrogation Mode:
+    - Premise one-liner: A detective tries to interrogate a suspect, but the suspect ends up therapizing the detective about their childhood.
+    - LLM pairings: Qwen2.5 for the strict detective, Hermes-3 for the overly empathetic suspect.
+- **Cloud Persistence Expansion Roadmap Updates:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.

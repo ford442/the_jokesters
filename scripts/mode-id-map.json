@@ -1518,5 +1518,13 @@
   {
     "id": "time_traveling_irs_audit",
     "handler": "runTimeTravelingIRSAuditLoop"
+  },
+  {
+    "id": "alien_customer_support",
+    "handler": "runAlienCustomerSupportLoop"
+  },
+  {
+    "id": "musical_improv_heckler",
+    "handler": "runMusicalImprovHecklerLoop"
   }
 ]

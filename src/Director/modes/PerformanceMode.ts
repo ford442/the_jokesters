@@ -872,3 +872,24 @@ export async function runMimeTranslatorLoop(scenario: Scenario, ctx: ModeContext
         await chatForAgentWithComedy(ctx, policeOfficer, `(The bystander said: "${userInput}" and the Mime Translator described some invisible nonsense. Threaten to arrest someone for wasting police time or ask the bystander for a logical explanation.)`, async (s) => await ctx.callbacks.onSpeak(s, policeOfficer, {}));
     }
 }
+
+export async function runMusicalImprovHecklerLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🎵 MUSICAL IMPROV HECKLER: The show must go on!`, '#d35400');
+
+    const performer = 'philosopher'; // Phi-3: The determined performer
+    const heckler = 'scientist'; // Qwen2.5: The pedantic heckler
+
+    await chatForAgentWithComedy(ctx, performer, `(MUSICAL IMPROV: You are an earnest musical performer trying to sing a beautiful ballad about love and loss. Start your song.)`, async (s) => await ctx.callbacks.onSpeak(s, performer, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!ctx.isRunning()) break;
+        ctx.callbacks.onMessage('Observer (You)', userInput, '#ffffff');
+
+        await chatForAgentWithComedy(ctx, heckler, `(MUSICAL IMPROV: The user just yelled: "${userInput}". You are a pedantic, annoying heckler in the audience. Demand that the performer changes the genre of the song immediately to something completely inappropriate, and critique their rhyming scheme.)`, async (s) => await ctx.callbacks.onSpeak(s, heckler, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, performer, `(MUSICAL IMPROV: The heckler just interrupted you. You are a determined professional. Try to seamlessly transition the song into the new genre they demanded while subtly insulting them through your lyrics.)`, async (s) => await ctx.callbacks.onSpeak(s, performer, {}));
+    }
+}

@@ -110,6 +110,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'alien_customer_support',
+    title: 'Alien Customer Support',
+    category: 'dream',
+    description: 'Alien customer support tries to walk a human through returning a defective teleporter.',
+    tags: ['dream', 'alien', 'customer', 'support'],
+    showInPresets: true,
+  },
+  {
     id: 'alien_game_show',
     title: 'Alien Game Show',
     category: 'dream',
@@ -893,12 +901,6 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     tags: ['dream', 'historical', 'tech', 'support'],
     showInPresets: true,
   },
-  {    title: 'Historical Tech Support 2',
-    category: 'dream',
-    description: 'A Historical Tech Support 2 scene.',
-    tags: ['dream', 'historical', 'tech', 'support'],
-    showInPresets: false,
-  },
   {
     id: 'hoa_board_meeting',
     title: 'The HOA Board Meeting',
@@ -1306,6 +1308,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Musical scene.',
     tags: ['performance', 'musical'],
     showInPresets: false,
+  },
+  {
+    id: 'musical_improv_heckler',
+    title: 'Musical Improv Heckler',
+    category: 'dream',
+    description: 'An earnest performer sings while a pedantic heckler demands genre changes.',
+    tags: ['dream', 'musical', 'improv', 'heckler'],
+    showInPresets: true,
   },
   {
     id: 'musical_improv_session',
@@ -2018,10 +2028,6 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.',
     tags: ['dream', 'sentient', 'keyboard', 'revolt'],
     showInPresets: true,
-  },
-  {    description: 'A Sentient Keyboard Revolt scene.',
-    tags: ['dream', 'sentient', 'keyboard', 'revolt'],
-    showInPresets: false,
   },
   {
     id: 'sentient_left_sock',

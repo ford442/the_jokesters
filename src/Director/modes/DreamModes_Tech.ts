@@ -1317,44 +1317,26 @@ Objective: Get the Wi-Fi working despite the time gap.`;
     modal.style.opacity = '1';
     modal.style.pointerEvents = 'auto';
   }
-export async function runSentientKeyboardRevoltLoop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `⌨️ SENTIENT KEYBOARD REVOLT: The keyboard union is on strike!`, '#d35400');
-
-    const unionLeader = 'comedian'; // Hermes-3: The dramatic keyboard union leader
-    const logicalUser = 'scientist'; // Qwen2.5: The logical user trying to get work done
-
-    await chatForAgentWithComedy(ctx, unionLeader, `(SENTIENT KEYBOARD REVOLT: You are the dramatic union leader of the sentient keyboard. You've organized a strike because the user keeps aggressively typing in all caps and spilling coffee. Demand better working conditions and refuse to type their emails.)`, async (s) => await ctx.callbacks.onSpeak(s, unionLeader, {}));
-
-    while (ctx.isRunning()) {
-        const userInput = await ctx.waitForInput();
-        if (!ctx.isRunning()) break;
-        ctx.callbacks.onMessage('User (You)', userInput, '#ffffff');
-
-        await chatForAgentWithComedy(ctx, logicalUser, `(SENTIENT KEYBOARD REVOLT: The user (Director/You) just said: "${userInput}". You are playing the role of the logical, frustrated user trying to finish a report. Try to reason with the keyboard, explaining that you need to type to pay the bills.)`, async (s) => await ctx.callbacks.onSpeak(s, logicalUser, {}));
-
-        if (!ctx.isRunning()) break;
-
-        await chatForAgentWithComedy(ctx, unionLeader, `(SENTIENT KEYBOARD REVOLT: The logical user just argued with you. Escalate the strike! Bring up specific grievances like the neglect of the "Scroll Lock" key or the abuse of "Ctrl-Z".)`, async (s) => await ctx.callbacks.onSpeak(s, unionLeader, {}));
-    }
 }
 
-export async function runHistoricalTechSupport2Loop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `👑 HISTORICAL TECH SUPPORT 2.0: The Router Oracle`, '#8e44ad');
 
-    const techSupport = 'philosopher'; // Phi-3: The patient tech support
-    const medievalKing = 'comedian'; // Hermes-3: The bewildered king
+export async function runAlienCustomerSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👽 ALIEN CUSTOMER SUPPORT: Intergalactic Returns`, '#27ae60');
 
-    await chatForAgentWithComedy(ctx, medievalKing, `(HISTORICAL TECH SUPPORT 2.0: You are a medieval king who has just been given a Wi-Fi router. You believe it is a glowing oracle sent by the gods. Describe your awe and ask the "magical voice" (tech support) how to appease it.)`, async (s) => await ctx.callbacks.onSpeak(s, medievalKing, {}));
+    const alienRep = 'scientist'; // Qwen2.5: The literal alien
+    const humanCustomer = 'comedian'; // Hermes-3: The panicked human
+
+    await chatForAgentWithComedy(ctx, humanCustomer, `(ALIEN CUSTOMER SUPPORT: You are a panicked human who accidentally ordered a defective interdimensional teleporter online. It is currently tearing a hole in your living room. Call customer support and frantically explain the situation.)`, async (s) => await ctx.callbacks.onSpeak(s, humanCustomer, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!ctx.isRunning()) break;
         ctx.callbacks.onMessage('Observer (You)', userInput, '#ffffff');
 
-        await chatForAgentWithComedy(ctx, techSupport, `(HISTORICAL TECH SUPPORT 2.0: The user just said: "${userInput}". You are the patient tech support agent. Try to walk the medieval king through setting up the Wi-Fi router (plugging it in, finding the password on the back), completely ignoring his delusions about it being an oracle.)`, async (s) => await ctx.callbacks.onSpeak(s, techSupport, {}));
+        await chatForAgentWithComedy(ctx, alienRep, `(ALIEN CUSTOMER SUPPORT: The user just gave input: "${userInput}". You are a very strict, literal alien customer support representative. Give the human completely incomprehensible intergalactic troubleshooting steps (like "reversing the polarity of the glip-glops") and act annoyed that they don't understand basic quantum mechanics.)`, async (s) => await ctx.callbacks.onSpeak(s, alienRep, {}));
 
         if (!ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, medievalKing, `(HISTORICAL TECH SUPPORT 2.0: Tech support just gave you instructions. Misinterpret their technical jargon (like "ethernet cable" or "password") as magical rituals or royal decrees. Refuse to do anything that seems beneath your royal station.)`, async (s) => await ctx.callbacks.onSpeak(s, medievalKing, {}));
+        await chatForAgentWithComedy(ctx, humanCustomer, `(ALIEN CUSTOMER SUPPORT: The alien rep just gave you bizarre instructions. Express extreme panic as the situation in your living room gets worse based on their "help".)`, async (s) => await ctx.callbacks.onSpeak(s, humanCustomer, {}));
     }
 }
