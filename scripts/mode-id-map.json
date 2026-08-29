@@ -1532,7 +1532,7 @@
     "handler": "runMusicalImprovHecklerLoop"
   },
   {
-    "id": "mode_sentient_microwave",
+    "id": "sentient_microwave_dinner",
     "handler": "runSentientMicrowaveLoop"
   }
 ]
