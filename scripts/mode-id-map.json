@@ -1524,6 +1524,10 @@
     "handler": "runAlienCustomerSupportLoop"
   },
   {
+    "id": "roasting_ai_debate",
+    "handler": "runRoastingAIDebateLoop"
+  },
+  {
     "id": "musical_improv_heckler",
     "handler": "runMusicalImprovHecklerLoop"
   }

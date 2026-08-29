@@ -6,7 +6,7 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 tasks_per_run: 2
 
 ## Project Velocity Feedback
-Today's run was smooth and frictionless. The tasks were clear, and we efficiently added multiple modes without any major blockers. Therefore, we maintain `tasks_per_run: 3` for a consistent, sustainable pace.
+Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 4` for a consistent, sustainable pace.
 Today was low friction so increased tasks_per_run to 4.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
@@ -192,7 +192,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while 
 - [x] Sentient Codebase Mode:
   - Premise one-liner: The codebase itself achieves sentience and complains to the developers about spaghetti code.
   - LLM pairings: Qwen2.5 for the overly strict linter personality, Hermes-3 for the chaotic junior developer.
-- Audience Heckler Mode:
+- [x] Audience Heckler Mode:
   - Premise one-liner: The audience aggressively heckles the agents, who must ruthlessly roast them back while trying to finish their sets.
   - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the bewildered event organizer.
 
@@ -302,16 +302,16 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - Premise one-liner: HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.
   - LLM pairings: Qwen2.5 for the strict superhero HR, Hermes-3 for the defensive superhero.
 
-- Heckler Interaction:
+- [x] Heckler Interaction:
   - Premise one-liner: The audience aggressively heckles the agents via a simulated audience sentiment meter, and agents must ruthlessly roast them back while trying to finish their sets.
   - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the panicking MC.
-- Collaborative Storytelling:
+- [x] Collaborative Storytelling:
   - Premise one-liner: Agents try to tell a cohesive story together, but keep trying to radically change the genre halfway through.
   - LLM pairings: Qwen2.5 for the strict fantasy author, Hermes-3 for the chaotic sci-fi fan.
 - [x] Zombie Apocalypse HOA Mode:
   - Premise one-liner: A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling.
   - LLM pairings: Qwen2.5 for the strict HOA leader, Hermes-3 for the panicked homeowner.
-- Cloud Persistence Expansion (Future):
+- [x] Cloud Persistence Expansion (Future):
   - **Syncing custom sound effects (SFX):** Allow users to upload or map their own SFX via HuggingFace storage and synchronize across devices.
   - **Leaderboard Integration:** Store high scores for Interactive Modes on Hugging Face using a dedicated HF space.
   - **Global Mode Registry sharing:** Allow users to publish their own custom mode configurations and UI presets to a public HF dataset, effectively creating a "Mode Workshop" accessible in-app.
@@ -326,7 +326,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 ## Phase 2: Architectural Expansion (The "Dream" Phase)
 
 ### A. Creative Expansion (New Modes)
-- **New Mode Idea:** Alien Customer Support Mode
+- [x] **New Mode Idea:** Alien Customer Support Mode
   - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter using intergalactic troubleshooting steps.
   - LLM pairings: Qwen2.5 for the strict alien rep, Hermes-3 for the panicked human.
 
@@ -341,10 +341,14 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**
-  - Roasting AI Debate Mode:
+  - Sentient Microwave:
+    - Premise one-liner: A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.
+    - LLM pairings: Qwen2.5 for the strict microwave, Hermes-3 for the defensive user.
+
+  - [x] Roasting AI Debate Mode:
     - Premise one-liner: Two AI agents participate in a formal debate but instead of arguing facts, they just brutally roast each other's processing speed and training data.
     - LLM pairings: Hermes-3 for the aggressive debater, Qwen2.5 for the overly defensive debater.
-  - Musical Improv Heckler Mode:
+  - [x] Musical Improv Heckler Mode:
     - Premise one-liner: An agent tries to perform a musical number, but the audience (user or another agent) keeps interrupting to change the genre mid-song.
     - LLM pairings: Phi-3 for the determined performer, Qwen2.5 for the pedantic heckler.
 
@@ -352,7 +356,6 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
-
 
 ### G. Phase 2: Architectural Expansion (The "Dream" Phase)
 - **Project Velocity:** Lowered `tasks_per_run` to 2 because we encountered massive friction with TypeScript brace matching and massive file compilation errors.
