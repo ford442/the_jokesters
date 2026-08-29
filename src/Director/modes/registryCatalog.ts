@@ -1270,6 +1270,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'mode_sentient_microwave',
+    title: 'Mode Sentient Microwave',
+    category: 'dream',
+    description: 'A Mode Sentient Microwave scene.',
+    tags: ['dream', 'mode', 'sentient', 'microwave'],
+    showInPresets: false,
+  },
+  {
     id: 'multiversal_chefs_table',
     title: 'Multiversal Chefs Table',
     category: 'dream',

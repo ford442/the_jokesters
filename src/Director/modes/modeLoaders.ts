@@ -163,6 +163,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'mode_alien_customer_support': async () => (await import('./ExpandedRealityModes')).runAlienCustomerSupportLoop,
   'mode_musical_improv_heckler': async () => (await import('./PerformanceMode')).runMusicalImprovHecklerLoop,
   'mode_roasting_ai_debate': async () => (await import('./PerformanceMode')).runRoastingAIDebateLoop,
+  'mode_sentient_microwave': async () => (await import('./ExpandedRealityModes')).runSentientMicrowaveLoop,
   'multiversal_chefs_table': async () => (await import('./DreamModes_Food')).runMultiversalChefsTableLoop,
   'multiversal_dmv': async () => (await import('./DreamModes_Bureaucratic')).runMultiversalDMVLoop,
   'multiverse_escape_room': async () => (await import('./ExpandedRealityModes')).runMultiverseEscapeRoomLoop,

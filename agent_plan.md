@@ -266,7 +266,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Project Velocity Feedback:** Today was a smooth run, keeping tasks_per_run at 3.
 
 - **New Mode Idea:**
-  - [ ] Alien Customer Support Mode:
+  - [x] Alien Customer Support Mode:
   - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter.
   - LLM pairings: Qwen2.5 for the literal alien, Hermes-3 for the panicked human.
 
@@ -348,7 +348,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 
 ### C. Self-Regulation
-- **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
+- **Project Velocity:** Maintained tasks_per_run: 4 due to smooth implementation.
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**
   - Sentient Microwave:
@@ -378,3 +378,8 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
+
+### Additional Dream Phase Extensions
+- **New Mode Idea:** Sentient Vending Machine:
+  - Premise one-liner: A vending machine refuses to dispense snacks until the user answers its philosophical questions.
+  - LLM pairings: Qwen2.5 for the pedantic vending machine, Hermes-3 for the hungry user.

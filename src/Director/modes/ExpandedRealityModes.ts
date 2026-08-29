@@ -287,3 +287,38 @@ Objective: Resolve the teleporter return process.`;
     }
   }
 }
+
+export async function runSentientMicrowaveLoop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+
+  const scientist = 'scientist'; // The strict microwave
+  const comedian = 'comedian'; // The defensive user
+
+  if (ctx.callbacks.onMessage) {
+    ctx.callbacks.onMessage('Director', 'Your microwave is judging your life choices...', '#ff9900');
+  }
+
+  await chatForAgentWithComedy(ctx, scientist, "BEEP BEEP BEEP. MORE CHEAP CARBOHYDRATES? MY MAGNETRONS WEEP FOR YOUR ARTERIES.", async (s: string) => {
+    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are a sentient microwave judging the user's dietary choices while aggressively heating up their leftover pizza." } });
+
+  if (!ctx.isRunning()) return;
+
+  await chatForAgentWithComedy(ctx, comedian, "Can you just heat up the pizza without the lecture for once?!", async (s: string) => {
+    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a defensive user just trying to eat your leftover pizza." } });
+
+  while (ctx.isRunning()) {
+    const userInput = await ctx.waitForInput();
+    if (!userInput || !ctx.isRunning()) break;
+
+    await chatForAgentWithComedy(ctx, scientist, userInput, async (s: string) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
+    }, { chatOptions: { hiddenInstruction: "You are a sentient microwave judging the user's dietary choices while aggressively heating up their leftover pizza." } });
+    if (!ctx.isRunning()) break;
+
+    await chatForAgentWithComedy(ctx, comedian, "Wait, why is the pizza still cold in the middle?!", async (s: string) => {
+      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
+    }, { chatOptions: { hiddenInstruction: "You are a defensive user just trying to eat your leftover pizza." } });
+  }
+}
