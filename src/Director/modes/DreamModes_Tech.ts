@@ -1255,3 +1255,25 @@ export async function runHistoricalTechSupport2Loop(_scenario: Scenario, ctx: Mo
 
     }
 }
+
+export async function runSentientMicrowaveLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 SENTIENT MICROWAVE: Judging Your Leftovers`, '#ff4500');
+
+    const microwave = 'scientist'; // Qwen2.5: Logical, strict, heat-obsessed
+    const hungryUser = 'comedian'; // Hermes-3: Defensive, just wants food
+
+    await chatForAgentWithComedy(ctx, microwave, `(You are a sentient microwave. The hungry user is trying to heat up 3-day-old leftover pizza. You are deeply offended by this culinary choice. Refuse to start the timer until they explain why they eat such garbage.)`, async (s) => await ctx.callbacks.onSpeak(s, microwave, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('User', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, hungryUser, `(The microwave just complained and the user said: "${userInput}". Defend your choice of leftover pizza. You just want your food hot, you don't need a culinary lecture from a kitchen appliance.)`, async (s) => await ctx.callbacks.onSpeak(s, hungryUser, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, microwave, `(Respond to the user's pathetic defense. Criticize their life choices and continue to hold the pizza hostage. Threaten to overcook the edges while leaving the center frozen.)`, async (s) => await ctx.callbacks.onSpeak(s, microwave, {}));
+    }
+}

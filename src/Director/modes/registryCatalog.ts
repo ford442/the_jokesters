@@ -2078,6 +2078,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'sentient_microwave_dinner',
+    title: 'Sentient Microwave Dinner',
+    category: 'dream',
+    description: "A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.",
+    tags: ['dream', 'sentient', 'microwave', 'dinner'],
+    showInPresets: true,
+  },
+  {
     id: 'sentient_middleware',
     title: 'Sentient Middleware Mode',
     category: 'dream',
