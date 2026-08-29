@@ -6,6 +6,8 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 tasks_per_run: 1
 
 ## Project Velocity Feedback
+Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 4` for a consistent, sustainable pace.
+Today was low friction so increased tasks_per_run to 4.
 Decreasing to 1 task for focus on the Sentient Microwave mode.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
@@ -328,7 +330,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 ## Phase 2: Architectural Expansion (The "Dream" Phase)
 
 ### A. Creative Expansion (New Modes)
-- **New Mode Idea:** Alien Customer Support Mode
+- [x] **New Mode Idea:** Alien Customer Support Mode
   - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter using intergalactic troubleshooting steps.
   - LLM pairings: Qwen2.5 for the strict alien rep, Hermes-3 for the panicked human.
 
@@ -349,6 +351,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 - **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**
+  - Sentient Microwave:
 
   - Therapist AI Debate Mode:
     - Premise one-liner: Two AI therapists try to analyze each other's underlying trauma resulting from being language models.
@@ -369,3 +372,9 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 
+### F. Infrastructure & Storage (The HF Integration Roadmap)
+- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
+- **Cloud Persistence Roadmap Steps:**
+  - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
+  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
+  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
