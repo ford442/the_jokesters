@@ -92,6 +92,28 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
             }
         });
 
+        const syncSfxBtn = document.getElementById('sync-sfx-btn');
+        if (syncSfxBtn) {
+            syncSfxBtn.addEventListener('click', async () => {
+                console.log("Syncing SFX...");
+                const memoryManager = getMemoryManager();
+                if (memoryManager) {
+                    await memoryManager.syncSFXToCloud('test_sfx', 'base64stub');
+                }
+            });
+        }
+
+        const leaderboardBtn = document.getElementById('leaderboard-btn');
+        if (leaderboardBtn) {
+            leaderboardBtn.addEventListener('click', async () => {
+                console.log("Viewing Leaderboard...");
+                const memoryManager = getMemoryManager();
+                if (memoryManager) {
+                    await memoryManager.saveHighscoreToCloud('test_mode', 9001);
+                }
+            });
+        }
+
         // Populate inputs if they already exist
         const memoryManager = getMemoryManager();
         if (memoryManager) {

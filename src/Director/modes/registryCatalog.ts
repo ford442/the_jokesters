@@ -1278,6 +1278,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'mode_sentient_microwave',
+    title: 'Mode Sentient Microwave',
+    category: 'dream',
+    description: 'A Mode Sentient Microwave scene.',
+    tags: ['dream', 'mode', 'sentient', 'microwave'],
+    showInPresets: false,
+  },
+  {
     id: 'multiversal_chefs_table',
     title: 'Multiversal Chefs Table',
     category: 'dream',
@@ -2091,6 +2099,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Agents play a philosophical mailbox, an enthusiastic junk mail flyer, and an important, panicked bill.',
     tags: ['dream', 'sentient', 'mailbox'],
+    showInPresets: true,
+  },
+  {
+    id: 'sentient_microwave_dinner',
+    title: 'Sentient Microwave Dinner',
+    category: 'dream',
+    description: "A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.",
+    tags: ['dream', 'sentient', 'microwave', 'dinner'],
     showInPresets: true,
   },
   {
