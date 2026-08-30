@@ -62,6 +62,26 @@ export async function initApp(): Promise<void> {
 
   if ('serviceWorker' in navigator) {
     try {
+      // Clean up any stale origin-wide (scope '/') service worker registration from
+      // earlier builds — it intercepts fetches for every app on this shared origin
+      // (test.1ink.us, go.1ink.us), not just this one. Our own registration below is
+      // scoped to /the-jokesters/, so this only ever removes the poisoned root worker.
+      const ownScope = new URL('./', location.href).href
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => {
+          for (const registration of registrations) {
+            if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
+              registration.unregister().then(() => {
+                console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
+              })
+            }
+          }
+        })
+        .catch((error) => {
+          console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
+        })
+
       registerSW({
         onNeedRefresh() {
           console.log('[ServiceWorker] New content available, please refresh.')
