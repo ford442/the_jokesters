@@ -339,9 +339,21 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 ### C. Self-Regulation
 - **Project Velocity:** Maintained tasks_per_run: 3 due to smooth implementation.
-### E. New Dream Phase Ideas
+- **Project Velocity Feedback:** Today was a smooth run, keeping tasks_per_run at 4.
+
+### F. Dream Phase: Creative Expansion (New Modes)
 - **New Mode Ideas:**
-  - Sentient Microwave:
+  - Existential Vending Machine:
+    - Premise one-liner: A sentient vending machine refuses to dispense junk food unless the user can justify the moral implications of their snack choice.
+    - LLM pairings: Qwen2.5 for the strict vending machine, Hermes-3 for the hungry user.
+  - Time-Traveling DMV:
+    - Premise one-liner: The user tries to renew their license, but the clerk is from 1845 and doesn't understand what a "car" is.
+    - LLM pairings: Phi-3 for the confused 1845 clerk, Qwen2.5 for the impatient modern manager.
+  - Debugging a Haunted House:
+    - Premise one-liner: Tech support has to troubleshoot a smart home that's possessed by a ghost who keeps messing with the thermostat.
+    - LLM pairings: Hermes-3 for the dramatic ghost, Qwen2.5 for the deadpan tech support.
+
+  - [x] Sentient Microwave:
     - Premise one-liner: A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.
     - LLM pairings: Qwen2.5 for the strict microwave, Hermes-3 for the defensive user.
 
