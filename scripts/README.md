@@ -18,17 +18,19 @@ Utility scripts for model hosting, WebLLM builds, and deployment.
 | `upload_staged_to_vps.py` | Upload `.vps-staging/` via SSH key |
 | `generate-mode-registry.mjs` | Regenerate mode registry entries |
 | `stage_vicuna_wasm_from_ci.sh` / `build-vicuna-wasm.sh` | Vicuna WASM pipeline (`mlc_llm compile`; see ADR) |
+| `build-llama-wasm-webgpu.sh` | **Experimental** ggml-org llama.cpp Emscripten + WebGPU (`test-backend-ops`). Artifacts are **not** the product llama.cpp path — `npm run verify:wllama` still owns `@wllama/wllama`. |
 | `deploy_dist.py` | **Deploy `dist/` over SFTP — credentials via env only** |
 | `../deploy.py` (repo root) | **Contabo zip deploy** → `storage.noahcohn.com` (env `DEPLOY_TOKEN`) |
 | `smoke_test.py` | Playwright-oriented smoke test |
 
 ### Native / C++ policy
 
-There is **no first-party C++ tree**. WASM comes from MLC compile, `@wllama/wllama`, and onnxruntime-web.  
-**Do not** install full TVM/emsdk for product work unless metrics green-light it.
+There is **no first-party C++ tree**. Product WASM comes from MLC compile, `@wllama/wllama`, and onnxruntime-web.  
+**Do not** install full TVM/emsdk for product work unless metrics green-light it. The llama.cpp WASM+WebGPU script is optional research CI, not a required toolchain.
 
 - **ADR:** [docs/adr/0001-native-cpp-boundary.md](../docs/adr/0001-native-cpp-boundary.md)
 - **Official Vicuna `model_lib` path:** `build-vicuna-wasm.sh` + Colab [`public/Jokesters_WebLLM_Compile.ipynb`](../public/Jokesters_WebLLM_Compile.ipynb)
+- **Experimental llama.cpp WASM+WebGPU:** `build-llama-wasm-webgpu.sh` + `.github/workflows/build-llama-wasm-webgpu.yml` (`workflow_dispatch` only). Output is **not** drop-in for `LlamaCppEngineAdapter` / wllama.
 - **Context/VRAM layering:** [docs/WASM_CONTEXT_GUIDE.md](../docs/WASM_CONTEXT_GUIDE.md)
 - **wllama pin:** `npm run verify:wllama` (GitHub #119 for deeper llama.cpp work)
 
