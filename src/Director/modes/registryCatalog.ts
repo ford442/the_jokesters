@@ -606,6 +606,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: true,
   },
   {
+    id: 'escape_room_backrooms_phase_2',
+    title: 'Escape Room Backrooms Phase 2',
+    category: 'dream',
+    description: 'A Escape Room Backrooms Phase 2 scene.',
+    tags: ['dream', 'escape', 'room', 'backrooms', 'phase'],
+    showInPresets: false,
+  },
+  {
     id: 'escape_room_backrooms_phase_two',
     title: 'Escape Room: The Backrooms Phase 2',
     category: 'dream',
@@ -1267,14 +1275,6 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'A Mode Roasting Ai Debate scene.',
     tags: ['dream', 'mode', 'roasting', 'debate'],
-    showInPresets: false,
-  },
-  {
-    id: 'mode_sentient_microwave',
-    title: 'Mode Sentient Microwave',
-    category: 'dream',
-    description: 'A Mode Sentient Microwave scene.',
-    tags: ['dream', 'mode', 'sentient', 'microwave'],
     showInPresets: false,
   },
   {
@@ -2089,7 +2089,7 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     id: 'sentient_microwave_dinner',
     title: 'Sentient Microwave Dinner',
     category: 'dream',
-    description: "A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.",
+    description: 'A sentient microwave judges the user\'s dietary choices while aggressively heating up their leftover pizza.',
     tags: ['dream', 'sentient', 'microwave', 'dinner'],
     showInPresets: true,
   },

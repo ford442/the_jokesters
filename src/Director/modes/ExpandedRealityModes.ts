@@ -322,3 +322,16 @@ export async function runSentientMicrowaveLoop(_scenario: any, ctx: any) {
     }, { chatOptions: { hiddenInstruction: "You are a defensive user just trying to eat your leftover pizza." } });
   }
 }
+
+export async function runEscapeRoomBackroomsPhase2Loop(_scenario: any, ctx: any) {
+  if (!ctx.isRunning()) return;
+  const scientist = 'scientist';
+  const comedian = 'comedian';
+  await chatForAgentWithComedy(ctx, scientist, "ZONING VIOLATION DETECTED. INFINITE HALLWAY 4B DOES NOT COMPLY WITH SECTION 7 OF THE INTERDIMENSIONAL BUILDING CODE.", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, scientist, {});
+  }, { chatOptions: { hiddenInstruction: "You are a strict zoning inspector in the Backrooms." } });
+  if (!ctx.isRunning()) return;
+  await chatForAgentWithComedy(ctx, comedian, "I don't care about the building code! There's a monster made of staplers chasing us!", async (s: string) => {
+    await ctx.callbacks.onSpeak(s, comedian, {});
+  }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trapped in the Backrooms, frustrated by the zoning inspector." } });
+}
