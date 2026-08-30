@@ -91,8 +91,10 @@ export default defineConfig({
         background_color: '#0f0f23',
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
-        icons: [{ src: '/vite.svg', sizes: 'any', type: 'image/svg+xml' }],
+        // Relative — resolved against the manifest's own URL, so this works whether the
+        // app is deployed at the site root or under a subpath (e.g. /the-jokesters/).
+        start_url: '.',
+        icons: [{ src: 'vite.svg', sizes: 'any', type: 'image/svg+xml' }],
       },
       devOptions: { enabled: true },
     }),
