@@ -1520,15 +1520,15 @@
     "handler": "runTimeTravelingIRSAuditLoop"
   },
   {
-    "id": "mode_alien_customer_support",
+    "id": "alien_customer_support",
     "handler": "runAlienCustomerSupportLoop"
   },
   {
-    "id": "mode_roasting_ai_debate",
+    "id": "roasting_ai_debate",
     "handler": "runRoastingAIDebateLoop"
   },
   {
-    "id": "mode_musical_improv_heckler",
+    "id": "musical_improv_heckler",
     "handler": "runMusicalImprovHecklerLoop"
   },
   {

@@ -1169,5 +1169,25 @@
     "mode": "historical_tech_support_2",
     "description": "A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.",
     "icon": "👑"
+  },
+  {
+    "id": "alien_customer_support",
+    "name": "Alien Customer Support",
+    "description": "Alien customer support tries to walk a human through returning a defective teleporter.",
+    "icon": "🛸",
+    "config": {
+      "modeContext": "A human is trying to return a defective teleporter, but the alien rep uses bizarre intergalactic troubleshooting.",
+      "tone": "absurdist"
+    }
+  },
+  {
+    "id": "musical_improv_heckler",
+    "name": "Musical Improv Heckler",
+    "description": "An earnest performer sings while a pedantic heckler demands genre changes.",
+    "icon": "🎵",
+    "config": {
+      "modeContext": "Musical improv performance constantly interrupted by a pedantic heckler.",
+      "tone": "comedic"
+    }
   }
 ]
