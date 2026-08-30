@@ -627,3 +627,32 @@ export async function runTimeTravelingTrafficCopLoop(_scenario: Scenario, ctx: M
 
     await chatForAgentWithComedy(ctx, cop, `(Insist the timeline is fixed and cite a ridiculous future traffic law involving hover-lane merge protocols. Threaten to impound their past vehicle.)`, async (s) => await ctx.callbacks.onSpeak(s, cop, {}));
 }
+
+/**
+ * Time-Traveling DMV 2.0 Mode
+ * The user tries to renew their license, but the clerk is from 1845 and doesn't understand what a "car" is.
+ */
+export async function runTimeTravelingDMV2Loop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🕰️ TIME-TRAVELING DMV: Horse and Buggy Permits`, '#34495e');
+
+    const pastClerk = 'philosopher'; // Phi-3: The 1845 clerk
+    const modernManager = 'scientist'; // Qwen2.5: The modern manager trying to keep things running
+
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, pastClerk, `(You are a DMV clerk who has been inexplicably time-shifted from the year 1845. The user is at your window trying to renew a "driver's license" for a "car". You have no idea what these things are. Ask them how many horses their carriage has and if they have a permit for their blacksmith.)`, async (s) => await ctx.callbacks.onSpeak(s, pastClerk, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Confused Driver (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Clerk responds
+        await chatForAgentWithComedy(ctx, pastClerk, `(The user just said: "${userInput}". Continue to be completely baffled by modern technology. Assume "engine" means a steam locomotive and "gas" means coal.)`, async (s) => await ctx.callbacks.onSpeak(s, pastClerk, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Manager intervenes
+        await chatForAgentWithComedy(ctx, modernManager, `(You are the modern DMV manager. The 1845 clerk just said something ridiculous again. Apologize to the user, yell at the clerk to use the computer, and try to desperately translate the user's modern vehicle into 1845 terms so the paperwork can be processed.)`, async (s) => await ctx.callbacks.onSpeak(s, modernManager, {}));
+    }
+}

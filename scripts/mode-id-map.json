@@ -1532,7 +1532,19 @@
     "handler": "runMusicalImprovHecklerLoop"
   },
   {
-    "id": "sentient_microwave_dinner",
+    "id": "mode_existential_vending_machine",
+    "handler": "runExistentialVendingMachineLoop"
+  },
+  {
+    "id": "mode_time_traveling_dmv_2",
+    "handler": "runTimeTravelingDMV2Loop"
+  },
+  {
+    "id": "mode_debugging_haunted_house",
+    "handler": "runDebuggingHauntedHouseLoop"
+  },
+  {
+    "id": "mode_sentient_microwave",
     "handler": "runSentientMicrowaveLoop"
   }
 ]
