@@ -110,6 +110,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     showInPresets: false,
   },
   {
+    id: 'alien_customer_support',
+    title: 'Alien Customer Support',
+    category: 'dream',
+    description: 'Alien customer support tries to walk a human through returning a defective teleporter.',
+    tags: ['dream', 'alien', 'customer', 'support'],
+    showInPresets: true,
+  },
+  {
     id: 'alien_game_show',
     title: 'Alien Game Show',
     category: 'dream',
@@ -1356,6 +1364,14 @@ export const MODE_CATALOG: ModeCatalogEntry[] = [
     description: 'A Musical scene.',
     tags: ['performance', 'musical'],
     showInPresets: false,
+  },
+  {
+    id: 'musical_improv_heckler',
+    title: 'Musical Improv Heckler',
+    category: 'dream',
+    description: 'An earnest performer sings while a pedantic heckler demands genre changes.',
+    tags: ['dream', 'musical', 'improv', 'heckler'],
+    showInPresets: true,
   },
   {
     id: 'musical_improv_session',

@@ -1262,6 +1262,29 @@ export async function runHistoricalTechSupport2Loop(_scenario: Scenario, ctx: Mo
  */
 export async function runSentientMicrowaveLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🍕 SENTIENT MICROWAVE: Culinary Judgment`, '#ff5733');
+export async function runAlienCustomerSupportLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👽 ALIEN CUSTOMER SUPPORT: Intergalactic Returns`, '#27ae60');
+
+    const alienRep = 'scientist'; // Qwen2.5: The literal alien
+    const humanCustomer = 'comedian'; // Hermes-3: The panicked human
+
+    await chatForAgentWithComedy(ctx, humanCustomer, `(ALIEN CUSTOMER SUPPORT: You are a panicked human who accidentally ordered a defective interdimensional teleporter online. It is currently tearing a hole in your living room. Call customer support and frantically explain the situation.)`, async (s) => await ctx.callbacks.onSpeak(s, humanCustomer, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        if (!ctx.isRunning()) break;
+        ctx.callbacks.onMessage('Observer (You)', userInput, '#ffffff');
+
+        await chatForAgentWithComedy(ctx, alienRep, `(ALIEN CUSTOMER SUPPORT: The user just gave input: "${userInput}". You are a very strict, literal alien customer support representative. Give the human completely incomprehensible intergalactic troubleshooting steps (like "reversing the polarity of the glip-glops") and act annoyed that they don't understand basic quantum mechanics.)`, async (s) => await ctx.callbacks.onSpeak(s, alienRep, {}));
+
+        if (!ctx.isRunning()) break;
+
+        await chatForAgentWithComedy(ctx, humanCustomer, `(ALIEN CUSTOMER SUPPORT: The alien rep just gave you bizarre instructions. Express extreme panic as the situation in your living room gets worse based on their "help".)`, async (s) => await ctx.callbacks.onSpeak(s, humanCustomer, {}));
+    }
+}
+
+export async function runSentientMicrowaveLoop(scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🔥 SENTIENT MICROWAVE: Judging Your Leftovers`, '#ff4500');
 
     const strictMicrowave = 'scientist'; // Qwen2.5: The pedantic microwave
     const defensiveUser = 'comedian'; // Hermes-3: The defensive user
