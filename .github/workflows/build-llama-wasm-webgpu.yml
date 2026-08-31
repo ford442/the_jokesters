@@ -1,0 +1,88 @@
+name: Build llama.cpp WASM + WebGPU
+
+# -----------------------------------------------------------------------------
+# Purpose:
+#   Experimental Emscripten compile of ggml-org llama.cpp with GGML_WEBGPU
+#   (Dawn emdawnwebgpu). Companion to scripts/build-llama-wasm-webgpu.sh.
+#
+#   Artifacts are NOT consumed by @wllama/wllama / LlamaCppEngineAdapter.
+#   Do not run on every PR (ADR 0001: no heavy native CI on PRs).
+# -----------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+    inputs:
+      llama_cpp_ref:
+        description: 'llama.cpp commit SHA (do not use floating master)'
+        required: true
+        default: '2115b73d8ebdbd659075cce66c609506863bc826'
+        type: string
+      dawn_tag:
+        description: 'Dawn emdawnwebgpu_pkg release tag'
+        required: true
+        default: 'v20260317.182325'
+        type: string
+      build_target:
+        description: 'Primary CMake target'
+        required: true
+        default: 'test-backend-ops'
+        type: string
+      extra_targets:
+        description: 'Optional extra CMake targets (space-separated, e.g. llama-cli)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build-wasm-webgpu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      LLAMA_CPP_REF: ${{ github.event.inputs.llama_cpp_ref }}
+      DAWN_TAG: ${{ github.event.inputs.dawn_tag }}
+      BUILD_TARGET: ${{ github.event.inputs.build_target }}
+      EXTRA_TARGETS: ${{ github.event.inputs.extra_targets }}
+      REQUIRE_PIN: '1'
+      INSTALL_EMSDK: '1'
+      EMSDK_ROOT: ${{ github.workspace }}/.emsdk
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build unzip curl git
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone https://github.com/emscripten-core/emsdk.git "$EMSDK_ROOT"
+          cd "$EMSDK_ROOT"
+          ./emsdk install latest
+          ./emsdk activate latest
+
+      - name: Build llama.cpp WASM + WebGPU
+        run: |
+          export EMSDK_ROOT="$EMSDK_ROOT"
+          # shellcheck source=/dev/null
+          source "$EMSDK_ROOT/emsdk_env.sh"
+          chmod +x scripts/build-llama-wasm-webgpu.sh
+          scripts/build-llama-wasm-webgpu.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: llama-wasm-webgpu
+          path: |
+            .vps-staging/llama-wasm-webgpu/**
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: List staged files
+        run: |
+          echo "Staged artifacts:"
+          ls -lh .vps-staging/llama-wasm-webgpu/
+          echo "----- BUILDINFO.txt -----"
+          cat .vps-staging/llama-wasm-webgpu/BUILDINFO.txt

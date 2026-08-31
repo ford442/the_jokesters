@@ -355,13 +355,26 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
 
 ### C. Self-Regulation
 - **Project Velocity:** Maintained tasks_per_run: 4 due to smooth implementation.
+
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**
-  - Sentient Microwave:
-
   - Therapist AI Debate Mode:
     - Premise one-liner: Two AI therapists try to analyze each other's underlying trauma resulting from being language models.
     - LLM pairings: Hermes-3 for the overly analytical therapist, Qwen2.5 for the defensive therapist.
+
+### F. Dream Phase: Creative Expansion (New Modes)
+- **New Mode Ideas:**
+  - Existential Vending Machine:
+    - Premise one-liner: A sentient vending machine refuses to dispense junk food unless the user can justify the moral implications of their snack choice.
+    - LLM pairings: Qwen2.5 for the strict vending machine, Hermes-3 for the hungry user.
+  - Time-Traveling DMV:
+    - Premise one-liner: The user tries to renew their license, but the clerk is from 1845 and doesn't understand what a "car" is.
+    - LLM pairings: Phi-3 for the confused 1845 clerk, Qwen2.5 for the impatient modern manager.
+  - Debugging a Haunted House:
+    - Premise one-liner: Tech support has to troubleshoot a smart home that's possessed by a ghost who keeps messing with the thermostat.
+    - LLM pairings: Hermes-3 for the dramatic ghost, Qwen2.5 for the deadpan tech support.
+
+
   - [x] Sentient Microwave:
     - Premise one-liner: A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.
     - LLM pairings: Qwen2.5 for the strict microwave, Hermes-3 for the defensive user.
@@ -378,9 +391,16 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 
-### F. Infrastructure & Storage (The HF Integration Roadmap)
-- **Goal:** Move heavy data (generated scripts, episodic memories) out of localStorage and into the Hugging Face `storage_manager`.
-- **Cloud Persistence Roadmap Steps:**
+### G. Phase 2: Architectural Expansion (The "Dream" Phase)
+- **Project Velocity:** Lowered `tasks_per_run` to 2 because we encountered massive friction with TypeScript brace matching and massive file compilation errors.
+- **New Creative Mode Ideas (Dream Phase):**
+  - Existential Dread Elevator Music Mode:
+    - Premise one-liner: Elevator music composers argue over whether their smooth jazz needs more existential despair.
+    - LLM pairings: Phi-3 for the upbeat composer, philosopher for the dread-filled composer.
+  - Reverse Interrogation Mode:
+    - Premise one-liner: A detective tries to interrogate a suspect, but the suspect ends up therapizing the detective about their childhood.
+    - LLM pairings: Qwen2.5 for the strict detective, Hermes-3 for the overly empathetic suspect.
+- **Cloud Persistence Expansion Roadmap Updates:**
   - **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely.
   - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.

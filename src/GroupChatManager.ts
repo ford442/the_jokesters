@@ -11,7 +11,7 @@
 import * as webllm from '@mlc-ai/web-llm'
 import type { VRAMOptimizationConfig, ContextWindowInfo } from './utils/dynamicContext'
 import type { DynamicContextManager } from './utils/dynamicContext'
-import type { ChatMessage, ContentPart } from './llm/LLMEngine'
+import type { ChatMessage, ContentPart, GenerationOptions, LLMEngine } from './llm/LLMEngine'
 import type { EngineType } from './llm/EngineFactory'
 import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
 import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
@@ -23,6 +23,12 @@ import { ModelSession } from './chat/ModelSession'
 import { PersonalityStore } from './chat/PersonalityStore'
 import { categorizeChatError } from './chat/chatErrors'
 import { getStreamContent, isSentenceBoundaryEvent } from './llm/streamEvents'
+import {
+  EMPTY_TURN_RETRY_SUFFIX,
+  isSpeakableText,
+  logTurnText,
+  retryMaxTokens,
+} from './chat/speakableText'
 
 export type { ProfanityLevel, Agent, Message, ErrorCategory }
 export { PROFANITY_LEVEL }
@@ -215,104 +221,61 @@ export class GroupChatManager {
         }
       }
 
-      const stream = await engine.chat(chatMessages, {
+      const genOpts = {
         max_tokens: effectiveMaxTokens,
         temperature: currentAgent.temperature,
         top_p: currentAgent.top_p,
         seed: options.seed,
         repetition_penalty: this.REPETITION_PENALTY,
         presence_penalty: this.PRESENCE_PENALTY,
-        stop: ['###', 'Director:', 'User:'],
-        stream: true,
-      })
-
-      let fullResponse = ''
-      let buffer = ''
-
-      for await (const event of stream) {
-        const content = getStreamContent(event)
-        if (!content) continue
-
-        fullResponse += content
-        buffer += content
-
-        const stopTokens = ['###', 'Director:', 'User:']
-        let earliestIdx = -1
-        let matchedToken: string | null = null
-        for (const token of stopTokens) {
-          const idx = buffer.indexOf(token)
-          if (idx >= 0 && (earliestIdx === -1 || idx < earliestIdx)) {
-            earliestIdx = idx
-            matchedToken = token
-          }
-        }
-        if (earliestIdx >= 0 && matchedToken) {
-          const preStop = buffer
-            .substring(0, earliestIdx)
-            .trim()
-            .replace(new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i'), '')
-            .replace(/###/g, '')
-            .replace(/Director:\s*/gi, '')
-            .replace(/User:\s*/gi, '')
-            .trim()
-          if (preStop) onSentence?.(preStop)
-          buffer = ''
-        }
-
-        let match
-        while ((match = buffer.match(/([.!?])\s/))) {
-          const endIdx = match.index! + 1
-          let sentence = buffer.substring(0, endIdx).trim()
-          const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-          sentence = sentence
-            .replace(namePrefixRegex, '')
-            .replace(/###/g, '')
-            .replace(/Director:\s*/gi, '')
-            .replace(/User:\s*/gi, '')
-            .trim()
-          if (sentence) onSentence?.(sentence)
-          buffer = buffer.substring(endIdx + 1)
-        }
-
-        // Custom web-llm fork: flush on sentence_boundary even without trailing space
-        if (isSentenceBoundaryEvent(event) && buffer.trim()) {
-          let sentence = buffer.trim()
-          const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-          sentence = sentence
-            .replace(namePrefixRegex, '')
-            .replace(/###/g, '')
-            .replace(/Director:\s*/gi, '')
-            .replace(/User:\s*/gi, '')
-            .trim()
-          if (sentence) onSentence?.(sentence)
-          buffer = ''
-        }
+        stop: ['###', 'Director:', 'User:'] as string[],
+        stream: true as const,
       }
 
-      if (buffer.trim()) {
-        let cleanBuffer = buffer.trim()
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-        cleanBuffer = cleanBuffer
-          .replace(namePrefixRegex, '')
-          .replace(/###/g, '')
-          .replace(/Director:\s*/gi, '')
-          .replace(/User:\s*/gi, '')
-          .trim()
-        onSentence?.(cleanBuffer)
+      let { raw, cleaned } = await this.streamAssistant(
+        engine,
+        chatMessages,
+        currentAgent,
+        genOpts,
+        onSentence,
+      )
+      logTurnText(raw, cleaned)
+
+      if (!isSpeakableText(cleaned)) {
+        const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+        this.conversation.replaceLastUser(retryPrompt)
+        this.patchLastUserMessage(chatMessages, retryPrompt)
+        const retryTokens = retryMaxTokens(
+          effectiveMaxTokens,
+          this.maxTokensPerTurn,
+          ABSOLUTE_MAX_TOKENS,
+        )
+        console.warn(
+          `[EmptyTurn] Unspeakable reply from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
+        )
+        ;({ raw, cleaned } = await this.streamAssistant(
+          engine,
+          chatMessages,
+          currentAgent,
+          { ...genOpts, max_tokens: retryTokens },
+          onSentence,
+        ))
+        logTurnText(raw, cleaned)
       }
 
-      const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-      const cleanFullResponse = fullResponse
-        .replace(namePrefixRegex, '')
-        .replace(/###/g, '')
-        .replace(/Director:\s*/gi, '')
-        .replace(/User:\s*/gi, '')
-        .trim()
+      if (!isSpeakableText(cleaned)) {
+        this.conversation.popLastIfUser()
+        this.conversation.advanceAgent()
+        console.warn(
+          `[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry — rotating to ${this.conversation.getCurrentAgent().id}`,
+        )
+        return { agentId: currentAgent.id, response: '' }
+      }
 
-      this.conversation.appendAssistant(cleanFullResponse)
+      this.conversation.appendAssistant(cleaned)
       this.conversation.advanceAgent()
 
-      return { agentId: currentAgent.id, response: fullResponse }
+      return { agentId: currentAgent.id, response: cleaned }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
       if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
@@ -331,6 +294,89 @@ export class GroupChatManager {
       }
       console.error('Error generating response:', error)
       throw error
+    }
+  }
+
+  private patchLastUserMessage(chatMessages: ChatMessage[], content: string): void {
+    for (let i = chatMessages.length - 1; i >= 0; i--) {
+      if (chatMessages[i].role === 'user') {
+        chatMessages[i] = { role: 'user', content }
+        return
+      }
+    }
+  }
+
+  private stripAssistantDecorations(text: string, agent: Agent): string {
+    const namePrefixRegex = new RegExp(`^(${agent.name}|${agent.id}):\\s*`, 'i')
+    return text
+      .replace(namePrefixRegex, '')
+      .replace(/###/g, '')
+      .replace(/Director:\s*/gi, '')
+      .replace(/User:\s*/gi, '')
+      .trim()
+  }
+
+  private async streamAssistant(
+    engine: LLMEngine,
+    chatMessages: ChatMessage[],
+    currentAgent: Agent,
+    genOpts: GenerationOptions,
+    onSentence?: (sentence: string) => void,
+  ): Promise<{ raw: string; cleaned: string }> {
+    const stream = await engine.chat(chatMessages, genOpts)
+    let fullResponse = ''
+    let buffer = ''
+
+    const emitIfSpeakable = (sentence: string) => {
+      if (!sentence) return
+      if (isSpeakableText(fullResponse)) onSentence?.(sentence)
+    }
+
+    for await (const event of stream) {
+      const content = getStreamContent(event)
+      if (!content) continue
+
+      fullResponse += content
+      buffer += content
+
+      const stopTokens = ['###', 'Director:', 'User:']
+      let earliestIdx = -1
+      let matchedToken: string | null = null
+      for (const token of stopTokens) {
+        const idx = buffer.indexOf(token)
+        if (idx >= 0 && (earliestIdx === -1 || idx < earliestIdx)) {
+          earliestIdx = idx
+          matchedToken = token
+        }
+      }
+      if (earliestIdx >= 0 && matchedToken) {
+        const preStop = this.stripAssistantDecorations(buffer.substring(0, earliestIdx).trim(), currentAgent)
+        emitIfSpeakable(preStop)
+        buffer = ''
+      }
+
+      let match
+      while ((match = buffer.match(/([.!?])\s/))) {
+        const endIdx = match.index! + 1
+        const sentence = this.stripAssistantDecorations(buffer.substring(0, endIdx).trim(), currentAgent)
+        emitIfSpeakable(sentence)
+        buffer = buffer.substring(endIdx + 1)
+      }
+
+      if (isSentenceBoundaryEvent(event) && buffer.trim()) {
+        const sentence = this.stripAssistantDecorations(buffer.trim(), currentAgent)
+        emitIfSpeakable(sentence)
+        buffer = ''
+      }
+    }
+
+    if (buffer.trim()) {
+      emitIfSpeakable(this.stripAssistantDecorations(buffer.trim(), currentAgent))
+    }
+
+    return {
+      raw: fullResponse,
+      cleaned: this.stripAssistantDecorations(fullResponse, currentAgent),
     }
   }
 
@@ -460,8 +506,12 @@ export class GroupChatManager {
 
     try {
       let currentPrompt = initialPrompt
+      let produced = 0
+      let attempts = 0
+      const maxAttempts = Math.max(turnCount * 5, turnCount + this.conversation.getAgents().length)
 
-      for (let i = 0; i < turnCount; i++) {
+      while (produced < turnCount && attempts < maxAttempts) {
+        attempts++
         const currentAgent = this.conversation.getCurrentAgent()
         const systemMessage = buildSystemMessage(
           currentAgent,
@@ -494,31 +544,47 @@ export class GroupChatManager {
           content: m.content,
         }))
 
-        const stream = await engine.chat(chatMessages, {
+        const genOpts: GenerationOptions = {
           temperature: currentAgent.temperature,
           top_p: currentAgent.top_p,
           max_tokens: effectiveMaxTokens,
           stream: false,
           stop: ['###', 'Director:', 'User:'],
-          seed: options.seed ? options.seed + i : undefined,
+          seed: options.seed ? options.seed + attempts : undefined,
           repetition_penalty: this.REPETITION_PENALTY,
           presence_penalty: this.PRESENCE_PENALTY,
-        })
-
-        let fullResponse = ''
-        for await (const chunk of stream) {
-          fullResponse += getStreamContent(chunk)
         }
 
-        const namePrefixRegex = new RegExp(`^(${currentAgent.name}|${currentAgent.id}):\\s*`, 'i')
-        const cleanResponse = fullResponse
-          .replace(namePrefixRegex, '')
-          .replace(/###/g, '')
-          .replace(/Director:\s*/gi, '')
-          .replace(/User:\s*/gi, '')
-          .trim()
+        let promptForTurn = currentPrompt
+        let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
+        logTurnText(raw, cleaned)
 
-        const sentences = cleanResponse
+        if (!isSpeakableText(cleaned)) {
+          promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, promptForTurn)
+          const retryTokens = retryMaxTokens(
+            effectiveMaxTokens,
+            this.maxTokensPerTurn,
+            ABSOLUTE_MAX_TOKENS,
+          )
+          console.warn(
+            `[EmptyTurn] Unspeakable prerender from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
+          )
+          ;({ raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, {
+            ...genOpts,
+            max_tokens: retryTokens,
+          }))
+          logTurnText(raw, cleaned)
+        }
+
+        if (!isSpeakableText(cleaned)) {
+          console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
+          this.conversation.advanceAgent()
+          currentPrompt = '(Reply naturally to the last thing said)'
+          continue
+        }
+
+        const sentences = cleaned
           .split(/([.!?])\s+/)
           .reduce((acc: string[], part: string, idx: number, arr: string[]) => {
             if (idx % 2 === 0 && part.trim()) {
@@ -531,12 +597,13 @@ export class GroupChatManager {
         prerenderedTurns.push({
           agentId: currentAgent.id,
           agentName: currentAgent.name,
-          response: cleanResponse,
+          response: cleaned,
           sentences,
         })
 
-        this.conversation.addTurn(currentPrompt, cleanResponse)
+        this.conversation.addTurn(promptForTurn, cleaned)
         currentPrompt = '(Reply naturally to the last thing said)'
+        produced++
       }
 
       return prerenderedTurns
@@ -596,7 +663,7 @@ export class GroupChatManager {
   }
 
   /** Test hook: attach mock engine without full model load. */
-  attachSessionForTests(engine: import('./llm/LLMEngine').LLMEngine, modelId: string): void {
+  attachSessionForTests(engine: LLMEngine, modelId: string): void {
     this.session.attachEngine(engine, modelId)
     this.conversation.reconcileHistoryAfterContextChange(
       this.session.getContextManager(),

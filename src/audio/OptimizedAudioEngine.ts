@@ -18,6 +18,7 @@ import type {
 import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
 import { VPS_STORAGE_URL } from '../config/models';
+import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -73,8 +74,9 @@ export class OptimizedAudioEngine {
     private onVisemeCallbacks: VisemeCallback[] = [];
     private onErrorCallbacks: ErrorCallback[] = [];
 
-    // Sample rate
-    public sampleRate = 24000;
+    // Hosted Supertonic vocoder is 44.1 kHz (tts.json ae.sample_rate). Init-success
+    // overwrites this from the JSON; never leave the old 24 kHz Bark-era default.
+    public sampleRate = SUPERTONIC_NATIVE_SAMPLE_RATE;
 
     constructor() {}
 
@@ -285,6 +287,9 @@ export class OptimizedAudioEngine {
                 if (e.data.type === 'init-success') {
                     clearTimeout(timeout);
                     this.worker?.removeEventListener('message', handler);
+                    if (typeof e.data.sampleRate === 'number' && e.data.sampleRate > 0) {
+                        this.sampleRate = e.data.sampleRate;
+                    }
                     resolve();
                 } else if (e.data.type === 'init-error') {
                     clearTimeout(timeout);
@@ -315,6 +320,14 @@ export class OptimizedAudioEngine {
 
         this.pendingRequests.delete(msg.requestId);
 
+        // Plumb vocoder-grounded rate from the worker before resolve so SpeechQueue
+        // stamps createBuffer with the same Hz that produced this PCM. Never use
+        // audioContext.sampleRate — the worker already preferred nativeHz over tts.json
+        // when they disagree.
+        if (typeof msg.sampleRate === 'number' && msg.sampleRate > 0) {
+            this.sampleRate = msg.sampleRate;
+        }
+
         const result: SynthesisResult = {
             audioData: msg.audioData,
             sampleRate: msg.sampleRate,
@@ -332,6 +345,8 @@ export class OptimizedAudioEngine {
             workerLatency: `${msg.latency.totalMs.toFixed(1)}ms`,
             mainThreadOverhead: `${mainThreadOverhead.toFixed(1)}ms`,
             totalLatency: `${(performance.now() - request.startTime).toFixed(1)}ms`,
+            sampleRate: msg.sampleRate,
+            samples: msg.audioData.length,
             cacheHit: msg.latency.cacheLookupMs < 1 // Approximate
         });
 

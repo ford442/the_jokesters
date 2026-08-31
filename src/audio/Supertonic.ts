@@ -106,7 +106,7 @@ export class SupertonicTTS {
         const durationSec = durationRaw[0] / speed;
 
         // Calculate dimensions based on config
-        const sampleRate = this.cfgs.ae.sample_rate; // 24000
+        const sampleRate = this.cfgs.ae.sample_rate; // hosted Supertonic: 44100
         const chunkSize = this.cfgs.ae.base_chunk_size * this.cfgs.ttl.chunk_compress_factor; // 512 * 6 = 3072
         const latentWidth = Math.ceil((durationSec * sampleRate) / chunkSize);
 

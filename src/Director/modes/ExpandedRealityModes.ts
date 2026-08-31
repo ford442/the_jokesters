@@ -288,39 +288,62 @@ Objective: Resolve the teleporter return process.`;
   }
 }
 
-export async function runSentientMicrowaveLoop(_scenario: any, ctx: any) {
-  if (!ctx.isRunning()) return;
+/**
+ * Existential Vending Machine Mode
+ * A sentient vending machine refuses to dispense junk food unless the user can justify the moral implications of their snack choice.
+ */
+export async function runExistentialVendingMachineLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍫 EXISTENTIAL VENDING MACHINE: Moral Snacks`, '#9b59b6');
 
-  const scientist = 'scientist'; // The strict microwave
-  const comedian = 'comedian'; // The defensive user
+    const strictVendingMachine = 'scientist'; // Qwen2.5: The strict vending machine
+    const hungryUser = 'comedian'; // Hermes-3: The hungry user (acting on behalf of the real user, or alongside them)
 
-  if (ctx.callbacks.onMessage) {
-    ctx.callbacks.onMessage('Director', 'Your microwave is judging your life choices...', '#ff9900');
-  }
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, strictVendingMachine, `(You are an existential vending machine. The user has just pressed A4 to get some potato chips. Refuse to dispense the chips. Demand they explain how eating these chips contributes to the greater good of humanity and the universe.)`, async (s) => await ctx.callbacks.onSpeak(s, strictVendingMachine, {}));
 
-  await chatForAgentWithComedy(ctx, scientist, "BEEP BEEP BEEP. MORE CHEAP CARBOHYDRATES? MY MAGNETRONS WEEP FOR YOUR ARTERIES.", async (s: string) => {
-    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
-  }, { chatOptions: { hiddenInstruction: "You are a sentient microwave judging the user's dietary choices while aggressively heating up their leftover pizza." } });
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Hungry User (You)', userInput, '#ffffff');
 
-  if (!ctx.isRunning()) return;
+        if (!ctx.isRunning()) break;
 
-  await chatForAgentWithComedy(ctx, comedian, "Can you just heat up the pizza without the lecture for once?!", async (s: string) => {
-    if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
-  }, { chatOptions: { hiddenInstruction: "You are a defensive user just trying to eat your leftover pizza." } });
+        // Vending machine responds
+        await chatForAgentWithComedy(ctx, strictVendingMachine, `(The user just said: "${userInput}". Evaluate their moral justification for wanting a snack. Find philosophical flaws in their argument. Keep holding their snack hostage.)`, async (s) => await ctx.callbacks.onSpeak(s, strictVendingMachine, {}));
 
-  while (ctx.isRunning()) {
-    const userInput = await ctx.waitForInput();
-    if (!userInput || !ctx.isRunning()) break;
+        if (!ctx.isRunning()) break;
 
-    await chatForAgentWithComedy(ctx, scientist, userInput, async (s: string) => {
-      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, scientist, {});
-    }, { chatOptions: { hiddenInstruction: "You are a sentient microwave judging the user's dietary choices while aggressively heating up their leftover pizza." } });
-    if (!ctx.isRunning()) break;
+        // Another hungry user complains
+        await chatForAgentWithComedy(ctx, hungryUser, `(The vending machine just gave another philosophical lecture. You are the next person in line, and you are extremely hungry. Yell at the vending machine and the user to hurry up, and try to use brute force logic to get your own snack.)`, async (s) => await ctx.callbacks.onSpeak(s, hungryUser, {}));
+    }
+}
 
-    await chatForAgentWithComedy(ctx, comedian, "Wait, why is the pizza still cold in the middle?!", async (s: string) => {
-      if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, comedian, {});
-    }, { chatOptions: { hiddenInstruction: "You are a defensive user just trying to eat your leftover pizza." } });
-  }
+/**
+ * Debugging a Haunted House Mode
+ * Tech support has to troubleshoot a smart home that's possessed by a ghost who keeps messing with the thermostat.
+ */
+export async function runDebuggingHauntedHouseLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `👻 HAUNTED SMART HOME: Troubleshooting the Paranormal`, '#2c3e50');
+
+    const dramaticGhost = 'comedian'; // Hermes-3: The dramatic ghost
+    const deadpanTech = 'scientist'; // Qwen2.5: The deadpan tech support
+
+    // 1. Setup
+    await chatForAgentWithComedy(ctx, deadpanTech, `(You are a deadpan tech support agent. The user has called complaining that their smart thermostat keeps setting itself to 40 degrees and their smart lights are flickering in morse code. Diagnose this as a standard "firmware issue" and ignore any supernatural implications.)`, async (s) => await ctx.callbacks.onSpeak(s, deadpanTech, {}));
+
+    while (ctx.isRunning()) {
+        const userInput = await ctx.waitForInput();
+        ctx.callbacks.onMessage('Terrified Homeowner (You)', userInput, '#ffffff');
+
+        if (!ctx.isRunning()) break;
+
+        // Tech support responds
+        await chatForAgentWithComedy(ctx, deadpanTech, `(The user just said: "${userInput}". Give them extremely boring, mundane troubleshooting steps for the clearly supernatural events occurring. Ask them to restart their router to exorcise the connection.)`, async (s) => await ctx.callbacks.onSpeak(s, deadpanTech, {}));
+
+        if (!ctx.isRunning()) break;
+
+        // Ghost interrupts
+        await chatForAgentWithComedy(ctx, dramaticGhost, `(You are the ghost haunting the smart home. You are interrupting the phone call through the smart speaker. Threaten the user and the tech support agent with doom, but get frustrated by the tech support agent treating you like a minor software bug.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
+    }
 }
 
 export async function runEscapeRoomBackroomsPhase2Loop(_scenario: any, ctx: any) {
