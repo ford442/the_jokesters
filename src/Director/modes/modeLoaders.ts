@@ -271,7 +271,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'sentient_linting_tool': async () => (await import('./DreamModes_Tech')).runSentientLintingToolLoop,
   'sentient_luggage': async () => (await import('./DreamModes_Sentient')).runSentientLuggageLoop,
   'sentient_mailbox': async () => (await import('./DreamModes_Sentient')).runSentientMailboxLoop,
-  'sentient_microwave_dinner': async () => (await import('./ExpandedRealityModes')).runSentientMicrowaveLoop,
+  'sentient_microwave_dinner': async () => (await import('./DreamModes_Tech')).runSentientMicrowaveLoop,
   'sentient_middleware': async () => (await import('./DreamModes_Tech')).runSentientMiddlewareLoop,
   'sentient_notification_center': async () => (await import('./DreamModes_Tech')).runSentientNotificationCenterLoop,
   'sentient_npcs': async () => (await import('./DreamModes_Sentient')).runSentientNPCsLoop,

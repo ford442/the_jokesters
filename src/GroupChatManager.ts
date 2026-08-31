@@ -243,7 +243,6 @@ export class GroupChatManager {
 
       if (!isSpeakableText(cleaned)) {
         const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-        this.conversation.replaceLastUser(retryPrompt)
         this.patchLastUserMessage(chatMessages, retryPrompt)
         const retryTokens = retryMaxTokens(
           effectiveMaxTokens,
@@ -601,7 +600,7 @@ export class GroupChatManager {
           sentences,
         })
 
-        this.conversation.addTurn(promptForTurn, cleaned)
+        this.conversation.addTurn(currentPrompt, cleaned)
         currentPrompt = '(Reply naturally to the last thing said)'
         produced++
       }
