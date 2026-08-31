@@ -154,4 +154,21 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
     expect(createBufferCalls[0]?.sampleRate).not.toBe(48000)
     expect(playbackRates).toEqual([])
   })
+
+  it('stamps the rate captured at add(), not a later engine.sampleRate mutation', async () => {
+    const engine = {
+      sampleRate: 44100,
+      init: async () => {},
+      synthesize: async () => new Float32Array(0),
+    }
+
+    const queue = new SpeechQueue(engine)
+    queue.add(new Float32Array(44100))
+    engine.sampleRate = 24000
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(createBufferCalls[0]?.sampleRate).toBe(44100)
+  })
 })

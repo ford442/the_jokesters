@@ -18,6 +18,7 @@ import type {
 import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
 import { VPS_STORAGE_URL } from '../config/models';
+import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -73,9 +74,9 @@ export class OptimizedAudioEngine {
     private onVisemeCallbacks: VisemeCallback[] = [];
     private onErrorCallbacks: ErrorCallback[] = [];
 
-    // Placeholder until the first worker synthesis-success supplies the vocoder-grounded rate.
-    // Never stamp createBuffer with this unless the worker actually sent 24000.
-    public sampleRate = 24000;
+    // Hosted Supertonic vocoder is 44.1 kHz (tts.json ae.sample_rate). Init-success
+    // overwrites this from the JSON; never leave the old 24 kHz Bark-era default.
+    public sampleRate = SUPERTONIC_NATIVE_SAMPLE_RATE;
 
     constructor() {}
 
@@ -286,6 +287,9 @@ export class OptimizedAudioEngine {
                 if (e.data.type === 'init-success') {
                     clearTimeout(timeout);
                     this.worker?.removeEventListener('message', handler);
+                    if (typeof e.data.sampleRate === 'number' && e.data.sampleRate > 0) {
+                        this.sampleRate = e.data.sampleRate;
+                    }
                     resolve();
                 } else if (e.data.type === 'init-error') {
                     clearTimeout(timeout);

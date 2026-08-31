@@ -17,7 +17,7 @@ describe('OptimizedAudioEngineAdapter', () => {
   it('exposes a live sampleRate getter from the wrapped engine', async () => {
     const init = vi.fn(async () => {})
     const mutableEngine = {
-      sampleRate: 24000,
+      sampleRate: 44100,
       init,
       synthesize: vi.fn(async () => {
         // Mimic OptimizedAudioEngine.handleSynthesisSuccess updating rate before resolve
@@ -29,7 +29,7 @@ describe('OptimizedAudioEngineAdapter', () => {
 
     const adapter = new OptimizedAudioEngineAdapter(fakeEngine)
 
-    expect(adapter.sampleRate).toBe(24000)
+    expect(adapter.sampleRate).toBe(44100)
     expect(adapter.getEngine()).toBe(fakeEngine)
 
     await adapter.init('https://storage.example/tts/onnx')

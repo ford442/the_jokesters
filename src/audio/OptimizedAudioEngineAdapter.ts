@@ -26,7 +26,8 @@ export class OptimizedAudioEngineAdapter implements TtsEngine {
         options: SynthesisOptions = {},
     ): Promise<Float32Array> {
         const result = await this.engine.synthesize(text, speakerId, options);
-        // Engine.sampleRate is updated before synthesize resolves; SpeechQueue reads it at play time.
+        // Engine.sampleRate is set at init from tts.json and refreshed on each
+        // synthesis-success; SpeechQueue captures it at add(), not at play time.
         return result.audioData;
     }
 

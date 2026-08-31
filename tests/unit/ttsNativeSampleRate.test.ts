@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   resolveTtsNativeSampleRate,
   snapSampleRate,
+  SUPERTONIC_NATIVE_SAMPLE_RATE,
+  trimVocoderPcm,
   TTS_NATIVE_SAMPLE_RATES,
 } from '../../src/audio/ttsNativeSampleRate'
 
@@ -68,5 +70,38 @@ describe('resolveTtsNativeSampleRate', () => {
     expect(probe.configHz).toBe(16000)
     expect(probe.nativeHz).toBe(48000)
     expect(probe.sampleRate).toBe(48000)
+  })
+
+  it('keeps 44.1 kHz when chunk padding inflates empirical toward 48 kHz', () => {
+    // 1s at 44100, vocoder emitted one extra 3072-sample chunk → 46080
+    const probe = resolveTtsNativeSampleRate(44100, 46080, 1)
+    expect(probe.empiricalHz).toBe(46080)
+    expect(probe.nativeHz).toBe(48000)
+    expect(probe.sampleRate).toBe(44100)
+  })
+
+  it('still overrides a 16 kHz JSON claim when PCM is clearly 24 kHz (50% off, not padding)', () => {
+    const probe = resolveTtsNativeSampleRate(16000, 24000, 1)
+    expect(probe.sampleRate).toBe(24000)
+  })
+})
+
+describe('trimVocoderPcm', () => {
+  it('drops ceil-to-chunk padding so samples match duration * configHz', () => {
+    const wav = new Float32Array(46080)
+    const trimmed = trimVocoderPcm(wav, 1, 44100)
+    expect(trimmed.length).toBe(44100)
+  })
+
+  it('leaves the buffer alone when it is already at or under the expected length', () => {
+    const wav = new Float32Array(22050)
+    expect(trimVocoderPcm(wav, 1, 44100).length).toBe(22050)
+    expect(trimVocoderPcm(wav, 0, 44100)).toBe(wav)
+  })
+})
+
+describe('SUPERTONIC_NATIVE_SAMPLE_RATE', () => {
+  it('is 44.1 kHz (hosted tts.json ae.sample_rate)', () => {
+    expect(SUPERTONIC_NATIVE_SAMPLE_RATE).toBe(44100)
   })
 })

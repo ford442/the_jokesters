@@ -5,7 +5,11 @@
  */
 
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
-import { resolveTtsNativeSampleRate } from '../ttsNativeSampleRate';
+import {
+    resolveTtsNativeSampleRate,
+    SUPERTONIC_NATIVE_SAMPLE_RATE,
+    trimVocoderPcm,
+} from '../ttsNativeSampleRate';
 
 // --- Types ---
 export interface WorkerInitMessage {
@@ -47,6 +51,8 @@ export type WorkerRequest =
 
 export interface WorkerInitSuccess {
     type: 'init-success';
+    /** From tts.json ae.sample_rate — available before the first synth. */
+    sampleRate: number;
 }
 
 export interface WorkerInitError {
@@ -370,7 +376,8 @@ async function handleInit(msg: WorkerInitMessage) {
             ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
         ]);
 
-        self.postMessage({ type: 'init-success' } as WorkerInitSuccess);
+        const initHz = config.ae.sample_rate || SUPERTONIC_NATIVE_SAMPLE_RATE;
+        self.postMessage({ type: 'init-success', sampleRate: initHz } as WorkerInitSuccess);
     } catch (err: any) {
         self.postMessage({ type: 'init-error', error: err.message } as WorkerInitError);
     }
@@ -513,19 +520,28 @@ async function handleSynthesize(msg: WorkerSynthesizeMessage) {
         // Phase 6: Vocoder
         const vocoderStart = performance.now();
         const vocoderOut = await vocoderSession.run({ latent: currentXt });
-        const wav = vocoderOut.wav_tts.data as Float32Array;
+        const rawWav = vocoderOut.wav_tts.data as Float32Array;
         phaseTimings.vocoderMs = performance.now() - vocoderStart;
 
-        // tts.json ae.sample_rate is a claim. Ground truth is wav.length / duration
-        // (duration-predictor seconds). Stamp the snapped empirical rate when they
-        // disagree by >5% — a wrong JSON rate makes playback slower/faster, not "close".
-        const configHz = config.ae.sample_rate;
+        // tts.json ae.sample_rate is 44100 for hosted Supertonic. Trim ceil-to-chunk
+        // padding (official Python does this) before measuring empirical Hz — untrimmed
+        // wav.length/duration snaps 44.1 kHz → 48 kHz on short comedy lines.
+        const configHz = config.ae.sample_rate || SUPERTONIC_NATIVE_SAMPLE_RATE;
+        const wav = trimVocoderPcm(rawWav, duration, configHz);
         const { empiricalHz, nativeHz, sampleRate: playbackHz } = resolveTtsNativeSampleRate(
             configHz,
             wav.length,
             duration,
         );
-        console.log('[TTS rate]', { configHz, empiricalHz, nativeHz, samples: wav.length, duration });
+        console.log('[TTS rate]', {
+            configHz,
+            empiricalHz,
+            nativeHz,
+            playbackHz,
+            samples: wav.length,
+            rawSamples: rawWav.length,
+            duration,
+        });
 
         // Generate visemes with lookahead
         const visemes = predictVisemes(text, duration);
