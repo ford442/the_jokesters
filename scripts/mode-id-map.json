@@ -1546,5 +1546,9 @@
   {
     "id": "mode_sentient_microwave",
     "handler": "runSentientMicrowaveLoop"
+  },
+  {
+    "id": "escape_room_backrooms_phase_2",
+    "handler": "runEscapeRoomBackroomsPhase2Loop"
   }
 ]
