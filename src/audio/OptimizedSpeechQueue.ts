@@ -209,7 +209,9 @@ export class OptimizedSpeechQueue {
     }
 
     private async playAudio(audioData: Float32Array, visemes?: Viseme[]): Promise<void> {
-        const buffer = this.audioContext.createBuffer(1, audioData.length, 24000);
+        // Use the engine's worker-reported rate — never hardcode 24000.
+        const sampleRate = this.engine.sampleRate;
+        const buffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
         buffer.getChannelData(0).set(audioData);
 
         const source = this.audioContext.createBufferSource();

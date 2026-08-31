@@ -73,8 +73,10 @@ export class OptimizedAudioEngine {
     private onVisemeCallbacks: VisemeCallback[] = [];
     private onErrorCallbacks: ErrorCallback[] = [];
 
-    // Sample rate
+    // Placeholder until the first worker synthesis-success supplies config.ae.sample_rate.
+    // Never stamp createBuffer with this unless the worker actually sent 24000.
     public sampleRate = 24000;
+    private loggedWorkerSampleRate = false;
 
     constructor() {}
 
@@ -315,6 +317,16 @@ export class OptimizedAudioEngine {
 
         this.pendingRequests.delete(msg.requestId);
 
+        // Plumb vocoder rate from the worker before resolve so SpeechQueue stamps
+        // createBuffer with the same Hz that produced this PCM.
+        if (typeof msg.sampleRate === 'number' && msg.sampleRate > 0) {
+            this.sampleRate = msg.sampleRate;
+            if (!this.loggedWorkerSampleRate) {
+                this.loggedWorkerSampleRate = true;
+                console.log(`[TTS rate] workerHz=${msg.sampleRate} engineHz=${this.sampleRate}`);
+            }
+        }
+
         const result: SynthesisResult = {
             audioData: msg.audioData,
             sampleRate: msg.sampleRate,
@@ -332,6 +344,8 @@ export class OptimizedAudioEngine {
             workerLatency: `${msg.latency.totalMs.toFixed(1)}ms`,
             mainThreadOverhead: `${mainThreadOverhead.toFixed(1)}ms`,
             totalLatency: `${(performance.now() - request.startTime).toFixed(1)}ms`,
+            sampleRate: msg.sampleRate,
+            samples: msg.audioData.length,
             cacheHit: msg.latency.cacheLookupMs < 1 // Approximate
         });
 

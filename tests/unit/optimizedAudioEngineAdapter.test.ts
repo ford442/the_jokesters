@@ -14,10 +14,18 @@ function fakeSynthesisResult(overrides: Partial<SynthesisResult> = {}): Synthesi
 }
 
 describe('OptimizedAudioEngineAdapter', () => {
-  it('exposes the wrapped engine sample rate and delegates init/synthesize', async () => {
+  it('exposes a live sampleRate getter from the wrapped engine', async () => {
     const init = vi.fn(async () => {})
-    const synthesize = vi.fn(async () => fakeSynthesisResult())
-    const fakeEngine = { sampleRate: 24000, init, synthesize } as unknown as OptimizedAudioEngine
+    const mutableEngine = {
+      sampleRate: 24000,
+      init,
+      synthesize: vi.fn(async () => {
+        // Mimic OptimizedAudioEngine.handleSynthesisSuccess updating rate before resolve
+        mutableEngine.sampleRate = 48000
+        return fakeSynthesisResult({ sampleRate: 48000 })
+      }),
+    }
+    const fakeEngine = mutableEngine as unknown as OptimizedAudioEngine
 
     const adapter = new OptimizedAudioEngineAdapter(fakeEngine)
 
@@ -28,9 +36,11 @@ describe('OptimizedAudioEngineAdapter', () => {
     expect(init).toHaveBeenCalledWith('https://storage.example/tts/onnx')
 
     const audio = await adapter.synthesize('Hello there.', 'comedian', { speed: 1.2 })
-    expect(synthesize).toHaveBeenCalledWith('Hello there.', 'comedian', { speed: 1.2 })
+    expect(mutableEngine.synthesize).toHaveBeenCalledWith('Hello there.', 'comedian', { speed: 1.2 })
     expect(audio).toBeInstanceOf(Float32Array)
     expect(audio.length).toBe(3)
+    // Live getter must reflect the worker rate after synthesize resolves
+    expect(adapter.sampleRate).toBe(48000)
   })
 
   it('unwraps the richer SynthesisResult to a plain Float32Array (SpeechQueue/PrerenderCoordinator contract)', async () => {

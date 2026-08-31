@@ -9,10 +9,11 @@ import type { SynthesisOptions, TtsEngine } from './AudioEngine';
  * pipeline without touching its call sites.
  */
 export class OptimizedAudioEngineAdapter implements TtsEngine {
-    readonly sampleRate: number;
+    constructor(private readonly engine: OptimizedAudioEngine = new OptimizedAudioEngine()) {}
 
-    constructor(private readonly engine: OptimizedAudioEngine = new OptimizedAudioEngine()) {
-        this.sampleRate = engine.sampleRate;
+    /** Live rate from the wrapped engine (updated on each worker synthesis-success). */
+    get sampleRate(): number {
+        return this.engine.sampleRate;
     }
 
     public async init(modelPath?: string): Promise<void> {
@@ -25,6 +26,7 @@ export class OptimizedAudioEngineAdapter implements TtsEngine {
         options: SynthesisOptions = {},
     ): Promise<Float32Array> {
         const result = await this.engine.synthesize(text, speakerId, options);
+        // Engine.sampleRate is updated before synthesize resolves; SpeechQueue reads it at play time.
         return result.audioData;
     }
 

@@ -21,6 +21,8 @@ export class SpeechQueue {
     private audioCache = new Map<string, Promise<Float32Array>>();
     /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
     private cacheEpoch = 0;
+    /** One-shot diagnostic for TTS buffer tagging (issue #332). */
+    private loggedBufferRate = false;
 
     constructor(audioEngine: TtsEngine) {
         this.audioEngine = audioEngine;
@@ -64,7 +66,17 @@ export class SpeechQueue {
 
         // Legacy AudioEngine doesn't expose sampleRate — keep its historical (44.1kHz) buffer
         // rate unchanged; engines that report a real rate (e.g. OptimizedAudioEngineAdapter) use it.
+        // Never hardcode 24000 here — stamp whatever the engine last received from the worker.
         const sampleRate = this.audioEngine.sampleRate ?? 44100;
+        if (!this.loggedBufferRate) {
+            this.loggedBufferRate = true;
+            console.log('[TTS buffer]', {
+                samples: audioData.length,
+                taggedHz: sampleRate,
+                ctxHz: this.audioContext.sampleRate,
+                secondsIfTagged: +(audioData.length / sampleRate).toFixed(2),
+            });
+        }
         const buffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
         buffer.copyToChannel(audioData as any, 0);
 
