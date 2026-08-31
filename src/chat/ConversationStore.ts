@@ -55,6 +55,27 @@ export class ConversationStore {
     this.history.push({ role: 'assistant', content })
   }
 
+  /** Replace the most recent user prompt (used for empty-turn retry). */
+  replaceLastUser(content: string): boolean {
+    for (let i = this.history.length - 1; i >= 0; i--) {
+      if (this.history[i].role === 'user') {
+        this.history[i] = { role: 'user', content }
+        return true
+      }
+    }
+    return false
+  }
+
+  /** Drop an unanswered user prompt so empty/emoji replies never enter history. */
+  popLastIfUser(): boolean {
+    const last = this.history[this.history.length - 1]
+    if (last?.role === 'user') {
+      this.history.pop()
+      return true
+    }
+    return false
+  }
+
   addTurn(userMessage: string, assistantResponse: string): void {
     this.appendUser(userMessage)
     this.appendAssistant(assistantResponse)

@@ -19,6 +19,7 @@ import {
     estimateSceneTurnBudget,
 } from './sceneArc';
 import type { SceneArcState } from './sceneArc';
+import { isVicunaModel } from '../chat/speakableText';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -525,10 +526,11 @@ export class Director {
 
     private calculatePacing() {
         const roll = Math.random();
+        const punchlineTokens = isVicunaModel(this.manager.getLoadedModelId()) ? 96 : 60;
         if (roll > 0.7) {
             return {
                 type: 'punchline',
-                maxTokens: 60,
+                maxTokens: punchlineTokens,
                 ttsSteps: 25,
                 promptSuffix: ' (Reply with a single, joking sentence. Be very brief. No emojis.)'
             };
