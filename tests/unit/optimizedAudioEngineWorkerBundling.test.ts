@@ -21,3 +21,18 @@ describe('OptimizedAudioEngine worker construction', () => {
     expect(source).toMatch(/new Worker\(\s*new URL\(/)
   })
 })
+
+describe('tts.worker native sample-rate grounding (#332)', () => {
+  const workerSource = fs.readFileSync(
+    path.join(__dirname, '../../src/audio/worker/tts.worker.ts'),
+    'utf8',
+  )
+
+  it('resolves playback Hz from wav.length/duration instead of trusting tts.json alone', () => {
+    expect(workerSource).toMatch(/resolveTtsNativeSampleRate/)
+    expect(workerSource).toMatch(/console\.log\('\[TTS rate\]'/)
+    // Latent sizing may still read config.ae.sample_rate; the posted rate must not.
+    expect(workerSource).toMatch(/sampleRate:\s*playbackHz/)
+    expect(workerSource).not.toMatch(/sampleRate:\s*sr\b/)
+  })
+})

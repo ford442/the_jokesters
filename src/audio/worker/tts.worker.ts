@@ -5,6 +5,7 @@
  */
 
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
+import { resolveTtsNativeSampleRate } from '../ttsNativeSampleRate';
 
 // --- Types ---
 export interface WorkerInitMessage {
@@ -515,6 +516,17 @@ async function handleSynthesize(msg: WorkerSynthesizeMessage) {
         const wav = vocoderOut.wav_tts.data as Float32Array;
         phaseTimings.vocoderMs = performance.now() - vocoderStart;
 
+        // tts.json ae.sample_rate is a claim. Ground truth is wav.length / duration
+        // (duration-predictor seconds). Stamp the snapped empirical rate when they
+        // disagree by >5% — a wrong JSON rate makes playback slower/faster, not "close".
+        const configHz = config.ae.sample_rate;
+        const { empiricalHz, nativeHz, sampleRate: playbackHz } = resolveTtsNativeSampleRate(
+            configHz,
+            wav.length,
+            duration,
+        );
+        console.log('[TTS rate]', { configHz, empiricalHz, nativeHz, samples: wav.length, duration });
+
         // Generate visemes with lookahead
         const visemes = predictVisemes(text, duration);
 
@@ -530,7 +542,7 @@ async function handleSynthesize(msg: WorkerSynthesizeMessage) {
         self.postMessage({
             type: 'synthesis-success',
             audioData: wav,
-            sampleRate: sr,
+            sampleRate: playbackHz,
             duration,
             visemes,
             latency: {

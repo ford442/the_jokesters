@@ -73,10 +73,9 @@ export class OptimizedAudioEngine {
     private onVisemeCallbacks: VisemeCallback[] = [];
     private onErrorCallbacks: ErrorCallback[] = [];
 
-    // Placeholder until the first worker synthesis-success supplies config.ae.sample_rate.
+    // Placeholder until the first worker synthesis-success supplies the vocoder-grounded rate.
     // Never stamp createBuffer with this unless the worker actually sent 24000.
     public sampleRate = 24000;
-    private loggedWorkerSampleRate = false;
 
     constructor() {}
 
@@ -317,14 +316,12 @@ export class OptimizedAudioEngine {
 
         this.pendingRequests.delete(msg.requestId);
 
-        // Plumb vocoder rate from the worker before resolve so SpeechQueue stamps
-        // createBuffer with the same Hz that produced this PCM.
+        // Plumb vocoder-grounded rate from the worker before resolve so SpeechQueue
+        // stamps createBuffer with the same Hz that produced this PCM. Never use
+        // audioContext.sampleRate — the worker already preferred nativeHz over tts.json
+        // when they disagree.
         if (typeof msg.sampleRate === 'number' && msg.sampleRate > 0) {
             this.sampleRate = msg.sampleRate;
-            if (!this.loggedWorkerSampleRate) {
-                this.loggedWorkerSampleRate = true;
-                console.log(`[TTS rate] workerHz=${msg.sampleRate} engineHz=${this.sampleRate}`);
-            }
         }
 
         const result: SynthesisResult = {

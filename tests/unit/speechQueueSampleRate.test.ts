@@ -96,4 +96,62 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
 
     expect(createBufferCalls[0]?.sampleRate).toBe(44100)
   })
+
+  it('stamps engine.sampleRate even when audioContext.sampleRate differs (never ctx Hz, never playbackRate)', async () => {
+    const playbackRates: unknown[] = []
+
+    class TrackingSource {
+      buffer: unknown = null
+      onended: (() => void) | null = null
+      connect() {}
+      start() {
+        queueMicrotask(() => this.onended?.())
+      }
+      stop() {}
+      set playbackRate(value: unknown) {
+        playbackRates.push(value)
+      }
+    }
+
+    // Rebuild AudioContext so createBufferSource is the tracking one.
+    class FakeAudioContext {
+      state = 'running'
+      sampleRate = 48000
+      destination = {}
+      createGain() {
+        return { gain: { value: 1 }, connect() {}, disconnect() {} }
+      }
+      createBuffer(channels: number, length: number, sampleRate: number) {
+        createBufferCalls.push({ channels, length, sampleRate })
+        return { copyToChannel() {} }
+      }
+      createBufferSource() {
+        return new TrackingSource()
+      }
+      resume = vi.fn(async () => {})
+    }
+
+    vi.stubGlobal('AudioContext', FakeAudioContext)
+    vi.stubGlobal('webkitAudioContext', FakeAudioContext)
+    vi.stubGlobal('window', {
+      AudioContext: FakeAudioContext,
+      webkitAudioContext: FakeAudioContext,
+    })
+
+    const engine: TtsEngine = {
+      sampleRate: 24000,
+      init: async () => {},
+      synthesize: async () => new Float32Array(0),
+    }
+
+    const queue = new SpeechQueue(engine)
+    queue.add(new Float32Array(24000))
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(createBufferCalls[0]?.sampleRate).toBe(24000)
+    expect(createBufferCalls[0]?.sampleRate).not.toBe(48000)
+    expect(playbackRates).toEqual([])
+  })
 })
