@@ -244,7 +244,6 @@ export class GroupChatManager {
       if (!isSpeakableText(cleaned)) {
         const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
         this.patchLastUserMessage(chatMessages, retryPrompt)
-        this.conversation.replaceLastUser(retryPrompt)
         const retryTokens = retryMaxTokens(
           effectiveMaxTokens,
           this.maxTokensPerTurn,
@@ -562,7 +561,6 @@ export class GroupChatManager {
         if (!isSpeakableText(cleaned)) {
           promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
           this.patchLastUserMessage(chatMessages, promptForTurn)
-          this.conversation.replaceLastUser(promptForTurn)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,

@@ -28,7 +28,7 @@ export class OptimizedSpeechQueue {
     private destinationNode: AudioNode;
     
     // Preloading
-    private preloadedAudio: Map<string, Float32Array> = new Map();
+    private preloadedAudio: Map<string, { audioData: Float32Array, sampleRate: number }> = new Map();
     private isPreloading = false;
     
     // Viseme callbacks
@@ -173,7 +173,9 @@ export class OptimizedSpeechQueue {
 
         // Check if preloaded
         const cacheKey = `${utterance.speakerId}:${utterance.text}`;
-        let audioData = this.preloadedAudio.get(cacheKey);
+        const preloaded = this.preloadedAudio.get(cacheKey);
+        let audioData = preloaded?.audioData;
+        let sampleRate = preloaded?.sampleRate;
         let visemes: Viseme[] | undefined;
 
         if (!audioData) {
@@ -186,6 +188,7 @@ export class OptimizedSpeechQueue {
                     { steps: 10 }
                 );
                 audioData = result.audioData;
+                sampleRate = result.sampleRate;
                 visemes = result.visemes;
                 
                 console.log(`[SpeechQueue] Synthesized "${utterance.text.substring(0, 30)}" in ${(performance.now() - startTime).toFixed(1)}ms`);
@@ -205,12 +208,10 @@ export class OptimizedSpeechQueue {
         }
 
         // Play audio
-        await this.playAudio(audioData, visemes);
+        await this.playAudio(audioData, sampleRate!, visemes);
     }
 
-    private async playAudio(audioData: Float32Array, visemes?: Viseme[]): Promise<void> {
-        // Use the engine's worker-reported rate — never hardcode 24000.
-        const sampleRate = this.engine.sampleRate;
+    private async playAudio(audioData: Float32Array, sampleRate: number, visemes?: Viseme[]): Promise<void> {
         const buffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
         buffer.getChannelData(0).set(audioData);
 
@@ -246,7 +247,7 @@ export class OptimizedSpeechQueue {
                 { steps: 10 }
             );
             
-            this.preloadedAudio.set(cacheKey, result.audioData);
+            this.preloadedAudio.set(cacheKey, { audioData: result.audioData, sampleRate: result.sampleRate });
             utterance.visemes = result.visemes;
             
             console.log(`[SpeechQueue] Preloaded "${utterance.text.substring(0, 30)}"`);
