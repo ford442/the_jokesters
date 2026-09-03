@@ -208,7 +208,7 @@ export class OptimizedSpeechQueue {
         }
 
         // Play audio
-        await this.playAudio(audioData, sampleRate!, visemes);
+        await this.playAudio(audioData, sampleRate ?? this.engine.sampleRate, visemes);
     }
 
     private async playAudio(audioData: Float32Array, sampleRate: number, visemes?: Viseme[]): Promise<void> {
