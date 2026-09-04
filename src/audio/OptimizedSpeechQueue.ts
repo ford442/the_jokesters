@@ -188,7 +188,7 @@ export class OptimizedSpeechQueue {
                     { steps: 10 }
                 );
                 audioData = result.audioData;
-                sampleRate = result.sampleRate;
+                sampleRate = result.sampleRate ?? this.engine.sampleRate;
                 visemes = result.visemes;
                 
                 console.log(`[SpeechQueue] Synthesized "${utterance.text.substring(0, 30)}" in ${(performance.now() - startTime).toFixed(1)}ms`);
@@ -208,7 +208,7 @@ export class OptimizedSpeechQueue {
         }
 
         // Play audio
-        await this.playAudio(audioData, sampleRate!, visemes);
+        await this.playAudio(audioData, sampleRate ?? this.engine.sampleRate, visemes);
     }
 
     private async playAudio(audioData: Float32Array, sampleRate: number, visemes?: Viseme[]): Promise<void> {
@@ -247,7 +247,7 @@ export class OptimizedSpeechQueue {
                 { steps: 10 }
             );
             
-            this.preloadedAudio.set(cacheKey, { audioData: result.audioData, sampleRate: result.sampleRate });
+            this.preloadedAudio.set(cacheKey, { audioData: result.audioData, sampleRate: result.sampleRate ?? this.engine.sampleRate });
             utterance.visemes = result.visemes;
             
             console.log(`[SpeechQueue] Preloaded "${utterance.text.substring(0, 30)}"`);
