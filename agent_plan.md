@@ -3,10 +3,10 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 4
+tasks_per_run: 1
 
 ## Project Velocity Feedback
-Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 4` for a consistent, sustainable pace.
+Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 1` for a consistent, sustainable pace.
 Today was low friction so increased tasks_per_run to 4.
 Decreasing to 1 task for focus on the Sentient Microwave mode.
 
@@ -354,7 +354,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 
 ### C. Self-Regulation
-- **Project Velocity:** Maintained tasks_per_run: 4 due to smooth implementation.
+- **Project Velocity:** Maintained tasks_per_run: 1 due to smooth implementation.
 
 ### E. New Dream Phase Ideas
 - **New Mode Ideas:**

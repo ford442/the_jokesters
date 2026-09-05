@@ -578,6 +578,7 @@ export class GroupChatManager {
 
         if (!isSpeakableText(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
+          this.conversation.popLastIfUser()
           this.conversation.advanceAgent()
           currentPrompt = '(Reply naturally to the last thing said)'
           continue
