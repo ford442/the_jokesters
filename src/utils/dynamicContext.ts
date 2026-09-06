@@ -34,7 +34,7 @@ export interface DynamicModelConfig {
   model: string;
   model_lib: string;
   /** Generic 4K .wasm used when custom model_lib is not yet hosted on VPS */
-  model_lib_fallback?: string;
+
   hf_fallback_url?: string;
   overrides?: Record<string, unknown>;
   vram_required_MB?: number;
@@ -559,16 +559,8 @@ export async function loadModelWithDynamicContext(
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
 ): Promise<webllm.MLCEngine> {
 
-  const { url: resolvedModelLib, usedFallback, compiledMaxContext } =
-    await resolveModelLibUrl(modelConfig.model_lib, modelConfig.model_lib_fallback);
-
-  if (usedFallback) {
-    onProgress?.({
-      progress: 0,
-      timeElapsed: 0,
-      text: 'Custom WASM not hosted yet — using generic 4K runtime (higher peak VRAM)…',
-    });
-  }
+  const { url: resolvedModelLib, compiledMaxContext } =
+    await resolveModelLibUrl(modelConfig.model_lib);
 
   // Determine context size
   let contextSize: number;

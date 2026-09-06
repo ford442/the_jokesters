@@ -112,7 +112,6 @@ export const VPS_FP32_MODELS = {
     model_id: "vicuna-7b-q4f32-webllm-ctx512",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
     model_lib: WASM_LIBS.VICUNA_7B_CTX512,
-    model_lib_fallback: WASM_LIBS.LLAMA2_7B_CTX4K,
     compiled_max_context: 512,
     overrides: {
       context_window_size: 512,
@@ -137,7 +136,6 @@ export const VPS_FP32_MODELS = {
     model_id: "vicuna-7b-q4f32-webllm-ctx1024",
     model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
     model_lib: WASM_LIBS.VICUNA_7B_CTX1024,
-    model_lib_fallback: WASM_LIBS.LLAMA2_7B_CTX4K,
     compiled_max_context: 1024,
     overrides: {
       context_window_size: 1024,
@@ -455,7 +453,6 @@ function buildModelList(): any[] {
       model: config.model,
       model_id: config.model_id,
       model_lib: config.model_lib,
-      model_lib_fallback: config.model_lib_fallback,
       compiled_max_context: config.compiled_max_context,
       overrides: config.overrides,
       vram_required_MB: config.vram_required_MB,
