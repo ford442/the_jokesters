@@ -31,7 +31,7 @@ Prioritize these over new premises. **Do not add Dream modes until Vicuna load r
 | Area | Goal |
 |------|------|
 | **Vicuna / model load (P0)** | [#302](https://github.com/ford442/the_jokesters/issues/302) dual-domain striped chunks · [#303](https://github.com/ford442/the_jokesters/issues/303) paid CDN eval · [#304](https://github.com/ford442/the_jokesters/issues/304) HF dedicated failover |
-| **VRAM / compile (P1)** | [#305](https://github.com/ford442/the_jokesters/issues/305) ship ctx512/1024 `model_lib` (closes gap in [#216](https://github.com/ford442/the_jokesters/issues/216)); ADR 0001 — TS-first, no C++ thrash |
+| **VRAM / compile (P1)** | [x] [#305](https://github.com/ford442/the_jokesters/issues/305) ship ctx512/1024 `model_lib` (closes gap in [#216](https://github.com/ford442/the_jokesters/issues/216)); ADR 0001 — TS-first, no C++ thrash |
 | **Download stack (P1)** | [#306](https://github.com/ford442/the_jokesters/issues/306) unify SW vs `ParallelDownloadManager`, load diagnostics, align blessed/fallback ladders |
 | **Live show (P3, gated)** | [#307](https://github.com/ford442/the_jokesters/issues/307) local party-mode MVP after load foundation — [LIVE_SHOW_VISION.md](./docs/LIVE_SHOW_VISION.md) |
 | **Mode registry** | Keep `MODE_REGISTRY` / `validateRegistry` healthy; split god-files [#289](https://github.com/ford442/the_jokesters/issues/289) [#290](https://github.com/ford442/the_jokesters/issues/290) |
