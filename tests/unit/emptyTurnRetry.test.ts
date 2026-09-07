@@ -47,7 +47,7 @@ describe('empty-turn retry / skip', () => {
 
     expect(result.response).toBe('')
     expect(spoken).toEqual([])
-    expect(manager.getHistory()).toEqual([])
+    expect(manager.getHistory()).toEqual([{ role: 'user', content: '(Reply naturally to the last thing said)' }])
     expect(manager.getCurrentAgent().id).not.toBe(firstAgent)
     expect(engine.chatCalls).toHaveLength(2)
   })

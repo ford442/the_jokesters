@@ -263,7 +263,6 @@ export class GroupChatManager {
       }
 
       if (!isSpeakableText(cleaned)) {
-        this.conversation.popLastIfUser()
         this.conversation.advanceAgent()
         console.warn(
           `[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry — rotating to ${this.conversation.getCurrentAgent().id}`,
