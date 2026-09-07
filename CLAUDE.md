@@ -74,6 +74,11 @@ npm run perf:quick
 | `WebGPU not supported` | Chrome/Edge 113+; or use llama.cpp blessed preset |
 | Model 404 `/resolve/main/` | VPS rewrites must be installed (`installVpsStorageRewrites`) |
 
+## Known issues / blockers
+
+- Repo gets pushed to by many parallel automated branches (`jules-*`, `claude/*`, `checkin-sprint-*`). `git pull --ff-only` before starting — this checkout was found 20 commits behind on 2026-09-07 with no local changes, which had made two already-fixed "file too big" issues (`registryCatalog.ts`, `DreamModes_Sentient.ts`, now split into `.partN.ts` files) look unresolved.
+- Seven ad-hoc `patch_*.py` regex scripts live at repo root, outside `scripts/` — not part of any npm script, safe to ignore or delete but worth confirming before running one against current source.
+
 ## Deployment
 
 ```bash
