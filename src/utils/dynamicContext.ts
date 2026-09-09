@@ -33,8 +33,6 @@ export interface DynamicModelConfig {
   model_id: string;
   model: string;
   model_lib: string;
-  /** Generic 4K .wasm used when custom model_lib is not yet hosted on VPS */
-
   hf_fallback_url?: string;
   overrides?: Record<string, unknown>;
   vram_required_MB?: number;
@@ -419,8 +417,7 @@ export function alignPrefillChunkSize(contextSize: number, prefillChunkSize: num
  */
 export async function resolveModelLibUrl(
   modelLib: string,
-  fallbackModelLib?: string,
-): Promise<{ url: string; usedFallback: boolean; compiledMaxContext: number | null }> {
+): Promise<{ url: string; compiledMaxContext: number | null }> {
   const probe = async (url: string): Promise<boolean> => {
     try {
       const resp = await fetch(url, { method: 'HEAD' });
@@ -433,27 +430,13 @@ export async function resolveModelLibUrl(
   if (await probe(modelLib)) {
     return {
       url: modelLib,
-      usedFallback: false,
       compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
-    };
-  }
-
-  if (fallbackModelLib && fallbackModelLib !== modelLib && (await probe(fallbackModelLib))) {
-    console.warn(
-      `[DynamicContext] Custom model_lib not hosted (${modelLib}) — ` +
-      `using fallback ${fallbackModelLib}`
-    );
-    return {
-      url: fallbackModelLib,
-      usedFallback: true,
-      compiledMaxContext: parseCompiledMaxContextFromModelLib(fallbackModelLib),
     };
   }
 
   console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
   return {
     url: modelLib,
-    usedFallback: false,
     compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
   };
 }

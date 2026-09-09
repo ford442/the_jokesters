@@ -104,7 +104,6 @@ export const VPS_FP32_MODELS = {
    * Vicuna-7B with custom 512-context model_lib
    * - model_lib: vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm (TVM plan baked for 512)
    * - overrides.context_window_size: 512 (must match compiled max)
-   * - model_lib_fallback: generic Llama-2 ctx4k .wasm until VPS hosts custom artifact
    * - VRAM: ~3.2 GB peak (vs ~3.5 GB with JS-only overrides on generic .wasm)
    * - Build: CONTEXT_SIZE=512 ./scripts/build-vicuna-wasm.sh
    */
