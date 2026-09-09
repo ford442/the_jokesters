@@ -54,7 +54,7 @@ CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
 | `vicuna-7b-q4f32-webllm-ctx1024` | **custom ctx1024** | 1024 | **~3.6 GB** |
 | `Hermes-3-Llama-3.2-3B-q4f32_1-MLC` | Llama-3.2 ctx4k | 4096 | ~2.5 GB |
 
-`loadModelWithDynamicContext()` HEAD-probes custom `.wasm` URLs and falls back to generic ctx4k with a user-visible warning until the artifact is hosted.
+`loadModelWithDynamicContext()` HEAD-probes custom `.wasm` URLs and expects them to be hosted natively without silent fallbacks.
 
 ## Context creation checklist
 
@@ -64,7 +64,7 @@ When calling `CreateMLCEngine`:
 - [ ] `overrides.context_window_size` ≤ compiled max (parsed from filename `ctx{N}`)
 - [ ] `prefill_chunk_size` ≤ context and power-of-two friendly
 - [ ] Sliding window only on generic ctx4k `.wasm` presets (not custom low-ctx `.wasm`)
-- [ ] Fallback chain: full Vicuna → ctx1024 → ctx512 → Hermes 3B → ultra-low JS preset
+- [x] Fallback chain: full Vicuna → ctx1024 → ctx512 → Hermes 3B → ultra-low JS preset
 
 ## Benchmarking peak VRAM (≤4 GB hardware)
 

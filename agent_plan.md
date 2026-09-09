@@ -42,7 +42,7 @@ Prioritize these over new premises. **Do not add Dream modes until Vicuna load r
 | **Tests + typecheck** | CI green (`npm run typecheck`, `npm test`); no silent debt |
 | **Context accuracy** | VRAM probe, memory depth, blessed presets, real download estimates |
 
-Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs **404** on VPS while weights + Llama-2 ctx4k lib exist — silent `model_lib_fallback` undoes low-VRAM presets. See [docs/FOUNDATION_NEXT.md](./docs/FOUNDATION_NEXT.md).
+Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly pointed to VPS without any silent `model_lib_fallback` mechanism. The application successfully loads the low-VRAM specific WASM or loudly fails if not present. See [docs/FOUNDATION_NEXT.md](./docs/FOUNDATION_NEXT.md).
 
 ## Implementation Roadmap
 
