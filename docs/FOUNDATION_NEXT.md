@@ -19,7 +19,7 @@ Strategic takeaway: **build load / VRAM / download foundation before more conten
 
 ## Org / debt (non-blocking but real)
 
-- Oversized: `registryCatalog.ts`, `DreamModes_Sentient.ts` ([#289](https://github.com/ford442/the_jokesters/issues/289), [#290](https://github.com/ford442/the_jokesters/issues/290))
+- Oversized: `DreamModes_Sentient.ts` ([#290](https://github.com/ford442/the_jokesters/issues/290)) — `registryCatalog.ts` ([#289](https://github.com/ford442/the_jokesters/issues/289)) resolved by splitting into `registryCatalog.partN.ts` partitions behind a thin barrel
 - `ParallelDownloadManager` mostly unused; SW owns parallel Range downloads
 - Doc drift: `PARALLEL_DOWNLOADS.md`, blessed vs `getRecommendedModel` thresholds
 

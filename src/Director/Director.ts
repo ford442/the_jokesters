@@ -19,6 +19,7 @@ import {
     estimateSceneTurnBudget,
 } from './sceneArc';
 import type { SceneArcState } from './sceneArc';
+import { isVicunaModel } from '../chat/speakableText';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -345,6 +346,7 @@ export class Director {
         }
 
         this.currentScenario = scenario;
+        if (this.memoryManager) { await this.memoryManager.fetchPreviousEpisodeSummaries(scenario.title).catch(e => console.error("Failed to fetch previous summaries:", e)); }
         this.isRunning = true;
         this.interruptQueue = [];
         this.manager.resetConversation();
@@ -452,6 +454,10 @@ export class Director {
                         },
                     });
                     setLastEpisode(episode);
+                    if (this.memoryManager && history.length > 0) {
+                        const scriptBeats = history.map(m => ({ speaker: m.role, line: m.content }));
+                        this.memoryManager.saveEpisodeScriptToCloud(scriptBeats, id).catch(e => console.error('Failed to save episode script to cloud:', e));
+                    }
                     this.episodeReadyHandler?.(episode);
 
                     this.callbacks.onMessage('System', `💾 Episode auto-saved (ID: ${id}) — export ready`, '#4ecdc4');
@@ -525,10 +531,11 @@ export class Director {
 
     private calculatePacing() {
         const roll = Math.random();
+        const punchlineTokens = isVicunaModel(this.manager.getLoadedModelId()) ? 96 : 60;
         if (roll > 0.7) {
             return {
                 type: 'punchline',
-                maxTokens: 60,
+                maxTokens: punchlineTokens,
                 ttsSteps: 25,
                 promptSuffix: ' (Reply with a single, joking sentence. Be very brief. No emojis.)'
             };

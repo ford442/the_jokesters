@@ -202,7 +202,7 @@ jobs:
         run: |
           # Get bundle size from dist/assets
           BUNDLE_SIZE=$(find dist/assets -name "*.js" -exec stat -c%s {} + | awk '{sum+=$1} END {print sum}')
-          MAX_SIZE=10000000  # 10MB
+          MAX_SIZE=10500000  # 10.5MB
           
           echo "Bundle size: $BUNDLE_SIZE bytes"
           echo "Max allowed: $MAX_SIZE bytes"

@@ -47,11 +47,12 @@ Pursue custom C++/compile work **only if** one of these is **measured** (logs, O
 | Need ops not present in stock web-llm JS | Prefer **web-llm JS fork** (`3rd_party/web-llm` + `scripts/build-webllm.sh`) before forking mlc-llm/TVM | [webllm-customization-plan.md](../webllm-customization-plan.md) |
 | Need ops not in stock **model_lib** WASM | Fork mlc-llm / TVM schedules (**high cost** — requires explicit green-light metrics below) | Out of tree; not committed here |
 | CPU fallback quality/speed insufficient | (1) Fix **wllama version pin** + `npm run verify:wllama`; (2) only then optional custom llama.cpp build | **#119**, `scripts/verify_wllama_wasm.sh`, `scripts/wllama-wasm.manifest.json` |
-| Multimodal Kimi-VL / audio | Separate research track; **must not** block comedy core | Optional API / experimental engines only |
+| Probe ggml-org llama.cpp **WASM + WebGPU** (Emscripten / Dawn `emdawnwebgpu`) | Optional out-of-tree compile only; **do not** feed artifacts to `LlamaCppEngineAdapter` | [`scripts/build-llama-wasm-webgpu.sh`](../../scripts/build-llama-wasm-webgpu.sh), [`.github/workflows/build-llama-wasm-webgpu.yml`](../../.github/workflows/build-llama-wasm-webgpu.yml) (`workflow_dispatch`). A **runtime** engine still needs track **B** metrics. |
+| Multimodal Kimi-VL / audio | Separate research track; **must not** block comedy core | Optional API / experimental engines only — **not** the WASM+WebGPU llama.cpp path (mtmd is native-oriented) |
 
 ### Official “native artifact” path (Vicuna small-context WASM)
 
-This is the **only** first-class, documented native compile pipeline for product needs today:
+This is the **only** first-class, documented native compile pipeline for product needs today. An **experimental** ggml-org llama.cpp WASM+WebGPU compile (`scripts/build-llama-wasm-webgpu.sh`) exists for research; it is not a product engine and does not replace Vicuna `model_lib` or `@wllama/wllama`.
 
 | Artifact | How |
 |----------|-----|
@@ -101,6 +102,7 @@ Until then: prefer **smaller blessed models**, **JS VRAM overrides**, **existing
 |-------|------|
 | Vicuna / small-context WASM issue family | [WASM_CONTEXT_GUIDE.md](../WASM_CONTEXT_GUIDE.md), `scripts/build-vicuna-wasm.sh`, Colab `public/Jokesters_WebLLM_Compile.ipynb` |
 | llama.cpp / wllama source & pin | GitHub **#119**, `scripts/verify_wllama_wasm.sh`, `package.json` `@wllama/wllama` |
+| Experimental ggml-org WASM+WebGPU compile | `scripts/build-llama-wasm-webgpu.sh` — not wired into product engines |
 | web-llm JS customization (prefer before C++) | [webllm-customization-plan.md](../webllm-customization-plan.md) |
 | VRAM JS stack | [VRAM_OPTIMIZATION_IMPLEMENTATION.md](../VRAM_OPTIMIZATION_IMPLEMENTATION.md) |
 | Scripts inventory | [scripts/README.md](../../scripts/README.md) |

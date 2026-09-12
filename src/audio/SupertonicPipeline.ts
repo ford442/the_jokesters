@@ -1,6 +1,7 @@
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import { RNG } from '../utils/RNG';
 import { VPS_STORAGE_URL } from '../utils/vpsStorageUrl';
+import { SUPERTONIC_NATIVE_SAMPLE_RATE, trimVocoderPcm } from './ttsNativeSampleRate';
 
 // Note: We do NOT import 'onnxruntime-web' at the top level. 
 // This prevents Vite from pre-bundling the worker logic that looks for .mjs files.
@@ -79,7 +80,7 @@ export class SupertonicPipeline {
     private vectorEstOrt!: InferenceSession;
     private vocoderOrt!: InferenceSession;
 
-    public sampleRate: number = 24000;
+    public sampleRate: number = SUPERTONIC_NATIVE_SAMPLE_RATE;
 
     async init(modelPath: string) {
         // 1. DYNAMIC IMPORT (Just like the other project)
@@ -261,9 +262,10 @@ export class SupertonicPipeline {
             currentXt = new this.ort.Tensor('float32', denoisedData, currentXt.dims);
         }
 
-        // Vocoder
+        // Vocoder — trim ceil-to-chunk padding so playback length matches DP seconds
         const vocoderOut = await this.vocoderOrt.run({ latent: currentXt });
-        const wav = vocoderOut.wav_tts.data as Float32Array;
+        const rawWav = vocoderOut.wav_tts.data as Float32Array;
+        const wav = trimVocoderPcm(rawWav, duration[0], this.sampleRate);
 
         return { wav, duration: duration[0] };
     }

@@ -19,6 +19,7 @@ import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 import { getSharedSfxManager } from '../audio/SfxManager'
+import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
 
 export interface ImprovControllerDeps {
   agents: Agent[]
@@ -34,12 +35,12 @@ export interface ImprovControllerDeps {
   getDirector: () => Director | null
 }
 
-function calculatePacing() {
+function calculatePacing(modelId: string | null) {
   const roll = Math.random()
   if (roll > 0.7) {
     return {
       type: 'punchline',
-      maxTokens: 48,
+      maxTokens: isVicunaModel(modelId) ? 96 : 48,
       ttsSteps: 25,
       promptSuffix: ' (One joking sentence. Be brief.)',
     }
@@ -105,6 +106,11 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     const agent = agents.find(a => a.id === turn.agentId)
     if (!agent) {
       console.warn('[Prerender] Unknown agent', turn.agentId)
+      return
+    }
+
+    if (!isSpeakableText(turn.response)) {
+      console.warn('[Prerender] Skipping unspeakable queued turn', turn.agentId, turn.response)
       return
     }
 
@@ -190,7 +196,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     try {
       coordinator.markLiveSource()
       const turnStart = coordinator.markTurnStart()
-      const pacing = calculatePacing()
+      const pacing = calculatePacing(groupChatManager.getLoadedModelId())
       console.log(`[Director] Live turn · pacing: ${pacing.type}`)
 
       const currentAgentId = groupChatManager.getCurrentAgent().id
@@ -217,7 +223,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       let reacted = false
       let firstAudio = true
 
-      await groupChatManager.chat(effectivePrompt, (sentence) => {
+      const result = await groupChatManager.chat(effectivePrompt, (sentence) => {
         if (!clearedThinking) {
           stage.setThinking(currentAgentId, false)
           stage.setActiveActor(currentAgentId)
@@ -264,6 +270,19 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         }
         chatLogEl.scrollTop = chatLogEl.scrollHeight
       }, { maxTokens: pacing.maxTokens, seed: turnSeed, hiddenInstruction: silentCritique })
+
+      if (!result.response) {
+        messageDiv.remove()
+        stage.setThinking(currentAgentId, false)
+        coordinator.markTurnEnd()
+        updateNextAgentUI(groupChatManager)
+        updateVRAMInfoBar(groupChatManager)
+        refreshHud()
+        if (isImprovRunning) {
+          coordinator.refillInBackground('(Reply naturally to the last thing said)')
+        }
+        return
+      }
 
       stage.setThinking(currentAgentId, false)
       if (!reacted && sentenceBuffer.length > 0) {

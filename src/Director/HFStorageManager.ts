@@ -197,4 +197,26 @@ export class HFStorageManager {
             return [];
         }
     }
+
+    public async saveCustomSFX(token: string, repoId: string, sfxName: string, base64Content: string): Promise<void> {
+        // stub: In the future this will upload SFX audio blobs to the cloud
+        console.log(`[HFStorageManager] Stub: Saving custom SFX ${sfxName} to ${repoId}`);
+    }
+
+    public async loadCustomSFX(token: string, repoId: string, sfxName: string): Promise<string | null> {
+        // stub: In the future this will download SFX audio blobs from the cloud
+        console.log(`[HFStorageManager] Stub: Loading custom SFX ${sfxName} from ${repoId}`);
+        return null;
+    }
+
+    public async saveHighscore(token: string, repoId: string, modeId: string, score: number): Promise<void> {
+        // stub: In the future this will upload high scores to a dedicated HF space or dataset
+        console.log(`[HFStorageManager] Stub: Saving highscore ${score} for mode ${modeId} to ${repoId}`);
+    }
+
+    public async loadLeaderboard(token: string, repoId: string, modeId: string): Promise<any[]> {
+        // stub: In the future this will download high scores
+        console.log(`[HFStorageManager] Stub: Loading leaderboard for mode ${modeId} from ${repoId}`);
+        return [];
+    }
 }

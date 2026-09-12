@@ -33,8 +33,6 @@ export interface DynamicModelConfig {
   model_id: string;
   model: string;
   model_lib: string;
-  /** Generic 4K .wasm used when custom model_lib is not yet hosted on VPS */
-  model_lib_fallback?: string;
   hf_fallback_url?: string;
   overrides?: Record<string, unknown>;
   vram_required_MB?: number;
@@ -419,8 +417,7 @@ export function alignPrefillChunkSize(contextSize: number, prefillChunkSize: num
  */
 export async function resolveModelLibUrl(
   modelLib: string,
-  fallbackModelLib?: string,
-): Promise<{ url: string; usedFallback: boolean; compiledMaxContext: number | null }> {
+): Promise<{ url: string; compiledMaxContext: number | null }> {
   const probe = async (url: string): Promise<boolean> => {
     try {
       const resp = await fetch(url, { method: 'HEAD' });
@@ -433,27 +430,13 @@ export async function resolveModelLibUrl(
   if (await probe(modelLib)) {
     return {
       url: modelLib,
-      usedFallback: false,
       compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
-    };
-  }
-
-  if (fallbackModelLib && fallbackModelLib !== modelLib && (await probe(fallbackModelLib))) {
-    console.warn(
-      `[DynamicContext] Custom model_lib not hosted (${modelLib}) — ` +
-      `using fallback ${fallbackModelLib}`
-    );
-    return {
-      url: fallbackModelLib,
-      usedFallback: true,
-      compiledMaxContext: parseCompiledMaxContextFromModelLib(fallbackModelLib),
     };
   }
 
   console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
   return {
     url: modelLib,
-    usedFallback: false,
     compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
   };
 }
@@ -559,16 +542,8 @@ export async function loadModelWithDynamicContext(
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
 ): Promise<webllm.MLCEngine> {
 
-  const { url: resolvedModelLib, usedFallback, compiledMaxContext } =
-    await resolveModelLibUrl(modelConfig.model_lib, modelConfig.model_lib_fallback);
-
-  if (usedFallback) {
-    onProgress?.({
-      progress: 0,
-      timeElapsed: 0,
-      text: 'Custom WASM not hosted yet — using generic 4K runtime (higher peak VRAM)…',
-    });
-  }
+  const { url: resolvedModelLib, compiledMaxContext } =
+    await resolveModelLibUrl(modelConfig.model_lib);
 
   // Determine context size
   let contextSize: number;

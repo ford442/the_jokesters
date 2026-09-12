@@ -215,6 +215,8 @@ The Jokesters loads LLM weights at runtime in the user's browser. Three engines 
 
 After bumping `@wllama/wllama`, run `npm run verify:wllama` and update `scripts/wllama-wasm.manifest.json`. VPS-hosted wllama WASM (`wllama-wasm/`) is optional legacy mirror for `download_models_on_vps.py`; the app uses bundled WASM.
 
+**Do not confuse ggml-org llama.cpp WASM+WebGPU with wllama.** `scripts/build-llama-wasm-webgpu.sh` (CI: `build-llama-wasm-webgpu.yml`) produces experimental Emscripten + Dawn artifacts. They are **not** compatible with `@wllama/wllama` JS glue — do not host them under `wllama-wasm/` or pass them to `Wllama()`. Product WebGPU inference stays **MLC WebLLM**. Runtime use of that backend is still gated on ADR 0001 track B.
+
 Model weights are hosted on `storage.1ink.us` (public CDN) with Contabo `storage.noahcohn.com` as origin/failover and HuggingFace as a last-resort path for some models. Self-hosting gives us control over CORS, MIME types, cache headers, and uptime; HF gives us geo-distributed CDN reach. Both VPS paths use the same MLC-compiled q4f32 weights for Vicuna 7B and the same Llama-2 model library `.wasm`.
 
 First-load is ~2–4 GB depending on model size; subsequent loads are instant from IndexedDB cache. The cache is cleared if storage pressure is detected (see `checkStorage()` in `main.ts`).

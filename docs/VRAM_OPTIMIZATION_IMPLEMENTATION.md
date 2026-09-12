@@ -251,7 +251,7 @@ CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
 **When to use:**
 - **CTX512**: GPUs with exactly 4 GB VRAM (e.g., GTX 1650, Intel Arc A380, many laptop iGPUs)
 - **CTX1024**: GPUs with 4–5 GB VRAM where you need a bit more conversation history
-- Keep the generic `.wasm` + override fallback for compatibility if the custom .wasm is not yet hosted
+- Explicitly use the dedicated `.wasm` artifacts and fail fast if missing instead of relying on generic fallback overrides
 
 **Caveats:**
 - The build environment is heavy (30–60 min on a clean machine). Use CI (`build-vicuna-wasm.yml`) or Colab for reproducibility.

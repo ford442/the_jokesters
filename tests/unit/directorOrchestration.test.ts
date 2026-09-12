@@ -148,6 +148,8 @@ describe('Director orchestration', () => {
     const saveEpisode = vi.fn()
     const fakeMemoryManager = {
       saveEpisode,
+      fetchPreviousEpisodeSummaries: vi.fn(async () => {}),
+      saveEpisodeScriptToCloud: vi.fn(async () => {}),
       searchLocalEpisodes: vi.fn(async () => []),
       searchFetchedSummaries: vi.fn(async () => []),
     } as any

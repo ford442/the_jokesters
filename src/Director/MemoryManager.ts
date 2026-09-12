@@ -1026,6 +1026,18 @@ public async fetchPreviousEpisodeSummaries(currentTopic?: string): Promise<void>
 
     return resolved;
   }
+
+  public async syncSFXToCloud(sfxName: string, base64Content: string): Promise<void> {
+    if (this.hfToken && this.hfRepoId) {
+        await this.hfStorage.saveCustomSFX(this.hfToken, this.hfRepoId, sfxName, base64Content);
+    }
+  }
+
+  public async saveHighscoreToCloud(modeId: string, score: number): Promise<void> {
+    if (this.hfToken && this.hfRepoId) {
+        await this.hfStorage.saveHighscore(this.hfToken, this.hfRepoId, modeId, score);
+    }
+  }
 }
 
 /**

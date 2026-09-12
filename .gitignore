@@ -25,6 +25,9 @@ dist-ssr
 *.sw?
 *.backup
 
+# Staged VPS / compile outputs (Vicuna model_lib, llama.cpp WASM+WebGPU, etc.)
+.vps-staging/
+
 # Models and generated ML artifacts (do NOT commit large model files)
 models/
 public/models/

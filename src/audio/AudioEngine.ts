@@ -37,6 +37,11 @@ export class AudioEngine implements TtsEngine {
         this.pipeline = new SupertonicPipeline();
     }
 
+    /** Native vocoder rate from tts.json (44100 for hosted Supertonic). */
+    get sampleRate(): number {
+        return this.pipeline.sampleRate;
+    }
+
     public async init(modelPath: string = './tts/onnx'): Promise<void> {
         try {
             console.log(`AudioEngine: Initializing pipeline from ${modelPath}...`);

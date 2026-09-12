@@ -11,10 +11,11 @@ import { SpeechQueue } from '../audio/SpeechQueue'
 import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
 import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
+import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
 import { agents } from './agents'
 import { getAppTemplate } from './appTemplate'
 import { wireModelPicker } from './modelPicker'
-import { setProgress, setInputsEnabled } from './loadingUi'
+import { setProgress, setInputsEnabled, showVoiceOfflineBanner } from './loadingUi'
 import { renderInitErrorPanel } from './errorPanel'
 import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
@@ -24,11 +25,63 @@ console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.ma
 
 type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
 
+/**
+ * TTS init hits the VPS storage host directly (not proxied through app-server
+ * CORS), so a misconfigured or down origin (e.g. duplicate ACAO headers) fails
+ * the whole `fetch`. Try primary, then fall back to the mirror host — never
+ * both at once, since the engines hold mutable init state (worker, caches)
+ * that a concurrent second `init()` call would clobber. A TTS failure on both
+ * hosts must never block the LLM/stage from booting — voice degrades gracefully.
+ */
+async function initAudioEngineWithFailover(audioEngine: TtsEngine): Promise<boolean> {
+  const primaryPath = `${VPS_STORAGE_URL}/tts/onnx`
+  try {
+    await audioEngine.init(primaryPath)
+    return true
+  } catch (primaryError) {
+    console.warn('[Audio] TTS init failed on primary storage host:', primaryError)
+  }
+
+  if (VPS_STORAGE_MIRROR_ORIGIN !== VPS_STORAGE_ORIGIN) {
+    const mirrorPath = `${VPS_STORAGE_MIRROR_ORIGIN}/models/tts/onnx`
+    try {
+      await audioEngine.init(mirrorPath)
+      console.log('[Audio] TTS init succeeded on mirror storage host')
+      return true
+    } catch (mirrorError) {
+      console.warn('[Audio] TTS init failed on mirror storage host:', mirrorError)
+    }
+  }
+
+  console.warn('[Audio] TTS unavailable on all storage hosts — continuing without voice.')
+  return false
+}
+
 export async function initApp(): Promise<void> {
   const app = document.querySelector<HTMLDivElement>('#app')!
 
   if ('serviceWorker' in navigator) {
     try {
+      // Clean up any stale origin-wide (scope '/') service worker registration from
+      // earlier builds — it intercepts fetches for every app on this shared origin
+      // (test.1ink.us, go.1ink.us), not just this one. Our own registration below is
+      // scoped to /the-jokesters/, so this only ever removes the poisoned root worker.
+      const ownScope = new URL('./', location.href).href
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => {
+          for (const registration of registrations) {
+            if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
+              registration.unregister().then(() => {
+                console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
+              })
+            }
+          }
+        })
+        .catch((error) => {
+          console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
+        })
+
       registerSW({
         onNeedRefresh() {
           console.log('[ServiceWorker] New content available, please refresh.')
@@ -130,7 +183,7 @@ export async function initApp(): Promise<void> {
 
     currentInitState = 'AUDIO'
     setProgress('Initializing Audio Engine...', 25)
-    await audioEngine.init(`${VPS_STORAGE_URL}/tts/onnx`)
+    const voiceAvailable = await initAudioEngineWithFailover(audioEngine)
 
     currentInitState = 'MODEL'
     setProgress('Initializing LLM Engine...', 35)
@@ -162,6 +215,10 @@ export async function initApp(): Promise<void> {
 
     loadingDiv.style.display = 'none'
     chatContainer.style.display = 'flex'
+
+    if (!voiceAvailable) {
+      showVoiceOfflineBanner()
+    }
 
     setInputsEnabled(true)
     userInput.focus()

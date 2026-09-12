@@ -1,5 +1,11 @@
 
 import type { SynthesisOptions, TtsEngine } from './AudioEngine';
+import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
+
+interface QueuedPcm {
+    pcm: Float32Array;
+    sampleRate: number;
+}
 
 function cacheKey(text: string, agentId: string, options: SynthesisOptions): string {
     const steps = options.steps ?? 10;
@@ -9,7 +15,7 @@ function cacheKey(text: string, agentId: string, options: SynthesisOptions): str
 }
 
 export class SpeechQueue {
-    private queue: Float32Array[] = [];
+    private queue: QueuedPcm[] = [];
     private isPlaying = false;
     private audioContext: AudioContext;
     private currentSource: AudioBufferSourceNode | null = null;
@@ -21,6 +27,8 @@ export class SpeechQueue {
     private audioCache = new Map<string, Promise<Float32Array>>();
     /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
     private cacheEpoch = 0;
+    /** One-shot diagnostic for TTS buffer tagging (issue #332). */
+    private loggedBufferRate = false;
 
     constructor(audioEngine: TtsEngine) {
         this.audioEngine = audioEngine;
@@ -48,7 +56,10 @@ export class SpeechQueue {
     }
 
     public add(audioData: Float32Array) {
-        this.queue.push(audioData);
+        // Capture the engine rate at enqueue — playNext is async (AudioContext resume)
+        // and must not re-read a later synth's rate or the 24 kHz placeholder.
+        const sampleRate = this.audioEngine.sampleRate ?? SUPERTONIC_NATIVE_SAMPLE_RATE;
+        this.queue.push({ pcm: audioData, sampleRate });
         this.playNext();
     }
 
@@ -60,11 +71,19 @@ export class SpeechQueue {
         }
 
         this.isPlaying = true;
-        const audioData = this.queue.shift()!;
+        const { pcm: audioData, sampleRate } = this.queue.shift()!;
 
-        // Legacy AudioEngine doesn't expose sampleRate — keep its historical (44.1kHz) buffer
-        // rate unchanged; engines that report a real rate (e.g. OptimizedAudioEngineAdapter) use it.
-        const sampleRate = this.audioEngine.sampleRate ?? 44100;
+        // Stamp the rate captured at enqueue (tts.json / worker), never audioContext.sampleRate
+        // and never a hardcoded 24000. Hosted Supertonic is 44100.
+        if (!this.loggedBufferRate) {
+            this.loggedBufferRate = true;
+            console.log('[TTS buffer]', {
+                samples: audioData.length,
+                taggedHz: sampleRate,
+                ctxHz: this.audioContext.sampleRate,
+                secondsIfTagged: +(audioData.length / sampleRate).toFixed(2),
+            });
+        }
         const buffer = this.audioContext.createBuffer(1, audioData.length, sampleRate);
         buffer.copyToChannel(audioData as any, 0);
 
