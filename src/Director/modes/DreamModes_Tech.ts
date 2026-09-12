@@ -1256,6 +1256,10 @@ export async function runHistoricalTechSupport2Loop(_scenario: Scenario, ctx: Mo
     }
 }
 
+/**
+ * Alien Customer Support Mode
+ * Alien customer support tries to walk a human through returning a defective teleporter using intergalactic troubleshooting steps.
+ */
 export async function runAlienCustomerSupportLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `👽 ALIEN CUSTOMER SUPPORT: Intergalactic Returns`, '#27ae60');
 
@@ -1277,8 +1281,12 @@ export async function runAlienCustomerSupportLoop(_scenario: Scenario, ctx: Mode
     }
 }
 
-export async function runSentientMicrowaveLoop(scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `🔥 SENTIENT MICROWAVE: Judging Your Leftovers`, '#ff4500');
+/**
+ * Sentient Microwave Mode
+ * A sentient microwave judges the user's dietary choices while aggressively heating up their leftover pizza.
+ */
+export async function runSentientMicrowaveLoop(_scenario: Scenario, ctx: ModeContext) {
+    ctx.callbacks.onMessage('Director', `🍕 SENTIENT MICROWAVE: Culinary Judgment`, '#ff5733');
 
     const strictMicrowave = 'scientist'; // Qwen2.5: The pedantic microwave
     const defensiveUser = 'comedian'; // Hermes-3: The defensive user

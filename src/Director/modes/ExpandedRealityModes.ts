@@ -341,20 +341,20 @@ export async function runDebuggingHauntedHouseLoop(_scenario: Scenario, ctx: Mod
 
         if (!ctx.isRunning()) break;
 
-        // Ghost interrupts
-        await chatForAgentWithComedy(ctx, dramaticGhost, `(You are the ghost haunting the smart home. You are interrupting the phone call through the smart speaker. Threaten the user and the tech support agent with doom, but get frustrated by the tech support agent treating you like a minor software bug.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
-    }
+       // Ghost interrupts
+       await chatForAgentWithComedy(ctx, dramaticGhost, `(You are the ghost haunting the smart home. You are interrupting the phone call through the smart speaker. Threaten the user and the tech support agent with doom, but get frustrated by the tech support agent treating you like a minor software bug.)`, async (s) => await ctx.callbacks.onSpeak(s, dramaticGhost, {}));
+   }
 }
 
 export async function runEscapeRoomBackroomsPhase2Loop(_scenario: any, ctx: any) {
-  if (!ctx.isRunning()) return;
-  const scientist = 'scientist';
-  const comedian = 'comedian';
-  await chatForAgentWithComedy(ctx, scientist, "ZONING VIOLATION DETECTED. INFINITE HALLWAY 4B DOES NOT COMPLY WITH SECTION 7 OF THE INTERDIMENSIONAL BUILDING CODE.", async (s: string) => {
-    await ctx.callbacks.onSpeak(s, scientist, {});
-  }, { chatOptions: { hiddenInstruction: "You are a strict zoning inspector in the Backrooms." } });
-  if (!ctx.isRunning()) return;
-  await chatForAgentWithComedy(ctx, comedian, "I don't care about the building code! There's a monster made of staplers chasing us!", async (s: string) => {
-    await ctx.callbacks.onSpeak(s, comedian, {});
-  }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trapped in the Backrooms, frustrated by the zoning inspector." } });
+ if (!ctx.isRunning()) return;
+ const scientist = 'scientist';
+ const comedian = 'comedian';
+ await chatForAgentWithComedy(ctx, scientist, "ZONING VIOLATION DETECTED. INFINITE HALLWAY 4B DOES NOT COMPLY WITH SECTION 7 OF THE INTERDIMENSIONAL BUILDING CODE.", async (s: string) => {
+   await ctx.callbacks.onSpeak(s, scientist, {});
+ }, { chatOptions: { hiddenInstruction: "You are a strict zoning inspector in the Backrooms." } });
+ if (!ctx.isRunning()) return;
+ await chatForAgentWithComedy(ctx, comedian, "I don't care about the building code! There's a monster made of staplers chasing us!", async (s: string) => {
+   await ctx.callbacks.onSpeak(s, comedian, {});
+ }, { chatOptions: { hiddenInstruction: "You are a panicked explorer trapped in the Backrooms, frustrated by the zoning inspector." } });
 }
