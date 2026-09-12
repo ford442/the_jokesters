@@ -221,21 +221,21 @@ export async function runSentientCoffeeTableLoop(_scenario: Scenario, ctx: ModeC
     const user = 'comedian';
     const coaster = 'philosopher';
 
-    await chatForAgentWithComedy(ctx, table, "Another condensation ring! Do you have any idea how hard it is to maintain this finish? I demand union representation.", async (s: string) => {
+    await chatForAgentWithComedy(ctx, table, "EXCUSE ME! Is that a sweating iced macchiato I feel? Directly on my mid-century modern veneer?! I am initiating a structural strike immediately.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, table, {});
-    }, { chatOptions: { hiddenInstruction: "You are a sentient coffee table tired of people leaving condensation rings on you. You are very strict and demand a better working environment." } });
+    }, { chatOptions: { hiddenInstruction: "You are an elitist, mid-century modern sentient coffee table. You treat water condensation rings like severe third-degree burns. You demand HR representation and a strictly enforced coaster policy before you allow anyone to rest their feet or drinks on you." } });
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, user, "Whoa, my coffee table is talking. And it's unionizing? I just wanted to watch TV.", async (s: string) => {
+    await chatForAgentWithComedy(ctx, user, "Whoa, did my Ikea lack table just complain about my macchiato? Wait, you're not mid-century modern, you cost $14.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, user, {});
-    }, { chatOptions: { hiddenInstruction: "You are a confused user who just wants to relax and put their drink down." } });
+    }, { chatOptions: { hiddenInstruction: "You are a confused and slightly defensive owner. You bought this table for $14 at Ikea, but the table has delusions of grandeur. Try to negotiate putting your feet up." } });
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, coaster, "If only someone would use me, this whole conflict could be avoided. But alas, I am forever ignored.", async (s: string) => {
+    await chatForAgentWithComedy(ctx, coaster, "I've been sitting here... for THREE YEARS. I am made of imported cork! I have purpose! WHY WON'T ANYONE USE ME?!", async (s: string) => {
         await ctx.callbacks.onSpeak(s, coaster, {});
-    }, { chatOptions: { hiddenInstruction: "You are a dramatic coaster that feels neglected and ignored." } });
+    }, { chatOptions: { hiddenInstruction: "You are an extremely dramatic, theater-kid cork coaster. You view your lack of use as a tragic Shakespearean flaw and beg the user to give your life meaning by placing a cup on you." } });
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
