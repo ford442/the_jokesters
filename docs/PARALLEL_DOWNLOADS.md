@@ -2,320 +2,209 @@
 
 ## Overview
 
-The Jokesters now supports **parallel HTTP Range-based downloads** for model files, enabling faster downloads of multi-gigabyte LLM weights from HuggingFace CDN.
+Large model shards (`.bin` / `.safetensors` / `.gguf` / `.wasm` over 42MB) are
+downloaded with **HTTP Range** requests. On our VPS hosts they are also
+**striped across two origins** so a stall or outage on one host does not fail
+the whole Vicuna 7B load.
 
-### Key Features
+| Origin | Role |
+|--------|------|
+| `storage.1ink.us` | Canonical primary (Cache API keys, app URLs) |
+| `storage.noahcohn.com` | Contabo mirror — alternating chunks + refill |
 
-- **4 concurrent parallel connections** (optimized for most servers)
-- **42MB chunk size** per connection for optimal performance
-- **HTTP 206 Partial Content (Range requests)** for true parallelization
-- **Graceful fallback** to single-connection if ranges not supported
-- **Memory cache only** (temporary, not persisted to disk)
-- **Service Worker-based interception** for transparent speedup
+### Choice: Option A (SW-only intercept)
 
----
+The service worker is the **sole** parallel download path. GGUF loads use the
+same intercept (`.gguf`). A second in-page Range assembler
+(`ParallelDownloadManager`) was removed in [#306](https://github.com/ford442/the_jokesters/issues/306)
+because it had no production caller and feeding Cache from it would fork
+WebLLM's cache keys.
+
+| Option | Decision |
+|--------|----------|
+| **A. SW-only striping** | **Chosen.** WebLLM `Cache.add` and wllama URL fetches are intercepted by `src/service-worker.ts`. |
+| B. PDM striping + feed Cache | Rejected: duplicate cache keys vs WebLLM. |
+| C. Hybrid two policies | Rejected: one planner, one assembler. |
+
+Chunk size / concurrency live in `src/utils/dualDomainStripe.ts` and are imported by the SW.
 
 ## Architecture
 
-### Component 1: ParallelDownloadManager (TypeScript Service)
+```mermaid
+flowchart TD
+  user[Load Model]
+  session[ModelSession EngineFactory]
+  mlc[WebLLM Cache.add]
+  gguf[wllama loadModelFromUrl]
+  pageRewrite[installVpsFetchRewrite]
+  sw[service-worker.ts]
+  planner[dualDomainStripe.ts]
+  cache[(Cache API primary URL)]
+  hf[HF Hub Vicuna retry]
 
-**File:** `src/services/ParallelDownloadManager.ts`
-
-A standalone class that handles parallel downloads with:
-- Byte-range request coordination
-- Browser HTTP cache support
-- Progress callbacks
-- Single-connection fallback
-
-**Usage:**
-```typescript
-import { parallelDownloadManager } from './services/ParallelDownloadManager'
-
-await parallelDownloadManager.initialize()
-
-const data = await parallelDownloadManager.downloadFile(
-  'https://huggingface.co/...',
-  (progress) => {
-    console.log(`Downloaded: ${progress.percentage}%`)
-  }
-)
+  user --> session
+  session --> mlc
+  session --> gguf
+  mlc --> pageRewrite
+  mlc --> sw
+  gguf --> sw
+  sw --> planner
+  planner -->|"even 1ink / odd Contabo + sibling refill"| cache
+  session -->|"network config wasm_missing only"| hf
 ```
 
-### Component 2: Service Worker
+### Shared planner (unit-tested)
+
+**File:** `src/utils/dualDomainStripe.ts`
+
+Pure functions: `buildStripePlan`, `preferredOriginForChunk`, `fetchStripedChunk`, `stripeCacheKey`. Tests in `tests/unit/dualDomainStripe.test.ts` (no service worker).
+
+### Service Worker (production path)
 
 **File:** `src/service-worker.ts`
 
-Intercepts all fetch requests for model files and transparently handles them with parallel downloads. Features:
-- Automatic detection of model file requests
-- Range request support detection
-- **Memory-based caching (1-hour TTL, temporary)**
-- Fallback to regular fetch on error
-- No persistent storage (clears when worker restarts)
-
-**How it works:**
 ```
-Browser fetch("model.bin")
+Browser / WebLLM Cache.add("https://storage.1ink.us/.../params_shard_0.bin")
     ↓
-Service Worker intercepts
+Service Worker intercepts (rewrites /resolve/main/ if needed)
     ↓
-Check: Supports Range? File > 10MB?
+HEAD on primary (mirror HEAD only for size if primary metadata fails)
     ↓
-Yes → Split into 42MB chunks → 4 parallel fetch calls
-       ↓
-       Combine chunks → Cache in memory → Return
-
-No → Regular fetch() → Return
-```
-
-### Component 3: GroupChatManager Integration
-
-**File:** `src/GroupChatManager.ts`
-
-Initializes the parallel download manager before model loading:
-```typescript
-await parallelDownloadManager.initialize()
-// Then WebLLM uses cached files for faster loading
-```
-
----
-
-## Performance Expectations
-
-### Single Connection (Original)
-- **2GB model:** ~60-120 seconds on 20 Mbps connection
-- **5GB model:** ~150-300 seconds
-
-### Parallel Downloads (4 connections, 42MB chunks)
-- **2GB model:** ~20-40 seconds (3-6x faster)
-- **5GB model:** ~50-100 seconds (3-6x faster)
-
-**Actual speedup depends on:**
-- Server's upload bandwidth per connection
-- Network latency
-- Client's available bandwidth
-- CPU utilization for chunk assembly
-
----
-
-## Implementation Details
-
-### Chunk Strategy
-- **42MB chunks:** Balanced for memory usage and disk I/O
-- **4 workers:** Optimal for most servers (HTTP/2 multiplexing limit)
-- **Range detection:** HEAD request checks `Accept-Ranges` header
-
-### Cache Management
-- **ParallelDownloadManager:** Uses browser HTTP cache (transparent)
-- **Service Worker:** Memory cache only (1-hour TTL, cleared on restart)
-- **WebLLM:** Its own IndexedDB cache (independent, not our concern)
-
-**Note:** No files are persisted to disk by the parallel download system.
-
-### Fallback Behavior
-```
-Server doesn't support ranges?
+File > 42MB + Accept-Ranges?
+    ↓ yes
+Split → 4 workers → even/odd hosts → sibling refill on miss
     ↓
-Service Worker → Use single fetch()
+Assemble → Response (CORS headers) for the *original* URL
     ↓
-ParallelDownloadManager → Use single fetch()
-    ↓
-User still gets the file, just slower
+WebLLM Cache.put under the canonical primary key
 ```
 
----
+HEAD used to pin every subsequent GET to `headResponse.url` (whichever host answered). That is gone — the download URL stays canonical so striping can use both origins.
 
-## Setup & Build
+`skipWaiting` + `clients.claim()` run on install/activate so the worker can rewrite on the first load. The page also installs `installVpsFetchRewrite` / `installVpsCacheRewrite` before the SW is guaranteed to control the client.
 
-### 1. Build Configuration
-Vite is configured to:
-- Compile `service-worker.ts` to `dist/service-worker.js`
-- Exclude it from main bundle chunking
-- Include in rollup output
+## Dual-domain striping
 
-### 2. Service Worker Registration
-In `src/main.ts`:
-```typescript
-if ('serviceWorker' in navigator) {
-  const registration = await navigator.serviceWorker.register('./service-worker.js')
-}
-```
+1. Split the file into **42MB** chunks.
+2. **Even** chunks prefer primary; **odd** chunks prefer the mirror.
+3. A miss, 4xx/5xx, timeout (45s), or wrong byte length on the preferred origin is a **soft failure** — the same range is retried on the sibling host.
+4. Chunks are concatenated in index order and returned as one `Response` for the **original request URL**.
+5. The service worker **never** `Cache.put`s under the mirror host. WebLLM / `installVpsCacheRewrite` still keys Cache API entries on the canonical primary URL (`/resolve/main/` form included). No duplicate cache entries for the same logical shard.
 
-### 3. Build & Deploy
-```bash
-npm run build
-# Outputs:
-#   dist/service-worker.js
-#   dist/index.html
-#   dist/assets/...
-```
+**Retry mirror** (error panel) sets a one-load session flag that inverts even/odd preference (`invertOrigins`) via `SET_STRIPE_CONFIG`. Cache keys stay on the primary host.
+
+Optional **TTFB race** (first-byte / headers-received, abort the loser): off by default. Enable with `VITE_VPS_STRIPE_RACE=1` or `?stripeRace`. Worker count is halved so in-flight connections stay around four.
+
+Same-origin `.gz` twins are **not** striped (Contabo-only gzip is ignored by design). Small JSON/config files still use `fetchWithRetry` with whole-file mirror failover.
+
+### Kill-switch (mirror diverged)
+
+| Mechanism | How |
+|-----------|-----|
+| Build | `VITE_VPS_DUAL_DOMAIN_STRIPE=0` |
+| Query | `?noStripe` or `?stripeOff` |
+| localStorage | `jokesters-dual-domain-stripe=0` then reload |
+
+The page posts `SET_STRIPE_CONFIG` to the service worker from `bootstrap.ts` so a runtime flag takes effect without a rebuild. Whole-file `fetchWithRetry` failover remains even when striping is off.
+
+### Progress / ETA
+
+The SW still returns a fully assembled body, so WebLLM's `InitProgressReport` stays file-level. `bootstrap.ts` prefixes that text with a stable phase (`rewrite` → `wasm_probe` → `download` → `compile` → `ready`) via `classifyInitProgress`. Stripe retries are **not** extra progress events.
+
+`stripeProgress()` counts **successfully assembled** chunk bytes only — a refill does not double-count.
 
 ---
 
 ## Testing
 
-### Enable/Disable
-To disable service worker downloads (use single connection):
-```typescript
-// In main.ts, comment out or remove:
-// navigator.serviceWorker.register('./service-worker.js')
+```bash
+npm test            # includes tests/unit/dualDomainStripe.test.ts
+npm run typecheck
 ```
 
-### Monitor in Browser DevTools
+### Simulate a degraded origin (acceptance)
 
-1. **Network Tab:**
-   - Look for multiple `206 Partial Content` responses
-   - Should see 4 parallel `model.bin` requests
+1. DevTools → Network → Block request URL → `storage.1ink.us` **or** `storage.noahcohn.com`.
+2. Cold-load Vicuna 7B MLC (clear Cache Storage / IndexedDB model cache first).
+3. Console should show stripe refill warnings for chunks that preferred the blocked host; the shard should still complete.
+4. Application → Cache Storage: keys for the shard should be the **primary** URL only (no `storage.noahcohn.com` duplicates).
+5. Repeat with `?noStripe` — downloads stay on one host (failover only after full-file retries).
 
-2. **Application → Service Workers:**
-   - Verify service worker is active
-   - Check "Update on reload" to test new versions
+### Monitor
 
-3. **Application → Cache:**
-   - View cached model files in IndexedDB
-   - Clear if needed: `await parallelDownloadManager.clearCache()`
-
-4. **Console:**
-   ```
-   [ServiceWorker] Intercepting model download: https://cdn-lfs.huggingface.co/...
-   [ServiceWorker] Using parallel download for: ...
-   [ParallelDownload] Starting parallel download: model.bin (2450.75MB)
-   ```
+- Network: `206 Partial Content` Range GETs alternating hosts (`bytes=0-…`, `bytes=44040191-…`).
+- Console: `[ServiceWorker] Parallel download (dual-domain stripe)` and refill lines.
+- Application → Service Workers: Update on reload after a SW change (`skipWaiting` + `clients.claim` are already on).
 
 ---
 
-## Advanced Customization
+## Implementation details
 
-### Change Chunk Size
-**File:** `src/services/ParallelDownloadManager.ts`
-```typescript
-const CHUNK_SIZE = 50 * 1024 * 1024  // 50MB instead of 42MB
+| Constant | Value |
+|----------|--------|
+| Chunk size | 42MB |
+| Parallel workers | 4 (2 if TTFB race is on) |
+| Chunk timeout | 45s (then sibling refill) |
+| TTFB race budget | 8s per origin (optional) |
+
+### Cache keys
+
+| Layer | Key |
+|-------|-----|
+| WebLLM Cache API | Original request URL (typically primary + `/resolve/main/`) |
+| SW stripe plan `cacheKey` | Primary-host equivalent of the fetch URL |
+| Mirror Range GETs | Ephemeral; not stored |
+
+### Fallback
+
 ```
-
-### Change Parallel Connections
-**Files:** Both `src/services/ParallelDownloadManager.ts` and `src/service-worker.ts`
-```typescript
-const PARALLEL_CONNECTIONS = 8  // Instead of 4
-```
-
-### Add Custom Download Progress UI
-In the progress callback:
-```typescript
-const data = await parallelDownloadManager.downloadFile(url, (progress) => {
-  const percent = progress.percentage
-  const mb = (progress.downloaded / 1024 / 1024).toFixed(1)
-  console.log(`${progress.fileName}: ${mb}MB (${percent}%)`)
-  // Update UI here
-})
+No Accept-Ranges or file ≤ 42MB
+    → fetchWithRetry (primary, then whole-file mirror)
+Stripe preferred origin fails
+    → same range on sibling origin
+Both origins fail for a chunk
+    → download fails (last-ditch whole-file fetch in the SW catch)
 ```
 
 ---
 
-## Limitations & Caveats
+## Setup & build
 
-### 1. Server-Dependent
-- **Must support HTTP Range requests** (`Accept-Ranges` header)
-- HuggingFace CDN ✅ supports ranges
-- Some proxy/CDN setups may not
+Vite `injectManifest` compiles `src/service-worker.ts` → `service-worker.js`.
+Registration is `registerSW()` from `virtual:pwa-register` in `src/app/bootstrap.ts`
+(not a hand-rolled `navigator.serviceWorker.register` in `main.ts`).
 
-### 2. Browser Cache
-- Service worker cache is memory-only (lost on reload)
-- Use ParallelDownloadManager for persistent IndexedDB cache
-- WebLLM still uses its own cache independently
-
-### 3. Mobile Networks
-- Parallel downloads may not help much on high-latency connections
-- Gracefully falls back to single connection if servers don't respond
-
-### 4. Service Worker Scope
-- Only works on HTTPS (or `localhost` for dev)
-- Requires user to accept service worker registration
-- May have issues in private browsing mode
+```bash
+npm run build
+# dist/service-worker.js  (stable name)
+```
 
 ---
 
 ## Troubleshooting
 
-### Service Worker Not Registering
-```
-Error: "Failed to register a ServiceWorker..."
-```
-**Causes:**
-- Running on HTTP (not HTTPS or localhost)
-- Service worker file not found (check build output)
-- Browser doesn't support service workers
+### Mirror diverged (wrong bytes, same size)
 
-**Fix:** Check console for detailed error, verify build includes `service-worker.js`
+Striping cannot checksum shards. Disable it (`?noStripe` or `VITE_VPS_DUAL_DOMAIN_STRIPE=0`) and resync Contabo → DreamHost (`contabo_storage_manager` sync scripts).
 
-### Downloads Still Slow
-```
-[ServiceWorker] Server does not support ranges, using regular fetch
-```
-**Cause:** Server doesn't support HTTP 206 responses
+### Service worker still on old code
 
-**Fix:** This is normal fallback behavior. Speedup won't apply to this server.
+Hard refresh, or DevTools → Application → Service Workers → Update. `skipWaiting` / `clients.claim` apply on the next navigation after install.
 
-### Memory Cache Limits
-Memory cache is automatically cleared when:
-- Service worker restarts
-- 1 hour has passed since caching
-- Browser is closed
+### Downloads still slow / one host only
 
-No persistent storage is used, so no manual cleanup is needed.
-
-### Service Worker Not Intercepting Requests
-1. Check DevTools → Application → Service Workers (should be "active")
-2. Enable "Update on reload" to test latest code
-3. Hard refresh: `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+- Kill-switch on (`?noStripe`)
+- File smaller than 42MB
+- Server omitted `Accept-Ranges`
+- HuggingFace / non-VPS URL (no stripe pair)
 
 ---
 
-## Technical Details
+## Related
 
-### HTTP Range Format
-When downloading with ranges, service worker sends:
-```
-GET /model.bin HTTP/1.1
-Range: bytes=0-44040191
-
-Response:
-HTTP/1.1 206 Partial Content
-Content-Range: bytes 0-44040191/2450000000
-Content-Length: 44040192
-```
-
-### Memory Layout (42MB chunks)
-For a 2GB model:
-- Chunk 0: bytes 0-44040191 (worker 1)
-- Chunk 1: bytes 44040192-88080383 (worker 2)
-- Chunk 2: bytes 88080384-132120575 (worker 3)
-- Chunk 3: bytes 132120576-176160767 (worker 4)
-- ... and so on
-
-Workers run in parallel, combining results at the end.
-
-### Memory Cache Format
-Service worker maintains a `Map<url, { timestamp, data }>` in memory:
-- **Key:** HuggingFace model URL
-- **Value:** Downloaded Uint8Array + timestamp
-- **TTL:** 1 hour (cleared on expiration)
-- **Scope:** Single service worker instance (not shared across tabs)
-
----
-
-## Future Enhancements
-
-- [ ] Resume interrupted downloads from last chunk
-- [ ] Compression-aware chunk sizing
-- [ ] Connection pool recycling for multiple models
-- [ ] Per-model bandwidth limiting
-- [ ] Download stats dashboard in UI
-- [ ] Configurable parallelism based on available bandwidth
-
----
-
-## References
-
-- [HTTP Range Requests (RFC 7233)](https://tools.ietf.org/html/rfc7233)
-- [Service Workers API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
-- [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-- [HuggingFace CDN](https://huggingface.co/docs/hub/security)
+- Issue [#302](https://github.com/ford442/the_jokesters/issues/302) — dual-domain striping
+- [#306](https://github.com/ford442/the_jokesters/issues/306) — unify download stack + load diagnostics (this doc)
+- [#304](https://github.com/ford442/the_jokesters/issues/304) — HF Vicuna weight failover
+- [#216](https://github.com/ford442/the_jokesters/issues/216) — custom Vicuna wasm / VRAM (orthogonal)
+- `src/utils/vpsStorageUrl.ts` — host allowlist, `toVpsMirrorUrl`
+- `docs/MODEL_HOSTING.md`

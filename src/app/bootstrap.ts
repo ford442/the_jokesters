@@ -12,14 +12,17 @@ import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
 import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
+import { parseStripeKillSwitch, consumePreferMirror } from '../utils/dualDomainStripe'
 import { agents } from './agents'
 import { getAppTemplate } from './appTemplate'
 import { wireModelPicker } from './modelPicker'
-import { setProgress, setInputsEnabled, showVoiceOfflineBanner } from './loadingUi'
+import { setProgress, setInputsEnabled, showVoiceOfflineBanner, showWasmFallbackBanner } from './loadingUi'
+import { classifyInitProgress, formatLoadStatus } from './loadProgress'
 import { renderInitErrorPanel } from './errorPanel'
 import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
 import { saveSuccessfulLaunch } from './modelGuide'
+import { consumeWasmFallbackWarning } from '../config/loadFailover'
 
 console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: { model_id: string }) => m.model_id))
 
@@ -91,6 +94,39 @@ export async function initApp(): Promise<void> {
         },
       })
       console.log('[ServiceWorker] Registered via virtual:pwa-register')
+
+      const invertOrigins = consumePreferMirror()
+      const stripeConfig = {
+        ...parseStripeKillSwitch({
+          search: window.location.search,
+          storageGet: (key) => {
+            try {
+              return localStorage.getItem(key)
+            } catch {
+              return null
+            }
+          },
+        }),
+        invertOrigins,
+      }
+      const stripeMessage = {
+        type: 'SET_STRIPE_CONFIG',
+        enabled: stripeConfig.enabled,
+        raceFirstByte: stripeConfig.raceFirstByte,
+        invertOrigins: stripeConfig.invertOrigins,
+      }
+      navigator.serviceWorker.controller?.postMessage(stripeMessage)
+      void navigator.serviceWorker.ready
+        .then((reg) => {
+          reg.active?.postMessage(stripeMessage)
+        })
+        .catch(() => {
+          /* registration still in flight */
+        })
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        navigator.serviceWorker.controller?.postMessage(stripeMessage)
+      })
+      console.log('[ServiceWorker] Dual-domain stripe', stripeConfig)
     } catch (error) {
       console.warn('[ServiceWorker] Registration failed (non-critical):', error)
     }
@@ -186,11 +222,12 @@ export async function initApp(): Promise<void> {
     const voiceAvailable = await initAudioEngineWithFailover(audioEngine)
 
     currentInitState = 'MODEL'
-    setProgress('Initializing LLM Engine...', 35)
+    setProgress(formatLoadStatus('Initializing LLM Engine...', 'rewrite'), 35)
     let progressStartTime = 0
     await groupChatManager.initialize((progress: webllm.InitProgressReport) => {
       const percentage = 35 + Math.round(progress.progress * 55)
-      let status = progress.text
+      const phase = classifyInitProgress(progress.text)
+      let status = formatLoadStatus(progress.text, phase)
       if (progress.progress > 0.02 && progress.progress < 0.99) {
         if (progressStartTime === 0) progressStartTime = performance.now()
         const elapsedMs = performance.now() - progressStartTime
@@ -199,13 +236,13 @@ export async function initApp(): Promise<void> {
         const remainingSec = Math.max(0, Math.round(remainingMs / 1000))
         const mm = Math.floor(remainingSec / 60).toString().padStart(2, '0')
         const ss = (remainingSec % 60).toString().padStart(2, '0')
-        status = `${progress.text} · ~${mm}:${ss} remaining`
+        status = `${status} · ~${mm}:${ss} remaining`
       }
       setProgress(status, percentage)
     }, selectedModelId, preferredContext, enginePreference)
 
     currentInitState = 'FINALIZING'
-    setProgress('Finalizing setup...', 90)
+    setProgress(formatLoadStatus('Finalizing setup...', 'ready'), 90)
 
     currentInitState = 'READY'
     setReadyStatus(groupChatManager)
@@ -218,6 +255,10 @@ export async function initApp(): Promise<void> {
 
     if (!voiceAvailable) {
       showVoiceOfflineBanner()
+    }
+    const wasmWarning = consumeWasmFallbackWarning()
+    if (wasmWarning) {
+      showWasmFallbackBanner(wasmWarning)
     }
 
     setInputsEnabled(true)

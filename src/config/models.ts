@@ -1,6 +1,11 @@
 import * as webllm from '@mlc-ai/web-llm'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
-import { estimateAvailableVRAM } from '../utils/dynamicContext'
+import {
+  HF_VICUNA_MODEL_ID,
+  HF_VICUNA_MODEL_URL,
+  MLC_GITHUB_WASM_PREFIX,
+  MLC_LLAMA2_7B_CTX4K_WASM,
+} from './loadFailover'
 
 export { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL }
 
@@ -38,7 +43,9 @@ export const WASM_LIBS = {
 
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)
- * Order matters for fallback chain: Vicuna 7B q4f32 first, then smaller models.
+ * Guided launch order lives in `recommendModels` (Hermes-first mid-band;
+ * Vicuna 7B only when VRAM looks healthy). Auto-fallback after a Vicuna
+ * failure jumps to Hermes 3B — ctx512/ctx1024 stay explicit picker entries.
  *
  * WASM ↔ override coupling:
  * - `model_lib` sets the compiled TVM memory plan (peak allocation at CreateMLCEngine).
@@ -69,7 +76,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "custom", "vicuna", "fp32"],
     source: "vps",
     notes: "Custom ford442 Vicuna build",
-    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
+    hf_fallback_url: HF_VICUNA_MODEL_URL,
   },
 
   /**
@@ -97,7 +104,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32"],
     source: "vps",
     notes: "JS-only ultra-low preset — generic ctx4k .wasm + sliding window. Prefer VPS_VICUNA_7B_CTX512 when custom .wasm is hosted.",
-    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
+    hf_fallback_url: HF_VICUNA_MODEL_URL,
   },
 
   /**
@@ -121,7 +128,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "ultra_low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
     notes: "Custom 512-ctx .wasm — lowest peak VRAM for Vicuna 7B on 4 GB GPUs.",
-    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
+    hf_fallback_url: HF_VICUNA_MODEL_URL,
   },
 
   /**
@@ -145,7 +152,7 @@ export const VPS_FP32_MODELS = {
     recommended_for: ["all_gpus", "low_vram", "vicuna", "fp32", "custom_wasm"],
     source: "vps",
     notes: "Custom 1024-ctx .wasm — more history than ctx512, still below generic 4K peak.",
-    hf_fallback_url: "https://huggingface.co/ford442/vicuna-7b-q4f32-webllm",
+    hf_fallback_url: HF_VICUNA_MODEL_URL,
   },
 
   /**
@@ -317,7 +324,7 @@ export const FP16_MODELS = {
  * URLs match the official mlc-ai prebuilt config so WebLLM's cleanModelUrl()
  * appends /resolve/main/ correctly.
  */
-const MLC_MODEL_LIB_PREFIX = 'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80';
+const MLC_MODEL_LIB_PREFIX = MLC_GITHUB_WASM_PREFIX;
 
 export const HF_FP32_MODELS = {
   /**
@@ -372,13 +379,17 @@ export const HF_FP32_MODELS = {
   },
 
   /**
-   * Vicuna 7B — ford442's custom WebLLM build (HF source)
-   * mlc-chat-config.json is missing tokenizer_files; supplied via overrides below.
+   * Vicuna 7B — ford442's custom WebLLM build (HF Hub failover target).
+   *
+   * Checklist (Option B): `mlc-chat-config.json` present; tokenizer via
+   * overrides (`tokenizer.model` + `tokenizer_config.json` — upstream config
+   * omits tokenizer_files); all `params_shard_*.bin`; HF CDN Range/206.
+   * Pin `HF_VICUNA_REVISION` in loadFailover.ts when a commit is verified.
    */
   HF_VICUNA_7B_Q4F32: {
-    model_id: "ford442/vicuna-7b-q4f32-webllm",
-    model: `https://huggingface.co/ford442/vicuna-7b-q4f32-webllm`,
-    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_id: HF_VICUNA_MODEL_ID,
+    model: HF_VICUNA_MODEL_URL,
+    model_lib: MLC_LLAMA2_7B_CTX4K_WASM,
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -416,10 +427,10 @@ export const OPTIMIZED_MODELS = {
 };
 
 /**
- * Default model configuration for the application
- * Vicuna 7B q4f32 on VPS — primary quality target for fp32 WebGPU
+ * Default model id for leftover registry consumers. Guided launch uses
+ * `recommendModels` (Hermes-3 3B q4f32 is the safe WebGPU default).
  */
-export const defaultModelId = VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
+export const defaultModelId = VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
 
 /** Human-readable labels for the status bar */
 const MODEL_DISPLAY_NAMES: Record<string, string> = {
@@ -531,161 +542,22 @@ export function applyModelConfigsToEngine(engine: typeof webllm) {
   }
 }
 
-/**
- * Get list of available models from the engine
- */
-export function getAvailableModels(engine: typeof webllm): string[] {
-  const engineAny = engine as any;
-  if (!engineAny || !engineAny.prebuiltAppConfig || !engineAny.prebuiltAppConfig.model_list) return [];
-  return engineAny.prebuiltAppConfig.model_list.map((m: any) => m.model_id);
-}
-
-/**
- * VRAM thresholds driving the model recommendation ladder (after APP_OVERHEAD_MB subtraction).
- * These mirror the vram_required_MB values in VPS_FP32_MODELS.
- */
-const VRAM_THRESHOLD_ULTRA_LOW = 3400;  // < this → ultra-low 512-ctx Vicuna
-const VRAM_THRESHOLD_3B        = 2800;  // < this → 3B model (7B won't fit at all)
-
-/**
- * Get recommended model based on device capabilities and probed VRAM.
- *
- * Ladder (highest to lowest VRAM requirement):
- *  ≥ 3400 MB  → Vicuna 7B q4f32 (full)
- *  ≥ 2800 MB  → Vicuna 7B ctx512 (custom .wasm when hosted; else generic fallback)
- *  < 2800 MB  → Hermes-3 3B q4f32
- *
- * The thresholds are post-overhead values produced by estimateAvailableVRAM().
- */
-export async function getRecommendedModel(): Promise<string> {
-  const gpu = (navigator as any).gpu;
-  if (!gpu) {
-    return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
-  }
-
-  // Hard buffer-size check — <256 MB maxBufferSize means MLC/WebGPU can't allocate model weights
-  try {
-    const adapter = await gpu.requestAdapter();
-    const maxBufferSize = (adapter as any)?.limits?.maxBufferSize ?? 0;
-    if (maxBufferSize > 0 && maxBufferSize < 268_435_456) {
-      console.log('[ModelConfig] maxBufferSize < 256 MB → recommending 3B fallback');
-      return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
-    }
-  } catch {
-    // Adapter probing failed; continue
-  }
-
-  // Probe available VRAM (includes APP_OVERHEAD_MB subtraction)
-  const availableMB = await estimateAvailableVRAM();
-  console.log(`[ModelConfig] Available VRAM (after overhead): ${availableMB} MB`);
-
-  if (availableMB < VRAM_THRESHOLD_3B) {
-    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_3B} MB → recommending Hermes-3 3B`);
-    return VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id;
-  }
-
-  if (availableMB < VRAM_THRESHOLD_ULTRA_LOW) {
-    console.log(`[ModelConfig] ${availableMB} MB < ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B ctx512 (custom .wasm)`);
-    return VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id;
-  }
-
-  console.log(`[ModelConfig] ${availableMB} MB ≥ ${VRAM_THRESHOLD_ULTRA_LOW} MB → recommending Vicuna 7B q4f32`);
-  return VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id;
-}
-
-/**
- * Get model info by ID
- */
 export function getModelInfo(modelId: string): any {
   return appConfig.model_list.find(m => m.model_id === modelId);
 }
 
 /**
- * Populate model selector dropdowns
+ * Auto-fallback after the preferred model fails.
+ * Vicuna 7B ctx variants are picker-only — a failed Vicuna load steps to
+ * Hermes-3 3B, then ultra-low / CPU, not another 7B.
  */
-export function populateModelSelect(engine: typeof webllm) {
-  const select = document.getElementById('model-select') as HTMLSelectElement;
-  const mainSelect = document.getElementById('model-select-main') as HTMLSelectElement;
-
-  if (!select) return;
-
-  const models = getAvailableModels(engine);
-  
-  // Sort models: VPS first, then FP32, then by size
-  const sortedModels = models.sort((a: string, b: string) => {
-    const aInfo = getModelInfo(a);
-    const bInfo = getModelInfo(b);
-    
-    // VPS models first
-    if (aInfo?.source === 'vps' && bInfo?.source !== 'vps') return -1;
-    if (bInfo?.source === 'vps' && aInfo?.source !== 'vps') return 1;
-    
-    // FP32 before FP16
-    const aIsF32 = a.includes('q4f32');
-    const bIsF32 = b.includes('q4f32');
-    if (aIsF32 && !bIsF32) return -1;
-    if (!aIsF32 && bIsF32) return 1;
-    
-    return a.localeCompare(b);
-  });
-  
-  const optionsHTML = sortedModels.map((m: string) => {
-    const info = getModelInfo(m);
-    const isVps = info?.source === 'vps';
-    const isF32 = m.includes('q4f32');
-    const vram = info?.vram_required_MB;
-    const isApi = info?.api !== undefined;
-    
-    let label = m;
-    if (isApi) {
-      label = `${m} (Server, no download)`;
-    } else if (isVps) {
-      label = `${m} (VPS, ~${vram}MB VRAM)`;
-    } else if (isF32) {
-      label = `${m} (FP32, ~${vram}MB VRAM)`;
-    } else if (vram) {
-      label = `${m} (~${vram}MB VRAM)`;
-    }
-    
-    return `<option value="${m}">${label}</option>`;
-  }).join('');
-
-  select.innerHTML = optionsHTML;
-  select.value = defaultModelId;
-
-  if (mainSelect) {
-    mainSelect.innerHTML = optionsHTML;
-    mainSelect.value = defaultModelId;
-
-    mainSelect.addEventListener('change', () => {
-      select.value = mainSelect.value;
-    });
-    select.addEventListener('change', () => {
-      if (mainSelect) mainSelect.value = select.value;
-    });
-  }
-  
-  console.log(`[ModelConfig] Populated ${models.length} models in selector`);
-}
-
-/**
- * Ordered fallback chain — smaller / lower-VRAM models before heavy 7B variants.
- * Custom ctx512/ctx1024 .wasm presets are tried before JS-only ultra-low.
- */
-const VPS_FALLBACK_ORDER: string[] = [
-  VPS_FP32_MODELS.VPS_VICUNA_7B_Q4F32.model_id,
-  VPS_FP32_MODELS.VPS_VICUNA_7B_CTX1024.model_id,
-  VPS_FP32_MODELS.VPS_VICUNA_7B_CTX512.model_id,
+const SMALLER_FALLBACK_ORDER: string[] = [
   VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id,
-  VPS_FP32_MODELS.VPS_VICUNA_7B_ULTRA_LOW.model_id,
+  'Qwen2.5-0.5B-Instruct-ONNX',
   VPS_FP32_MODELS.VPS_LLAMA_3_2_3B_Q4F32.model_id,
-  VPS_FP32_MODELS.VPS_LLAMA_2_7B_Q4F32.model_id,
+  'vicuna-7b-v1.5-GGUF',
 ];
 
-/**
- * Get fallback model chain for a given preferred model
- * Returns list of models to try in order
- */
 export function getModelFallbackChain(preferredModelId?: string): string[] {
   const chain: string[] = [];
 
@@ -693,17 +565,11 @@ export function getModelFallbackChain(preferredModelId?: string): string[] {
     chain.push(preferredModelId);
   }
 
-  for (const modelId of VPS_FALLBACK_ORDER) {
+  for (const modelId of SMALLER_FALLBACK_ORDER) {
     if (!chain.includes(modelId)) {
       chain.push(modelId);
     }
   }
-
-  Object.values(HF_FP32_MODELS).forEach((config: any) => {
-    if (!chain.includes(config.model_id)) {
-      chain.push(config.model_id);
-    }
-  });
 
   return chain;
 }
@@ -802,6 +668,8 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
     name: 'Vicuna 7B (MLC)',
     vram_required_MB: 4000,
     context_window_size: 2048,
+    hf_fallback_url: HF_VICUNA_MODEL_URL,
+    hf_fallback_model_id: HF_VICUNA_MODEL_ID,
     mlc: {
       model_url: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
       model_lib_url: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,

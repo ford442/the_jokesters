@@ -64,8 +64,8 @@ export class MlcEngineAdapter implements LLMEngine {
       model_id: modelConfig.id,
       model: mlcConfig.model_url,
       model_lib: mlcConfig.model_lib_url,
-
-      hf_fallback_url: (modelConfig as any).hf_fallback_url,
+      requestedModelId: modelConfig.id,
+      hf_fallback_url: modelConfig.hf_fallback_url,
       overrides: mlcConfig.overrides || {},
       vram_required_MB: modelConfig.vram_required_MB,
     }

@@ -14,6 +14,13 @@ describe('GroupChatManager.getErrorCategory', () => {
     expect(GroupChatManager.getErrorCategory(new Error('allocation failed: out of memory'))).toBe('oom');
   });
 
+  it('classifies incomplete config and missing wasm', () => {
+    expect(GroupChatManager.getErrorCategory(new Error('invalid tokenizer.json'))).toBe('config');
+    expect(GroupChatManager.getErrorCategory(new Error('failed to fetch model_lib .wasm'))).toBe(
+      'wasm_missing',
+    );
+  });
+
   it('classifies network / fetch errors', () => {
     expect(GroupChatManager.getErrorCategory(new Error('fetch failed: ERR_CONNECTION_REFUSED'))).toBe('network');
     expect(GroupChatManager.getErrorCategory(new Error('Network timeout while downloading from CDN'))).toBe('network');

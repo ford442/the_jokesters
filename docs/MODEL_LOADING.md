@@ -1,6 +1,6 @@
 # Model Loading — The Jokesters
 
-Last reviewed: 2026-05-02
+Last reviewed: 2026-09-12
 
 Scope: how models (especially Vicuna 7B) are fetched, cached, and handed to engines; what changes are worth making and which trade-offs are deliberate.
 
@@ -52,23 +52,38 @@ The honest case for 1A over 1B: you control the cache headers, MIME types, CORS,
 
 **Verdict**: keep 1A as the default Vicuna path. Keep 1B as a fallback. Drop 1C from the picker — wllama's only real role is "what if WebGPU is missing entirely," and at that point a 7B model is the wrong size anyway.
 
+### Automatic failover (VPS → Contabo → HF Hub)
+
+Implemented in `src/config/loadFailover.ts` + `loadModelWithDynamicContext`. Order:
+
+| Step | Source | Who | When |
+|------|--------|-----|------|
+| 1 | `storage.1ink.us` | App URLs / Cache keys | Default Vicuna MLC |
+| 2 | `storage.noahcohn.com` | Service worker striping + `fetchWithRetry` | Chunk miss/stall (see PARALLEL_DOWNLOADS.md) |
+| 3 | HuggingFace Hub `ford442/vicuna-7b-q4f32-webllm` | **One automatic retry** on `network` / `config` / `wasm_missing` | After VPS+Contabo fail |
+| 4 | OpenAI-compatible API | Existing `ApiEngineAdapter` | **Not** a Vicuna weight host. Comedy-only remote; Option C (paid HF Endpoint) is not wired |
+
+**Not used:** per-shard mix of VPS+HF in one load (Option D) — Cache API keys would fragment.
+
+GPU **OOM** never failovers to HF (same weights, same GPU). The error panel title is **GPU Out of Memory** vs **Download Failed**.
+
+Custom ctx512/1024 `model_lib` HEAD **404** falls back to the generic Llama-2 4K WASM (VPS, then MLC GitHub) and shows an in-app warning that peak VRAM may be ~4 GB. Last successful source is stored in `localStorage` (`jokesters-last-load-source`) so the next Vicuna launch prefers HF if that is what worked. Structured logs: `console.info('[LoadFailover]', { modelId, source, phase, ms, errorCategory })`.
+
 ---
 
-## 2. The bigger question — should Vicuna 7B even be in the picker?
+## 2. Picker default — `recommendModels`
 
-Vicuna 7B is a 2023-era Llama-2 fine-tune. The 3B models in your picker (Hermes-3, Llama-3.2) are smaller, faster to load, faster to run, and on most benchmarks outperform Vicuna 7B.
+Guided launch (`src/app/modelGuide.ts` `recommendModels`) is the single UX ladder:
 
-The only genuine reason to keep Vicuna is "I want a 7B model for users with beefy GPUs who'd rather have richer responses." If that's the goal, Llama-3.1-8B is a strict upgrade — better instruction-following, modern training, MLC has it prebuilt with both q4f16 and q4f32 variants.
+- No WebGPU → Vicuna GGUF (CPU)
+- Tiny GPU buffers / low VRAM → Hermes-3 3B q4f32 or Qwen 0.5B
+- Mid-band + f16 → Hermes-3 3B f16
+- ~3800 MB+ free and no prior Vicuna OOM → Vicuna 7B (quality), Hermes as the on-panel fallback
+- After a Vicuna OOM or a failed Vicuna download, the next automatic try is **Hermes-3 3B q4f32** — not another 7B ctx variant
 
-### Suggested picker reorganization
+`getRecommendedModel()` was removed (it disagreed with this ladder and had no callers). Blessed dropdown order stays Hermes-first.
 
-- **Recommended** (top of list): `Hermes-3-Llama-3.2-3B-q4f16` (current default)
-- **Best quality (f16 GPUs)**: `Hermes-3-Llama-3.1-8B-q4f16`
-- **Best quality (no f16)**: `Llama-2-7b-chat` or `Vicuna 7B q4f32` — pick one, drop the other
-- **Compatibility / smaller**: the q4f32 3B variants
-- **Drop**: the GGUF Vicuna option (slow, redundant)
-
-If you keep Vicuna for nostalgia or for Llama-2 prompt-format testing, that's a fine reason — just be honest about it in the dropdown label (`"Vicuna 7B · for Llama-2 prompt-format testing · slower than Hermes-3"`).
+The error panel after a Vicuna **network / config / wasm_missing** failure offers Retry, Retry mirror, Retry from Hugging Face, Clear model cache, and Try Hermes-3 3B. OOM never failovers to HF.
 
 ---
 
@@ -78,7 +93,7 @@ These are wins available regardless of which model is selected. Some are already
 
 ### Already in the codebase ✅
 
-- Service worker registration (`main.ts`) — for parallel shard download
+- Service worker registration (`src/app/bootstrap.ts` via `virtual:pwa-register`) — sole parallel Range / dual-domain stripe path
 - Bundled WASM for wllama (Vite `?url` from `@wllama/wllama`; verified via `npm run verify:wllama`)
 - Self-hosted Transformers.js mirror via `env.remoteHost`
 - Storage quota check before loading large models, with proactive cache-clear UI

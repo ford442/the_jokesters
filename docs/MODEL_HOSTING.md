@@ -176,7 +176,25 @@ All model URLs in the codebase now point to the VPS:
 - `src/llm/TransformersEngineAdapter.ts` — `env.remoteHost` redirected to VPS
 - `src/audio/Supertonic.ts` — TTS ONNX models
 - `src/audio/AudioEngine.ts` — TTS voice styles
-- `src/service-worker.ts` — Intercepts `storage.1ink.us` (and Contabo failover) for parallel downloads
+- `src/service-worker.ts` — Intercepts `storage.1ink.us` (and Contabo) for parallel Range downloads with dual-domain striping
+- `src/config/loadFailover.ts` — VPS → Contabo (SW) → HF Hub automatic Vicuna retry
+
+## HuggingFace Vicuna repo checklist (Option B)
+
+Failover target: `https://huggingface.co/ford442/vicuna-7b-q4f32-webllm` (`main` until `HF_VICUNA_REVISION` is pinned).
+
+| Item | Why |
+|------|-----|
+| `mlc-chat-config.json` | WebLLM refuses to init without it |
+| `tokenizer.model` + `tokenizer_config.json` | Upstream config omits `tokenizer_files`; app supplies them via overrides |
+| All `params_shard_*.bin` (complete shard set) | Partial uploads fail mid-load as network/config |
+| HF CDN Range / HTTP 206 | SW parallel chunks; confirm with `curl -I -H 'Range: bytes=0-1023'` |
+| Matching q4f32 quant | Same as VPS Vicuna — do not mix q4f16 shards |
+| LFS pointer files resolved | Raw LFS pointers 404 as tiny files and fail the byte-length check |
+
+Option C (HF Inference Endpoint / paid always-on) is **not** implemented. Use the existing API engine for comedy-only remote inference if Hub CDN is still too flaky after A+B.
+
+## Storage Requirements
 
 ## Storage Requirements
 

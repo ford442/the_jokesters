@@ -20,8 +20,8 @@ Strategic takeaway: **build load / VRAM / download foundation before more conten
 ## Org / debt (non-blocking but real)
 
 - Oversized: `DreamModes_Sentient.ts` ([#290](https://github.com/ford442/the_jokesters/issues/290)) — `registryCatalog.ts` ([#289](https://github.com/ford442/the_jokesters/issues/289)) resolved by splitting into `registryCatalog.partN.ts` partitions behind a thin barrel
-- `ParallelDownloadManager` mostly unused; SW owns parallel Range downloads
-- Doc drift: `PARALLEL_DOWNLOADS.md`, blessed vs `getRecommendedModel` thresholds
+- Download stack: service worker + `dualDomainStripe.ts` is the sole parallel path ([#306](https://github.com/ford442/the_jokesters/issues/306)); `ParallelDownloadManager` removed
+- Guided picker: `recommendModels` in `src/app/modelGuide.ts` (Hermes mid-band; Vicuna only on healthy VRAM). Auto-fallback after Vicuna failure jumps to Hermes 3B.
 
 ## Filed issues (work order)
 
@@ -31,7 +31,7 @@ Strategic takeaway: **build load / VRAM / download foundation before more conten
 | [#303](https://github.com/ford442/the_jokesters/issues/303) | Paid CDN / object storage evaluation | P0 load |
 | [#304](https://github.com/ford442/the_jokesters/issues/304) | HF-dedicated Vicuna + multi-source failover | P0 load |
 | [#305](https://github.com/ford442/the_jokesters/issues/305) | Ship ctx512/1024 wasm; stop silent high-VRAM fallback | P1 VRAM |
-| [#306](https://github.com/ford442/the_jokesters/issues/306) | Unify download stack + load diagnostics | P1 foundation |
+| [#306](https://github.com/ford442/the_jokesters/issues/306) | Unify download stack + load diagnostics | Done (SW-only parallel path, error-panel recovery, aligned fallback) |
 | [#307](https://github.com/ford442/the_jokesters/issues/307) | Local party-mode live show MVP | P3 vision (gated) |
 
 ## Later vision (after gates)

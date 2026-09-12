@@ -3,6 +3,12 @@
 
 interface ImportMetaEnv {
     readonly BASE_URL: string
+    readonly VITE_VPS_STORAGE_ORIGIN?: string
+    readonly VITE_VPS_STORAGE_MIRROR_ORIGIN?: string
+    /** Dual-domain Range striping (default on). Set to `0` / `false` to disable. */
+    readonly VITE_VPS_DUAL_DOMAIN_STRIPE?: string
+    /** Per-chunk TTFB race across both origins (default off). */
+    readonly VITE_VPS_STRIPE_RACE?: string
 }
 
 interface ImportMeta {

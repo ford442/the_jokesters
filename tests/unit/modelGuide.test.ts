@@ -28,6 +28,14 @@ describe('recommendModels', () => {
     expect(r.primaryReason.toLowerCase()).toMatch(/webgpu|cpu/)
   })
 
+  it('recommends Hermes instead of Vicuna after a prior Vicuna OOM', () => {
+    const r = recommendModels(device({ availableVramMB: 5000, supportsF16: true }), {
+      avoidVicuna: true,
+    })
+    expect(r.primary.id).not.toContain('vicuna-7b-q4f32-webllm-vps')
+    expect(r.primaryReason.toLowerCase()).toMatch(/gpu memory|oom/)
+  })
+
   it('recommends Vicuna 7B on high VRAM', () => {
     const r = recommendModels(device({ availableVramMB: 5000, supportsF16: true }))
     expect(r.primary.id).toContain('vicuna-7b-q4f32')

@@ -3,6 +3,7 @@ import { getRequestedRendererMode, setRendererModePreference, isWebGPUAvailable 
 import type { RendererMode } from '../visuals/rendererMode'
 import type { VRAMOptimizationConfig } from '../utils/dynamicContext'
 import type { LaunchConfig } from './types'
+import { clearModelWeightCaches } from './modelCache'
 import {
   BLESSED_PRESETS,
   downloadBlurb,
@@ -11,6 +12,7 @@ import {
   probeDeviceCapabilities,
   recommendModels,
   consumeOomFallback,
+  avoidVicunaFromLastOom,
   type ModelRecommendation,
 } from './modelGuide'
 
@@ -245,18 +247,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
   clearCacheBtn?.addEventListener('click', async () => {
     clearCacheBtn.textContent = 'Clearing...'
     try {
-      const dbs = (await (window as any).indexedDB?.databases?.()) ?? []
-      for (const db of dbs) {
-        if (db.name && (db.name.includes('webllm') || db.name.includes('cache'))) {
-          ;(window as any).indexedDB.deleteDatabase(db.name)
-          console.log('[Storage] Deleted IndexedDB:', db.name)
-        }
-      }
-      const cacheNames = await caches.keys()
-      for (const name of cacheNames) {
-        await caches.delete(name)
-        console.log('[Storage] Deleted Cache:', name)
-      }
+      await clearModelWeightCaches()
       const regs = (await navigator.serviceWorker?.getRegistrations()) ?? []
       for (const reg of regs) {
         await reg.unregister()
@@ -281,7 +272,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       const oom = consumeOomFallback()
       const last = loadLastSuccessfulLaunch()
       const device = await probeDeviceCapabilities()
-      const rec = recommendModels(device)
+      const rec = recommendModels(device, { avoidVicuna: avoidVicunaFromLastOom() })
 
       updateCapabilityDisplay(
         `${device.supportsF16 ? '✅' : '❌'} f16 · ~${Math.round(device.availableVramMB)} MB free`,

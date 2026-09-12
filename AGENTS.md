@@ -156,8 +156,7 @@ the_jokesters/
 │   │   ├── LipSync.ts             # Lip synchronization with audio volume
 │   │   └── CallbackVisualizer.ts  # Visual feedback for callbacks
 │   ├── services/                  # External services
-│   │   ├── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
-│   │   └── ParallelDownloadManager.ts # Parallel download orchestration
+│   │   └── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
 │   ├── config/                    # Configuration
 │   │   ├── agents.ts              # Agent definitions (personalities, prompts, colors)
 │   │   ├── models.ts              # LLM model configurations (VPS, HF, unified, triple-engine)
@@ -167,7 +166,9 @@ the_jokesters/
 │   ├── utils/                     # Utilities
 │   │   ├── RNG.ts                 # Seeded random number generator
 │   │   ├── performanceTest.ts     # Performance testing utilities
-│   │   └── dynamicContext.ts      # Dynamic context window / VRAM optimization
+│   │   ├── dynamicContext.ts      # Dynamic context window / VRAM optimization
+│   │   ├── vpsStorageUrl.ts       # Canonical storage host + /resolve/main/ rewrite
+│   │   └── dualDomainStripe.ts    # Shared Range stripe planner (SW parallel downloads)
 │   ├── prompts/                   # Persona prompts (loaded as text)
 │   │   ├── robot.ts               # Robot persona prompt
 │   │   └── techBro.ts             # Tech Bro persona prompt
@@ -183,7 +184,7 @@ the_jokesters/
 │   │   ├── chaosTestRunner.cjs    # Chaos test runner (CommonJS)
 │   │   ├── integrationChaosTest.ts # Integration chaos tests
 │   │   └── runChaosTests.ts       # Chaos test runner
-│   ├── service-worker.ts          # Service worker for parallel model downloads
+│   ├── service-worker.ts          # Parallel Range downloads + dual-domain striping / failover
 │   ├── improv/                    # Conversation branching utilities
 │   │   └── branching.ts
 │   └── style.css                  # Application styles
@@ -647,7 +648,7 @@ Available models include:
 
 Default / blessed launch presets: Hermes-3 3B (f32/f16), Vicuna 7B, Qwen 0.5B, Vicuna GGUF — see `src/config/blessedPresets.ts`.
 **Canonical model host:** `https://storage.1ink.us` via `VPS_STORAGE_URL` (`src/utils/vpsStorageUrl.ts`).  
-Override with `VITE_VPS_STORAGE_ORIGIN`. Mirror `storage.noahcohn.com` is ops/SW failover only.
+Override with `VITE_VPS_STORAGE_ORIGIN`. Mirror `storage.noahcohn.com` is used for dual-domain Range striping and failover (`src/utils/dualDomainStripe.ts`); do not hardcode new app paths to the mirror.
 
 ### Agent Configuration
 Agents defined in `src/config/agents.ts`:
@@ -939,10 +940,11 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   after version bumps. On SwiftShader / software WebGPU VMs, prefer **MLC** with q4f32 models (no
   shader-f16); llama.cpp is for true no-WebGPU browsers.
 - WebLLM caches weights via the **Cache API** using HF-style `…/resolve/main/…` URLs. The
-  `index.html` `fetch` wrapper cannot rewrite those (`Cache.add()` bypasses it); the service worker
-  (`src/service-worker.ts`) does the rewrite but only controls the page **after a reload** (it never
-  calls `clients.claim()`). A fresh first load can therefore 404 on `mlc-chat-config.json` — reload
-  so the SW takes control (or rewrite `/resolve/main/` at the network layer in a test harness).
+  `index.html` `fetch` wrapper cannot rewrite those (`Cache.add()` bypasses it). The service worker
+  (`src/service-worker.ts`) rewrites them and takes control with `skipWaiting` + `clients.claim()`.
+  A first paint can still race activate; `installVpsFetchRewrite` / `installVpsCacheRewrite` cover
+  `Cache.add` before the worker controls the page. Reload only if both the page rewrite and the SW
+  missed (`mlc-chat-config.json` 404 on a flat VPS path).
 - The **"Cloud Conflict Dashboard"** modal (`#cloud-dashboard-modal`) defaults to `display:none` and
   `setupDashboard()` (`src/ui/dashboard.ts`) hides it again on init; it only opens via the dashboard
   or "Review Sync" buttons, so it no longer blocks **Load Model & Start** on cold start.

@@ -1,22 +1,32 @@
 import { isWllamaRuntimeMismatch } from '../llm/wllamaRuntime'
 import type { ErrorCategory } from '../types/chat'
 
-/** Categorize LLM / GPU errors for user-facing messaging. */
-export function categorizeChatError(error: unknown): ErrorCategory {
-  const msg = error instanceof Error ? error.message : String(error)
-  const msgLower = msg.toLowerCase()
+const CATEGORIES: readonly ErrorCategory[] = [
+  'webgpu',
+  'oom',
+  'network',
+  'config',
+  'wasm_missing',
+  'llamacpp_mismatch',
+  'unknown',
+]
 
+function isErrorCategory(value: unknown): value is ErrorCategory {
+  return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value)
+}
+
+/** Categorize LLM / GPU / download errors for failover + user-facing messaging. */
+export function categorizeChatError(error: unknown): ErrorCategory {
   if (
     error instanceof Error &&
-    error.name === 'WebLLMInitError' &&
     'category' in error &&
-    typeof (error as { category?: string }).category === 'string'
+    isErrorCategory((error as { category?: unknown }).category)
   ) {
-    const cat = (error as { category: string }).category
-    if (cat === 'webgpu' || cat === 'oom' || cat === 'network') {
-      return cat
-    }
+    return (error as { category: ErrorCategory }).category
   }
+
+  const msg = error instanceof Error ? error.message : String(error)
+  const msgLower = msg.toLowerCase()
 
   if (msgLower.includes('webgpu') || (msgLower.includes('gpu') && msgLower.includes('not supported'))) {
     return 'webgpu'
@@ -24,26 +34,33 @@ export function categorizeChatError(error: unknown): ErrorCategory {
 
   if (
     msgLower.includes('oom') ||
-    msgLower.includes('memory') ||
     msgLower.includes('createbuffer') ||
-    msgLower.includes('allocation') ||
     msgLower.includes('mapasync') ||
     msgLower.includes('buffer was unmapped') ||
     msgLower.includes('device is lost') ||
-    msgLower.includes('device lost')
+    msgLower.includes('device lost') ||
+    (msgLower.includes('memory') && !msgLower.includes('wasm'))
   ) {
     return 'oom'
   }
 
   if (
-    msgLower.includes('fetch') ||
-    msgLower.includes('network') ||
-    msgLower.includes('err_') ||
-    msgLower.includes('cache') ||
-    msgLower.includes('cdn') ||
-    msgLower.includes('timeout')
+    msgLower.includes('model_lib') ||
+    msgLower.includes('.wasm') ||
+    msgLower.includes('wasm missing') ||
+    msgLower.includes('webgpu.wasm')
   ) {
-    return 'network'
+    return 'wasm_missing'
+  }
+
+  if (
+    msgLower.includes('tokenizer') ||
+    msgLower.includes('mlc-chat-config') ||
+    msgLower.includes('tokenizer_files') ||
+    msgLower.includes('invalid config') ||
+    msgLower.includes('chat config')
+  ) {
+    return 'config'
   }
 
   if (
@@ -52,6 +69,20 @@ export function categorizeChatError(error: unknown): ErrorCategory {
     isWllamaRuntimeMismatch(error)
   ) {
     return 'llamacpp_mismatch'
+  }
+
+  if (
+    msgLower.includes('fetch') ||
+    msgLower.includes('network') ||
+    msgLower.includes('err_') ||
+    msgLower.includes('cache') ||
+    msgLower.includes('cdn') ||
+    msgLower.includes('timeout') ||
+    msgLower.includes('cors') ||
+    /\b(404|403|429|500|502|503)\b/.test(msgLower) ||
+    msgLower.includes('failed to load')
+  ) {
+    return 'network'
   }
 
   return 'unknown'

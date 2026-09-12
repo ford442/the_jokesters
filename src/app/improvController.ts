@@ -374,8 +374,10 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       const cat = GroupChatManager.getErrorCategory(error)
       const msgs = {
         oom: '⚠️ GPU ran out of memory. Close other GPU-heavy tabs and reload.',
-        network: '⚠️ Network error during scene. Check your connection and try again.',
+        network: '⚠️ Download failed during scene. Check your connection and try again.',
         webgpu: '⚠️ WebGPU error. Try reloading the page.',
+        config: '⚠️ Model config/tokenizer error. Reload or pick another model.',
+        wasm_missing: '⚠️ Model WASM missing. Reload — peak VRAM may be higher if the generic library is used.',
         llamacpp_mismatch: '⚠️ llama.cpp runtime mismatch. Reload or switch to MLC.',
         unknown: '⚠️ Error running scene — see console for details.',
       } as const
@@ -526,8 +528,10 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       const cat = GroupChatManager.getErrorCategory(error)
       const msgs = {
         oom: '⚠️ GPU ran out of memory. Close other GPU-heavy tabs and reload.',
-        network: '⚠️ Network error during scene. Check your connection and try again.',
+        network: '⚠️ Download failed during scene. Check your connection and try again.',
         webgpu: '⚠️ WebGPU error. Try reloading the page.',
+        config: '⚠️ Model config/tokenizer error. Reload or pick another model.',
+        wasm_missing: '⚠️ Model WASM missing. Reload — peak VRAM may be higher if the generic library is used.',
         llamacpp_mismatch: '⚠️ llama.cpp runtime mismatch. Reload or switch to MLC in the engine selector.',
         unknown: '⚠️ Error running improv scene — see console for details.',
       } as const

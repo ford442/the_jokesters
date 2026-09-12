@@ -7,17 +7,46 @@ export function setProgress(status: string, percentage: number): void {
 
 /** Non-fatal notice shown when TTS init fails on all storage hosts — the show still boots (text + stage), just silently. */
 export function showVoiceOfflineBanner(): void {
+  showChatBanner(
+    'voice-offline-banner',
+    '🔇',
+    'Voice offline — text-to-speech could not connect. The show continues without narration.',
+    '#4a1a1a',
+    '#ffb3b3',
+    '#ff6b6b',
+  )
+}
+
+/** Custom ctx WASM was missing; generic 4K lib is in use (higher peak VRAM). */
+export function showWasmFallbackBanner(message: string): void {
+  showChatBanner(
+    'wasm-fallback-banner',
+    '⚠️',
+    message,
+    '#3d3416',
+    '#ffe9a8',
+    '#e6c15a',
+  )
+}
+
+function showChatBanner(
+  id: string,
+  icon: string,
+  message: string,
+  background: string,
+  color: string,
+  border: string,
+): void {
   const chatContainer = document.getElementById('chat-container')
-  if (!chatContainer || document.getElementById('voice-offline-banner')) return
+  if (!chatContainer || document.getElementById(id)) return
 
   const banner = document.createElement('div')
-  banner.id = 'voice-offline-banner'
+  banner.id = id
   banner.setAttribute('role', 'status')
   banner.style.cssText =
-    'background:#4a1a1a;color:#ffb3b3;border:1px solid #ff6b6b;border-radius:6px;' +
+    `background:${background};color:${color};border:1px solid ${border};border-radius:6px;` +
     'padding:8px 12px;margin-bottom:10px;font-size:0.85em;display:flex;align-items:center;gap:8px;'
-  banner.innerHTML =
-    '<span>🔇</span><span>Voice offline — text-to-speech could not connect. The show continues without narration.</span>'
+  banner.innerHTML = `<span>${icon}</span><span>${message}</span>`
   chatContainer.insertBefore(banner, chatContainer.firstChild)
 }
 

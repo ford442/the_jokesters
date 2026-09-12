@@ -134,6 +134,9 @@ export interface UnifiedModelConfig {
   transformers?: TransformersEngineConfig
   /** API server-specific configuration */
   api?: ApiEngineConfig
+  /** HuggingFace Hub weight URL used when VPS Vicuna fails as network/config */
+  hf_fallback_url?: string
+  hf_fallback_model_id?: string
 }
 
 /**

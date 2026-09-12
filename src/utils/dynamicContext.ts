@@ -2,6 +2,22 @@ import { buildComedyLogitProcessorRegistry } from '../llm/webllmComedyExtensions
 import type { TokenEstimator, TokenEstimationSource } from './tokenEstimator';
 import { HeuristicTokenEstimator } from './tokenEstimator';
 import * as webllm from '@mlc-ai/web-llm';
+import { categorizeChatError } from '../chat/chatErrors';
+import {
+  WASM_FALLBACK_VRAM_WARNING,
+  applyHfWeightFailover,
+  applyVpsWeightRestore,
+  decideWeightFailover,
+  inferLoadSourceFromUrl,
+  parseLastLoadSource,
+  preferredStartSource,
+  recordLoadTelemetry,
+  setWasmFallbackWarning,
+  wasmLibFallbackChain,
+  consumeForceHfSource,
+  LAST_LOAD_SOURCE_KEY,
+  type LoadSource,
+} from '../config/loadFailover';
 
 export interface ContextConfig {
   context_window_size: number;
@@ -34,6 +50,17 @@ export interface DynamicModelConfig {
   model: string;
   model_lib: string;
   hf_fallback_url?: string;
+  requestedModelId?: string;
+  loadSource?: LoadSource;
+  skipSourceFailover?: boolean;
+  triedSources?: LoadSource[];
+  /** Snapshot of the VPS URLs so an HF-first attempt can reverse-failover. */
+  vpsRestore?: {
+    model_id: string;
+    model: string;
+    model_lib: string;
+    overrides?: Record<string, unknown>;
+  };
   overrides?: Record<string, unknown>;
   vram_required_MB?: number;
 }
@@ -411,33 +438,64 @@ export function alignPrefillChunkSize(contextSize: number, prefillChunkSize: num
   return Math.max(1, p2);
 }
 
+export interface ResolvedModelLib {
+  url: string;
+  compiledMaxContext: number | null;
+  usedFallback: boolean;
+  warning?: string;
+}
+
 /**
- * HEAD-probe model_lib URL; fall back to generic 4K .wasm when custom artifact
- * is not yet published on the VPS.
+ * HEAD-probe model_lib URL. A 404 on a custom ctx512/1024 Vicuna lib falls
+ * back to the generic 4K MLC WASM (VPS, then GitHub) and surfaces a VRAM warning.
+ * Network errors on HEAD do not assume the file is missing (GET may still work).
  */
 export async function resolveModelLibUrl(
   modelLib: string,
-): Promise<{ url: string; compiledMaxContext: number | null }> {
-  const probe = async (url: string): Promise<boolean> => {
+): Promise<ResolvedModelLib> {
+  const probeStatus = async (url: string): Promise<number | 'throw'> => {
     try {
       const resp = await fetch(url, { method: 'HEAD' });
-      return resp.ok;
+      return resp.status;
     } catch {
-      return false;
+      return 'throw';
     }
   };
 
-  if (await probe(modelLib)) {
+  const status = await probeStatus(modelLib);
+  if (status !== 'throw' && status >= 200 && status < 300) {
     return {
       url: modelLib,
       compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+      usedFallback: false,
     };
   }
 
-  console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
+  const missing = status === 404 || status === 410;
+  if (missing) {
+    for (const fallback of wasmLibFallbackChain(modelLib)) {
+      const fbStatus = await probeStatus(fallback);
+      if (fbStatus !== 'throw' && fbStatus >= 200 && fbStatus < 300) {
+        console.warn(
+          `[DynamicContext] ${WASM_FALLBACK_VRAM_WARNING} (${modelLib} → ${fallback})`,
+        );
+        setWasmFallbackWarning(WASM_FALLBACK_VRAM_WARNING);
+        return {
+          url: fallback,
+          compiledMaxContext: parseCompiledMaxContextFromModelLib(fallback),
+          usedFallback: true,
+          warning: WASM_FALLBACK_VRAM_WARNING,
+        };
+      }
+    }
+  } else {
+    console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
+  }
+
   return {
     url: modelLib,
     compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+    usedFallback: false,
   };
 }
 
@@ -541,9 +599,82 @@ export async function loadModelWithDynamicContext(
   onProgress?: (report: webllm.InitProgressReport) => void,
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
 ): Promise<webllm.MLCEngine> {
+  const loadStarted = performance.now();
+  const requestedId = modelConfig.requestedModelId ?? modelConfig.model_id;
+  const originalVps = {
+    model_id: modelConfig.model_id,
+    model: modelConfig.model,
+    model_lib: modelConfig.model_lib,
+    overrides: modelConfig.overrides,
+  };
 
-  const { url: resolvedModelLib, compiledMaxContext } =
+  if (!modelConfig.skipSourceFailover) {
+    let last = null as ReturnType<typeof parseLastLoadSource>;
+    try {
+      last = parseLastLoadSource(localStorage.getItem(LAST_LOAD_SOURCE_KEY));
+    } catch {
+      last = null;
+    }
+    const forceHf = consumeForceHfSource()
+    const start = preferredStartSource(requestedId, last, { forceHf })
+    if (start === 'hf' && inferLoadSourceFromUrl(modelConfig.model) !== 'hf') {
+      onProgress?.({
+        progress: 0,
+        timeElapsed: 0,
+        text: forceHf
+          ? 'Retrying Vicuna from Hugging Face…'
+          : 'Last successful Vicuna load was Hugging Face — starting there…',
+      });
+      return loadModelWithDynamicContext(
+        {
+          ...applyHfWeightFailover({ ...modelConfig, requestedModelId: requestedId }),
+          skipSourceFailover: true,
+          vpsRestore: originalVps,
+        },
+        preferredContext,
+        onProgress,
+        vramConfig,
+      );
+    }
+  }
+
+  const currentSource: LoadSource = modelConfig.loadSource ?? inferLoadSourceFromUrl(modelConfig.model);
+  recordLoadTelemetry({
+    modelId: requestedId,
+    source: currentSource,
+    phase: 'start',
+    ms: 0,
+  });
+
+  if (currentSource === 'vps') {
+    onProgress?.({
+      progress: 0,
+      timeElapsed: 0,
+      text: 'Rewriting VPS model URLs…',
+    });
+  }
+
+  onProgress?.({
+    progress: 0,
+    timeElapsed: 0,
+    text: 'Probing model WASM library…',
+  });
+  recordLoadTelemetry({
+    modelId: requestedId,
+    source: currentSource,
+    phase: 'wasm_probe',
+    ms: Math.round(performance.now() - loadStarted),
+  });
+
+  const { url: resolvedModelLib, compiledMaxContext, usedFallback } =
     await resolveModelLibUrl(modelConfig.model_lib);
+
+  recordLoadTelemetry({
+    modelId: requestedId,
+    source: currentSource,
+    phase: 'engine',
+    ms: Math.round(performance.now() - loadStarted),
+  });
 
   // Determine context size
   let contextSize: number;
@@ -657,32 +788,110 @@ export async function loadModelWithDynamicContext(
     ]);
 
     cleanup();
+    recordLoadTelemetry({
+      modelId: requestedId,
+      source: currentSource,
+      phase: 'success',
+      ms: Math.round(performance.now() - loadStarted),
+    });
+    try {
+      localStorage.setItem(
+        LAST_LOAD_SOURCE_KEY,
+        JSON.stringify({
+          modelId: requestedId,
+          source: currentSource,
+          wasmFallback: usedFallback,
+          savedAt: new Date().toISOString(),
+        }),
+      );
+    } catch {
+      /* ignore quota */
+    }
     return engine;
 
   } catch (error: any) {
     cleanup();
     
     const errorMsg = error?.message || String(error);
+    const category = categorizeChatError(error);
+    const tried = [...(modelConfig.triedSources ?? []), currentSource];
+    const action = decideWeightFailover({
+      modelId: requestedId,
+      currentSource,
+      category,
+      tried,
+    });
 
-    // HF Failover for Network / Fetch errors (VPS down or CORS issue)
-    if (modelConfig.hf_fallback_url && modelConfig.model !== modelConfig.hf_fallback_url && (errorMsg.toLowerCase().includes('fetch') || errorMsg.toLowerCase().includes('network') || errorMsg.toLowerCase().includes('failed to fetch'))) {
-      console.warn(`[DynamicContext] Primary model load failed: ${errorMsg}. Failing over to HF fallback: ${modelConfig.hf_fallback_url}`);
+    recordLoadTelemetry({
+      modelId: requestedId,
+      source: currentSource,
+      phase: 'fail',
+      ms: Math.round(performance.now() - loadStarted),
+      errorCategory: category,
+    });
+
+    if (action === 'retry_hf') {
+      console.warn(
+        `[DynamicContext] ${category} on VPS Vicuna (${errorMsg}). Retrying once from Hugging Face Hub.`,
+      );
       onProgress?.({
         progress: 0,
         timeElapsed: 0,
-        text: 'Primary server unreachable. Failing over to Hugging Face CDN...',
+        text: 'Download failed on VPS. Retrying Vicuna from Hugging Face…',
       });
-      // Swap the model URL to the HF fallback and retry
+      recordLoadTelemetry({
+        modelId: requestedId,
+        source: 'hf',
+        phase: 'hf_retry',
+        ms: Math.round(performance.now() - loadStarted),
+        errorCategory: category,
+      });
       return loadModelWithDynamicContext(
-        { ...modelConfig, model: modelConfig.hf_fallback_url },
+        {
+          ...applyHfWeightFailover({ ...modelConfig, requestedModelId: requestedId }),
+          triedSources: tried,
+          skipSourceFailover: true,
+          vpsRestore: modelConfig.vpsRestore ?? originalVps,
+        },
         contextSize,
         onProgress,
-        vramConfig
+        vramConfig,
+      );
+    }
+
+    if (action === 'retry_vps') {
+      console.warn(
+        `[DynamicContext] ${category} on Hugging Face Vicuna (${errorMsg}). Retrying VPS.`,
+      );
+      onProgress?.({
+        progress: 0,
+        timeElapsed: 0,
+        text: 'Hugging Face download failed. Retrying Vicuna from storage.1ink.us…',
+      });
+      recordLoadTelemetry({
+        modelId: requestedId,
+        source: 'vps',
+        phase: 'vps_retry',
+        ms: Math.round(performance.now() - loadStarted),
+        errorCategory: category,
+      });
+      return loadModelWithDynamicContext(
+        {
+          ...applyVpsWeightRestore(
+            { ...modelConfig, requestedModelId: requestedId },
+            modelConfig.vpsRestore ?? originalVps,
+          ),
+          triedSources: tried,
+          skipSourceFailover: true,
+        },
+        contextSize,
+        onProgress,
+        vramConfig,
       );
     }
 
     // On OOM, retry with smaller context and optionally force KV cache quantization
-    if (errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
+    if (category === 'oom' || errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
       // Floor: 128 for 3B, 256 for 7B/8B (was 512 — lowered for constrained 4 GB GPUs)
       const isSmallModel = modelConfig.model_id.toLowerCase().includes('3b');
       const minContext = isSmallModel ? 128 : 256;
@@ -707,15 +916,22 @@ export async function loadModelWithDynamicContext(
         // @ts-ignore
         if (typeof gc !== 'undefined') gc();
 
-        return loadModelWithDynamicContext(modelConfig, smallerContext, onProgress, vramConfig);
+        return loadModelWithDynamicContext(
+          { ...modelConfig, skipSourceFailover: true },
+          smallerContext,
+          onProgress,
+          vramConfig,
+        );
       }
 
       // Already at floor — try forcing int8 KV quantization as the last resort
       if (vramConfig.kv_cache_quantization === 'none' || vramConfig.kv_cache_quantization === 'auto') {
         console.warn('[DynamicContext] OOM at minimum context — forcing int8 KV cache quantization and retrying');
         return loadModelWithDynamicContext(
-          modelConfig, oomFloor, onProgress,
-          { ...vramConfig, kv_cache_quantization: 'int8' }
+          { ...modelConfig, skipSourceFailover: true },
+          oomFloor,
+          onProgress,
+          { ...vramConfig, kv_cache_quantization: 'int8' },
         );
       }
     }

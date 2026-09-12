@@ -7,6 +7,21 @@ import {
   toVpsMirrorUrl,
   vpsGzUrl,
 } from './utils/vpsStorageUrl';
+import {
+  STRIPE_CHUNK_SIZE,
+  STRIPE_CHUNK_TIMEOUT_MS,
+  STRIPE_TTFB_TIMEOUT_MS,
+  buildStripePlan,
+  chunkSourceUrls,
+  defaultStripeConfig,
+  expectedChunkBytes,
+  fetchStripedChunk,
+  isChunkLengthValid,
+  raceRangeResponses,
+  stripeWorkerCount,
+  type StripeChunk,
+  type StripeConfig,
+} from './utils/dualDomainStripe';
 
 // @ts-ignore
 precacheAndRoute(self.__WB_MANIFEST || []);
@@ -27,8 +42,17 @@ self.addEventListener('activate', (event) => {
  * requests for large files (> CHUNK_SIZE). For smaller files it acts as a
  * thin pass-through to avoid unnecessary memory buffering.
  *
- * Reliability: after primary retries exhaust, falls back once to the Contabo
- * mirror (storage.noahcohn.com ↔ storage.1ink.us).
+ * Reliability: large Range-able shards stripe 42MB chunks across
+ * storage.1ink.us and the Contabo mirror (storage.noahcohn.com). A miss or
+ * stall on the preferred origin is a soft failure — the same byte range is
+ * refilled from the sibling host. Whole-file fetchWithRetry still failovers
+ * after retries for small / non-range files.
+ *
+ * Cache API keys stay on the canonical primary URL (the intercepted request).
+ * This worker never Cache.put()s under the mirror host.
+ *
+ * Kill-switch: VITE_VPS_DUAL_DOMAIN_STRIPE=0, ?noStripe, or
+ * localStorage jokesters-dual-domain-stripe=0 (page posts SET_STRIPE_CONFIG).
  *
  * Speed: same-origin `.gz` twins only (no cross-host Contabo .gz pulls);
  * negative-caches missing `.gz` HEADs for 1 hour.
@@ -38,8 +62,7 @@ self.addEventListener('activate', (event) => {
 // @ts-ignore
 declare const self: ServiceWorkerGlobalScope;
 
-const PARALLEL_CONNECTIONS = 4;
-const CHUNK_SIZE = 42 * 1024 * 1024; // 42MB
+const CHUNK_SIZE = STRIPE_CHUNK_SIZE;
 const MODEL_HOSTS = [
   'cdn-lfs.huggingface.co',
   'huggingface.co',
@@ -51,6 +74,9 @@ const MODEL_HOSTS = [
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 500;
 const GZ_MISS_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+/** Runtime override from the page (query / localStorage kill-switch). */
+let stripeConfig: StripeConfig = defaultStripeConfig();
 
 /** Session negative cache for missing same-origin `.gz` twins. */
 const gzMissCache = new Map<string, number>();
@@ -115,6 +141,97 @@ async function fetchWithRetry(
   }
 
   throw lastError || new Error(`fetch failed after ${maxRetries} retries`);
+}
+
+function mergeAbortSignals(signals: AbortSignal[]): AbortSignal {
+  const live = signals.filter((s) => !!s);
+  if (live.length === 0) return new AbortController().signal;
+  const anyFn = (AbortSignal as typeof AbortSignal & {
+    any?: (s: AbortSignal[]) => AbortSignal;
+  }).any;
+  if (typeof anyFn === 'function') return anyFn(live);
+  const ctrl = new AbortController();
+  for (const s of live) {
+    if (s.aborted) {
+      ctrl.abort();
+      return ctrl.signal;
+    }
+    s.addEventListener('abort', () => ctrl.abort(), { once: true });
+  }
+  return ctrl.signal;
+}
+
+async function fetchRangeResponse(
+  url: string,
+  start: number,
+  end: number,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      headers: { Range: `bytes=${start}-${end}` },
+      signal: mergeAbortSignals(signal ? [signal, ctrl.signal] : [ctrl.signal]),
+    });
+    if (response.ok || response.status === 206) return response;
+    throw new Error(`HTTP ${response.status}`);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchRangeBytes(
+  url: string,
+  start: number,
+  end: number,
+  timeoutMs: number,
+  signal?: AbortSignal,
+): Promise<Uint8Array> {
+  const response = await fetchRangeResponse(url, start, end, timeoutMs, signal);
+  const buffer = await response.arrayBuffer();
+  return new Uint8Array(buffer);
+}
+
+/**
+ * Check if URL is a model download we should intercept (with retry / rewrite).
+ */
+async function probeHead(url: string): Promise<{ fileSize: number; supportsRanges: boolean; ok: boolean }> {
+  const headResponse = await fetchWithRetry(url, { method: 'HEAD' }, 1, false);
+  const fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
+  const supportsRanges =
+    headResponse.ok &&
+    headResponse.headers.has('accept-ranges') &&
+    headResponse.headers.get('accept-ranges') !== 'none';
+  return { fileSize, supportsRanges, ok: headResponse.ok };
+}
+
+/**
+ * Size + range probe. Tries primary then mirror for *metadata only* — the
+ * download URL stays canonical so striping can still split across both hosts.
+ */
+async function probeFileMeta(url: string): Promise<{ fileSize: number; supportsRanges: boolean } | null> {
+  const apply = async (u: string) => {
+    const probed = await probeHead(u);
+    if (probed.ok && probed.fileSize > 0) return probed;
+    return null;
+  };
+
+  try {
+    const primary = await apply(url);
+    if (primary) return primary;
+  } catch {
+    /* try mirror for size */
+  }
+
+  const mirror = toVpsMirrorUrl(url);
+  if (!mirror) return null;
+  try {
+    return await apply(mirror);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -250,47 +367,94 @@ async function tryFetchGzCompressed(url: string): Promise<Response | null> {
 
 /**
  * Download a large file with parallel connections.
- * Chunk workers use fetchWithRetry (including mirror failover).
+ *
+ * VPS shards stripe even/odd chunks across primary + Contabo mirror. A miss
+ * on the preferred origin refills that range from the sibling (soft fail).
+ * Cache keys stay on `url` (canonical primary); we never put under the mirror.
  */
 async function downloadParallel(
   url: string,
   fileSize: number
 ): Promise<Response> {
-  const chunkCount = Math.ceil(fileSize / CHUNK_SIZE);
+  const plan = buildStripePlan(fileSize, url, stripeConfig);
+  console.log(
+    `[ServiceWorker] Parallel download${plan.enabled ? ' (dual-domain stripe)' : ''}: ` +
+    `${url} — ${plan.chunks.length} × ${(plan.chunkSize / 1024 / 1024).toFixed(0)}MB, ` +
+    `cache key ${plan.cacheKey}`
+  );
 
-  const ranges: Array<{ start: number; end: number }> = [];
-  for (let i = 0; i < chunkCount; i++) {
-    const start = i * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
-    ranges.push({ start, end });
-  }
-
-  const queue = [...ranges];
+  const queue = [...plan.chunks];
   const completedChunks: Array<{ index: number; data: Uint8Array }> = [];
+
+  const fetchRange = async (
+    chunk: StripeChunk,
+    sourceUrl: string,
+    start: number,
+    end: number,
+    signal?: AbortSignal,
+  ): Promise<Uint8Array> => {
+    const bytes = await fetchRangeBytes(sourceUrl, start, end, STRIPE_CHUNK_TIMEOUT_MS, signal);
+    if (!isChunkLengthValid(bytes.byteLength, chunk)) {
+      throw new Error(
+        `chunk ${chunk.index} length ${bytes.byteLength} != ${expectedChunkBytes(chunk)} from ${sourceUrl}`
+      );
+    }
+    return bytes;
+  };
+
+  const downloadOne = async (chunk: StripeChunk): Promise<Uint8Array> => {
+    const { preferredUrl, fallbackUrl } = chunkSourceUrls(chunk, plan);
+
+    if (plan.raceFirstByte && fallbackUrl) {
+      try {
+        const { value: response, url: winnerUrl } = await raceRangeResponses(
+          preferredUrl,
+          fallbackUrl,
+          (sourceUrl, signal) =>
+            fetchRangeResponse(sourceUrl, chunk.start, chunk.end, STRIPE_TTFB_TIMEOUT_MS, signal),
+        );
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (!isChunkLengthValid(bytes.byteLength, chunk)) {
+          throw new Error(`raced chunk ${chunk.index} length mismatch from ${winnerUrl}`);
+        }
+        console.log(`[ServiceWorker] Stripe chunk ${chunk.index} raced via ${winnerUrl}`);
+        return bytes;
+      } catch (err) {
+        console.warn(
+          `[ServiceWorker] Stripe race failed for chunk ${chunk.index}, sequential refill:`,
+          err,
+        );
+      }
+    }
+
+    const result = await fetchStripedChunk(chunk, plan, (sourceUrl, start, end, signal) =>
+      fetchRange(chunk, sourceUrl, start, end, signal),
+    );
+    if (result.fromFallback) {
+      console.warn(
+        `[ServiceWorker] Stripe chunk ${chunk.index} missed ${preferredUrl}, refilled from ${result.url}`
+      );
+    }
+    return result.data;
+  };
 
   const downloadWorker = async (): Promise<void> => {
     while (true) {
-      const range = queue.shift();
-      if (!range) break;
-
-      const { start, end } = range;
-      const idx = ranges.indexOf(range);
+      const chunk = queue.shift();
+      if (!chunk) break;
 
       try {
-        const response = await fetchWithRetry(url, {
-          headers: { 'Range': `bytes=${start}-${end}` },
-        });
-        const buffer = await response.arrayBuffer();
-        completedChunks.push({ index: idx, data: new Uint8Array(buffer) });
+        const data = await downloadOne(chunk);
+        completedChunks.push({ index: chunk.index, data });
       } catch (error) {
-        console.error(`[ServiceWorker] Chunk ${idx} failed after retries:`, error);
+        console.error(`[ServiceWorker] Chunk ${chunk.index} failed after stripe refill:`, error);
         throw error;
       }
     }
   };
 
   const workers = Array.from(
-    { length: Math.min(PARALLEL_CONNECTIONS, chunkCount) },
+    { length: stripeWorkerCount(plan.chunks.length, plan.raceFirstByte) },
     () => downloadWorker()
   );
   await Promise.all(workers);
@@ -372,38 +536,19 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
           if (gzResp) return gzResp;
         }
 
-        // Get file size via HEAD for parallel download decision.
-        // If primary fails over to the mirror, Response.url is the mirror URL —
-        // reuse it so subsequent GETs stay on the working host.
-        let headResponse: Response | null = null;
-        let fileSize = 0;
-        let downloadUrl = fetchUrl;
-        try {
-          headResponse = await fetchWithRetry(fetchUrl, { method: 'HEAD' }, 1);
-          fileSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
-          if (headResponse.url) {
-            downloadUrl = headResponse.url;
-          }
-        } catch {
+        const meta = await probeFileMeta(fetchUrl);
+        if (!meta) {
           console.warn('[ServiceWorker] HEAD request failed, using regular fetch:', fetchUrl);
           return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
         }
 
-        if (fileSize === 0 || !headResponse.ok) {
-          return fetchWithRetry(downloadUrl, fetchInit, MAX_RETRIES);
+        if (meta.supportsRanges && meta.fileSize > CHUNK_SIZE) {
+          console.log('[ServiceWorker] Using parallel download for:', fetchUrl);
+          return await downloadParallel(fetchUrl, meta.fileSize);
         }
 
-        const supportsRanges =
-          headResponse.headers.has('accept-ranges') &&
-          headResponse.headers.get('accept-ranges') !== 'none';
-
-        if (supportsRanges && fileSize > CHUNK_SIZE) {
-          console.log('[ServiceWorker] Using parallel download for:', downloadUrl);
-          return await downloadParallel(downloadUrl, fileSize);
-        }
-
-        console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', downloadUrl);
-        return fetchWithRetry(downloadUrl, fetchInit, MAX_RETRIES);
+        console.log('[ServiceWorker] File fits in single chunk, using regular fetch:', fetchUrl);
+        return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
       } catch (error) {
         console.error('[ServiceWorker] Download failed:', error);
         // Last-ditch: try mirror once more, then bare fetch
@@ -423,11 +568,20 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
  * Handle messages from the client
  */
 // @ts-ignore - ExtendableMessageEvent is service worker specific
-self.addEventListener('message', (event: ExtendableMessageEvent & { data: { type?: string } }) => {
+self.addEventListener('message', (event: ExtendableMessageEvent & {
+  data: { type?: string; enabled?: boolean; raceFirstByte?: boolean; invertOrigins?: boolean }
+}) => {
   if (event.data?.type === 'SKIP_WAITING') {
     (self as any).skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
     gzMissCache.clear();
     console.log('[ServiceWorker] Memory cache cleared');
+  } else if (event.data?.type === 'SET_STRIPE_CONFIG') {
+    stripeConfig = {
+      enabled: event.data.enabled !== false,
+      raceFirstByte: !!event.data.raceFirstByte,
+      invertOrigins: !!event.data.invertOrigins,
+    };
+    console.log('[ServiceWorker] Stripe config', stripeConfig);
   }
 });

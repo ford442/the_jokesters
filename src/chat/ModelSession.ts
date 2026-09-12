@@ -22,7 +22,6 @@ import {
   getUnifiedModelById,
   UNIFIED_MODELS,
 } from '../config/models'
-import { parallelDownloadManager } from '../services/ParallelDownloadManager'
 
 /**
  * Owns LLM engine lifecycle, context window budget, and interrupt semantics.
@@ -78,13 +77,6 @@ export class ModelSession {
     enginePreference: EngineType = 'auto',
   ): Promise<void> {
     if (this.isInitialized) return
-
-    try {
-      await parallelDownloadManager.initialize()
-      console.log('[ModelSession] Parallel download manager initialized')
-    } catch (error) {
-      console.warn('[ModelSession] Could not initialize parallel download manager:', error)
-    }
 
     this.engineType = enginePreference
     const unifiedModel = preferredModelId ? getUnifiedModelById(preferredModelId) : null
@@ -191,7 +183,7 @@ export class ModelSession {
     }
 
     const supportsF16 = await checkF16Support()
-    const autoFallbacks = getModelFallbackChain()
+    const autoFallbacks = getModelFallbackChain(preferredModelId)
     const compatibleFallbacks = supportsF16
       ? autoFallbacks
       : autoFallbacks.filter((id) => {

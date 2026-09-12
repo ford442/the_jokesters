@@ -30,6 +30,8 @@ src/
   prerender/                Adaptive LLM+TTS prerender coordinator
   audio/SfxManager.ts       Whitelisted SFX
   utils/vpsStorageUrl.ts    Canonical storage host (+ Vite env override)
+  utils/dualDomainStripe.ts Dual-domain Range striping (SW + PDM planner)
+  config/loadFailover.ts    Vicuna VPS → HF Hub source selection
   visuals/Stage.ts          Three.js stage + 5 actors
 ```
 
@@ -37,7 +39,8 @@ src/
 
 - **Canonical origin:** `https://storage.1ink.us` (`VPS_STORAGE_ORIGIN` in `src/utils/vpsStorageUrl.ts`)
 - **Override:** `VITE_VPS_STORAGE_ORIGIN` (see `.env.example`)
-- **Mirror (ops):** `storage.noahcohn.com` — do not hardcode new app paths to the mirror
+- **Mirror:** `storage.noahcohn.com` — SW dual-domain Range striping + failover; do not hardcode new app paths to the mirror
+- **HF Hub failover:** Vicuna `network`/`config` retries once to `ford442/vicuna-7b-q4f32-webllm` (`src/config/loadFailover.ts`)
 - Weights download at runtime and cache in the browser (Cache API / IndexedDB)
 
 ## Guided launch UX

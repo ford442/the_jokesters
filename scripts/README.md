@@ -43,8 +43,10 @@ App code reads Vite env (build-time):
 ```bash
 # .env.local (not committed)
 VITE_VPS_STORAGE_ORIGIN=https://storage.1ink.us
-# optional mirror label for docs/ops
+# optional mirror label for docs/ops + dual-domain Range striping
 VITE_VPS_STORAGE_MIRROR_ORIGIN=https://storage.noahcohn.com
+# VITE_VPS_DUAL_DOMAIN_STRIPE=0   # kill-switch if the mirror diverges
+# VITE_VPS_STRIPE_RACE=1          # optional per-chunk TTFB race
 ```
 
 Canonical constant: `src/utils/vpsStorageUrl.ts` → `VPS_STORAGE_ORIGIN` / `VPS_STORAGE_URL`.

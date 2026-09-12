@@ -14,4 +14,11 @@ export interface Message {
   content: string
 }
 
-export type ErrorCategory = 'webgpu' | 'oom' | 'network' | 'llamacpp_mismatch' | 'unknown'
+export type ErrorCategory =
+  | 'webgpu'
+  | 'oom'
+  | 'network'
+  | 'config'
+  | 'wasm_missing'
+  | 'llamacpp_mismatch'
+  | 'unknown'

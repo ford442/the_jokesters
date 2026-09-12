@@ -2,7 +2,8 @@
  * Canonical VPS model storage URL helpers.
  *
  * Primary host: storage.1ink.us (override with VITE_VPS_STORAGE_ORIGIN).
- * Mirror host:  storage.noahcohn.com (used by SW / ops scripts only).
+ * Mirror host:  storage.noahcohn.com (SW dual-domain Range striping + failover;
+ * ops scripts). Do not hardcode new app paths to the mirror.
  *
  * WebLLM's cleanModelUrl() appends HuggingFace-style `/resolve/main/` to every
  * model base URL. Our VPS serves flat paths (no /resolve/main/), so those
@@ -30,7 +31,7 @@ function normalizeOrigin(origin: string): string {
 /** Primary model CDN origin (no trailing slash). Overridable via VITE_VPS_STORAGE_ORIGIN. */
 export const VPS_STORAGE_ORIGIN = normalizeOrigin(readViteOrigin() ?? DEFAULT_ORIGIN)
 
-/** Optional mirror origin for ops / service-worker failover docs. */
+/** Optional mirror origin for SW striping / failover and ops docs. */
 export const VPS_STORAGE_MIRROR_ORIGIN = normalizeOrigin(
   (() => {
     try {

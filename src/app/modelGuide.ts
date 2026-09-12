@@ -11,6 +11,12 @@ import {
   getBlessedPreset,
   type BlessedPreset,
 } from '../config/blessedPresets'
+import {
+  LAST_LOAD_SOURCE_KEY,
+  LAST_OOM_MODEL_KEY,
+  parseLastLoadSource,
+  shouldAvoidVicunaRecommendation,
+} from '../config/loadFailover'
 import type { LaunchConfig } from './types'
 
 export const LAST_SUCCESS_KEY = 'jokesters-last-success-launch'
@@ -100,7 +106,10 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
  * Pick 1 primary + 1 safe fallback from blessed presets with plain-language reasons.
  * Pure decision given a device snapshot (easy to unit test).
  */
-export function recommendModels(device: DeviceCapabilitySnapshot): ModelRecommendation {
+export function recommendModels(
+  device: DeviceCapabilitySnapshot,
+  opts?: { avoidVicuna?: boolean },
+): ModelRecommendation {
   const byId = (id: string) => BLESSED_PRESETS.find((p) => p.id === id)!
 
   const hermesF16 = byId('Hermes-3-Llama-3.2-3B-q4f16_1-MLC')
@@ -151,8 +160,20 @@ export function recommendModels(device: DeviceCapabilitySnapshot): ModelRecommen
     }
   }
 
-  // Comfortable VRAM for 7B
-  if (vram >= 3800) {
+  if (vram >= 3800 && opts?.avoidVicuna) {
+    const primary = device.supportsF16 ? hermesF16 : hermesF32
+    return {
+      primary,
+      safeFallback: qwenUltra,
+      primaryReason: `~${Math.round(vram)} MB free, but a previous Vicuna 7B launch ran out of GPU memory — recommending Hermes-3 3B instead.`,
+      fallbackReason: 'Qwen 0.5B is the ultra-low escape hatch if 3B still OOMs.',
+      device,
+      enginePreference: 'mlc',
+    }
+  }
+
+  // Comfortable VRAM for 7B — skip Vicuna if a prior session OOMed on it
+  if (vram >= 3800 && !opts?.avoidVicuna) {
     return {
       primary: vicuna7,
       safeFallback: device.supportsF16 ? hermesF16 : hermesF32,
@@ -216,6 +237,34 @@ export function loadLastSuccessfulLaunch(): PersistedLaunchSuccess | null {
   } catch {
     return null
   }
+}
+
+export function recordOomFailure(modelId: string): void {
+  try {
+    localStorage.setItem(LAST_OOM_MODEL_KEY, modelId)
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadLastOomModelId(): string | null {
+  try {
+    return localStorage.getItem(LAST_OOM_MODEL_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function loadLastLoadSource() {
+  try {
+    return parseLastLoadSource(localStorage.getItem(LAST_LOAD_SOURCE_KEY))
+  } catch {
+    return null
+  }
+}
+
+export function avoidVicunaFromLastOom(): boolean {
+  return shouldAvoidVicunaRecommendation(loadLastOomModelId())
 }
 
 /** Queue a smaller model for the next initApp() after OOM. */
