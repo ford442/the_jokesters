@@ -58,7 +58,7 @@ export class SpeechQueue {
     public add(audioData: Float32Array) {
         // Capture the engine rate at enqueue — playNext is async (AudioContext resume)
         // and must not re-read a later synth's rate or the 24 kHz placeholder.
-        const sampleRate = this.audioEngine.sampleRate ?? SUPERTONIC_NATIVE_SAMPLE_RATE;
+        const sampleRate = this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
         this.queue.push({ pcm: audioData, sampleRate });
         this.playNext();
     }
