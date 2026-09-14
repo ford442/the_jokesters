@@ -263,6 +263,7 @@ export class GroupChatManager {
       }
 
       if (!isSpeakableText(cleaned)) {
+        this.conversation.appendAssistant('…')
         this.conversation.advanceAgent()
         console.warn(
           `[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry — rotating to ${this.conversation.getCurrentAgent().id}`,
@@ -577,6 +578,7 @@ export class GroupChatManager {
 
         if (!isSpeakableText(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
+          this.conversation.appendAssistant('…')
           this.conversation.advanceAgent()
           // Do not change currentPrompt so the next agent can answer it
           continue
