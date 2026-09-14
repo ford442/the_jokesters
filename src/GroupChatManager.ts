@@ -268,7 +268,7 @@ export class GroupChatManager {
         console.warn(
           `[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry — rotating to ${this.conversation.getCurrentAgent().id}`,
         )
-        return { agentId: currentAgent.id, response: '' }
+        return { agentId: currentAgent.id, response: '…' }
       }
 
       this.conversation.appendAssistant(cleaned)
