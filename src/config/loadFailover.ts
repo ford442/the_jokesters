@@ -127,8 +127,6 @@ export function wasmLibFallbackChain(modelLib: string): string[] {
 
   const isCustomVicuna = /vicuna-7b-q4f32_1-ctx(512|1024)_/.test(modelLib)
   if (isCustomVicuna) {
-    push(VPS_LLAMA2_7B_CTX4K_WASM)
-    push(MLC_LLAMA2_7B_CTX4K_WASM)
     return chain
   }
 
