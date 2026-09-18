@@ -126,7 +126,7 @@ describe('applyHfWeightFailover', () => {
 })
 
 describe('wasmLibFallbackChain', () => {
-  it('does not map missing custom ctx512/1024 Vicuna wasm to generic 4K libs', () => {
+  it('maps custom ctx512/1024 Vicuna wasm to empty fallback to prevent silent high-VRAM fallback', () => {
     const custom = `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`
     expect(wasmLibFallbackChain(custom)).toEqual([])
   })

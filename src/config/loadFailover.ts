@@ -127,7 +127,7 @@ export function wasmLibFallbackChain(modelLib: string): string[] {
 
   const isCustomVicuna = /vicuna-7b-q4f32_1-ctx(512|1024)_/.test(modelLib)
   if (isCustomVicuna) {
-    return chain
+    return []
   }
 
   const fileName = modelLib.split('/').pop() ?? ''

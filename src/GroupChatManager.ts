@@ -268,6 +268,7 @@ export class GroupChatManager {
         console.warn(
           `[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry — rotating to ${this.conversation.getCurrentAgent().id}`,
         )
+        // Fix #333: skip emoji-only follow-ups by returning the placeholder and looping back
         return { agentId: currentAgent.id, response: '…' }
       }
 
