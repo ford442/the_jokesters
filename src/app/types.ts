@@ -1,5 +1,5 @@
 import type { EngineType } from '../llm/EngineFactory'
-import type { VRAMOptimizationConfig } from '../utils/dynamicContext'
+import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 
 export interface LaunchConfig {
   selectedModelId: string

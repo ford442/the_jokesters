@@ -3,8 +3,8 @@
  */
 
 import { detectCapabilities, detectWebGPULimits, type EngineType } from '../llm/EngineFactory'
-import { estimateAvailableVRAM } from '../utils/dynamicContext'
-import type { VRAMOptimizationConfig } from '../utils/dynamicContext'
+import { estimateAvailableVRAM } from '../utils/vramOverrides'
+import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 import {
   BLESSED_PRESETS,
   formatDownloadSize,

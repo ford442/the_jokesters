@@ -10,7 +10,7 @@ import {
   DynamicContextManager,
   type ChatMessage as ContextChatMessage,
   type ContextWindowInfo,
-} from '../utils/dynamicContext'
+} from '../utils/contextBudget'
 
 export interface PreparedHistory {
   history: Message[]

@@ -18,6 +18,7 @@
  */
 
 import { VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
+import { parseCompiledMaxContextFromModelLib } from '../utils/vramOverrides'
 import type { ErrorCategory } from '../types/chat'
 
 export type LoadSource = 'vps' | 'hf' | 'api'
@@ -258,4 +259,69 @@ export function consumeLastLoadTelemetry(): LoadTelemetry | null {
   const event = lastLoadTelemetry
   lastLoadTelemetry = null
   return event
+}
+
+// ============================================================================
+// model_lib (WASM) HEAD probe + fallback chain
+// ============================================================================
+
+export interface ResolvedModelLib {
+  url: string;
+  compiledMaxContext: number | null;
+  usedFallback: boolean;
+  warning?: string;
+}
+
+/**
+ * HEAD-probe model_lib URL. A 404 on a custom ctx512/1024 Vicuna lib falls
+ * back to the generic 4K MLC WASM (VPS, then GitHub) and surfaces a VRAM warning.
+ * Network errors on HEAD do not assume the file is missing (GET may still work).
+ */
+export async function resolveModelLibUrl(
+  modelLib: string,
+): Promise<ResolvedModelLib> {
+  const probeStatus = async (url: string): Promise<number | 'throw'> => {
+    try {
+      const resp = await fetch(url, { method: 'HEAD' });
+      return resp.status;
+    } catch {
+      return 'throw';
+    }
+  };
+
+  const status = await probeStatus(modelLib);
+  if (status !== 'throw' && status >= 200 && status < 300) {
+    return {
+      url: modelLib,
+      compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+      usedFallback: false,
+    };
+  }
+
+  const missing = status === 404 || status === 410;
+  if (missing) {
+    for (const fallback of wasmLibFallbackChain(modelLib)) {
+      const fbStatus = await probeStatus(fallback);
+      if (fbStatus !== 'throw' && fbStatus >= 200 && fbStatus < 300) {
+        console.warn(
+          `[DynamicContext] ${WASM_FALLBACK_VRAM_WARNING} (${modelLib} → ${fallback})`,
+        );
+        setWasmFallbackWarning(WASM_FALLBACK_VRAM_WARNING);
+        return {
+          url: fallback,
+          compiledMaxContext: parseCompiledMaxContextFromModelLib(fallback),
+          usedFallback: true,
+          warning: WASM_FALLBACK_VRAM_WARNING,
+        };
+      }
+    }
+  } else {
+    console.warn(`[DynamicContext] model_lib HEAD probe failed for ${modelLib}; proceeding anyway`);
+  }
+
+  return {
+    url: modelLib,
+    compiledMaxContext: parseCompiledMaxContextFromModelLib(modelLib),
+    usedFallback: false,
+  };
 }

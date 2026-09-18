@@ -4,12 +4,9 @@ import type { EngineType } from '../llm/EngineFactory'
 import { EngineFactory, getEngineFallbackOrder } from '../llm/EngineFactory'
 import { MlcEngineAdapter } from '../llm/MlcEngineAdapter'
 import { isWllamaRuntimeMismatch } from '../llm/wllamaRuntime'
-import {
-  loadModelWithDynamicContext,
-  DynamicContextManager,
-  type VRAMOptimizationConfig,
-  DEFAULT_VRAM_CONFIG,
-} from '../utils/dynamicContext'
+import { loadModelWithDynamicContext } from '../llm/mlcEngineCreate'
+import { DynamicContextManager } from '../utils/contextBudget'
+import { type VRAMOptimizationConfig, DEFAULT_VRAM_CONFIG } from '../utils/vramOverrides'
 import {
   createTokenEstimatorForEngine,
   calibrateTokenEstimator,

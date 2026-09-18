@@ -1,7 +1,7 @@
 import { EngineFactory, type EngineType } from '../llm/EngineFactory'
 import { getRequestedRendererMode, setRendererModePreference, isWebGPUAvailable } from '../visuals/rendererMode'
 import type { RendererMode } from '../visuals/rendererMode'
-import type { VRAMOptimizationConfig } from '../utils/dynamicContext'
+import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 import type { LaunchConfig } from './types'
 import { clearModelWeightCaches } from './modelCache'
 import {

@@ -14,7 +14,8 @@ import {
   type EngineType,
   normalizeOptions,
 } from './LLMEngine'
-import { loadModelWithDynamicContext, type VRAMOptimizationConfig } from '../utils/dynamicContext'
+import { loadModelWithDynamicContext } from './mlcEngineCreate'
+import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 
 export interface MlcModelConfig extends UnifiedModelConfig {
   engineConfig?: {
