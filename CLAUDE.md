@@ -23,6 +23,10 @@ procedural acting.
 src/
   app/bootstrap.ts          App init, model load, SFX, scene wire-up
   GroupChatManager.ts       LLM chat, history, prerenderTurns
+  utils/contextBudget.ts    DynamicContextManager (token-budget message window)
+  utils/vramOverrides.ts    Compiled-ctx clamp, prefill align, KV quant, sliding window
+  llm/mlcEngineCreate.ts    CreateMLCEngine + device-lost race + OOM step-down
+  utils/dynamicContext.ts   Back-compat re-export barrel for the three above
   config/models.ts          Model registry (uses VPS_STORAGE_URL)
   config/blessedPresets.ts  Curated 5-model launch list
   app/modelGuide.ts         Guided onboarding recommendations
@@ -80,7 +84,7 @@ npm run perf:quick
 ## Known issues / blockers
 
 - Repo gets pushed to by many parallel automated branches (`jules-*`, `claude/*`, `checkin-sprint-*`). `git pull --ff-only` before starting — this checkout was found 20 commits behind on 2026-09-07 with no local changes, which had made two already-fixed "file too big" issues (`registryCatalog.ts`, `DreamModes_Sentient.ts`, now split into `.partN.ts` files) look unresolved.
-- Seven ad-hoc `patch_*.py` regex scripts live at repo root, outside `scripts/` — not part of any npm script, safe to ignore or delete but worth confirming before running one against current source.
+- The seven ad-hoc `patch_*.py` regex scripts that used to sit at the repo root now live in `scripts/archive/obsolete/` with a do-not-run README. They are historical records only — their hardcoded paths and regexes no longer match current source (notably the split `dynamicContext.ts`) and running one will corrupt files.
 
 ## Deployment
 

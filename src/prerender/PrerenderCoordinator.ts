@@ -1,7 +1,7 @@
 import type { GroupChatManager } from '../GroupChatManager'
 import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
-import { estimateAvailableVRAM } from '../utils/dynamicContext'
+import { estimateAvailableVRAM } from '../utils/vramOverrides'
 import { stripSfxTokens } from '../audio/sfxTokens'
 import { computePrerenderDepth, median, type PrerenderDepthBudget } from './adaptiveDepth'
 
