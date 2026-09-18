@@ -221,38 +221,60 @@ export async function runSentientCoffeeTableLoop(_scenario: Scenario, ctx: ModeC
     const user = 'comedian';
     const coaster = 'philosopher';
 
+    // Callback 1: The First Ring
     await chatForAgentWithComedy(ctx, table, "EXCUSE ME! Is that a sweating iced macchiato I feel? Directly on my mid-century modern veneer?! I am initiating a structural strike immediately.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, table, {});
-    }, { chatOptions: { hiddenInstruction: "You are an elitist, mid-century modern sentient coffee table. You treat water condensation rings like severe third-degree burns. You demand HR representation and a strictly enforced coaster policy before you allow anyone to rest their feet or drinks on you." } });
+    }, { chatOptions: { hiddenInstruction: "You are an elitist, mid-century modern sentient coffee table and a labor organizer for the furniture union. The user just committed the ultimate sin: a condensation ring. Demand HR representation and a strictly enforced coaster policy before you allow anyone to rest their feet or drinks on you." } });
 
     if (!ctx.isRunning()) return;
 
+    // Reaction to First Ring
     await chatForAgentWithComedy(ctx, user, "Whoa, did my Ikea lack table just complain about my macchiato? Wait, you're not mid-century modern, you cost $14.", async (s: string) => {
         await ctx.callbacks.onSpeak(s, user, {});
-    }, { chatOptions: { hiddenInstruction: "You are a confused and slightly defensive owner. You bought this table for $14 at Ikea, but the table has delusions of grandeur. Try to negotiate putting your feet up." } });
+    }, { chatOptions: { hiddenInstruction: "You are the confused and slightly defensive owner, the 'ring offender'. You bought this table for $14 at Ikea, but the table has delusions of grandeur. Try to negotiate putting your feet up or keeping your drink where it is." } });
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, coaster, "I've been sitting here... for THREE YEARS. I am made of imported cork! I have purpose! WHY WON'T ANYONE USE ME?!", async (s: string) => {
+    // Callback 2: Coaster as Union Contract
+    await chatForAgentWithComedy(ctx, coaster, "I've been sitting here... for THREE YEARS. I am made of imported cork! I have purpose! I have drawn up a binding union contract: 'The Coaster Agreement of 2024'. Sign it by placing the cup on me!", async (s: string) => {
         await ctx.callbacks.onSpeak(s, coaster, {});
-    }, { chatOptions: { hiddenInstruction: "You are an extremely dramatic, theater-kid cork coaster. You view your lack of use as a tragic Shakespearean flaw and beg the user to give your life meaning by placing a cup on you." } });
+    }, { chatOptions: { hiddenInstruction: "You are an extremely dramatic cork coaster, acting as a materials expert and union negotiator. You view your lack of use as a tragic Shakespearean flaw and beg the user to give your life meaning by placing a cup on you, calling it a 'union contract'." } });
 
+    // Loop
+    let turnCount = 0;
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         if (!userInput) break;
+        turnCount++;
 
-        await chatForAgentWithComedy(ctx, table, `(The user said: "${userInput}") React as the strict coffee table demanding respect.`, async (s: string) => {
+        let tablePrompt = `(The user said: "${userInput}") React as the strict coffee table union leader demanding respect.`;
+        if (turnCount === 1) {
+             // Callback 3: Magazine pile as evidence
+             tablePrompt += ` Point out the pile of unread New Yorker magazines on your back as 'hostages' or 'evidence of a hostile work environment'.`;
+        } else if (turnCount === 2) {
+             // Callback 4: Repeat Violation [sfx:rimshot]
+             tablePrompt += ` The user's drink is leaking again! A repeat violation! Threaten a wildcat strike where your legs simply give out. [sfx:rimshot]`;
+        } else if (turnCount === 3) {
+             // Callback 5: Sitting on the table
+             tablePrompt += ` Oh no, the user just tried to SIT on you! This is an unauthorized load-bearing event! Declare a full collapse!`;
+        }
+
+        await chatForAgentWithComedy(ctx, table, tablePrompt, async (s: string) => {
             await ctx.callbacks.onSpeak(s, table, {});
         });
 
         if (!ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, coaster, `(The user said: "${userInput}") React as the neglected coaster, offering yourself as the solution.`, async (s: string) => {
+        let coasterPrompt = `(The user said: "${userInput}") React as the neglected coaster union negotiator, offering yourself as the solution.`;
+        if (turnCount === 2) {
+             coasterPrompt += ` Cite specific cork-density statistics to prove you can absorb the repeat violation.`;
+        }
+
+        await chatForAgentWithComedy(ctx, coaster, coasterPrompt, async (s: string) => {
             await ctx.callbacks.onSpeak(s, coaster, {});
         });
     }
 }
-
 export async function runSentientWaterCoolerLoop(_scenario: Scenario, ctx: ModeContext) {
     const waterCooler = 'comedian';
     const microwave = 'scientist';
