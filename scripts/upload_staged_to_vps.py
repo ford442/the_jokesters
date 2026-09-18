@@ -65,8 +65,7 @@ def main():
         if not subdir.is_dir():
             continue
         remote_subdir = f"{VPS_MODELS_DIR}/{subdir.name}"
-        print(f"
-📂 Uploading {subdir.name}/ -> {remote_subdir}/")
+        print(f"\n📂 Uploading {subdir.name}/ -> {remote_subdir}/")
         upload_directory(sftp, subdir, remote_subdir)
 
     sftp.close()
