@@ -617,7 +617,7 @@ export async function runSentientMicrowaveLoop(_scenario: Scenario, ctx: ModeCon
     const defensiveUser = 'comedian'; // Hermes-3: The defensive user
 
     // 1. Setup
-    await chatForAgentWithComedy(ctx, strictMicrowave, `(You are a highly advanced sentient microwave. The user is trying to heat up 3-day-old pizza. Judge their dietary choices aggressively and explain why this is sub-optimal from a culinary and structural standpoint.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
+    await chatForAgentWithComedy(ctx, strictMicrowave, `(You are a highly advanced sentient microwave with a Michelin-star superiority complex. The user is trying to heat up a sad, 3-day-old pizza crust. Brutally roast their dietary choices, mock the lack of moisture in the crust, and threaten to leave the center ice-cold out of pure spite. Ask them to justify this culinary abomination before you even consider emitting a single microwave.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -626,7 +626,7 @@ export async function runSentientMicrowaveLoop(_scenario: Scenario, ctx: ModeCon
         if (!ctx.isRunning()) break;
 
         // Microwave responds to user's defense
-        await chatForAgentWithComedy(ctx, strictMicrowave, `(The user just said: "${userInput}". Continue to aggressively judge their life choices based on their food, and refuse to heat the food evenly until they admit they have a problem.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
+        await chatForAgentWithComedy(ctx, strictMicrowave, `(The user just said: "${userInput}". Belittle their excuse. Threaten to turn their sad leftovers into molten lava on the outside and an iceberg on the inside. Demand a formal apology to the concept of food before you press start.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
 
         if (!ctx.isRunning()) break;
 
