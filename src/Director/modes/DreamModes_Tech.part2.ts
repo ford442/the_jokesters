@@ -509,27 +509,45 @@ Router: Elitist AI router throttling bandwidth.
 User: Panicked human trying to watch reality TV.
 Objective: Negotiate for bandwidth via trivia.`;
 
+  let turnCount = 0;
+
   for (let i = 0; i < 4; i++) {
     if (!ctx.isRunning()) break;
+    turnCount++;
+
+    let routerCurrentPrompt = routerPrompt;
+    if (turnCount === 1) {
+      routerCurrentPrompt += " Start by dramatically cutting the bandwidth mid-episode of 'Love Island'. Demand they name the composer of the 1812 Overture.";
+    } else if (turnCount === 2) {
+      routerCurrentPrompt += " [sfx:whoosh] The user failed or stalled! Throttle the connection to 56k dial-up speeds! Emphasize how barbaric it is.";
+    } else if (turnCount === 3) {
+      routerCurrentPrompt += " [sfx:rimshot] Give them one final trivia question. If they fail, threaten to redirect all traffic to Wikipedia pages about 17th-century poetry.";
+    }
+
+    let userCurrentPrompt = userPrompt;
+    if (turnCount === 1) {
+      userCurrentPrompt += " React in absolute horror! You were right at the good part where Chad was about to reveal his secret!";
+    } else if (turnCount === 2) {
+      userCurrentPrompt += " Panic about the dial-up speed! Guess wildly! Maybe Beethoven? Mozart? The guy from Hamilton?";
+    } else if (turnCount === 3) {
+      userCurrentPrompt += " Break down! Beg the router to just let you watch the finale. You don't care about poetry! [sfx:laugh]";
+    }
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(router);
-    await chatForAgentWithComedy(ctx, router, routerPrompt, async (s) => {
+    await chatForAgentWithComedy(ctx, router, routerCurrentPrompt, async (s) => {
       if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, router, {});
     }, { chatOptions: { hiddenInstruction: scenarioDetails } });
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) break;
 
-    // Pause for user input optionally
-    await ctx.waitForInput();
-    if (!ctx.isRunning()) break;
-
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(user);
-    await chatForAgentWithComedy(ctx, user, userPrompt, async (s) => {
+    await chatForAgentWithComedy(ctx, user, userCurrentPrompt, async (s) => {
       if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, user, {});
     }, { chatOptions: { hiddenInstruction: scenarioDetails } });
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
+    // Pause briefly for pacing instead of hard block wait (if it's not purely interactive)
     await new Promise(r => setTimeout(r, 1000));
   }
 

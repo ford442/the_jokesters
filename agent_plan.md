@@ -277,7 +277,7 @@ Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUAL
   - LLM pairings: Qwen2.5 for the strict elitist router, Hermes-3 for the panicked user trying to watch a show.
 
 - **Infrastructure / Storage Roadmap:**
-  - Authenticating with the HF API.
+  - [x] Authenticating with the HF API.
   - Pushing finished "Episode Scripts" to a private Dataset.
   - Fetching "Previous Episode Summaries" at boot for continuity.
   - *Cloud Persistence Roadmap Updates Added*

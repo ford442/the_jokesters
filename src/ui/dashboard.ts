@@ -57,6 +57,12 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
     const hfAuthSaveBtn = document.getElementById('hf-auth-save-btn');
     const hfAuthStatus = document.getElementById('hf-auth-status');
 
+    // Main panel HF Auth UI elements
+    const hfTokenInputMain = document.getElementById('hf-token-input-main') as HTMLInputElement;
+    const hfRepoInputMain = document.getElementById('hf-repo-input-main') as HTMLInputElement;
+    const hfAuthSaveBtnMain = document.getElementById('hf-auth-save-btn-main');
+    const hfAuthStatusMain = document.getElementById('hf-auth-status-main');
+
 
     if (!dashboardBtn || !dashboardModal || !closeBtn || !refreshBtn || !historyList) return;
     if (hfAuthSaveBtn && hfTokenInput && hfRepoInput && hfAuthStatus) {
@@ -121,6 +127,47 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
              if (creds.token) hfTokenInput.value = creds.token;
              if (creds.repoId) hfRepoInput.value = creds.repoId;
         }
+
+    if (hfAuthSaveBtnMain && hfTokenInputMain && hfRepoInputMain && hfAuthStatusMain) {
+        hfAuthSaveBtnMain.addEventListener('click', async () => {
+            const token = hfTokenInputMain.value.trim();
+            const repo = hfRepoInputMain.value.trim();
+
+            if (!token || !repo) {
+                hfAuthStatusMain.textContent = 'Token and Repo ID required.';
+                hfAuthStatusMain.style.color = '#ff6b6b';
+                return;
+            }
+
+            hfAuthStatusMain.textContent = 'Validating...';
+            hfAuthStatusMain.style.color = '#ffd700';
+            hfAuthSaveBtnMain.setAttribute('disabled', 'true');
+
+            const storage = new HFStorageManager();
+            const isValid = await storage.validateToken(token);
+
+            hfAuthSaveBtnMain.removeAttribute('disabled');
+
+            if (isValid) {
+                hfAuthStatusMain.textContent = 'Success!';
+                hfAuthStatusMain.style.color = '#4ecdc4';
+                const memoryManager = getMemoryManager();
+                if (memoryManager) {
+                    memoryManager.setCloudCredentials(token, repo);
+                }
+            } else {
+                hfAuthStatusMain.textContent = 'Invalid Token.';
+                hfAuthStatusMain.style.color = '#ff6b6b';
+            }
+        });
+
+        const memoryManager = getMemoryManager();
+        if (memoryManager) {
+             const creds = memoryManager.getCloudCredentials();
+             if (creds.token) hfTokenInputMain.value = creds.token;
+             if (creds.repoId) hfRepoInputMain.value = creds.repoId;
+        }
+    }
     }
 
 
