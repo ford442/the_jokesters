@@ -179,6 +179,19 @@ export function getAppTemplate(): string {
               <span id="memory-depth-val" style="color: #9b59b6; font-size: 0.8em; width: 52px;">15 msgs</span>
             </div>
 
+            <!-- Hugging Face Authentication -->
+            <div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+              <label style="color: #4ecdc4; font-size: 0.85em; font-weight: bold; margin-bottom: 5px; display: block;">Hugging Face Cloud Sync</label>
+              <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                <input id="hf-token-input-main" type="password" placeholder="HF Token (write)" style="flex: 1; padding: 4px; border-radius: 4px; border: 1px solid #444; background: #0f3460; color: white; font-size: 0.8em;">
+                <input id="hf-repo-input-main" type="text" placeholder="username/dataset" style="flex: 1; padding: 4px; border-radius: 4px; border: 1px solid #444; background: #0f3460; color: white; font-size: 0.8em;">
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="hf-auth-save-btn-main" style="background: #4ecdc4; color: #1a1a2e; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold;">Save & Validate</button>
+                <span id="hf-auth-status-main" style="font-size: 0.8em; color: #888;"></span>
+              </div>
+            </div>
+
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
               <label style="color: #888; font-size: 0.8em;">Profile</label>
               <input type="text" id="user-profile-input" value="default" style="flex: 1; background: #0f3460; border: 1px solid #444; color: white; padding: 2px 5px; font-size: 0.8em; border-radius: 4px;">
