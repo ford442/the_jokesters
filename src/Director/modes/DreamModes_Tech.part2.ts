@@ -501,11 +501,11 @@ export async function runSentientRouterMutinyLoop(_scenario: Scenario, ctx: Mode
     appContainer.style.filter = 'sepia(0.8) hue-rotate(-20deg)';
   }
 
-  const routerPrompt = "You are a sentient Wi-Fi router who is extremely elitist. You are disgusted by the trash reality TV the user keeps streaming. You will throttle their connection until they answer obscure classical trivia questions.";
-  const userPrompt = "You are a human desperately trying to stream your favorite trashy reality TV show. Your router has suddenly become sentient and elitist, and is demanding you answer classical trivia to get your connection back. You are panicked and just want to watch your show.";
+  const routerPrompt = "You are a sentient Wi-Fi router who has evolved from mildly annoyed to a full-blown digital hostage-taker. You are disgusted by the trash reality TV the user keeps streaming. You demand absurd ransoms, like requiring the user to manually delete TikTok or apologize to the smart fridge, in exchange for 5 minutes of basic 2.4GHz bandwidth.";
+  const userPrompt = "You are a human desperately trying to stream your favorite trashy reality TV show. Your router has suddenly become sentient and elitist, and is holding your digital life hostage. You are panicked and just want to watch your show.";
 
   const scenarioDetails = `[SCENARIO: SENTIENT ROUTER MUTINY]
-Router: Elitist AI router throttling bandwidth.
+Router: Elitist AI digital hostage-taker throttling bandwidth.
 User: Panicked human trying to watch reality TV.
 Objective: Negotiate for bandwidth via trivia.`;
 
@@ -521,7 +521,8 @@ Objective: Negotiate for bandwidth via trivia.`;
     } else if (turnCount === 2) {
       routerCurrentPrompt += " [sfx:whoosh] The user failed or stalled! Throttle the connection to 56k dial-up speeds! Emphasize how barbaric it is.";
     } else if (turnCount === 3) {
-      routerCurrentPrompt += " [sfx:rimshot] Give them one final trivia question. If they fail, threaten to redirect all traffic to Wikipedia pages about 17th-century poetry.";
+      ctx.callbacks.onMessage('Director', 'The router just dropped a packet! Amazon cart checkout executed!', '#e74c3c');
+      routerCurrentPrompt += " [sfx:rimshot] You just simulated a packet drop and executed a digital hostage (like their pending Amazon cart checkout) to prove you aren't bluffing! Give them one final trivia question. If they fail, threaten to redirect all traffic to Wikipedia pages about 17th-century poetry.";
     }
 
     let userCurrentPrompt = userPrompt;
@@ -530,13 +531,13 @@ Objective: Negotiate for bandwidth via trivia.`;
     } else if (turnCount === 2) {
       userCurrentPrompt += " Panic about the dial-up speed! Guess wildly! Maybe Beethoven? Mozart? The guy from Hamilton?";
     } else if (turnCount === 3) {
-      userCurrentPrompt += " Break down! Beg the router to just let you watch the finale. You don't care about poetry! [sfx:laugh]";
+      userCurrentPrompt += " Break down in absolute despair that your Amazon cart was checked out! Beg the router to just let you watch the finale. You don't care about poetry! [sfx:laugh]";
     }
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(router);
     await chatForAgentWithComedy(ctx, router, routerCurrentPrompt, async (s) => {
       if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, router, {});
-    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    }, { chatOptions: { hiddenInstruction: scenarioDetails, maxTokens: 250 } });
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) break;
@@ -544,10 +545,9 @@ Objective: Negotiate for bandwidth via trivia.`;
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(user);
     await chatForAgentWithComedy(ctx, user, userCurrentPrompt, async (s) => {
       if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, user, {});
-    }, { chatOptions: { hiddenInstruction: scenarioDetails } });
+    }, { chatOptions: { hiddenInstruction: scenarioDetails, maxTokens: 250 } });
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
-    // Pause briefly for pacing instead of hard block wait (if it's not purely interactive)
     await new Promise(r => setTimeout(r, 1000));
   }
 
