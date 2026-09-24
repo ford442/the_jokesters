@@ -171,14 +171,15 @@ export async function runZombieApocalypseHOALoop(_scenario: any, ctx: any) {
   const scientist = 'scientist'; // The strict HOA leader (Qwen2.5)
   const comedian = 'comedian'; // The panicked homeowner (Hermes-3)
 
-  await chatForAgentWithComedy(ctx, scientist, "I understand there is an undead horde, but section 4B of the bylaws clearly states that brain matter must be washed off the driveway within 24 hours.", async (s: string) => {
+  await chatForAgentWithComedy(ctx, scientist, "I understand there is an undead horde tearing down the perimeter wall, but section 4B of the bylaws clearly states that any defensive barricades must be constructed from approved, earth-toned materials and submitted for architectural review 30 days in advance.", async (s: string) => {
     await ctx.callbacks.onSpeak(s, scientist, {});
-  }, { chatOptions: { hiddenInstruction: "You are a pedantic HOA leader insisting on neighborhood rules during a zombie apocalypse." } });
+  }, { chatOptions: { hiddenInstruction: "You are a pedantic HOA leader insisting on neighborhood rules during a zombie apocalypse. Focus heavily on architectural review forms for barricades and strictly enforce grass height regulations even if the lawns are currently on fire." } });
+
   if (!ctx.isRunning()) return;
 
-  await chatForAgentWithComedy(ctx, comedian, "They ate my mailbox! And my neighbor! I don't care about the driveway, they are scratching at the windows!", async (s: string) => {
+  await chatForAgentWithComedy(ctx, comedian, "They ate my mailbox! And my neighbor! I don't have 30 days, they are literally scratching at the windows and my lawn is on fire!", async (s: string) => {
     await ctx.callbacks.onSpeak(s, comedian, {});
-  }, { chatOptions: { hiddenInstruction: "You are a terrified homeowner trying to survive a zombie apocalypse while dealing with your strict HOA." } });
+  }, { chatOptions: { hiddenInstruction: "You are a terrified homeowner trying to survive a zombie apocalypse while dealing with your strict HOA. You are incredulous that they are worrying about paperwork and grass while zombies attack." } });
 }
 
 export async function runEscapeRoomBackroomsPhaseTwoLoop(_scenario: Scenario, ctx: ModeContext) {
