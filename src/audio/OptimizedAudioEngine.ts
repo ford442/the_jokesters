@@ -19,6 +19,7 @@ import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
 import { VPS_STORAGE_URL } from '../config/models';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
+import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -55,14 +56,6 @@ export class OptimizedAudioEngine {
         dpData: Float32Array;
         dpDims: number[];
     }>();
-
-    // Voice mapping
-    private voiceMap: Record<string, string> = {
-        'comedian': 'F1',
-        'philosopher': 'M2',
-        'scientist': 'M1',
-        'default': 'F1'
-    };
 
     // Viseme predictor
     private visemePredictor = new VisemePredictor();
@@ -130,10 +123,9 @@ export class OptimizedAudioEngine {
         const startTime = performance.now();
 
         // Resolve voice
-        const validVoices = ['M1', 'M2', 'F1', 'F2'];
-        let realVoiceId = this.voiceMap[speakerId] || speakerId;
-        if (!validVoices.includes(realVoiceId)) {
-            realVoiceId = this.voiceMap['default'];
+        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
+        if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {
+            realVoiceId = DEFAULT_VOICE_STYLE;
         }
 
         // Get style data
@@ -370,9 +362,7 @@ export class OptimizedAudioEngine {
     }
 
     private async loadVoiceStyles(): Promise<void> {
-        const voicesToLoad = ['M1', 'M2', 'F1', 'F2'];
-
-        for (const voice of voicesToLoad) {
+        for (const voice of SUPERTONIC_STYLE_IDS) {
             try {
                 const stylePath = `${VPS_STORAGE_URL}/tts/voice_styles/${voice}.json`;
                 const resp = await fetch(stylePath);

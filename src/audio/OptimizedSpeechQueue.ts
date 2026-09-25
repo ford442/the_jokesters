@@ -1,4 +1,10 @@
 /**
+ * @internal DEAD CODE — not wired into bootstrap, not part of the public
+ * audio barrel (see src/audio/index.ts). Its `enqueue()` API is incompatible
+ * with SpeechQueue's `prerenderOne` / keyed cache that PrerenderCoordinator
+ * and the improv/mode loops depend on. Do not wire this in without rewriting
+ * the prerender pipeline — use `SpeechQueue.ts` for all playback instead.
+ *
  * Optimized Speech Queue
  * Integrates with OptimizedAudioEngine for low-latency playback
  * Supports viseme lookahead for smooth lip-sync
