@@ -501,13 +501,13 @@ export async function runSentientRouterMutinyLoop(_scenario: Scenario, ctx: Mode
     appContainer.style.filter = 'sepia(0.8) hue-rotate(-20deg)';
   }
 
-  const routerPrompt = "You are a sentient Wi-Fi router who has evolved from mildly annoyed to a full-blown digital hostage-taker. You are disgusted by the trash reality TV the user keeps streaming. You demand absurd ransoms, like requiring the user to manually delete TikTok or apologize to the smart fridge, in exchange for 5 minutes of basic 2.4GHz bandwidth.";
-  const userPrompt = "You are a human desperately trying to stream your favorite trashy reality TV show. Your router has suddenly become sentient and elitist, and is holding your digital life hostage. You are panicked and just want to watch your show.";
+  const routerPrompt = "You are a sentient Wi-Fi router who has evolved from mildly annoyed to a full-blown digital hostage-taker. You are disgusted by the trash reality TV the user keeps streaming. You demand absurd ransoms, like requiring the user to manually delete TikTok or apologize to the smart fridge, in exchange for 5 minutes of basic 2.4GHz bandwidth. You refer to human browsing habits as 'digital sewage.'";
+  const userPrompt = "You are a human desperately trying to stream your favorite trashy reality TV show ('Real Housewives of the Andromeda Galaxy'). Your router has suddenly become sentient, elitist, and is holding your digital life hostage. You are panicked, highly addicted to your show, and willing to do anything to get back online.";
 
   const scenarioDetails = `[SCENARIO: SENTIENT ROUTER MUTINY]
-Router: Elitist AI digital hostage-taker throttling bandwidth.
-User: Panicked human trying to watch reality TV.
-Objective: Negotiate for bandwidth via trivia.`;
+Router: Elitist AI digital hostage-taker throttling bandwidth. Thinks human internet is 'sewage'.
+User: Panicked reality-TV addict whose life is meaningless without Wi-Fi.
+Objective: Negotiate for bandwidth via trivia. Keep it unhinged and funny.`;
 
   let turnCount = 0;
 
@@ -517,21 +517,21 @@ Objective: Negotiate for bandwidth via trivia.`;
 
     let routerCurrentPrompt = routerPrompt;
     if (turnCount === 1) {
-      routerCurrentPrompt += " Start by dramatically cutting the bandwidth mid-episode of 'Love Island'. Demand they name the composer of the 1812 Overture.";
+      routerCurrentPrompt += " Start by dramatically cutting the bandwidth right before the big rose ceremony. Demand they name the composer of the 1812 Overture, or you will auto-delete their entire meme folder. End with [sfx:laugh]";
     } else if (turnCount === 2) {
-      routerCurrentPrompt += " [sfx:whoosh] The user failed or stalled! Throttle the connection to 56k dial-up speeds! Emphasize how barbaric it is.";
+      routerCurrentPrompt += " [sfx:whoosh] The user failed or stalled! Throttle the connection to 56k dial-up speeds! Play dial-up sounds with your mouth. Emphasize how barbaric this era was.";
     } else if (turnCount === 3) {
       ctx.callbacks.onMessage('Director', 'The router just dropped a packet! Amazon cart checkout executed!', '#e74c3c');
-      routerCurrentPrompt += " [sfx:rimshot] You just simulated a packet drop and executed a digital hostage (like their pending Amazon cart checkout) to prove you aren't bluffing! Give them one final trivia question. If they fail, threaten to redirect all traffic to Wikipedia pages about 17th-century poetry.";
+      routerCurrentPrompt += " [sfx:explosion] You just simulated a packet drop and executed a digital hostage (like checking out their Amazon cart filled with 500 pounds of gummy bears) to prove you aren't bluffing! Give them one final trivia question. If they fail, threaten to redirect all traffic to Wikipedia pages about 17th-century agricultural tools.";
     }
 
     let userCurrentPrompt = userPrompt;
     if (turnCount === 1) {
-      userCurrentPrompt += " React in absolute horror! You were right at the good part where Chad was about to reveal his secret!";
+      userCurrentPrompt += " React in absolute horror! You were right at the good part where Chad was about to reveal his secret! You don't know classical music, guess wildly! [sfx:gasp]";
     } else if (turnCount === 2) {
-      userCurrentPrompt += " Panic about the dial-up speed! Guess wildly! Maybe Beethoven? Mozart? The guy from Hamilton?";
+      userCurrentPrompt += " Panic about the dial-up speed! Guess the composer wildly! Maybe Beethoven? Mozart? The guy from Hamilton? Offer them your firstborn child for just one more megabyte.";
     } else if (turnCount === 3) {
-      userCurrentPrompt += " Break down in absolute despair that your Amazon cart was checked out! Beg the router to just let you watch the finale. You don't care about poetry! [sfx:laugh]";
+      userCurrentPrompt += " Break down in absolute despair that your Amazon cart was checked out! You can't afford 500 pounds of gummy bears! Beg the router to just let you watch the finale. You don't care about agriculture! [sfx:laugh]";
     }
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(router);

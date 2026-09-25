@@ -300,7 +300,11 @@ export async function resolveModelLibUrl(
 
   const missing = status === 404 || status === 410;
   if (missing) {
-    for (const fallback of wasmLibFallbackChain(modelLib)) {
+    const fallbacks = wasmLibFallbackChain(modelLib);
+    if (fallbacks.length === 0) {
+      throw new Error(`Custom model lib missing (HTTP ${status}): ${modelLib}`);
+    }
+    for (const fallback of fallbacks) {
       const fbStatus = await probeStatus(fallback);
       if (fbStatus !== 'throw' && fbStatus >= 200 && fbStatus < 300) {
         console.warn(
