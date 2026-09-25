@@ -320,6 +320,7 @@ export class Director {
             },
             recordSceneBeat: (agentId: string, text: string) => this.recordSceneBeat(agentId, text),
             getArcPromptInjection: () => (this.sceneArc ? buildArcPromptInjection(this.sceneArc) : null),
+            getSceneAct: () => this.sceneArc?.act ?? null,
         };
     }
 

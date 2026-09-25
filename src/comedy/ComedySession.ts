@@ -143,6 +143,26 @@ export class ComedySession {
   }
 
   /**
+   * Most-used callback in play (ties → most recent), with its status + latest snippet.
+   * Feeds per-turn sampling (see comedySamplingPlan.ts). Null until something has been called back.
+   */
+  getSpotlightCallback(): { status: ComedyCallbackStatus; snippet: string } | null {
+    let best: { callbackCount: number; lastCallbackAt: number; id: string; contextSnippets: string[] } | null = null;
+    for (const joke of Object.values(this.engine.export())) {
+      if (joke.callbackCount < 1) continue;
+      if (!best || joke.callbackCount > best.callbackCount
+        || (joke.callbackCount === best.callbackCount && joke.lastCallbackAt > best.lastCallbackAt)) {
+        best = joke;
+      }
+    }
+    if (!best) return null;
+    const metrics = this.engine.getCallbackMetrics(best.id);
+    const snippet = best.contextSnippets.at(-1);
+    if (!metrics || !snippet) return null;
+    return { status: metrics.status, snippet };
+  }
+
+  /**
    * Maybe append a callback prompt based on probability (0–1).
    */
   maybeInjectCallbackPrompt(probability = 0.3): string | null {
