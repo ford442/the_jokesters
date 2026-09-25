@@ -67,10 +67,16 @@ export async function runImprovLoop(scenario: Scenario, ctx: ModeContext) {
   const tree = createConversationTree(initialTopic);
   const sentimentTracker = new SentimentTracker(tree);
 
+  // Declare the loop's real length so the production card can place a cold open + tag.
+  ctx.production?.setTurnBudget(MAX_IMPROV_TURNS);
+
   let turnCount = 0;
 
   if (ctx.manager.getHistoryLength() === 0) {
     let seed = initialTopic;
+
+    const castNotes = describePublicRelationships(scenario, ctx);
+    if (castNotes) ctx.callbacks.onMessage('Director', `🎭 Cast notes: ${castNotes}`, '#888');
 
     const recall = await ctx.searchAndRecall(seed);
     if (recall) {
@@ -95,6 +101,13 @@ export async function runImprovLoop(scenario: Scenario, ctx: ModeContext) {
 
     await new Promise(r => setTimeout(r, 800));
     if (!ctx.isRunning()) break;
+
+    if (ctx.production?.getBeat() === 'tag') {
+      // Tag beat: one button line — the production card's hidden note carries the callback.
+      await processTurnWithComedy(ctx, '(Final line of the scene — land it.)');
+      turnCount++;
+      break;
+    }
 
     const recentEvents = sentimentTracker.getRecentEvents(5);
     const shouldEvaluate = turnCount % 2 === 0 || recentEvents.some(e => e.intensity > 0.6);
@@ -229,6 +242,14 @@ export async function runAutonomousLoop(scenario: Scenario, ctx: ModeContext) {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
+
+/** Public relationships only — subtext ones and secret objectives never reach the chat log. */
+function describePublicRelationships(scenario: Scenario, ctx: ModeContext): string | null {
+  const rels = (scenario.config?.production?.relationships ?? []).filter((r) => r.public);
+  if (rels.length === 0) return null;
+  const nameOf = (id: string) => ctx.manager.getAgents().find((a) => a.id === id)?.name ?? id;
+  return rels.map((r) => `${nameOf(r.a)} & ${nameOf(r.b)} are ${r.label}`).join('; ');
+}
 
 function getRandomAutonomousTopic(): string {
   const topics = [

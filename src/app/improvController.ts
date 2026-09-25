@@ -17,6 +17,7 @@ import { PrerenderCoordinator } from '../prerender/PrerenderCoordinator'
 import type { PrerenderedTurn } from '../prerender/PrerenderCoordinator'
 import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
+import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
@@ -97,6 +98,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   const chatLogEl = document.getElementById('chat-log')!
 
   const modeBrowser = wireModeBrowser()
+  const readProductionCard = wireProductionCardPanel(agents)
 
   let isImprovRunning = false
 
@@ -367,7 +369,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         type: modeId,
         title,
         description,
-        config: { chaosLevel: parseInt(chaosSlider.value, 10) },
+        config: { chaosLevel: parseInt(chaosSlider.value, 10), production: readProductionCard() },
       })
     } catch (error) {
       console.error('Mode scene error:', error)

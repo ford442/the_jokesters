@@ -298,6 +298,20 @@ export function getAppTemplate(): string {
                 autocomplete="off"
               ></textarea>
             </div>
+            <details id="production-card-panel" class="production-card-panel">
+              <summary>Production card (optional)</summary>
+              <div class="production-card-row">
+                <select id="prod-rel-a" aria-label="Relationship: first agent"></select>
+                <span>&amp;</span>
+                <select id="prod-rel-b" aria-label="Relationship: second agent"></select>
+                <input type="text" id="prod-rel-label" placeholder="are… (exes, boss-intern, rivals)" autocomplete="off" aria-label="Relationship label" />
+                <label title="Unchecked = subtext only, never stated on stage"><input type="checkbox" id="prod-rel-public" checked /> public</label>
+              </div>
+              <div class="production-card-row">
+                <select id="prod-secret-agent" aria-label="Secret objective: agent"></select>
+                <input type="text" id="prod-secret-goal" placeholder="secret goal (e.g. steer to pickles)" autocomplete="off" aria-label="Secret goal" />
+              </div>
+            </details>
             <div class="improv-buttons">
               <button id="start-improv-btn" class="primary-btn">Start Scene</button>
               <button id="stop-improv-btn" class="secondary-btn" style="display: none;">Stop Scene</button>

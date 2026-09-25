@@ -2,13 +2,24 @@ import type { Scenario } from '../Director';
 import type { ModeContext } from './ModeContext';
 import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
+/** Roast length: 1-turn cold open + main + 1-turn tag (see productionCard.deriveBeatTiming). */
+const ROAST_TURN_BUDGET = 12;
+/** Monologue (cold open) + 2 guest segments + 2 panel rounds + closing tag. */
+const TALK_SHOW_TURN_BUDGET = 12;
+
 export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
     const target = scenario.config?.roastTarget || 'The Audience';
     ctx.callbacks.onMessage('Director', `🔥 ROAST BATTLE START! Target: ${target}`, '#ff6b6b');
 
+    ctx.production?.setTurnBudget(ROAST_TURN_BUDGET);
+    ctx.production?.ensureRelationships([
+        { a: 'comedian', b: 'philosopher', label: 'bitter former writing partners', public: true },
+    ]);
+
     let turnCount = 0;
     while (ctx.isRunning()) {
-        if (ctx.interruptQueue.length > 0) {
+        const isTag = ctx.production?.getBeat() === 'tag';
+        if (!isTag && ctx.interruptQueue.length > 0) {
             const heckle = ctx.interruptQueue.shift()!;
             ctx.callbacks.onMessage('Director', `📢 HECKLER: "${heckle}"`, '#ff6b6b');
             await ctx.processTurn(`(The target just shouted back: "${heckle}". Destroy them for speaking!)`);
@@ -17,9 +28,16 @@ export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
 
         if (!ctx.isRunning()) break;
 
-        const prompt = `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+        const prompt = isTag
+            ? `(ROAST BATTLE — FINAL ROAST: Close the night on "${target}" with one last savage line that calls back an earlier roast.)`
+            : `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
 
         await ctx.processTurn(prompt);
+
+        if (isTag) {
+            ctx.callbacks.onMessage('Director', '🎤 Mic drop — that\'s the roast!', '#ff6b6b');
+            break;
+        }
 
         if (Math.random() > 0.5) {
             const reactions = ['"OOOOOH!"', '"DAMN!"', '"APPLY COLD WATER!"', '"TOO FAR!"', '"LOL"'];
@@ -670,6 +688,11 @@ export async function runTalkShowLoop(_scenario: Scenario, ctx: ModeContext) {
 
     ctx.callbacks.onMessage('Director', `🎙️ WELCOME TO THE LATE NIGHT SHOW!`, '#3498db');
 
+    ctx.production?.setTurnBudget(TALK_SHOW_TURN_BUDGET);
+    ctx.production?.ensureRelationships([
+        { a: guest1, b: guest2, label: "exes who haven't spoken since the breakup", public: false },
+    ]);
+
     // Segment 1: Monologue
     ctx.callbacks.onMessage('Director', `[SEGMENT 1: MONOLOGUE]`, '#e74c3c');
     await chatForAgentWithComedy(ctx, host, `(HOST: You are the logical, overly-analytical host of a late-night talk show. Deliver your opening monologue. Try to make a joke, but ruin it by explaining the science behind it.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
@@ -712,6 +735,12 @@ export async function runTalkShowLoop(_scenario: Scenario, ctx: ModeContext) {
 
         round++;
     }
+
+    if (!ctx.isRunning()) return;
+
+    // Segment 5: Tag — the production card's tag beat carries the callback instruction.
+    ctx.callbacks.onMessage('Director', `[SEGMENT 5: GOODNIGHT]`, '#e74c3c');
+    await chatForAgentWithComedy(ctx, host, `(HOST: Sign off the show in one line that calls back to something from tonight.)`, async (s) => await ctx.callbacks.onSpeak(s, host, {}));
 }
 
 export async function runCollaborativeSandboxConstructionLoop(_scenario: Scenario, ctx: ModeContext) {

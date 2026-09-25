@@ -83,6 +83,23 @@ It's versioned independently of `EPISODE_FORMAT_VERSION` since it's an additive,
 `EpisodeSceneState` already has a free-form `[key: string]: unknown` bag and loose validation, so
 no other export/validation changes were required.
 
+## Production card (dramatic layer)
+
+`src/Director/productionCard.ts` sits on top of the arc: one `ProductionCard` per scene holds the
+episode beat (`cold_open` → `main` → `tag`), pre-defined relationships, secret objectives and an
+optional guest NPC. Director owns it next to `SceneArcState`, advances it in `recordSceneBeat`, and
+modes reach it via `ModeContext.production` (`setTurnBudget`, `ensureRelationships`, `getBeat`).
+
+- Timing comes from the turn budget: open-ended → no beats; < 10 turns → 1-turn tag only;
+  ≥ 10 → 1-turn cold open + 1-turn tag. Beat changes post a Director message.
+- Entering the tag beat forces the arc into `close`, so `getArcPromptInjection()` returns the
+  close-act callback instruction and the tag's hidden note includes it too.
+- All card text is compiled per agent by `compileProductionInstruction` (`productionPrompt.ts`) and
+  sent as `hiddenInstruction` (system prompt only) — never appended to the visible prompt/history, so
+  subtext relationships and secrets stay out of the transcript and episode turns.
+- Exported as `sceneState.production` (`PRODUCTION_SCHEMA_VERSION`, additive like `sceneArc`);
+  `parseProductionSnapshot` validates it on import.
+
 ## Out of scope (for now)
 
 `GroupChatManager.getDirectorCritique()` ("Silent Coach") remains scoped to the legacy classic

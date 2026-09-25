@@ -4,6 +4,7 @@ export type {
   EpisodeTurn,
   EpisodeSceneState,
   EpisodeSceneArcSnapshot,
+  EpisodeProductionSnapshot,
   JokestersEpisode,
   EpisodeValidationResult,
   EpisodeValidationErrorCode,

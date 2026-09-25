@@ -36,6 +36,9 @@ export interface EpisodeSceneArcSnapshot {
   beats: { turnIndex: number; agentId: string; summary: string; themes: string[] }[]
 }
 
+export type { EpisodeProductionSnapshot } from '../Director/productionCard'
+import type { EpisodeProductionSnapshot } from '../Director/productionCard'
+
 /** Optional scene metadata for context on import/replay. */
 export interface EpisodeSceneState {
   title?: string
@@ -45,6 +48,8 @@ export interface EpisodeSceneState {
   seed?: number
   /** Rolling scene-arc snapshot at the moment the episode was captured, if the scene had one. */
   sceneArc?: EpisodeSceneArcSnapshot
+  /** Production-card snapshot (beat, relationships, secrets, guest) — see src/Director/productionCard.ts. */
+  production?: EpisodeProductionSnapshot
   /** Free-form bag for future fields; ignored by validators except type check. */
   [key: string]: unknown
 }

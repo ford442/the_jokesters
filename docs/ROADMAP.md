@@ -386,18 +386,27 @@ Pre-built setups with structure:
 
 ### Implementation Priorities
 
-**Phase 1 - Quick Wins (1-2 weeks):**
-- [ ] Add scene templates library (talk show, courtroom, news desk)
-- [ ] Implement simulated audience reactions (laugh track, emoji reactions)
-- [ ] Create "cold open" + "tag" episode structure
+**Phase 1 - Quick Wins — done:**
+- [x] Scene templates library — talk show, courtroom (`trial`), news desk (`newsroom`/`reporter`) and
+  friends already exist as registered **modes**. Do not clone them; new structure goes into shared
+  Director machinery (Phase 2) that those modes opt into.
+- [x] Simulated audience reactions (`src/comedy/audienceFeedback.ts`)
 
-**Phase 2 - Medium Complexity (3-4 weeks):**
-- [ ] Build character memory system for callbacks
-- [ ] Add secret objectives and conflict roles
-- [ ] Implement status games and power dynamics
+**Phase 2 - Production grammar (shared Director machinery, not new modes):**
+- [x] "Cold open" + "tag" episode structure — `src/Director/productionCard.ts` (`EpisodeBeat`),
+  timing derived from the turn budget; tag forces the scene-arc close act so the button lands a callback
+- [x] Character relationship pre-definition (public or subtext-only) — compiled per agent into
+  `hiddenInstruction` by the single compiler `src/Director/productionPrompt.ts`
+- [x] Secret objectives — owner-only hidden note + keyword heuristic tracking; never in the transcript
+- [x] Guest NPC field on the card (voiced by an existing agent; entrance after N turns)
+- [x] Episode export: additive `sceneState.production` snapshot (`PRODUCTION_SCHEMA_VERSION`)
+- [x] Users: improv, roast, talk show; optional relationship / secret-goal inputs on the improv panel
+- [x] Character memory system for callbacks (`ComedySession` / `CallbackEngine`)
+- [ ] Status games and power dynamics
+- [ ] Party-mode votes (#307) — should mutate the production card, not add a parallel prompt path
 
 **Phase 3 - Advanced Features (5-8 weeks):**
-- [ ] Guest character / NPC spawning by Director
+- [ ] Guest NPC as a true sixth speaker (own persona/voice rather than borrowing an agent)
 - [ ] Genre shift mechanism
 - [ ] Emotional arc tracking
 - [ ] Audience voting system
