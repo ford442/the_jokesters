@@ -2,12 +2,25 @@
  * MLC engine creation: `CreateMLCEngine` + WebGPU `maxBufferSize` intercept +
  * GPU device-lost race + weight/wasm failover + OOM step-down.
  *
+ * Runtime: by default the engine lives in a Web Worker (`worker/mlc.worker.ts`) so
+ * prefill/decode never block Three.js rAF; `?legacyLlm` (or no `Worker`) keeps the
+ * in-process `CreateMLCEngine`. Context policy, failover and OOM retries are identical
+ * for both — only the final create step differs (`createEngineForRuntime`).
+ *
  * Split out of the former `utils/dynamicContext.ts` god-file (#345).
  * Context policy lives in `utils/vramOverrides.ts`; source failover and the
  * `model_lib` HEAD probe live in `config/loadFailover.ts`.
  */
 import * as webllm from '@mlc-ai/web-llm';
 import { buildComedyLogitProcessorRegistry } from './webllmComedyExtensions';
+import { deviceLostErrorMessage, interceptWebGpuAdapterLimits } from './webgpuLimits';
+import {
+  MlcWorkerStartupError,
+  createMlcWorkerEngine,
+  resolveMlcRuntime,
+  type JokestersWorkerMLCEngine,
+  type MlcRuntime,
+} from './worker/mlcWorkerEngine';
 import { categorizeChatError } from '../chat/chatErrors';
 import {
   DEFAULT_VRAM_CONFIG,
@@ -53,6 +66,86 @@ export interface DynamicModelConfig {
   vram_required_MB?: number;
 }
 
+/** Either the in-process engine or the Web Worker client — same chat/interrupt/unload API. */
+export type MlcEngineHandle = webllm.MLCEngine | JokestersWorkerMLCEngine;
+
+export interface MlcCreateOptions {
+  /** Defaults to `resolveMlcRuntime()` (worker unless `?legacyLlm` / no Worker). */
+  runtime?: MlcRuntime;
+}
+
+/** Effective (post-clamp) context window per created engine, for either runtime. */
+const effectiveContextByEngine = new WeakMap<object, number>();
+
+/**
+ * Context window the engine was actually created with. Works for the worker client,
+ * whose `chatOpts` is an array rather than the object main-thread callers expect.
+ */
+export function getMlcEngineContextWindow(engine: unknown): number | undefined {
+  if (!engine || typeof engine !== 'object') return undefined;
+  const recorded = effectiveContextByEngine.get(engine);
+  if (recorded) return recorded;
+  const chatOpts = (engine as { chatOpts?: unknown }).chatOpts;
+  const first = Array.isArray(chatOpts) ? chatOpts[0] : chatOpts;
+  const fromOpts = (first as { context_window_size?: number } | undefined)?.context_window_size;
+  return typeof fromOpts === 'number' && fromOpts > 0 ? fromOpts : undefined;
+}
+
+type EngineCreateConfig = Pick<webllm.MLCEngineConfig, 'appConfig' | 'initProgressCallback'>;
+
+/**
+ * Main-thread create: patch `navigator.gpu` for max buffer limits and race
+ * `CreateMLCEngine` against GPU device loss so OOM during init hits the retry chain.
+ */
+async function createMainThreadEngine(
+  modelId: string,
+  engineConfig: EngineCreateConfig,
+  chatOpts: webllm.ChatOptions,
+): Promise<webllm.MLCEngine> {
+  let deviceLostRejectFn: ((err: Error) => void) | null = null;
+  const deviceLostRace = new Promise<never>((_, reject) => {
+    deviceLostRejectFn = reject;
+  });
+
+  const nav = navigator as unknown as { gpu: Parameters<typeof interceptWebGpuAdapterLimits>[0] };
+  const restoreRequestAdapter = interceptWebGpuAdapterLimits(nav.gpu, (info) => {
+    deviceLostRejectFn?.(new Error(deviceLostErrorMessage(info)));
+  });
+
+  try {
+    return await Promise.race([
+      webllm.CreateMLCEngine(
+        modelId,
+        {
+          ...engineConfig,
+          logitProcessorRegistry: buildComedyLogitProcessorRegistry(modelId) as
+            | Map<string, webllm.LogitProcessor>
+            | undefined,
+        },
+        chatOpts,
+      ),
+      deviceLostRace,
+    ]);
+  } finally {
+    restoreRequestAdapter();
+    deviceLostRejectFn = null; // Prevent late device-lost events from propagating
+  }
+}
+
+async function createEngineForRuntime(
+  runtime: MlcRuntime,
+  modelId: string,
+  engineConfig: EngineCreateConfig,
+  chatOpts: webllm.ChatOptions,
+): Promise<MlcEngineHandle> {
+  if (runtime === 'worker') {
+    // The worker installs its own WebGPU intercept + comedy logit processors and
+    // reports device loss back; a failed attempt terminates the worker (frees VRAM).
+    return createMlcWorkerEngine(modelId, engineConfig, chatOpts);
+  }
+  return createMainThreadEngine(modelId, engineConfig, chatOpts);
+}
+
 // ============================================================================
 // Model Loading
 // ============================================================================
@@ -65,8 +158,11 @@ export async function loadModelWithDynamicContext(
   preferredContext: number | 'auto' = 'auto',
   onProgress?: (report: webllm.InitProgressReport) => void,
   vramConfig: VRAMOptimizationConfig = DEFAULT_VRAM_CONFIG,
-): Promise<webllm.MLCEngine> {
+  createOptions: MlcCreateOptions = {},
+): Promise<MlcEngineHandle> {
   const loadStarted = performance.now();
+  const runtime = createOptions.runtime ?? resolveMlcRuntime();
+  const retryOptions: MlcCreateOptions = { ...createOptions, runtime };
   const requestedId = modelConfig.requestedModelId ?? modelConfig.model_id;
   const originalVps = {
     model_id: modelConfig.model_id,
@@ -101,6 +197,7 @@ export async function loadModelWithDynamicContext(
         preferredContext,
         onProgress,
         vramConfig,
+        retryOptions,
       );
     }
   }
@@ -191,70 +288,20 @@ export async function loadModelWithDynamicContext(
     prefill_chunk_size: effectivePrefill,
   };
 
-  // ========================================================================
-  // WEBGPU LIMITS FIX: Intercept requestAdapter to force maximum buffer sizes
-  // DEVICE-LOST DETECTION: Race CreateMLCEngine against GPU device loss so OOM
-  // during initialization is caught and the fallback chain can try the next model.
-  // ========================================================================
-  const nav = navigator as any;
-  const originalRequestAdapter = nav.gpu.requestAdapter.bind(nav.gpu);
-
-  let deviceLostRejectFn: ((err: Error) => void) | null = null;
-  const deviceLostRace = new Promise<never>((_, reject) => {
-    deviceLostRejectFn = reject;
-  });
-
-  nav.gpu.requestAdapter = async function (options?: any) {
-    const adapter = await originalRequestAdapter(options);
-    if (!adapter) return adapter;
-
-    const originalRequestDevice = adapter.requestDevice.bind(adapter);
-    adapter.requestDevice = async function (descriptor: any = {}) {
-      const device = await originalRequestDevice({
-        ...descriptor,
-        requiredLimits: {
-          ...descriptor.requiredLimits,
-          maxBufferSize: adapter.limits.maxBufferSize, // Forces the 4GB limit
-          maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize,
-          maxComputeWorkgroupStorageSize: adapter.limits.maxComputeWorkgroupStorageSize,
-        }
-      });
-      // Monitor for async GPU device loss (OOM after device creation)
-      device.lost.then((info: any) => {
-        deviceLostRejectFn?.(
-          new Error(
-            `GPU device lost during model initialization: ${info.message ?? info.reason} — device is lost`
-          )
-        );
-      });
-      return device;
-    };
-    return adapter;
-  };
-
-  const cleanup = () => {
-    nav.gpu.requestAdapter = originalRequestAdapter;
-    deviceLostRejectFn = null; // Prevent late device-lost events from propagating
-  };
-
-  // Try to load, racing against GPU device loss
+  // WebGPU limits fix + device-lost race live in createEngineForRuntime (main thread)
+  // or inside the MLC worker (worker runtime).
   try {
-    const engine = await Promise.race([
-      webllm.CreateMLCEngine(
-        modelConfig.model_id,
-        {
-          initProgressCallback: onProgress,
-          appConfig: dynamicAppConfig,
-          logitProcessorRegistry: buildComedyLogitProcessorRegistry(modelConfig.model_id) as
-            | Map<string, unknown>
-            | undefined,
-        },
-        chatOpts
-      ),
-      deviceLostRace,
-    ]);
+    const engine = await createEngineForRuntime(
+      runtime,
+      modelConfig.model_id,
+      {
+        initProgressCallback: onProgress,
+        appConfig: dynamicAppConfig as unknown as webllm.AppConfig,
+      },
+      chatOpts as webllm.ChatOptions,
+    );
+    effectiveContextByEngine.set(engine, effectiveContext);
 
-    cleanup();
     recordLoadTelemetry({
       modelId: requestedId,
       source: currentSource,
@@ -277,8 +324,20 @@ export async function loadModelWithDynamicContext(
     return engine;
 
   } catch (error: any) {
-    cleanup();
-    
+    if (runtime === 'worker' && error instanceof MlcWorkerStartupError) {
+      // Worker bundle/CSP/404 problem, not a model problem — replay this exact attempt in-process.
+      console.warn(
+        `[DynamicContext] ${error.message}. Falling back to main-thread CreateMLCEngine (same as ?legacyLlm).`,
+      );
+      return loadModelWithDynamicContext(
+        { ...modelConfig, skipSourceFailover: true },
+        preferredContext,
+        onProgress,
+        vramConfig,
+        { ...createOptions, runtime: 'main' },
+      );
+    }
+
     const errorMsg = error?.message || String(error);
     const category = categorizeChatError(error);
     const tried = [...(modelConfig.triedSources ?? []), currentSource];
@@ -323,6 +382,7 @@ export async function loadModelWithDynamicContext(
         contextSize,
         onProgress,
         vramConfig,
+        retryOptions,
       );
     }
 
@@ -354,6 +414,7 @@ export async function loadModelWithDynamicContext(
         contextSize,
         onProgress,
         vramConfig,
+        retryOptions,
       );
     }
 
@@ -388,6 +449,7 @@ export async function loadModelWithDynamicContext(
           smallerContext,
           onProgress,
           vramConfig,
+          retryOptions,
         );
       }
 
@@ -399,6 +461,7 @@ export async function loadModelWithDynamicContext(
           oomFloor,
           onProgress,
           { ...vramConfig, kv_cache_quantization: 'int8' },
+          retryOptions,
         );
       }
     }

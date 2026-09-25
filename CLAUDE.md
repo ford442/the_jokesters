@@ -26,6 +26,7 @@ src/
   utils/contextBudget.ts    DynamicContextManager (token-budget message window)
   utils/vramOverrides.ts    Compiled-ctx clamp, prefill align, KV quant, sliding window
   llm/mlcEngineCreate.ts    CreateMLCEngine + device-lost race + OOM step-down
+  llm/worker/               MLC Web Worker (default runtime; `?legacyLlm` = main thread)
   utils/dynamicContext.ts   Back-compat re-export barrel for the three above
   config/models.ts          Model registry (uses VPS_STORAGE_URL)
   config/blessedPresets.ts  Curated 5-model launch list
