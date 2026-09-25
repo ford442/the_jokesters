@@ -436,12 +436,15 @@ Text-to-speech orchestration:
 - Loads voice styles from `${VPS_STORAGE_URL}/tts/voice_styles/`
 - Viseme prediction lookahead (predict next 3 phonemes while speaking current)
 - Phoneme pre-cache for common sounds
-- Agent-to-voice mapping (`voiceMap` in each engine) — only 3 of the 5 agents have an
-  explicit entry; the rest fall through to `'default'` (F1):
-  - Comedian → F1 (Female voice)
-  - Philosopher → M2 (Deep/slow male voice)
-  - Scientist → M1 (Standard male voice)
-  - Tech Bro / Robot → F1 (`default`), with per-agent pacing only (`CHARACTER_SPEEDS` in `chatLog.ts`)
+- Agent-to-voice mapping is canonical in `src/audio/voiceMap.ts` (`AGENT_VOICE_MAP`) and
+  imported by both `AudioEngine.ts` and `OptimizedAudioEngine.ts` — not duplicated per engine.
+  All 5 agents have an explicit entry; only 4 style files exist (M1/M2/F1/F2), so one pair
+  shares a style id and is told apart by speed (`CHARACTER_SPEEDS` in `chatLog.ts`):
+  - Comedian → F1 (Female voice), speed 1.5
+  - Philosopher → M2 (Deep/slow male voice), speed 0.6
+  - Scientist → M1 (Standard male voice), speed 1.0
+  - Tech Bro → F2 (previously loaded but never assigned to an agent), speed 1.3 (rushed)
+  - Robot → M2 (shares Philosopher's style), speed 0.85 (flat/metronomic, not slow-drawl)
 
 **Default vs. legacy engine.** `bootstrap.ts` constructs `OptimizedAudioEngineAdapter` (wrapping
 `OptimizedAudioEngine`) by default: synthesis runs in `worker/tts.worker.ts` off the main thread,
@@ -457,9 +460,11 @@ Append `?legacyAudio` to the app URL to force the old main-thread `AudioEngine` 
 fallback for one release if the optimized path regresses on some device.
 
 `OptimizedSpeechQueue.ts` (a separate, text-in `enqueue()` queue with its own internal synthesis
-call) is **not** wired into bootstrap — its API isn't compatible with the existing prerender cache
-(`SpeechQueue.prerenderOne`/`synthesizeOrTakeCached`) that `PrerenderCoordinator` and the improv/mode
-loops depend on. Swapping to it would mean rewriting the prerender pipeline, not just the engine.
+call) is **not** wired into bootstrap and **not** re-exported from `src/audio/index.ts` — its API
+isn't compatible with the existing prerender cache (`SpeechQueue.prerenderOne`/`synthesizeOrTakeCached`)
+that `PrerenderCoordinator` and the improv/mode loops depend on. It carries an `@internal` doc
+comment pointing back at `SpeechQueue`. Swapping to it would mean rewriting the prerender pipeline,
+not just the engine.
 
 **Gotcha:** `new Worker(new URL('./x.ts', import.meta.url), opts)` must have the `new URL(...)`
 inlined directly in the `Worker` constructor call for Vite's worker plugin to detect and bundle it.

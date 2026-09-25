@@ -17,14 +17,16 @@ export { LipSync } from '../visuals/LipSync';
 // Optimized exports (default production TTS stack)
 export { OptimizedAudioEngine } from './OptimizedAudioEngine';
 export { OptimizedAudioEngineAdapter } from './OptimizedAudioEngineAdapter';
-export type { 
+export type {
     SynthesisResult,
     SynthesisCallback,
     VisemeCallback,
-    ErrorCallback 
+    ErrorCallback
 } from './OptimizedAudioEngine';
-export { OptimizedSpeechQueue } from './OptimizedSpeechQueue';
-export type { QueuedUtterance } from './OptimizedSpeechQueue';
+// NOTE: OptimizedSpeechQueue.ts is intentionally NOT re-exported here. It's an
+// unwired, dead alternative queue with an `enqueue()` API incompatible with
+// SpeechQueue.prerenderOne / PrerenderCoordinator. Use SpeechQueue (above) for
+// all playback — see the @internal comment atop OptimizedSpeechQueue.ts.
 export { VisemePredictor } from './VisemePredictor';
 export type { Viseme, VisemeSequence, MouthShape } from './VisemePredictor';
 export { PhonemeCache } from './PhonemeCache';

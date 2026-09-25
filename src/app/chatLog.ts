@@ -90,8 +90,14 @@ export function createFeedbackControls(
   return feedbackDiv
 }
 
+// Pairs with AGENT_VOICE_MAP (src/audio/voiceMap.ts): Robot shares Philosopher's
+// M2 style id, so their speeds must stay distinct — Robot is a rushed-but-flat
+// metronomic pace, not a second slow-drawl voice. Tech Bro is a hair faster than
+// baseline but not as manic as the Comedian.
 export const CHARACTER_SPEEDS: Record<string, number> = {
   comedian: 1.5,
   philosopher: 0.6,
   scientist: 1.0,
+  techBro: 1.3,
+  robot: 0.85,
 }

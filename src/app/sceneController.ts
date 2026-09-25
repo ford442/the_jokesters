@@ -11,6 +11,7 @@ import { loadMemoryDepthPreference } from '../config/contextDepth'
 import { getDOM } from '../ui/uiHelpers'
 import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
+import { wireVoiceUi } from './voiceUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
 import type { MemoryManager } from '../Director/MemoryManager'
@@ -160,6 +161,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   })
 
   wireSfxUi()
+  wireVoiceUi(speechQueue, agents)
 
   dom.userInput.focus()
 }

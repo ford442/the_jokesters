@@ -215,6 +215,12 @@ export function getAppTemplate(): string {
               </div>
               <div id="sfx-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
             </div>
+
+            <!-- Voice previews -->
+            <div class="voice-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <label style="color: #888; font-size: 0.8em; display: block; margin-bottom: 6px;">Voice Preview</label>
+              <div id="voice-preview-row" class="voice-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+            </div>
           </div>
 
           <!-- VRAM / Context Info Bar -->

@@ -1,5 +1,6 @@
 import { SupertonicPipeline, Style } from './SupertonicPipeline';
 import { VPS_STORAGE_URL } from '../config/models';
+import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -23,15 +24,7 @@ export class AudioEngine implements TtsEngine {
     private pipeline: SupertonicPipeline;
     private styles: Map<string, Style> = new Map();
     private isReady = false;
-    private defaultVoice = 'M1';
-
-    // Define the mapping: Agent ID -> Filename (without .json)
-    private voiceMap: Record<string, string> = {
-        'comedian': 'F1',    // Female Voice for Comedian
-        'philosopher': 'M2', // Deep/Slow Male Voice
-        'scientist': 'M1',   // Standard Male Voice
-        'default': 'F1'
-    };
+    private defaultVoice = DEFAULT_VOICE_STYLE;
 
     constructor() {
         this.pipeline = new SupertonicPipeline();
@@ -50,7 +43,7 @@ export class AudioEngine implements TtsEngine {
             this.isReady = true;
 
             // Pre-load only the actual voice files (M1, M2, F1, F2)
-            const voicesToLoad = ['M1', 'M2', 'F1', 'F2'];
+            const voicesToLoad = SUPERTONIC_STYLE_IDS;
 
             for (const voice of voicesToLoad) {
                 try {
@@ -107,13 +100,12 @@ export class AudioEngine implements TtsEngine {
         }
 
         // 1. Map agent ID to actual voice file ID
-        const validVoices = ['M1', 'M2', 'F1', 'F2'];
-        let realVoiceId = this.voiceMap[speakerId] || speakerId;
+        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
 
         // Validate it's an actual voice file, not an unmapped agent ID
-        if (!validVoices.includes(realVoiceId)) {
+        if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {
             console.warn(`AudioEngine: Invalid voice '${realVoiceId}' for agent '${speakerId}', using default`);
-            realVoiceId = this.voiceMap['default'];
+            realVoiceId = this.defaultVoice;
         }
 
         console.log(`AudioEngine: Synthesizing for '${speakerId}' using voice '${realVoiceId}'`);
