@@ -7,6 +7,7 @@ import {
   type ComedySamplingPlan,
 } from './comedySamplingPlan';
 import type { ChatSamplingOverrides } from '../GroupChatManager';
+import { mergeHiddenInstructions } from '../Director/productionPrompt';
 
 type ComedyChatOptions = {
   maxTokens?: number;
@@ -135,7 +136,9 @@ export async function chatForAgentWithComedy(
 ): Promise<string | null> {
   const { qualityGate = true } = options;
   const enrichedPrompt = withComedyPrompt(ctx, prompt, options.callbackChance ?? 0.25);
-  const chatOptions = applyComedySamplingPlan(planComedySampling(ctx), options.chatOptions);
+  const planned = applyComedySamplingPlan(planComedySampling(ctx), options.chatOptions);
+  const hiddenInstruction = mergeHiddenInstructions(ctx.getProductionInstruction?.(agentId), planned?.hiddenInstruction);
+  const chatOptions = hiddenInstruction ? { ...planned, hiddenInstruction } : planned;
 
   let responseText = '';
   await ctx.callbacks.onTurnStart(agentId);

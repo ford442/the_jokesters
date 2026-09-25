@@ -20,6 +20,15 @@ import {
 } from './sceneArc';
 import type { SceneArcState } from './sceneArc';
 import { isVicunaModel } from '../chat/speakableText';
+import {
+    createProductionCard,
+    recordProductionTurn,
+    setProductionTurnBudget,
+    withDefaultRelationships,
+    snapshotProductionCard,
+} from './productionCard';
+import type { AgentRelationship, ProductionCard, ProductionCardInput } from './productionCard';
+import { compileProductionInstruction, BEAT_LABELS } from './productionPrompt';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -190,6 +199,8 @@ export interface Scenario {
         comedyEnabled?: boolean;
         /** Message-count memory depth for this scene (4–30). Overrides slider default. */
         contextDepth?: number;
+        /** Production card content (relationships / secret objectives / guest NPC) — see productionCard.ts. */
+        production?: ProductionCardInput;
     };
 }
 
@@ -215,6 +226,8 @@ export class Director {
     private comedySession: ComedySession | null = null;
     /** Short rolling scene-arc summary — see src/Director/sceneArc.ts. Null before/after a scene. */
     private sceneArc: SceneArcState | null = null;
+    /** Dramatic layer (episode beat, relationships, secrets, guest) — see src/Director/productionCard.ts. */
+    private productionCard: ProductionCard | null = null;
     /** Registered by whichever controller owns the prerender queue (see setPrerenderInvalidator). */
     private prerenderInvalidator: (() => void) | null = null;
     /** Registered by the episode export UI (see setEpisodeReadyHandler). */
@@ -290,10 +303,73 @@ export class Director {
         }
     }
 
-    /** Heuristic scene-arc update after a turn's text is finalized. No-op without an active arc. */
+    /** Current production card, or null before a scene starts / after it stops. */
+    public getProductionCard(): ProductionCard | null {
+        return this.productionCard;
+    }
+
+    /** Heuristic scene-arc + production update after a turn's text is finalized. No-op without an active arc. */
     private recordSceneBeat(agentId: string, text: string): void {
-        if (!this.sceneArc || !text.trim()) return;
-        this.sceneArc = updateSceneArc(this.sceneArc, { agentId, text });
+        if (!text.trim()) return;
+        if (this.sceneArc) {
+            this.sceneArc = updateSceneArc(this.sceneArc, { agentId, text });
+        }
+        if (this.productionCard) {
+            const result = recordProductionTurn(this.productionCard, agentId, text);
+            this.productionCard = result.card;
+            if (result.beatChanged) this.onProductionBeatChanged();
+            else if (this.productionCard.beat === 'tag') this.forceArcClose();
+            if (result.guestEntered && this.productionCard.guestNpc) {
+                this.callbacks.onMessage('Director', `🚪 Guest enters: ${this.productionCard.guestNpc.name}`, '#888');
+            }
+            for (const id of result.secretsAchieved) {
+                // Deliberately never names the goal — the objective stays secret.
+                this.callbacks.onMessage('Director', `🤫 ${this.agentName(id)} is up to something…`, '#888');
+            }
+        }
+    }
+
+    private agentName(agentId: string): string {
+        return this.manager.getAgents().find((a) => a.id === agentId)?.name ?? agentId;
+    }
+
+    /** Tag beat rides the arc's close-act path so the button carries a callback. */
+    private forceArcClose(): void {
+        while (this.sceneArc && this.sceneArc.act !== 'close') {
+            this.sceneArc = advanceSceneAct(this.sceneArc);
+        }
+    }
+
+    private onProductionBeatChanged(): void {
+        if (!this.productionCard) return;
+        const beat = this.productionCard.beat;
+        if (beat === 'tag') this.forceArcClose();
+        this.callbacks.onMessage('Director', BEAT_LABELS[beat], '#888');
+        this.callbacks.onTicker?.(BEAT_LABELS[beat]);
+    }
+
+    private setSceneTurnBudget(turns: number | null): void {
+        if (!this.productionCard) return;
+        const before = this.productionCard.beat;
+        const wasFresh = this.productionCard.turnCount === 0;
+        this.productionCard = setProductionTurnBudget(this.productionCard, turns);
+        if (this.sceneArc) {
+            this.sceneArc = { ...this.sceneArc, estimatedTurns: turns && turns > 0 ? turns : null };
+        }
+        // A scene that hadn't started yet only announces a newly-gained cold open, not "main".
+        if (this.productionCard.beat !== before && (!wasFresh || this.productionCard.beat === 'cold_open')) {
+            this.onProductionBeatChanged();
+        }
+    }
+
+    /** Compiled per-agent production hiddenInstruction (single compiler: productionPrompt.ts). */
+    private getProductionInstruction(agentId: string): string | undefined {
+        if (!this.productionCard) return undefined;
+        const closeAct = this.sceneArc?.act === 'close' ? buildArcPromptInjection(this.sceneArc) : null;
+        return compileProductionInstruction(this.productionCard, agentId, {
+            nameOf: (id) => this.agentName(id),
+            closeActInstruction: closeAct,
+        });
     }
 
     /**
@@ -321,6 +397,16 @@ export class Director {
             recordSceneBeat: (agentId: string, text: string) => this.recordSceneBeat(agentId, text),
             getArcPromptInjection: () => (this.sceneArc ? buildArcPromptInjection(this.sceneArc) : null),
             getSceneAct: () => this.sceneArc?.act ?? null,
+            getProductionInstruction: (agentId: string) => this.getProductionInstruction(agentId),
+            production: {
+                getBeat: () => this.productionCard?.beat ?? null,
+                setTurnBudget: (turns: number | null) => this.setSceneTurnBudget(turns),
+                ensureRelationships: (defaults: AgentRelationship[]) => {
+                    if (this.productionCard) {
+                        this.productionCard = withDefaultRelationships(this.productionCard, defaults);
+                    }
+                },
+            },
         };
     }
 
@@ -365,7 +451,10 @@ export class Director {
         this.manager.setSceneMemoryDepth(sceneDepth);
 
         this.initComedySession(scenario);
-        this.sceneArc = createSceneArc(scenario.title || scenario.description || scenario.type, estimateSceneTurnBudget(modeDef));
+        const turnBudget = estimateSceneTurnBudget(modeDef);
+        this.sceneArc = createSceneArc(scenario.title || scenario.description || scenario.type, turnBudget);
+        this.productionCard = createProductionCard(turnBudget, scenario.config?.production);
+        if (this.productionCard.beat === 'cold_open') this.onProductionBeatChanged();
 
         try {
             const modeLoop = await loadModeLoop(scenario.type);
@@ -452,6 +541,7 @@ export class Director {
                                 runningGags: this.sceneArc.runningGags,
                                 beats: this.sceneArc.beats,
                             } : undefined,
+                            production: this.productionCard ? snapshotProductionCard(this.productionCard) : undefined,
                         },
                     });
                     setLastEpisode(episode);
@@ -475,6 +565,7 @@ export class Director {
             this.comedySession?.reset();
             this.comedySession = null;
             this.sceneArc = null;
+            this.productionCard = null;
         }
     }
 
@@ -633,7 +724,11 @@ export class Director {
                     speed: characterSpeeds[currentAgent.id] || 1.0,
                     seed: turnSeed
                 });
-            }, { maxTokens: pacing.maxTokens, seed: turnSeed });
+            }, {
+                maxTokens: pacing.maxTokens,
+                seed: turnSeed,
+                hiddenInstruction: this.getProductionInstruction(currentAgent.id),
+            });
 
             this.callbacks.onThinking?.(currentAgent.id, false);
             if (!reacted && responseText.trim()) {

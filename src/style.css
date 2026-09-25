@@ -997,3 +997,23 @@ input:focus, textarea:focus {
 .mode-card:hover .mode-card-fav {
     color: #ffd700;
 }
+
+.production-card-panel {
+  margin: 6px 0;
+  font-size: 0.85em;
+  color: #bbb;
+}
+.production-card-panel summary {
+  cursor: pointer;
+}
+.production-card-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.production-card-row input[type="text"] {
+  flex: 1 1 140px;
+  min-width: 0;
+}
