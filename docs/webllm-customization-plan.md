@@ -72,7 +72,7 @@ We should **defer forking mlc-llm** until we have a concrete, measured need for 
   - KV cache (paged or continuous)
   - Logit processors / grammar (xgrammar, JSON schema, structural tags)
   - Streaming via `AsyncGenerator`
-- Workers: `WebWorkerMLCEngineHandler` for off-main-thread (optional today).
+- Workers: `WebWorkerMLCEngineHandler` for off-main-thread (our default MLC runtime — see §4.5).
 - Caching: `cache_util.ts` uses browser Cache API (or IndexedDB/OPFS/CrossOrigin per `appConfig.cacheBackend`).
 
 **No part of web-llm knows how to *compile* a new `.wasm`.** That is 100% mlc-llm + TVM/Emscripten.
@@ -220,9 +220,13 @@ Fast, but stateful and not reproducible.
 **Recommendation in the plan:** Start with **Pattern A** (source alias) for 90% of fork development. Promote to **Pattern B** (vendored dist + explicit build step) before any release or when multiple engineers touch the fork. Never rely on Pattern C/D for the canonical build.
 
 ### 4.5 Worker Considerations
-web-llm supports off-main-thread via `WebWorkerMLCEngineHandler`. Our current `MlcEngineAdapter` + `CreateMLCEngine` runs on the main thread (acceptable today because generation is async and we have `requestAnimationFrame` + Three.js on the same thread).
+**Status: shipped (stock npm web-llm, no fork required).** MLC now runs in a dedicated Web Worker by default:
 
-Future comedy win: move the entire LLM loop to a worker so the Director game loop + TTS synthesis + 3D rendering never stutter on long prefills. The fork makes it easy to expose a clean "create worker engine" factory that the adapter can opt into.
+- `src/llm/worker/mlc.worker.ts` — `WebWorkerMLCEngineHandler` subclass; re-installs the VPS fetch/Cache rewrites, the WebGPU max-buffer intercept (`src/llm/webgpuLimits.ts`) and comedy logit processors inside the worker, and reports GPU device loss back.
+- `src/llm/worker/mlcWorkerEngine.ts` — `WebWorkerMLCEngine` subclass (device-lost → OOM path, crash/startup detection, `countTokens`, bounded `dispose()` → `worker.terminate()`), plus `spawnMlcWorker()` (keep `new Worker(new URL(...))` inlined — guarded by `tests/unit/mlcWorkerBundling.test.ts`).
+- `loadModelWithDynamicContext` keeps the same context clamp / prefill / sliding-window / failover / OOM step-down chain for both runtimes; each failed worker attempt is terminated so VRAM is freed before the retry. A worker that never starts falls back to the main thread.
+- `?legacyLlm` keeps in-process `CreateMLCEngine` (also used automatically where `Worker` is unavailable, e.g. Vitest).
+- Trade-off: the worker bundles its own copy of web-llm (`assets/mlc.worker-[hash].js`, ~2.1 MB gzip) next to the main-thread `webllm-engine` chunk.
 
 ---
 

@@ -113,4 +113,34 @@ describe('PrerenderCoordinator', () => {
 
     expect(coordinator.getQueueDepth()).toBe(0)
   })
+
+  it('a cancelled refill landing late (worker-late chunks) neither enqueues nor lets a duplicate batch start', async () => {
+    const stale = deferred<RawTurn[]>()
+    const fresh = deferred<RawTurn[]>()
+    const prerenderTurns = vi
+      .fn()
+      .mockImplementationOnce(() => stale.promise)
+      .mockImplementationOnce(() => fresh.promise)
+      .mockImplementation(async () => [makeTurn('scientist', 'duplicate batch')])
+    const manager = { prerenderTurns } as unknown as GroupChatManager
+    const coordinator = new PrerenderCoordinator(manager, fakeAudioEngine(), fakeSpeechQueue())
+
+    coordinator.refillInBackground('continue prompt')
+    coordinator.beginScene() // cancel + un-cancel: old batch is still generating in the worker
+    coordinator.refillInBackground('continue prompt')
+    expect(prerenderTurns).toHaveBeenCalledTimes(2)
+
+    // The cancelled batch's LLM call finally lands while the new refill is still in flight.
+    stale.resolve([makeTurn('comedian', 'stale')])
+    await new Promise((r) => setTimeout(r, 0))
+
+    // The new generation's refill is still in flight — no third, duplicate LLM batch may start.
+    coordinator.refillInBackground('continue prompt')
+    expect(prerenderTurns).toHaveBeenCalledTimes(2)
+
+    fresh.resolve([makeTurn('philosopher', 'fresh')])
+    await vi.waitFor(() => expect(coordinator.isFilling()).toBe(false))
+    expect(coordinator.getQueueDepth()).toBe(1)
+    expect(coordinator.takeTurn()?.response).toBe('fresh')
+  })
 })

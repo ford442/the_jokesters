@@ -4,7 +4,7 @@ import type { EngineType } from '../llm/EngineFactory'
 import { EngineFactory, getEngineFallbackOrder } from '../llm/EngineFactory'
 import { MlcEngineAdapter } from '../llm/MlcEngineAdapter'
 import { isWllamaRuntimeMismatch } from '../llm/wllamaRuntime'
-import { loadModelWithDynamicContext } from '../llm/mlcEngineCreate'
+import { getMlcEngineContextWindow, loadModelWithDynamicContext } from '../llm/mlcEngineCreate'
 import { DynamicContextManager } from '../utils/contextBudget'
 import { type VRAMOptimizationConfig, DEFAULT_VRAM_CONFIG } from '../utils/vramOverrides'
 import {
@@ -214,11 +214,11 @@ export class ModelSession {
         adapter.setVRAMConfig(this.vramConfig)
         ;(adapter as unknown as { engine: unknown }).engine = mlcEngine
         ;(adapter as unknown as { initialized: boolean }).initialized = true
-        ;(adapter as unknown as { modelConfig: unknown }).modelConfig = {
+        ;(adapter as unknown as { config: unknown }).config = {
           id: modelId,
           name: modelId,
           context_window_size:
-            (mlcEngine as { chatOpts?: { context_window_size?: number } }).chatOpts?.context_window_size ??
+            getMlcEngineContextWindow(mlcEngine) ??
             modelConfig.overrides?.context_window_size ??
             4096,
           vram_required_MB: modelConfig.vram_required_MB || 4000,
