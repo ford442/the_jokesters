@@ -2,6 +2,7 @@ import type { GroupChatManager } from '../../GroupChatManager';
 import type { DirectorCallbacks, Scenario, ScriptBeat } from '../Director';
 import type { MemoryManager } from '../MemoryManager';
 import type { ComedySession } from '../../comedy/ComedySession';
+import type { SceneAct } from '../sceneArc';
 
 /**
  * Shared context passed to all mode loop functions.
@@ -26,6 +27,8 @@ export interface ModeContext {
     recordSceneBeat: (agentId: string, text: string) => void;
     /** Current act's prompt fragment (recall running gags, or close-act tag guidance) — null if nothing to inject yet. */
     getArcPromptInjection: () => string | null;
+    /** Current scene act (drives per-turn comedy sampling). Optional so lightweight test contexts can omit it. */
+    getSceneAct?: () => SceneAct | null;
 }
 
 export type ModeLoop = (scenario: Scenario, ctx: ModeContext) => Promise<void>;

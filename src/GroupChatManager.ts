@@ -30,6 +30,15 @@ import {
   retryMaxTokens,
 } from './chat/speakableText'
 
+
+/** Optional per-turn sampling overrides layered on the agent's defaults. */
+export interface ChatSamplingOverrides {
+  temperatureDelta?: number
+  top_p?: number
+  presence_penalty?: number
+  stop?: string[]
+}
+
 export type { ProfanityLevel, Agent, Message, ErrorCategory }
 export { PROFANITY_LEVEL }
 
@@ -153,6 +162,8 @@ export class GroupChatManager {
       seed?: number
       hiddenInstruction?: string
       enablePerfTracking?: boolean
+      /** Per-turn comedy sampling tweaks (see src/comedy/comedySamplingPlan.ts). */
+      sampling?: ChatSamplingOverrides
     } = {},
   ): Promise<{ agentId: string; response: string }> {
     const engine = this.session.getEngine()
@@ -221,14 +232,17 @@ export class GroupChatManager {
         }
       }
 
+      const sampling = options.sampling
       const genOpts = {
         max_tokens: effectiveMaxTokens,
-        temperature: currentAgent.temperature,
-        top_p: currentAgent.top_p,
+        temperature: sampling?.temperatureDelta
+          ? Math.min(1.5, Math.max(0.1, currentAgent.temperature + sampling.temperatureDelta))
+          : currentAgent.temperature,
+        top_p: sampling?.top_p ?? currentAgent.top_p,
         seed: options.seed,
         repetition_penalty: this.REPETITION_PENALTY,
-        presence_penalty: this.PRESENCE_PENALTY,
-        stop: ['###', 'Director:', 'User:'] as string[],
+        presence_penalty: sampling?.presence_penalty ?? this.PRESENCE_PENALTY,
+        stop: ['###', 'Director:', 'User:', ...(sampling?.stop ?? [])] as string[],
         stream: true as const,
       }
 
@@ -617,7 +631,7 @@ export class GroupChatManager {
     agentId: string,
     prompt: string,
     onSentence?: (sentence: string) => void,
-    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string } = {},
+    options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; sampling?: ChatSamplingOverrides } = {},
   ): Promise<{ agentId: string; response: string }> {
     const originalIndex = this.conversation.getAgentIndex()
     const agentIndex = this.conversation.getAgents().findIndex((a) => a.id === agentId)

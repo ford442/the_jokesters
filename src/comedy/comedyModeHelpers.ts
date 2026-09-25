@@ -1,5 +1,58 @@
 import type { ModeContext } from '../Director/modes/ModeContext';
 import { mapScoreToAudienceFeedback, scoreTextToAudienceFeedback } from './audienceFeedback';
+import {
+  buildComedySamplingPlan,
+  derivePacing,
+  isComedyDebugEnabled,
+  type ComedySamplingPlan,
+} from './comedySamplingPlan';
+import type { ChatSamplingOverrides } from '../GroupChatManager';
+
+type ComedyChatOptions = {
+  maxTokens?: number;
+  seed?: number;
+  hiddenInstruction?: string;
+  sampling?: ChatSamplingOverrides;
+};
+
+/**
+ * Per-turn sampling plan from scene act + callback heat. Null when the mode has no comedy session.
+ */
+export function planComedySampling(ctx: ModeContext): ComedySamplingPlan | null {
+  if (!ctx.comedy) return null;
+  const act = ctx.getSceneAct?.() ?? null;
+  const plan = buildComedySamplingPlan({
+    act,
+    callback: ctx.comedy.getSpotlightCallback(),
+    pacing: derivePacing(act, ctx.comedy.getTurnCount()),
+  });
+  if (isComedyDebugEnabled()) console.debug('[comedySampling]', plan.label, plan);
+  return plan;
+}
+
+/**
+ * Merge a sampling plan under caller-supplied chat options (caller's explicit values win,
+ * except maxTokens which takes the tighter of the two).
+ */
+export function applyComedySamplingPlan(
+  plan: ComedySamplingPlan | null,
+  base: ComedyChatOptions | undefined,
+): ComedyChatOptions | undefined {
+  if (!plan) return base;
+  const hidden = [base?.hiddenInstruction, plan.promptSuffix].filter((s) => s?.trim()).join('\n');
+  return {
+    ...base,
+    maxTokens: Math.min(base?.maxTokens ?? Infinity, plan.max_tokens),
+    hiddenInstruction: hidden || undefined,
+    sampling: {
+      temperatureDelta: plan.temperatureDelta,
+      top_p: plan.top_p,
+      presence_penalty: plan.presence_penalty,
+      stop: plan.stop,
+      ...base?.sampling,
+    },
+  };
+}
 
 /**
  * Append callback prompt injection when comedy session is active.
@@ -77,18 +130,19 @@ export async function chatForAgentWithComedy(
     callbackChance?: number;
     qualityGate?: boolean;
     /** Passed through verbatim to the underlying `GroupChatManager.chatForAgent` call. */
-    chatOptions?: { maxTokens?: number; seed?: number; hiddenInstruction?: string };
+    chatOptions?: ComedyChatOptions;
   } = {},
 ): Promise<string | null> {
   const { qualityGate = true } = options;
   const enrichedPrompt = withComedyPrompt(ctx, prompt, options.callbackChance ?? 0.25);
+  const chatOptions = applyComedySamplingPlan(planComedySampling(ctx), options.chatOptions);
 
   let responseText = '';
   await ctx.callbacks.onTurnStart(agentId);
   await ctx.manager.chatForAgent(agentId, enrichedPrompt, async (sentence) => {
     responseText += `${sentence} `;
     await onSpeak(sentence);
-  }, options.chatOptions);
+  }, chatOptions);
 
   let trimmed = responseText.trim();
 
@@ -99,7 +153,7 @@ export async function chatForAgentWithComedy(
       await ctx.manager.chatForAgent(agentId, `${enrichedPrompt} ${assessment.qualityPrompt}`, async (sentence) => {
         retryText += `${sentence} `;
         await onSpeak(sentence);
-      }, options.chatOptions);
+      }, chatOptions);
       const retryTrimmed = retryText.trim();
       if (retryTrimmed) trimmed = retryTrimmed;
     }
