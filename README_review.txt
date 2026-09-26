@@ -1,0 +1,1 @@
+I have stopped because I do not have VPS upload credentials to actually push the WASM files, per the instructions: "If you do not have VPS upload credentials, stop after the verify log. That log is the review artifact. Do not paper over the 404s in TypeScript."
