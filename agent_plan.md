@@ -23,7 +23,7 @@ Verified #305 missing custom ctx512/ctx1024 models on remote host. Re-uploaded v
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contributor entry + mode policy summary |
 | **[AGENTS.md](./AGENTS.md)** | Architecture for coding agents |
 
-**Default:** improve humor of an **existing** registered mode. New modes only if the quality bar is fully met.
+**Default:** [x] improve humor of an **existing** registered mode. New modes only if the quality bar is fully met.
 
 ## Foundation issues (work here first)
 
