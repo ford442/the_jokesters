@@ -59,12 +59,17 @@ export default defineConfig(({ command }) => {
           sw: './src/service-worker.ts',
         },
         output: {
-          manualChunks: {
-            'webllm-engine': [webllmChunkId],
-            'llamacpp-engine': ['@wllama/wllama'],
-            'transformers-engine': ['@huggingface/transformers'],
-            'three-core': ['three'],
-            'onnx-runtime': ['onnxruntime-web'],
+          manualChunks: (id) => {
+            if (id.includes('@wllama/wllama')) return 'llamacpp-engine';
+            if (id.includes('@huggingface/transformers')) return 'transformers-engine';
+            if (id.includes('three/src')) return 'three-core';
+            if (id.includes('three/examples')) return 'three-examples';
+            if (id.includes('onnxruntime-web')) return 'onnx-runtime';
+            if (id.includes('@mlc-ai/web-llm') || id.includes('3rd_party/web-llm-dist/lib/index.js')) return 'webllm-engine';
+            if (id.includes('src/Director/modes/DreamModes_Tech')) return 'director-modes-tech';
+            if (id.includes('src/Director/modes/DreamModes_Sentient')) return 'director-modes-sentient';
+            if (id.includes('src/Director/modes/DreamModes_Absurdist')) return 'director-modes-absurdist';
+            if (id.includes('src/Director/modes/ExpandedRealityModes')) return 'director-modes-expanded';
           },
           chunkFileNames: (chunkInfo) => `assets/${chunkInfo.name}-[hash].js`,
           entryFileNames: (chunkInfo) => {
