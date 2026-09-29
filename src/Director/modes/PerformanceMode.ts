@@ -22,15 +22,15 @@ export async function runRoastLoop(scenario: Scenario, ctx: ModeContext) {
         if (!isTag && ctx.interruptQueue.length > 0) {
             const heckle = ctx.interruptQueue.shift()!;
             ctx.callbacks.onMessage('Director', `📢 HECKLER: "${heckle}"`, '#ff6b6b');
-            await ctx.processTurn(`(The target just shouted back: "${heckle}". Destroy them for speaking!)`);
+            await ctx.processTurn(`(The target just shouted back: "${heckle}". Utterly destroy them for speaking! Break down the grammatical or logical flaws in their heckle before insulting their life choices. End with a callback to an earlier joke.)`);
             continue;
         }
 
         if (!ctx.isRunning()) break;
 
         const prompt = isTag
-            ? `(ROAST BATTLE — FINAL ROAST: Close the night on "${target}" with one last savage line that calls back an earlier roast.)`
-            : `(ROAST BATTLE: You are roasting "${target}". Be savage, funny, and ruthless. Keep it short and punchy! Use proper timing. If someone else just roasted, react to it first.)`;
+            ? `(ROAST BATTLE — FINAL ROAST: Close the night on "${target}" with a devastating final line that combines the harshest insult of the night with a petty, personal observation. Drop the mic!)`
+            : `(ROAST BATTLE: You are roasting "${target}". Use hyperspecific, absurdly petty insults rather than generic anger. If another comedian just roasted them, aggressively one-up their joke, pointing out why yours is funnier. Keep it short, punchy, and use [sfx:rimshot] if you land a solid blow!)`;
 
         await ctx.processTurn(prompt);
 
@@ -93,7 +93,7 @@ export async function runEnhancedRoastLoop(scenario: Scenario, ctx: ModeContext)
         if (ctx.interruptQueue.length > 0) {
             const heckle = ctx.interruptQueue.shift()!;
             ctx.callbacks.onMessage('Director', `📢 HECKLER: "${heckle}"`, '#ff6b6b');
-            await chatForAgentWithComedy(ctx, roaster1, `(The target just shouted back: "${heckle}". Destroy them for speaking!)`, async (s) => await ctx.callbacks.onSpeak(s, roaster1, {}));
+            await chatForAgentWithComedy(ctx, roaster1, `(The target just shouted back: "${heckle}". Utterly destroy them for speaking! Break down the grammatical or logical flaws in their heckle before insulting their life choices. End with a callback to an earlier joke.)`, async (s) => await ctx.callbacks.onSpeak(s, roaster1, {}));
             continue;
         }
 
