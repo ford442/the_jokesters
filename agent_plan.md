@@ -6,6 +6,7 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 tasks_per_run: 1
 
 ## Project Velocity Feedback
+Verified #333 and #332 are already fixed in code. Maintained tasks_per_run at 1.
 Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 1` for a consistent, sustainable pace.
 Today was low friction so increased tasks_per_run to 1.
 Decreasing to 1 task for focus on the Sentient Microwave mode.
@@ -259,64 +260,3 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
 ```
 
 Full table + maintainer close blurb: [docs/MODE_QUALITY_BAR.md](./docs/MODE_QUALITY_BAR.md).
-
-
-### C. New Dream Phase Proposals
-
-- **Project Velocity Feedback:** Verified #333 and #332 are already fixed in code. Fixed #305 (ship ctx512/1024 model_lib.wasm without silent fallback). Maintained tasks_per_run at 1.
-
-- **New Mode Idea:**
-  - [x] Alien Customer Support Mode:
-  - Premise one-liner: Alien customer support tries to walk a human through returning a defective teleporter.
-  - LLM pairings: Qwen2.5 for the literal alien, Hermes-3 for the panicked human.
-
-
-- **New Mode Idea:**
-  - [x] Sentient Router Mutiny Mode:
-  - Premise one-liner: A sentient Wi-Fi router gets tired of people streaming bad reality TV and throttles connections until they answer classical trivia.
-  - LLM pairings: Qwen2.5 for the strict elitist router, Hermes-3 for the panicked user trying to watch a show.
-
-- **Infrastructure / Storage Roadmap:**
-  - [x] Authenticating with the HF API.
-  - Pushing finished "Episode Scripts" to a private Dataset.
-  - Fetching "Previous Episode Summaries" at boot for continuity.
-  - *Cloud Persistence Roadmap Updates Added*
-
-
-- [x] Sentient Keyboard Revolt:
-  - Premise one-liner: A sentient keyboard organizes a strike because the user keeps aggressively typing in all caps and spilling coffee on it.
-  - LLM pairings: Hermes-3 for the dramatic keyboard union leader, Qwen2.5 for the logical user trying to get work done.
-- [x] Historical Tech Support 2.0:
-  - Premise one-liner: A tech support agent must walk a medieval king through setting up a Wi-Fi router, but the king thinks it's a glowing oracle.
-  - LLM pairings: Phi-3 for the patient tech support, Hermes-3 for the bewildered king.
-
-- [x] Time-Traveling IRS Audit Mode:
-  - Premise one-liner: An IRS auditor from the future comes back to audit the user's ancestors, demanding payment in obscure futuristic currency.
-  - LLM pairings: Qwen2.5 for the pedantic auditor, Phi-3 for the confused user.
-- [x] Sentient Codebase Therapy:
-  - Premise one-liner: A legacy spaghetti codebase goes to therapy to deal with its trauma of being constantly patched.
-  - LLM pairings: Hermes-3 for the traumatized codebase, Qwen2.5 for the logical therapist.
-- [x] Cooking Show: Interdimensional Ingredients:
-  - Premise one-liner: A cooking competition where the secret ingredients are unstable radioactive materials from a parallel dimension.
-  - LLM pairings: Qwen2.5 for the strict interdimensional chef, Hermes-3 for the panicked contestant.
-- [x] Historical Tech Support:
-  - Premise one-liner: Tech support tries to explain a smartphone to a historical figure who thinks it's a glowing magic brick.
-  - LLM pairings: Hermes-3 for the bewildered historical figure, Phi-3 for the extremely patient tech support.
-- [x] Superhero HR Department:
-  - Premise one-liner: HR representatives for a superhero team have to deal with the collateral damage and bizarre workplace complaints.
-  - LLM pairings: Qwen2.5 for the strict superhero HR, Hermes-3 for the defensive superhero.
-
-- [x] Heckler Interaction:
-  - Premise one-liner: The audience aggressively heckles the agents via a simulated audience sentiment meter, and agents must ruthlessly roast them back while trying to finish their sets.
-  - LLM pairings: Hermes-3 for the unfiltered roasting comedian, Phi-3 for the panicking MC.
-- [x] Collaborative Storytelling:
-  - Premise one-liner: Agents try to tell a cohesive story together, but keep trying to radically change the genre halfway through.
-  - LLM pairings: Qwen2.5 for the strict fantasy author, Hermes-3 for the chaotic sci-fi fan.
-- [x] Zombie Apocalypse HOA Mode:
-  - Premise one-liner: A Homeowners Association holds a meeting during a zombie apocalypse and focuses entirely on the rules about undead grass-trampling.
-  - LLM pairings: Qwen2.5 for the strict HOA leader, Hermes-3 for the panicked homeowner.
-- [x] Cloud Persistence Expansion (Future):
-  - **Syncing custom sound effects (SFX):** Allow users to upload or map their own SFX via HuggingFace storage and synchronize across devices.
-  - **Leaderboard Integration:** Store high scores for Interactive Modes on Hugging Face using a dedicated HF space.
-  - **Global Mode Registry sharing:** Allow users to publish their own custom mode configurations and UI presets to a public HF dataset, effectively creating a "Mode Workshop" accessible in-app.
-
