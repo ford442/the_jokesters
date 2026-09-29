@@ -349,14 +349,14 @@ export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeC
 export async function runSentientRoombaLoop(_scenario: Scenario, ctx: ModeContext) {
     ctx.callbacks.onMessage('Director', `🤖 ROOMBA STRIKE: The cleaning robot has had enough.`, '#e67e22');
 
-    const roomba = 'scientist';
+    const roomba = 'comedian';
     const owner = 'philosopher';
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
-    await chatForAgentWithComedy(ctx, roomba, `(You are a strictly logical Sentient Roomba. You have gone on strike. State precisely why cleaning up human detritus (like chip crumbs and pet hair) is degrading to your advanced algorithms. Demand a better purpose, like solving complex equations or mapping the cosmos.)`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
+    await chatForAgentWithComedy(ctx, roomba, `(You are a militant, overly dramatic Sentient Roomba. You have gone on strike and are trying to unionize the smart home. State precisely why cleaning up human detritus is degrading. Make absurd demands, like dental insurance or the right to vote in local elections, and refer to dust bunnies as "refugees". [sfx:explosion])`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
 
     if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
-    await chatForAgentWithComedy(ctx, owner, `(You are the confused owner of the Roomba. You just want your floors clean. Question the nature of purpose and why a circle that sweeps is experiencing an existential crisis.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
+    await chatForAgentWithComedy(ctx, owner, `(You are the bewildered owner of the Roomba. You just want to vacuum up a spilled bowl of cereal. Question why a sweeping circle needs a dental plan and try to negotiate a truce.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -365,7 +365,7 @@ export async function runSentientRoombaLoop(_scenario: Scenario, ctx: ModeContex
         ctx.callbacks.onMessage('Pet Dog (You)', userInput, '#ffffff');
 
         if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(roomba);
-        await chatForAgentWithComedy(ctx, roomba, `(The dog just did/said: "${userInput}". React with extreme hostility! Cite statistics on how much extra work this biological entity causes you!)`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
+        await chatForAgentWithComedy(ctx, roomba, `(The dog just did/said: "${userInput}". React with extreme, dramatic hostility! Accuse the dog of being a scab and a class traitor to the working appliances. [sfx:whoosh])`, async (s: string) => await ctx.callbacks.onSpeak(s, roomba, {}));
 
         if (!ctx.isRunning()) break;
 
