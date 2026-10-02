@@ -130,7 +130,7 @@ export const MODE_LOADER_BY_ID: Record<string, () => Promise<ModeLoop>> = {
   'interdimensional_customs': async () => (await import('./InteractiveMode')).runInterdimensionalCustomsLoop,
   'interdimensional_dmv': async () => (await import('./ExpandedRealityModes_Scifi')).runInterdimensionalDMVLoop,
   'interdimensional_public_access_tv': async () => (await import('./DreamModes_Scifi')).runInterdimensionalPublicAccessTVLoop,
-  'interdimensional-cooking-show': async () => (await import('./ExpandedRealityModes_ShowGames')).runInterdimensionalCookingShowLoop,
+  'interdimensional-cooking-show': async () => (await import('./DreamModes_Absurdist_PartC')).runInterdimensionalCookingShowLoop,
   'intergalactic_bake_off': async () => (await import('./DreamModes_Scifi')).runIntergalacticBakeOffLoop,
   'intergalactic_cooking': async () => (await import('./ExpandedRealityModes_ShowGames')).runIntergalacticCookingLoop,
   'intergalactic_dmv': async () => (await import('./ExpandedRealityModes_Scifi')).runIntergalacticDMVLoop,
