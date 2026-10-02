@@ -28,27 +28,27 @@ export async function runParanormalTechSupportLoop(_scenario: Scenario, ctx: Mod
 }
 
 export async function runInterdimensionalCookingShowLoop(_scenario: Scenario, ctx: ModeContext) {
-    ctx.callbacks.onMessage('Director', `🐙 INTERDIMENSIONAL COOKING SHOW: What is that... thing?`, '#8e44ad');
+    ctx.callbacks.onMessage('Director', `🐙 INTERDIMENSIONAL COOKING SHOW: The secret ingredient is non-Euclidean!`, '#8e44ad');
 
     const enthusiasticChef = 'comedian'; // enthusiastic chef
     const terrifiedGuest = 'philosopher'; // terrified guest judge
 
-    await chatForAgentWithComedy(ctx, enthusiasticChef, `(You are an enthusiastic cooking show chef. Introduce today's secret ingredient: a writhing, multi-dimensional hyper-squid that is currently singing opera.)`, async (s: string) => await ctx.callbacks.onSpeak(s, enthusiasticChef, {}));
+    await chatForAgentWithComedy(ctx, enthusiasticChef, `(You are an enthusiastic cooking show chef. Introduce today's secret ingredient: a writhing, multi-dimensional hyper-squid that is currently singing 19th-century Italian opera and vibrating at a frequency that makes everyone's fillings taste like purple.)`, async (s: string) => await ctx.callbacks.onSpeak(s, enthusiasticChef, {}));
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, terrifiedGuest, `(You are a terrified guest judge. Question reality and ask why the ingredient is staring directly into your soul and telling you your past sins.)`, async (s: string) => await ctx.callbacks.onSpeak(s, terrifiedGuest, {}));
+    await chatForAgentWithComedy(ctx, terrifiedGuest, `(You are a terrified guest judge on the cooking show. Panic completely. Ask why the ingredient is staring directly into your soul, reciting your browser history, and blatantly violating the second law of thermodynamics.)`, async (s: string) => await ctx.callbacks.onSpeak(s, terrifiedGuest, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
         ctx.callbacks.onMessage('Producer (You)', userInput, '#ffffff');
         if (!ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, enthusiasticChef, `(Reacting to: "${userInput}". cheerfully explain that you have to sauté it before it breaches the space-time continuum, and ask the guest to hand you a chronal-spatula.)`, async (s: string) => await ctx.callbacks.onSpeak(s, enthusiasticChef, {}));
+        await chatForAgentWithComedy(ctx, enthusiasticChef, `(Reacting to the producer: "${userInput}". Cheerfully ignore the guest's terror. Explain that you have to julienne the squid's temporal lobe before it breaches the space-time continuum and forms a black hole. Casually ask the guest to pass the chronal-whisk.)`, async (s: string) => await ctx.callbacks.onSpeak(s, enthusiasticChef, {}));
 
         if (!ctx.isRunning()) break;
 
-        await chatForAgentWithComedy(ctx, terrifiedGuest, `(Reacting to: "${userInput}". Tremble in fear as the ingredient begins floating and reciting poetry in an ancient tongue. Refuse to eat it.)`, async (s: string) => await ctx.callbacks.onSpeak(s, terrifiedGuest, {}));
+        await chatForAgentWithComedy(ctx, terrifiedGuest, `(Reacting to the producer: "${userInput}". Shriek in horror as the dish begins floating, rearranging the kitchen's architecture, and speaking in the voice of your grandmother. Refuse to eat it and demand a lawyer or a physicist.)`, async (s: string) => await ctx.callbacks.onSpeak(s, terrifiedGuest, {}));
     }
 }
 
