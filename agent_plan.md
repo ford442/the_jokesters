@@ -6,7 +6,7 @@ This file is **not** a Dream Mode checklist. Mode spam is paused behind a qualit
 tasks_per_run: 1
 
 ## Project Velocity Feedback
-Verified #333 and #332 are already fixed in code. Maintained tasks_per_run at 1.
+Fixed #333 emoji-only follow-ups poisoning history. Maintained tasks_per_run at 1.
 Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 1` for a consistent, sustainable pace.
 Today was low friction so increased tasks_per_run to 1.
 Decreasing to 1 task for focus on the Sentient Microwave mode.
