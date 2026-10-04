@@ -273,8 +273,9 @@ export interface ResolvedModelLib {
 }
 
 /**
- * HEAD-probe model_lib URL. A 404 on a custom ctx512/1024 Vicuna lib falls
- * back to the generic 4K MLC WASM (VPS, then GitHub) and surfaces a VRAM warning.
+ * HEAD-probe model_lib URL. A 404 on a custom ctx512/1024 Vicuna lib throws an error
+ * instead of falling back to the generic 4K MLC WASM, preventing silent high-VRAM usage.
+ * Other missing libs will fall back to their chain and surface a VRAM warning.
  * Network errors on HEAD do not assume the file is missing (GET may still work).
  */
 export async function resolveModelLibUrl(
