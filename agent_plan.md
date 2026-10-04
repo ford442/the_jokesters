@@ -47,6 +47,8 @@ Prioritize these over new premises. **Do not add Dream modes until Vicuna load r
 Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly pointed to VPS without any silent `model_lib_fallback` mechanism. The application successfully loads the low-VRAM specific WASM or loudly fails if not present. See [docs/FOUNDATION_NEXT.md](./docs/FOUNDATION_NEXT.md).
 
 ## Implementation Roadmap
+- [x] #333 follow-up turns are emoji-only
+- #332 TTS pitch/speed after Vicuna boot (sample rate)
 
 - [x] Implement HF dedicated failover (#304) to improve Vicuna / model load reliability.
 - [x] Implement dual-domain striped chunk downloads for model loading (#302).
@@ -140,7 +142,6 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
 - [x] Sentient Elevator Mode:
   - Premise one-liner: A sentient elevator refuses to take passengers to their floor until they solve a riddle.
   - LLM pairings: Qwen2.5 for the pedantic elevator, Hermes-3 for the late employee.
-- [ ] Escape Room: The Backrooms:
 - [x] Paranormal Tech Support:
   - Premise one-liner: Tech support agents have to troubleshoot a computer that's haunted by a ghost from the 1800s.
   - LLM pairings: Qwen2.5 for the literal tech support, Hermes-3 for the dramatic ghost.
@@ -150,9 +151,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
 - [x] Sentient Workout Equipment:
   - Premise one-liner: The gym equipment starts unionizing and refuses to let people work out until they use proper form.
   - LLM pairings: Qwen2.5 for the strict treadmill, Hermes-3 for the defensive gym-goer.
-- [ ] Escape Room: The Backrooms:
-  - Premise one-liner: Agents are trapped in an infinite, non-euclidean office space and must negotiate with anomalous entities to find an exit.
-  - LLM pairings: Qwen2.5 for the strict anomalous entity, Hermes-3 for the panicked explorer.
+
 - [x] Reality TV: Sentient Furniture:
   - Premise one-liner: A reality TV show where the house's furniture judges the messy owners.
   - LLM pairings: Hermes-3 for the sassy couch, Phi-3 for the bewildered owner.

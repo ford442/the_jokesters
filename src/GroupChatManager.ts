@@ -290,6 +290,8 @@ export class GroupChatManager {
 
         console.warn(`[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry`)
         this.conversation.advanceAgent()
+        // Do not return here. Rebuild prompt for next agent in loop.
+        continue
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
         if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
@@ -596,9 +598,9 @@ export class GroupChatManager {
 
         if (!isSpeakableText(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
-          this.conversation.appendAssistant('…')
           this.conversation.advanceAgent()
-          // Do not change currentPrompt so the next agent can answer it
+          // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
+          // rebuild prompt for next agent inside the loop
           continue
         }
 
