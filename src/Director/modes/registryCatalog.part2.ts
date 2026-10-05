@@ -6,22 +6,6 @@ import type { ModeCatalogEntry } from './registry';
 
 export const MODE_CATALOG_PART_2: ModeCatalogEntry[] = [
   {
-    id: 'escape_backrooms',
-    title: 'Escape Backrooms',
-    category: 'dream',
-    description: 'A Escape Backrooms scene.',
-    tags: ['dream', 'escape', 'backrooms'],
-    showInPresets: false,
-  },
-  {
-    id: 'escape_room',
-    title: 'Escape Room',
-    category: 'dream',
-    description: 'A Escape Room scene.',
-    tags: ['dream', 'escape', 'room'],
-    showInPresets: false,
-  },
-  {
     id: 'escape_room_backrooms',
     title: 'Escape Room: The Backrooms',
     category: 'dream',
@@ -587,6 +571,38 @@ export const MODE_CATALOG_PART_2: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Drivers completely lost in a cul-de-sac blaming the house number.',
     tags: ['dream', 'lost', 'delivery', 'drivers'],
+    showInPresets: true,
+  },
+  {
+    id: 'lost_in_ikea',
+    title: 'Lost In Ikea',
+    category: 'dream',
+    description: 'A Lost In Ikea scene.',
+    tags: ['dream', 'lost', 'ikea'],
+    showInPresets: false,
+  },
+  {
+    id: 'mad_scientist',
+    title: 'Mad Scientist',
+    category: 'dream',
+    description: 'A Mad Scientist scene.',
+    tags: ['dream', 'mad', 'scientist'],
+    showInPresets: false,
+  },
+  {
+    id: 'magical_detention',
+    title: 'Magical Detention',
+    category: 'dream',
+    description: 'A Magical Detention scene.',
+    tags: ['dream', 'magical', 'detention'],
+    showInPresets: false,
+  },
+  {
+    id: 'mars_colony_hoa',
+    title: 'Mars Colony HOA',
+    category: 'dream',
+    description: 'A strict HOA president enforces rules on an unruly Martian colonist.',
+    tags: ['dream', 'mars', 'colony', 'hoa'],
     showInPresets: true,
   },
 ];

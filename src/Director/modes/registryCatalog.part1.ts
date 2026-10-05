@@ -589,4 +589,20 @@ export const MODE_CATALOG_PART_1: ModeCatalogEntry[] = [
     tags: ['performance', 'enhanced', 'roast'],
     showInPresets: false,
   },
+  {
+    id: 'escape_backrooms',
+    title: 'Escape Backrooms',
+    category: 'dream',
+    description: 'A Escape Backrooms scene.',
+    tags: ['dream', 'escape', 'backrooms'],
+    showInPresets: false,
+  },
+  {
+    id: 'escape_room',
+    title: 'Escape Room',
+    category: 'dream',
+    description: 'A Escape Room scene.',
+    tags: ['dream', 'escape', 'room'],
+    showInPresets: false,
+  },
 ];

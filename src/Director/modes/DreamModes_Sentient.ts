@@ -6,3 +6,4 @@
 export * from './DreamModes_Sentient.part1';
 export * from './DreamModes_Sentient.part2';
 export * from './DreamModes_Sentient.part3';
+export * from './DreamModes_Sentient.part4';
