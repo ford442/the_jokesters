@@ -49,7 +49,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
 
 ## Implementation Roadmap
 - [x] #333 follow-up turns are emoji-only
-- #332 TTS pitch/speed after Vicuna boot (sample rate)
+- [x] #332 TTS pitch/speed after Vicuna boot (sample rate)
 
 - [x] Implement HF dedicated failover (#304) to improve Vicuna / model load reliability.
 - [x] Implement dual-domain striped chunk downloads for model loading (#302).

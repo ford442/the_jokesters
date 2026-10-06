@@ -182,7 +182,7 @@ export class OptimizedSpeechQueue {
         const cacheKey = `${utterance.speakerId}:${utterance.text}`;
         const preloaded = this.preloadedAudio.get(cacheKey);
         let audioData = preloaded?.audioData;
-        let sampleRate = preloaded?.sampleRate;
+        let sampleRate = preloaded?.sampleRate || this.engine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
         let visemes: Viseme[] | undefined;
 
         if (!audioData) {
