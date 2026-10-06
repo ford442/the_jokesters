@@ -282,16 +282,15 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
         }
 
-        if (isSpeakableText(cleaned)) {
-          this.conversation.appendAssistant(cleaned)
+        if (!isSpeakableText(cleaned)) {
+          console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
           this.conversation.advanceAgent()
-          return { agentId: currentAgent.id, response: cleaned }
+          continue
         }
 
-        console.warn(`[EmptyTurn] Skipping ${currentAgent.id} after emoji-only retry`)
+        this.conversation.appendAssistant(cleaned)
         this.conversation.advanceAgent()
-        // Do not return here. Rebuild prompt for next agent in loop.
-        continue
+        return { agentId: currentAgent.id, response: cleaned }
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error)
         if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
