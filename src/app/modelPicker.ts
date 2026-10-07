@@ -32,12 +32,16 @@ function updateEngineInfo(engineType: string): void {
   }
 }
 
-function updateCapabilityDisplay(extra?: string): void {
+function updateCapabilityDisplay(extra?: string, adapterAvailable?: boolean): void {
   const caps = EngineFactory.detectCapabilities()
   const el = document.getElementById('engine-capabilities')
   if (el) {
+    let webGpuIcon = caps.webgpu ? '✅' : '❌'
+    if (caps.webgpu && adapterAvailable === false) {
+      webGpuIcon = '⚠️ (no adapter)'
+    }
     el.innerHTML = `
-      ${caps.webgpu ? '✅' : '❌'} WebGPU
+      ${webGpuIcon} WebGPU
       ${caps.wasm ? '✅' : '❌'} WASM
       ${caps.simd ? '✅' : '❌'} SIMD
       ${caps.threads ? '✅' : '❌'} Threads
@@ -276,6 +280,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
 
       updateCapabilityDisplay(
         `${device.supportsF16 ? '✅' : '❌'} f16 · ~${Math.round(device.availableVramMB)} MB free`,
+        device.webgpu
       )
 
       let rememberedLabel: string | undefined

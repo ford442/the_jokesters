@@ -98,27 +98,42 @@ export async function detectShaderF16Support(): Promise<boolean> {
 export interface WebGPULimits {
   maxBufferSize: number
   supportsF16: boolean
+  adapterAvailable: boolean
 }
 
+let webgpuLimitsPromise: Promise<WebGPULimits> | null = null;
+
 export async function detectWebGPULimits(): Promise<WebGPULimits> {
-  try {
-    const nav = navigator as any
-    if (!nav.gpu) {
-      return { maxBufferSize: 0, supportsF16: false }
+  if (webgpuLimitsPromise) return webgpuLimitsPromise;
+
+  webgpuLimitsPromise = (async () => {
+    try {
+      const nav = navigator as any
+      if (!nav.gpu) {
+        return { maxBufferSize: 0, supportsF16: false, adapterAvailable: false }
+      }
+
+      const adapter = await nav.gpu.requestAdapter()
+      if (!adapter) {
+        return { maxBufferSize: 0, supportsF16: false, adapterAvailable: false }
+      }
+
+      const maxBufferSize = adapter.limits?.maxBufferSize ?? 0
+      const supportsF16 = adapter.features?.has('shader-f16') ?? false
+
+      return { maxBufferSize, supportsF16, adapterAvailable: true }
+    } catch {
+      return { maxBufferSize: 0, supportsF16: false, adapterAvailable: false }
     }
+  })();
 
-    const adapter = await nav.gpu.requestAdapter()
-    if (!adapter) {
-      return { maxBufferSize: 0, supportsF16: false }
-    }
+  return webgpuLimitsPromise;
+}
 
-    const maxBufferSize = adapter.limits?.maxBufferSize ?? 0
-    const supportsF16 = adapter.features?.has('shader-f16') ?? false
-
-    return { maxBufferSize, supportsF16 }
-  } catch {
-    return { maxBufferSize: 0, supportsF16: false }
-  }
+export async function detectCapabilitiesWithAdapter(): Promise<EngineCapabilities> {
+  const caps = detectCapabilities();
+  const limits = await detectWebGPULimits();
+  return { ...caps, webgpu: limits.adapterAvailable, shaderF16: limits.supportsF16 };
 }
 
 /**
@@ -321,6 +336,13 @@ export class EngineFactory {
    */
   static detectCapabilities(): EngineCapabilities {
     return detectCapabilities()
+  }
+
+  /**
+   * Detect browser capabilities asynchronously, explicitly checking the adapter.
+   */
+  static async detectCapabilitiesWithAdapter(): Promise<EngineCapabilities> {
+    return detectCapabilitiesWithAdapter()
   }
 
   /**
