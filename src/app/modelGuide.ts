@@ -67,6 +67,9 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
       const limits = await detectWebGPULimits()
       supportsF16 = limits.supportsF16
       maxBufferSize = limits.maxBufferSize
+      if (!limits.adapterAvailable) {
+        caps.webgpu = false;
+      }
     } catch {
       /* keep defaults */
     }

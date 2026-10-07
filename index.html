@@ -133,7 +133,19 @@
       <div class="tech-info" id="browser-info">
         Detecting browser capabilities...
       </div>
+      <div style="margin-top: 15px;">
+        <button id="webgpu-continue-btn" style="background-color: #2b2b36; border: 1px solid #4a4a5a; color: #fff; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Continue without WebGPU (slower)</button>
+      </div>
+      <div style="margin-top: 10px; font-size: 0.85em; color: #aaa;">
+        You can still use llama.cpp, Transformers.js, or the API engine.
+      </div>
     </div>
+
+    <script>
+      document.getElementById('webgpu-continue-btn')?.addEventListener('click', () => {
+        document.getElementById('webgpu-error')?.classList.remove('visible');
+      });
+    </script>
 
     <div id="app"></div>
     

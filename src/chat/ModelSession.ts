@@ -122,7 +122,8 @@ export class ModelSession {
     preferredContext?: number | 'auto',
     enginePreference: EngineType = 'auto',
   ): Promise<void> {
-    this.engine = await EngineFactory.selectEngine(modelConfig, enginePreference)
+    const caps = await EngineFactory.detectCapabilitiesWithAdapter();
+    this.engine = await EngineFactory.selectEngine(modelConfig, enginePreference, caps)
     this.engineType = this.engine.id as EngineType
 
     try {
@@ -152,7 +153,6 @@ export class ModelSession {
       this.loadedModelId = null
 
       if (isWllamaRuntimeMismatch(error)) {
-        const caps = EngineFactory.detectCapabilities()
         const fallbacks = getEngineFallbackOrder(modelConfig, caps, ['llamacpp'])
         for (const nextEngine of fallbacks) {
           try {
