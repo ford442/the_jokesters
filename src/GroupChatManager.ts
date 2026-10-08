@@ -312,6 +312,7 @@ export class GroupChatManager {
       }
     }
 
+    this.conversation.popLastIfUser()
     return { agentId: lastAgentId, response: '' }
   }
 
@@ -494,7 +495,11 @@ export class GroupChatManager {
     return this.conversation.getAgents()
   }
 
-  addToHistory(userMessage: string, assistantResponse: string): void {
+  addToHistory(userMessage: string, assistantResponse: string, agentId?: string): void {
+    if (agentId) {
+      const agentIndex = this.getAgents().findIndex(a => a.id === agentId)
+      if (agentIndex !== -1) this.conversation.setAgentIndex(agentIndex)
+    }
     this.conversation.addTurn(userMessage, assistantResponse)
   }
 
@@ -513,6 +518,18 @@ export class GroupChatManager {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
     }
 
+
+    const allAgents = this.conversation.getAgents()
+    let localAgentIndex = this.conversation.getAgentIndex()
+    const getLocalAgent = () => allAgents[localAgentIndex]
+    const advanceLocalAgent = () => { localAgentIndex = (localAgentIndex + 1) % allAgents.length }
+    const localHistory = [...this.conversation.getHistory()]
+    const addLocalTurn = (userMsg: string, asstMsg: string) => {
+      localHistory.push({ role: 'user', content: userMsg })
+      localHistory.push({ role: 'assistant', content: asstMsg })
+      advanceLocalAgent()
+    }
+
     const prerenderedTurns: Array<{
       agentId: string
       agentName: string
@@ -520,9 +537,9 @@ export class GroupChatManager {
       sentences: string[]
     }> = []
 
-    const snapshot = this.conversation.snapshot()
 
-    try {
+
+
       let currentPrompt = initialPrompt
       let produced = 0
       let attempts = 0
@@ -530,7 +547,7 @@ export class GroupChatManager {
 
       while (produced < turnCount && attempts < maxAttempts) {
         attempts++
-        const currentAgent = this.conversation.getCurrentAgent()
+        const currentAgent = getLocalAgent()
         const systemMessage = buildSystemMessage(
           currentAgent,
           undefined,
@@ -546,7 +563,7 @@ export class GroupChatManager {
 
         const depth = this.conversation.getEffectiveMemoryDepth()
         const historyWithPrompt: Message[] = [
-          ...this.conversation.getHistory(),
+          ...localHistory,
           { role: 'user', content: currentPrompt },
         ]
         const depthSliced = this.conversation.sliceHistoryByDepth(historyWithPrompt, depth)
@@ -597,7 +614,7 @@ export class GroupChatManager {
 
         if (!isSpeakableText(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
-          this.conversation.advanceAgent()
+          advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
           continue
@@ -620,15 +637,13 @@ export class GroupChatManager {
           sentences,
         })
 
-        this.conversation.addTurn(currentPrompt, cleaned)
+        addLocalTurn(currentPrompt, cleaned)
         currentPrompt = '(Reply naturally to the last thing said)'
         produced++
       }
 
       return prerenderedTurns
-    } finally {
-      this.conversation.restore(snapshot)
-    }
+
   }
 
   async chatForAgent(
