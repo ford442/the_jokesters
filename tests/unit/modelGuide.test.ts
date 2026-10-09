@@ -7,8 +7,10 @@ import {
 import { BLESSED_PRESETS } from '../../src/config/blessedPresets'
 
 function device(partial: Partial<DeviceCapabilitySnapshot>): DeviceCapabilitySnapshot {
+  const webgpu = partial.webgpu ?? true
   return {
-    webgpu: true,
+    webgpu,
+    webgpuStatus: partial.webgpuStatus ?? (webgpu ? 'ready' : 'unavailable'),
     wasm: true,
     simd: true,
     threads: false,

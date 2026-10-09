@@ -15,9 +15,25 @@ import { ApiEngineAdapter } from './ApiEngineAdapter'
 
 export type EngineType = 'auto' | 'mlc' | 'llamacpp' | 'transformers' | 'api'
 
+/**
+ * Adapter-aware WebGPU availability.
+ * - `ready`: `requestAdapter()` returned an adapter
+ * - `no-adapter`: `navigator.gpu` exists, but no adapter (null or request failed)
+ * - `unavailable`: no WebGPU API
+ * - `unknown`: API is present, but the adapter has not been requested yet
+ */
+export type WebGPUStatus = 'ready' | 'no-adapter' | 'unavailable' | 'unknown'
+
 export interface EngineCapabilities {
-  /** WebGPU support available */
+  /**
+   * True only when a WebGPU adapter was obtained.
+   * API presence alone is not enough — engines that need WebGPU will fail without an adapter.
+   */
   webgpu: boolean
+  /** `navigator.gpu` exists, independent of whether an adapter can be created. */
+  webgpuApi: boolean
+  /** Three-state availability used by the capability line and engine selection. */
+  webgpuStatus: WebGPUStatus
   /** WebAssembly support available */
   wasm: boolean
   /** SIMD support available */
@@ -28,14 +44,29 @@ export interface EngineCapabilities {
   shaderF16: boolean
 }
 
+/** Capability-line label. Same status drives Auto engine selection via `webgpu`. */
+export function formatWebGPUCapabilityLabel(status: WebGPUStatus): string {
+  switch (status) {
+    case 'ready':
+      return '✅ WebGPU (adapter OK)'
+    case 'no-adapter':
+      return '⚠️ WebGPU API present, no adapter'
+    case 'unavailable':
+      return '❌ no WebGPU'
+    case 'unknown':
+      return '… WebGPU (checking adapter)'
+  }
+}
+
 /**
  * Detect browser capabilities relevant to LLM engines.
  */
 export function detectCapabilities(): EngineCapabilities {
-  const nav = navigator as any
+  const nav = (typeof navigator !== 'undefined' ? navigator : {}) as any
 
-  // Check WebGPU
-  const webgpu = typeof nav.gpu !== 'undefined'
+  // API presence only. A working adapter is resolved by detectCapabilitiesWithAdapter().
+  const webgpuApi = typeof nav.gpu !== 'undefined'
+  const webgpuStatus: WebGPUStatus = webgpuApi ? 'unknown' : 'unavailable'
 
   // Check WASM
   const wasm = typeof WebAssembly === 'object' && 
@@ -67,7 +98,9 @@ export function detectCapabilities(): EngineCapabilities {
   const shaderF16 = false  // Actual check happens in checkF16Support() from config/models
 
   return {
-    webgpu,
+    webgpu: false,
+    webgpuApi,
+    webgpuStatus,
     wasm,
     simd,
     threads,
@@ -132,8 +165,32 @@ export async function detectWebGPULimits(): Promise<WebGPULimits> {
 
 export async function detectCapabilitiesWithAdapter(): Promise<EngineCapabilities> {
   const caps = detectCapabilities();
+  if (!caps.webgpuApi) {
+    return { ...caps, webgpu: false, webgpuStatus: 'unavailable', shaderF16: false };
+  }
+
   const limits = await detectWebGPULimits();
-  return { ...caps, webgpu: limits.adapterAvailable, shaderF16: limits.supportsF16 };
+  if (!limits.adapterAvailable) {
+    return { ...caps, webgpu: false, webgpuStatus: 'no-adapter', shaderF16: false };
+  }
+
+  return { ...caps, webgpu: true, webgpuStatus: 'ready', shaderF16: limits.supportsF16 };
+}
+
+/** Drop the cached adapter probe so a later call hits `requestAdapter()` again. */
+export function resetWebGPUDetectionCache(): void {
+  webgpuLimitsPromise = null;
+}
+
+function transformersUsesWebGPU(modelConfig: UnifiedModelConfig): boolean {
+  const device = modelConfig.transformers?.device
+  return device !== 'wasm' && device !== 'cpu'
+}
+
+function transformersRunnable(modelConfig: UnifiedModelConfig, capabilities: EngineCapabilities): boolean {
+  if (modelConfig.transformers === undefined) return false
+  if (!transformersUsesWebGPU(modelConfig)) return true
+  return capabilities.webgpu
 }
 
 /**
@@ -180,14 +237,14 @@ export function getModelEngineSupport(
   const hasTransformers = modelConfig.transformers !== undefined
   const hasApi = modelConfig.api !== undefined
 
-  // Determine recommended engine: API → MLC → Transformers.js → llama.cpp
-  // API models are server-side and don't depend on browser capabilities
+  // API models are server-side and don't depend on browser capabilities.
+  // MLC and WebGPU Transformers.js require a real adapter (`capabilities.webgpu`).
   let recommended: 'mlc' | 'llamacpp' | 'transformers' | 'api'
   if (hasApi) {
     recommended = 'api'
   } else if (hasMlc && capabilities.webgpu) {
     recommended = 'mlc'
-  } else if (hasTransformers) {
+  } else if (hasTransformers && transformersRunnable(modelConfig, capabilities)) {
     recommended = 'transformers'
   } else if (hasLlamaCpp) {
     recommended = 'llamacpp'
@@ -221,7 +278,7 @@ export function getEngineFallbackOrder(
   if (support.mlc && capabilities.webgpu && !exclude.includes('mlc')) {
     order.push('mlc')
   }
-  if (support.transformers && !exclude.includes('transformers')) {
+  if (support.transformers && transformersRunnable(modelConfig, capabilities) && !exclude.includes('transformers')) {
     order.push('transformers')
   }
   if (support.api && !exclude.includes('api')) {
@@ -234,78 +291,65 @@ export function getEngineFallbackOrder(
 /**
  * Select and create the appropriate engine for a model.
  */
+/**
+ * Pick an engine id from model support and adapter-aware capabilities.
+ * `capabilities.webgpu` must come from `detectCapabilitiesWithAdapter()` (or an equivalent probe).
+ */
+export function resolveEngineChoice(
+  modelConfig: UnifiedModelConfig,
+  preference: EngineType,
+  capabilities: EngineCapabilities,
+): 'mlc' | 'llamacpp' | 'transformers' | 'api' {
+  const support = getModelEngineSupport(modelConfig, capabilities)
+
+  if (preference === 'api' && support.api) return 'api'
+  if (preference === 'transformers' && support.transformers) return 'transformers'
+  if (preference === 'mlc' && support.mlc) return 'mlc'
+  if (preference === 'llamacpp' && support.llamacpp) return 'llamacpp'
+
+  if (support.recommended === 'api' && support.api) return 'api'
+  if (support.recommended === 'mlc' && support.mlc && capabilities.webgpu) return 'mlc'
+  if (support.recommended === 'transformers' && transformersRunnable(modelConfig, capabilities)) {
+    return 'transformers'
+  }
+  if (support.llamacpp) return 'llamacpp'
+  if (support.api) return 'api'
+  if (capabilities.webgpu && support.mlc) return 'mlc'
+  if (transformersRunnable(modelConfig, capabilities)) return 'transformers'
+  if (support.mlc) return 'mlc'
+  if (support.transformers) return 'transformers'
+  return 'llamacpp'
+}
+
 export async function selectEngine(
   modelConfig: UnifiedModelConfig,
   preference: EngineType = 'auto',
   capabilities?: EngineCapabilities
 ): Promise<LLMEngine> {
-  const caps = capabilities ?? detectCapabilities()
-  const support = getModelEngineSupport(modelConfig, caps)
+  const caps = capabilities ?? await detectCapabilitiesWithAdapter()
+  const choice = resolveEngineChoice(modelConfig, preference, caps)
 
-  // Respect user preference
-  if (preference === 'api') {
-    if (!support.api) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support API engine. Falling back to auto.`)
-      // Fall through to auto-selection
-    } else {
+  if (preference !== 'auto' && preference !== choice) {
+    console.warn(`[EngineFactory] Model ${modelConfig.id} does not support ${preference} engine. Falling back to auto.`)
+  }
+  if ((choice === 'mlc' || (choice === 'transformers' && transformersUsesWebGPU(modelConfig))) && !caps.webgpu) {
+    console.warn(`[EngineFactory] WebGPU adapter not available. ${choice} engine may not work properly.`)
+  }
+
+  switch (choice) {
+    case 'api':
       console.log('[EngineFactory] Using API Server (OpenAI-compatible)')
       return new ApiEngineAdapter()
-    }
-  }
-
-  if (preference === 'transformers') {
-    if (!support.transformers) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support Transformers.js engine. Falling back to auto.`)
-      // Fall through to auto-selection
-    } else {
+    case 'transformers':
       console.log('[EngineFactory] Using Transformers.js (ONNX/WebGPU)')
       return new TransformersEngineAdapter()
-    }
-  }
-
-  if (preference === 'mlc') {
-    if (!support.mlc) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support MLC engine. Falling back to auto.`)
-      // Fall through to auto-selection
-    } else {
-      if (!caps.webgpu) {
-        console.warn(`[EngineFactory] WebGPU not available. MLC engine may not work properly.`)
-      }
+    case 'mlc':
       console.log('[EngineFactory] Using MLC (WebGPU optimized)')
       return new MlcEngineAdapter()
-    }
-  }
-
-  if (preference === 'llamacpp') {
-    if (!support.llamacpp) {
-      console.warn(`[EngineFactory] Model ${modelConfig.id} does not support llama.cpp engine. Falling back to auto.`)
-      // Fall through to auto-selection
-    } else {
+    case 'llamacpp':
       console.log('[EngineFactory] Using llama.cpp (WASM/CPU)')
       return new LlamaCppEngineAdapter()
-    }
   }
-
-  // Auto-select based on model support and capabilities
-  // Priority: API → MLC → Transformers.js → llama.cpp
-  if (support.recommended === 'api') {
-    console.log('[EngineFactory] Auto-selected API Server (OpenAI-compatible)')
-    return new ApiEngineAdapter()
-  }
-
-  if (support.recommended === 'mlc' && caps.webgpu) {
-    console.log('[EngineFactory] Auto-selected MLC (WebGPU optimized)')
-    return new MlcEngineAdapter()
-  }
-  
-  if (support.recommended === 'transformers' || support.transformers) {
-    console.log('[EngineFactory] Auto-selected Transformers.js (ONNX/WebGPU)')
-    return new TransformersEngineAdapter()
-  }
-
-  // Fall back to llama.cpp for compatibility
-  console.log('[EngineFactory] Auto-selected llama.cpp (WASM/CPU)')
-  return new LlamaCppEngineAdapter()
 }
 
 /**

@@ -1,4 +1,4 @@
-import { EngineFactory } from '../../src/llm/EngineFactory'
+import { EngineFactory, formatWebGPUCapabilityLabel } from '../../src/llm/EngineFactory'
 import { MlcEngineAdapter } from '../../src/llm/MlcEngineAdapter'
 import { LlamaCppEngineAdapter } from '../../src/llm/LlamaCppEngineAdapter'
 import { TransformersEngineAdapter } from '../../src/llm/TransformersEngineAdapter'
@@ -14,14 +14,19 @@ interface TestResult {
 }
 
 // Display capabilities on load
-function displayCapabilities() {
-  const caps = EngineFactory.detectCapabilities()
+async function displayCapabilities() {
+  const caps = await EngineFactory.detectCapabilitiesWithAdapter()
   const grid = document.getElementById('capability-grid')!
+  const webgpuClass = caps.webgpuStatus === 'ready'
+    ? 'supported'
+    : caps.webgpuStatus === 'no-adapter'
+      ? 'partial'
+      : 'unsupported'
   
   grid.innerHTML = `
-    <div class="capability-item ${caps.webgpu ? 'supported' : 'unsupported'}">
+    <div class="capability-item ${webgpuClass}">
       <strong>WebGPU</strong><br>
-      ${caps.webgpu ? '✅ Supported' : '❌ Not Supported'}
+      ${formatWebGPUCapabilityLabel(caps.webgpuStatus)}
     </div>
     <div class="capability-item ${caps.wasm ? 'supported' : 'unsupported'}">
       <strong>WebAssembly</strong><br>
@@ -258,7 +263,7 @@ function showComparisonSummary(results: { mlc?: TestResult; transformers?: TestR
   
   // Recommendation
   if (successfulEngines.length >= 2) {
-    const caps = EngineFactory.detectCapabilities()
+    const caps = await EngineFactory.detectCapabilitiesWithAdapter()
     const fastest = successfulEngines.reduce((a, b) => a.tokensPerSec > b.tokensPerSec ? a : b)
     if (caps.webgpu && fastest.name === 'MLC WebLLM') {
       html += `<p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;"><strong>💡 Recommendation:</strong> Use MLC WebLLM for best performance on this device.</p>`
