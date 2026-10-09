@@ -195,6 +195,7 @@ export const MODE_CATALOG_PART_3: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Anchor reports breaking news with correspondent interviews.',
     tags: ['dream', 'news', 'desk'],
+    stageKit: 'news',
     showInPresets: true,
   },
   {
@@ -203,6 +204,7 @@ export const MODE_CATALOG_PART_3: ModeCatalogEntry[] = [
     category: 'reporter',
     description: 'A Newsroom scene.',
     tags: ['reporter', 'newsroom'],
+    stageKit: 'news',
     showInPresets: false,
   },
   {
@@ -587,6 +589,7 @@ export const MODE_CATALOG_PART_3: ModeCatalogEntry[] = [
     category: 'reporter',
     description: 'A Reporter scene.',
     tags: ['reporter'],
+    stageKit: 'news',
     showInPresets: false,
   },
   {

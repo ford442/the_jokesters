@@ -23,6 +23,8 @@ describe('isSpeakableText', () => {
 
   it('stripForSpeakability removes SFX tokens and pictographs', () => {
     expect(stripForSpeakability('[sfx:rimshot] hello')).toMatch(/hello/)
+    expect(stripForSpeakability('[prop:mug] hello')).toMatch(/hello/)
+    expect(stripForSpeakability('[prop:../../etc/passwd]')).toBe('')
     expect(stripForSpeakability('😂')).toBe('')
   })
 })

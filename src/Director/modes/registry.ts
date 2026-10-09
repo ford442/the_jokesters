@@ -1,6 +1,7 @@
 import type { ModeLoop } from './ModeContext';
 import { MODE_CATALOG } from './registryCatalog';
 import { MODE_LOADER_BY_ID } from './modeLoaders';
+import { isStageKitId, type StageKitId } from '../../visuals/stageKitIds';
 
 export type { ModeLoop } from './ModeContext';
 
@@ -24,6 +25,11 @@ export interface ModeCatalogEntry {
   description: string;
   agents?: string[];
   tags?: string[];
+  /**
+   * Set dressing for this mode. Omitted modes stay on the bare stage (`void`).
+   * Unknown ids are rejected by validateRegistry().
+   */
+  stageKit?: StageKitId;
   estimatedTurns?: 'short' | 'medium' | 'long' | number;
   /** Legacy: was used for giant preset dropdown; mode browser lists all modes. */
   showInPresets?: boolean;
@@ -96,6 +102,10 @@ export function validateRegistry(): { ok: boolean; errors: string[] } {
 
     if (!MODE_LOADER_BY_ID[mode.id]) {
       errors.push(`Mode "${mode.id}" has no lazy loader`);
+    }
+
+    if (mode.stageKit !== undefined && !isStageKitId(mode.stageKit)) {
+      errors.push(`Mode "${mode.id}" has unknown stageKit "${mode.stageKit}"`);
     }
   }
 

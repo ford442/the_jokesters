@@ -6,7 +6,7 @@ import type { MemoryManager } from '../Director/MemoryManager'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
 import { getSharedSfxManager } from '../audio/SfxManager'
-import { stripSfxTokens } from '../audio/sfxTokens'
+import { stripStageTokens, takePropCues } from '../visuals/propTokens'
 import type { ChatLogApi } from './chatLog'
 import { CHARACTER_SPEEDS } from './chatLog'
 import type { SpeakAndVisualizeFn } from './chatController'
@@ -38,7 +38,9 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
       const steps = options.steps ?? parseInt(deps.ttsStepsSlider.value, 10)
       const speed = options.speed ?? CHARACTER_SPEEDS[agentId] ?? 1.0
       const seed = options.seed
-      const spoken = stripSfxTokens(sentence)
+      const cued = takePropCues(sentence)
+      deps.stage.applyPropCues(cued.cues)
+      const spoken = stripStageTokens(cued.cleanText)
       if (spoken) {
         await deps.speakAndVisualize(spoken, agentId, { steps, speed, seed })
       }
@@ -63,6 +65,15 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     onReactToText: (agentId, text) => deps.stage.reactToText(agentId, text),
     onSfx: (name, agentId) => {
       getSharedSfxManager()?.play(name, agentId)
+    },
+    onStageKit: (kitId) => {
+      void deps.stage.setStageKit(kitId)
+    },
+    onProp: (name, action) => {
+      deps.stage.applyPropCue(name, action)
+    },
+    onCallbackRecorded: () => {
+      deps.stage.whipCamera()
     },
     onAudienceReaction: (event) => {
       audienceFeedback.handleEvent(event)

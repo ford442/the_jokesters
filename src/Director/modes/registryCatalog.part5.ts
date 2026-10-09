@@ -147,6 +147,7 @@ export const MODE_CATALOG_PART_5: ModeCatalogEntry[] = [
     category: 'dream',
     description: 'Host interviews agents with pre-defined segments.',
     tags: ['dream', 'talk', 'show'],
+    stageKit: 'talkshow',
     showInPresets: true,
   },
   {
@@ -379,6 +380,7 @@ export const MODE_CATALOG_PART_5: ModeCatalogEntry[] = [
     category: 'interactive',
     description: 'A Trial scene.',
     tags: ['interactive', 'trial'],
+    stageKit: 'court',
     showInPresets: false,
   },
   {

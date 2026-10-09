@@ -10,14 +10,19 @@ declare module 'three' {
 
     export class Color {
         constructor(color?: number | string);
+        setHex(hex: number): this;
     }
 
     export class Object3D {
+        name: string;
+        visible: boolean;
         position: Vector3;
         rotation: any;
         scale: Vector3;
         add(...object: Object3D[]): this;
         remove(...object: Object3D[]): this;
+        removeFromParent(): this;
+        traverse(callback: (object: Object3D) => void): void;
     }
 
     export class Scene extends Object3D {
@@ -29,6 +34,7 @@ declare module 'three' {
 
     export class PerspectiveCamera extends Camera {
         constructor(fov?: number, aspect?: number, near?: number, far?: number);
+        fov: number;
         aspect: number;
         lookAt(x: number | Vector3, y?: number, z?: number): void;
         updateProjectionMatrix(): void;
@@ -55,9 +61,12 @@ declare module 'three' {
 
     export class Mesh extends Object3D {
         constructor(geometry?: any, material?: any);
+        readonly isMesh: boolean;
         castShadow: boolean;
         receiveShadow: boolean;
+        frustumCulled: boolean;
         material: any;
+        geometry?: { dispose(): void };
     }
 
     // Geometry classes
@@ -129,7 +138,7 @@ declare module 'three' {
 
     // Additional geometry
     export class TorusGeometry {
-        constructor(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number);
+        constructor(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number);
     }
 
     export class CylinderGeometry {
@@ -181,6 +190,14 @@ declare module 'three' {
 // WebGPU renderer lives in a separate entry point (three/webgpu). The `three`
 // package ships no types, so we declare the minimal surface we use here.
 // This is an OPT-IN rendering path — see src/visuals/rendererMode.ts.
+declare module 'three/addons/loaders/GLTFLoader.js' {
+    import { Group } from 'three';
+
+    export class GLTFLoader {
+        loadAsync(url: string): Promise<{ scene: Group }>;
+    }
+}
+
 declare module 'three/webgpu' {
     import { Scene, Camera } from 'three';
 

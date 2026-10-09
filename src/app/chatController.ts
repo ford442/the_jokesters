@@ -8,7 +8,7 @@ import { CHARACTER_SPEEDS, createFeedbackControls } from './chatLog'
 import { MAX_PRERENDER_SENTENCES } from './types'
 import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
 import { getSharedSfxManager } from '../audio/SfxManager'
-import { stripSfxTokens } from '../audio/sfxTokens'
+import { stripStageTokens, takePropCues } from '../visuals/propTokens'
 
 export interface ChatControllerDeps {
   agents: Agent[]
@@ -119,7 +119,7 @@ export function wireChatController(deps: ChatControllerDeps): void {
         })
         sentenceIndex++
 
-        const displaySentence = stripSfxTokens(sentence)
+        const displaySentence = stripStageTokens(sentence)
         if (!fullResponse) contentSpan.textContent = ''
         if (displaySentence) {
           fullResponse += displaySentence + ' '
@@ -187,9 +187,11 @@ export function createAudioHelpers(
   const speakAndVisualize: SpeakAndVisualizeFn = async (text, agentId, options = {}) => {
     try {
       stage.setActiveActor(agentId)
-      // Strip [sfx:…] tokens, play whitelisted SFX, never TTS the token text
+      // Strip [prop:…] / [sfx:…] tokens. Props are whitelist-only; SFX plays, never TTS.
+      const cued = takePropCues(text)
+      stage.applyPropCues(cued.cues)
       const sfx = getSharedSfxManager()
-      const cleanText = sfx ? await sfx.processDialogue(text, agentId) : stripSfxTokens(text)
+      const cleanText = sfx ? await sfx.processDialogue(cued.cleanText, agentId) : stripStageTokens(cued.cleanText)
       if (!cleanText.trim()) return
       // Use keyed TTS cache so sentence prerender is actually consumed (no double synth)
       const audioData = await speechQueue.synthesizeOrTakeCached(cleanText, agentId, {
@@ -212,7 +214,7 @@ export function createAudioHelpers(
     const prerenderCount = Math.min(MAX_PRERENDER_SENTENCES, sentences.length)
     const toPrerender = sentences
       .slice(0, prerenderCount)
-      .map((s) => stripSfxTokens(s))
+      .map((s) => stripStageTokens(s))
       .filter((s) => s.trim().length > 0)
 
     if (toPrerender.length > 0) {

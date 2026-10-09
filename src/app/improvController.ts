@@ -12,7 +12,7 @@ import {
   hideEpisodeExportBar,
   showEpisodeExportBar,
 } from './episodeUi'
-import { stripSfxTokens } from '../audio/sfxTokens'
+import { stripStageTokens, takePropCues } from '../visuals/propTokens'
 import { PrerenderCoordinator } from '../prerender/PrerenderCoordinator'
 import type { PrerenderedTurn } from '../prerender/PrerenderCoordinator'
 import type { Director } from '../Director/Director'
@@ -144,7 +144,9 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     for (let i = 0; i < turn.sentences.length; i++) {
       if (!isImprovRunning) break
       const sentence = turn.sentences[i]
-      const clean = stripSfxTokens(sentence)
+      const cued = takePropCues(sentence)
+      stage.applyPropCues(cued.cues)
+      const clean = stripStageTokens(cued.cleanText)
       if (!clean.trim()) continue
 
       const audioData = await coordinator.resolveSentenceAudio(
@@ -263,7 +265,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         })()
         sentenceIndex++
 
-        const displaySentence = stripSfxTokens(sentence)
+        const displaySentence = stripStageTokens(sentence)
         if (displaySentence) {
           contentSpan.textContent =
             contentSpan.textContent === '...'

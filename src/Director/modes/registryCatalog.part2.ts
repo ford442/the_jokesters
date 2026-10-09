@@ -355,6 +355,7 @@ export const MODE_CATALOG_PART_2: ModeCatalogEntry[] = [
     category: 'improv',
     description: 'A Improv scene.',
     tags: ['improv'],
+    stageKit: 'void',
     showInPresets: false,
   },
   {
