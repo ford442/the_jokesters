@@ -126,13 +126,15 @@ export function recommendModels(
   const qwenUltra = byId('Qwen2.5-0.5B-Instruct-ONNX')
   const cpuGguf = byId('vicuna-7b-v1.5-GGUF')
 
-  // No WebGPU → CPU path
+  // No working adapter → CPU path. API-present-but-no-adapter is not a usable GPU.
   if (!device.webgpu) {
+    const noAdapter = device.webgpuStatus === 'no-adapter'
     return {
       primary: cpuGguf,
       safeFallback: qwenUltra,
-      primaryReason:
-        'This browser has no WebGPU. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.',
+      primaryReason: noAdapter
+        ? 'WebGPU is in this browser, but no GPU adapter is available. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.'
+        : 'This browser has no WebGPU. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.',
       fallbackReason:
         'If you enable WebGPU later, Qwen 0.5B is a tiny GPU option for tight memory.',
       device,
