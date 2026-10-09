@@ -139,12 +139,16 @@ export class ModelSession {
       throw error
     }
 
+    const autoPlan = enginePreference === 'auto'
+      ? planEngineSelection(modelConfig, 'auto', caps)
+      : null
+
     let lastError: unknown = null
     for (let i = 0; i < attempts.length; i++) {
       const attempt = attempts[i]
       let plan
       try {
-        plan = planEngineSelection(modelConfig, attempt, caps)
+        plan = i === 0 && autoPlan ? autoPlan : planEngineSelection(modelConfig, attempt, caps)
       } catch (error) {
         console.error('[ModelSession] Engine cannot start:', error)
         lastError = error
