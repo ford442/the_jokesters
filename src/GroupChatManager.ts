@@ -184,137 +184,145 @@ export class GroupChatManager {
 
     const MAX_AGENT_ATTEMPTS = 3
     let lastAgentId = this.conversation.getCurrentAgent().id
+    let success = false
 
-    for (let attempt = 0; attempt < MAX_AGENT_ATTEMPTS; attempt++) {
-      const currentAgent = this.conversation.getCurrentAgent()
-      lastAgentId = currentAgent.id
+    try {
+      for (let attempt = 0; attempt < MAX_AGENT_ATTEMPTS; attempt++) {
+        const currentAgent = this.conversation.getCurrentAgent()
+        lastAgentId = currentAgent.id
 
-      let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
-      if (options.hiddenInstruction?.trim()) {
-        fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
-      }
+        let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
+        if (options.hiddenInstruction?.trim()) {
+          fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
+        }
 
-      const { history: depthSlicedHistory, depthLimit, hintLabel } =
-        this.conversation.prepareHistoryForContext(false)
+        const { history: depthSlicedHistory, depthLimit, hintLabel } =
+          this.conversation.prepareHistoryForContext(false)
 
-      const effectiveMaxTokens = Math.min(
-        options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
-        this.maxTokensPerTurn,
-        ABSOLUTE_MAX_TOKENS,
-      )
-
-      const { messages, info: ctxInfo } = this.conversation.truncateForTurn(
-        this.session.getContextManager(),
-        fullSystemPrompt,
-        depthSlicedHistory,
-        effectiveMaxTokens,
-        depthLimit,
-        hintLabel,
-      )
-
-      if (ctxInfo.droppedMessages > 0 && attempt === 0) {
-        console.log(
-          `[ContextTruncation] Dropped ${ctxInfo.droppedMessages} messages ` +
-            `(${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens used, summary: ${ctxInfo.hasSummary})`,
+        const effectiveMaxTokens = Math.min(
+          options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
+          this.maxTokensPerTurn,
+          ABSOLUTE_MAX_TOKENS,
         )
-      }
 
-      try {
-        const chatMessages: ChatMessage[] = messages.map((m) => ({
-          role: m.role as 'system' | 'user' | 'assistant',
-          content: m.content,
-        }))
+        const { messages, info: ctxInfo } = this.conversation.truncateForTurn(
+          this.session.getContextManager(),
+          fullSystemPrompt,
+          depthSlicedHistory,
+          effectiveMaxTokens,
+          depthLimit,
+          hintLabel,
+        )
 
-        if (typeof originalContent !== 'string') {
-          let lastUserIdx = -1
-          for (let i = chatMessages.length - 1; i >= 0; i--) {
-            if (chatMessages[i].role === 'user') {
-              lastUserIdx = i
-              break
+        if (ctxInfo.droppedMessages > 0 && attempt === 0) {
+          console.log(
+            `[ContextTruncation] Dropped ${ctxInfo.droppedMessages} messages ` +
+              `(${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens used, summary: ${ctxInfo.hasSummary})`,
+          )
+        }
+
+        try {
+          const chatMessages: ChatMessage[] = messages.map((m) => ({
+            role: m.role as 'system' | 'user' | 'assistant',
+            content: m.content,
+          }))
+
+          if (typeof originalContent !== 'string') {
+            let lastUserIdx = -1
+            for (let i = chatMessages.length - 1; i >= 0; i--) {
+              if (chatMessages[i].role === 'user') {
+                lastUserIdx = i
+                break
+              }
+            }
+            if (lastUserIdx >= 0) {
+              chatMessages[lastUserIdx] = { role: 'user', content: originalContent }
             }
           }
-          if (lastUserIdx >= 0) {
-            chatMessages[lastUserIdx] = { role: 'user', content: originalContent }
+
+          const sampling = options.sampling
+          const genOpts = {
+            max_tokens: effectiveMaxTokens,
+            temperature: sampling?.temperatureDelta
+              ? Math.min(1.5, Math.max(0.1, currentAgent.temperature + sampling.temperatureDelta))
+              : currentAgent.temperature,
+            top_p: sampling?.top_p ?? currentAgent.top_p,
+            seed: options.seed,
+            repetition_penalty: this.REPETITION_PENALTY,
+            presence_penalty: sampling?.presence_penalty ?? this.PRESENCE_PENALTY,
+            stop: ['###', 'Director:', 'User:', ...(sampling?.stop ?? [])] as string[],
+            stream: true as const,
           }
-        }
 
-        const sampling = options.sampling
-        const genOpts = {
-          max_tokens: effectiveMaxTokens,
-          temperature: sampling?.temperatureDelta
-            ? Math.min(1.5, Math.max(0.1, currentAgent.temperature + sampling.temperatureDelta))
-            : currentAgent.temperature,
-          top_p: sampling?.top_p ?? currentAgent.top_p,
-          seed: options.seed,
-          repetition_penalty: this.REPETITION_PENALTY,
-          presence_penalty: sampling?.presence_penalty ?? this.PRESENCE_PENALTY,
-          stop: ['###', 'Director:', 'User:', ...(sampling?.stop ?? [])] as string[],
-          stream: true as const,
-        }
-
-        let { raw, cleaned } = await this.streamAssistant(
-          engine,
-          chatMessages,
-          currentAgent,
-          genOpts,
-          onSentence,
-        )
-        logTurnText(raw, cleaned)
-
-        if (!isSpeakableText(cleaned)) {
-          const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, retryPrompt)
-          const retryTokens = retryMaxTokens(
-            effectiveMaxTokens,
-            this.maxTokensPerTurn,
-            ABSOLUTE_MAX_TOKENS,
-          )
-          console.warn(
-            `[EmptyTurn] Unspeakable reply from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
-          )
-          ;({ raw, cleaned } = await this.streamAssistant(
+          let { raw, cleaned } = await this.streamAssistant(
             engine,
             chatMessages,
             currentAgent,
-            { ...genOpts, max_tokens: retryTokens },
+            genOpts,
             onSentence,
-          ))
+          )
           logTurnText(raw, cleaned)
-        }
 
-        if (!isSpeakableText(cleaned)) {
-          console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
+          if (!isSpeakableText(cleaned)) {
+            const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            this.patchLastUserMessage(chatMessages, retryPrompt)
+            const retryTokens = retryMaxTokens(
+              effectiveMaxTokens,
+              this.maxTokensPerTurn,
+              ABSOLUTE_MAX_TOKENS,
+            )
+            console.warn(
+              `[EmptyTurn] Unspeakable reply from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
+            )
+            ;({ raw, cleaned } = await this.streamAssistant(
+              engine,
+              chatMessages,
+              currentAgent,
+              { ...genOpts, max_tokens: retryTokens },
+              onSentence,
+            ))
+            logTurnText(raw, cleaned)
+          }
+
+          if (!isSpeakableText(cleaned)) {
+            console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
+            this.conversation.advanceAgent()
+            continue
+          }
+
+          this.conversation.appendAssistant(cleaned)
           this.conversation.advanceAgent()
-          continue
-        }
+          success = true
+          return { agentId: currentAgent.id, response: cleaned }
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error)
+          if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
+            await this.session.terminate()
+            throw new Error(
+              'The AI model was unloaded unexpectedly (GPU device lost). Please reload the page.',
+            )
+          }
 
-        this.conversation.appendAssistant(cleaned)
-        this.conversation.advanceAgent()
-        return { agentId: currentAgent.id, response: cleaned }
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error)
-        if (msg.includes('Model not loaded') || msg.includes('not loaded before')) {
-          await this.session.terminate()
-          throw new Error(
-            'The AI model was unloaded unexpectedly (GPU device lost). Please reload the page.',
-          )
+          if (categorizeChatError(error) === 'oom' && this.maxTokensPerTurn > 32) {
+            const reduced = Math.max(32, Math.floor(this.maxTokensPerTurn * 0.6))
+            console.warn(
+              `[TokenBudget] OOM during generation — reducing maxTokensPerTurn from ${this.maxTokensPerTurn} to ${reduced}`,
+            )
+            this.maxTokensPerTurn = reduced
+          }
+          console.error('Error generating response:', error)
+          throw error
         }
-
-        if (categorizeChatError(error) === 'oom' && this.maxTokensPerTurn > 32) {
-          const reduced = Math.max(32, Math.floor(this.maxTokensPerTurn * 0.6))
-          console.warn(
-            `[TokenBudget] OOM during generation — reducing maxTokensPerTurn from ${this.maxTokensPerTurn} to ${reduced}`,
-          )
-          this.maxTokensPerTurn = reduced
-        }
-        console.error('Error generating response:', error)
-        throw error
+      }
+    } finally {
+      if (!success) {
+        this.conversation.popLastIfUser()
       }
     }
 
-    this.conversation.popLastIfUser()
     return { agentId: lastAgentId, response: '' }
   }
+
 
   private patchLastUserMessage(chatMessages: ChatMessage[], content: string): void {
     for (let i = chatMessages.length - 1; i >= 0; i--) {
