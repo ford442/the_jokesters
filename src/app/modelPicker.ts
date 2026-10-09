@@ -4,6 +4,15 @@ import {
   type EngineCapabilities,
   type EngineType,
 } from '../llm/EngineFactory'
+import {
+  CPU_WASM_SWITCH,
+  EngineStartError,
+  NO_WEBGPU_ADAPTER_MESSAGE,
+  isEngineStartError,
+  planEngineSelection,
+  type EnginePlan,
+} from '../llm/engineSelection'
+import { getUnifiedModelById } from '../config/models'
 import { getRequestedRendererMode, setRendererModePreference, isWebGPUAvailable } from '../visuals/rendererMode'
 import type { RendererMode } from '../visuals/rendererMode'
 import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
@@ -66,6 +75,52 @@ function updateModelHint(modelId: string): void {
   if (!modelHint) return
   const preset = getBlessedPreset(modelId)
   modelHint.textContent = preset?.blurb ?? ''
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function showLaunchEngineError(error: unknown): void {
+  console.error('[Launch] Engine cannot start:', error)
+  const el = document.getElementById('launch-engine-error')
+  if (!el) return
+  const message = error instanceof Error ? error.message : String(error)
+  const switchTo = isEngineStartError(error) ? error.switchTo : CPU_WASM_SWITCH
+  el.style.display = 'block'
+  el.innerHTML = `
+    <p>${escapeHtml(message)}</p>
+    <button type="button" id="launch-switch-cpu-btn">Switch to CPU/WASM</button>
+  `
+  document.getElementById('launch-switch-cpu-btn')?.addEventListener('click', () => {
+    selectModel(switchTo.modelId, switchTo.engine)
+    console.log(`[Launch] Switched to ${switchTo.engine}: ${switchTo.modelId}`)
+    el.innerHTML = `<p>Switched to ${escapeHtml(switchTo.label)}. Press Load Model &amp; Start.</p>`
+  })
+}
+
+function hideLaunchEngineError(): void {
+  const el = document.getElementById('launch-engine-error')
+  if (!el) return
+  el.style.display = 'none'
+  el.innerHTML = ''
+}
+
+async function preflightLaunch(modelId: string, preference: EngineType): Promise<EnginePlan | null> {
+  const caps = await EngineFactory.detectCapabilitiesWithAdapter()
+  const unified = getUnifiedModelById(modelId)
+  if (!unified) {
+    if (!caps.webgpu) {
+      console.error(`[Launch] ${NO_WEBGPU_ADAPTER_MESSAGE}`)
+      throw new EngineStartError(NO_WEBGPU_ADAPTER_MESSAGE)
+    }
+    return null
+  }
+  return planEngineSelection(unified, preference, caps)
 }
 
 function selectModel(modelId: string, engine?: EngineType): void {
@@ -330,71 +385,102 @@ export function wireModelPicker(): Promise<LaunchConfig> {
   updateModelHint(modelSelectLaunch.value)
   updateDownloadEstimate(modelSelectLaunch.value)
 
+  const launchBtn = document.getElementById('launch-btn') as HTMLButtonElement | null
+  if (!launchBtn) {
+    const missing = new Error('Load Model & Start button is missing from the page.')
+    console.error('[Launch]', missing)
+    return Promise.reject(missing)
+  }
+
   return new Promise<LaunchConfig>((resolve) => {
-    document.getElementById('launch-btn')!.addEventListener('click', async () => {
-      const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement
-      const contextVal = contextSelect ? contextSelect.value : 'auto'
-      const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10)
+    launchBtn.addEventListener('click', async () => {
+      launchBtn.disabled = true
+      try {
+        const contextSelect = document.getElementById('context-size-select') as HTMLSelectElement
+        const contextVal = contextSelect ? contextSelect.value : 'auto'
+        const preferredContext = contextVal === 'auto' ? 'auto' : parseInt(contextVal, 10)
 
-      const engineSelect = document.getElementById('engine-select') as HTMLSelectElement
-      const enginePreference = (engineSelect?.value as EngineType) || 'auto'
+        const engineSelect = document.getElementById('engine-select') as HTMLSelectElement
+        const enginePreference = (engineSelect?.value as EngineType) || 'auto'
 
-      const prefillSelect = document.getElementById('prefill-chunk-select') as HTMLSelectElement
-      const kvCacheSelect = document.getElementById('kv-cache-select') as HTMLSelectElement
-      const slidingWindowSelect = document.getElementById('sliding-window-select') as HTMLSelectElement
-      const attentionSinkSliderEl = document.getElementById('attention-sink-slider') as HTMLInputElement
-      const gpuMemSliderEl = document.getElementById('gpu-mem-slider') as HTMLInputElement
-      const maxTokensSliderEl = document.getElementById('max-tokens-slider') as HTMLInputElement
+        const prefillSelect = document.getElementById('prefill-chunk-select') as HTMLSelectElement
+        const kvCacheSelect = document.getElementById('kv-cache-select') as HTMLSelectElement
+        const slidingWindowSelect = document.getElementById('sliding-window-select') as HTMLSelectElement
+        const attentionSinkSliderEl = document.getElementById('attention-sink-slider') as HTMLInputElement
+        const gpuMemSliderEl = document.getElementById('gpu-mem-slider') as HTMLInputElement
+        const maxTokensSliderEl = document.getElementById('max-tokens-slider') as HTMLInputElement
 
-      const vramConfig: VRAMOptimizationConfig = {
-        prefill_chunk_size: parseInt(prefillSelect?.value ?? '0', 10),
-        kv_cache_quantization: (kvCacheSelect?.value ?? 'auto') as VRAMOptimizationConfig['kv_cache_quantization'],
-        sliding_window_size: parseInt(slidingWindowSelect?.value ?? '0', 10),
-        attention_sink_size: parseInt(attentionSinkSliderEl?.value ?? '4', 10),
-        gpu_memory_utilization: parseInt(gpuMemSliderEl?.value ?? '85', 10) / 100,
-      }
-
-      const chosenMaxTokens = parseInt(maxTokensSliderEl?.value ?? '96', 10)
-      const selectedModel = modelSelectLaunch.value
-      const preset = getBlessedPreset(selectedModel)
-
-      // Storage warning for large downloads
-      if (preset && preset.downloadMB >= 3000) {
-        try {
-          const estimate = await navigator.storage?.estimate?.()
-          const quota = estimate?.quota ?? 0
-          const usage = estimate?.usage ?? 0
-          const freeGB = (quota - usage) / 1024 / 1024 / 1024
-          const needGB = preset.downloadMB / 1000
-          if (quota > 0 && freeGB < needGB) {
-            const proceed = confirm(
-              `⚠️ Storage Warning\n\n` +
-                `This model downloads about ${needGB.toFixed(1)} GB.\n` +
-                `You appear to have ~${freeGB.toFixed(1)} GB free.\n\n` +
-                `Proceed anyway?`,
-            )
-            if (!proceed) return
-          }
-        } catch {
-          /* ignore */
+        const vramConfig: VRAMOptimizationConfig = {
+          prefill_chunk_size: parseInt(prefillSelect?.value ?? '0', 10),
+          kv_cache_quantization: (kvCacheSelect?.value ?? 'auto') as VRAMOptimizationConfig['kv_cache_quantization'],
+          sliding_window_size: parseInt(slidingWindowSelect?.value ?? '0', 10),
+          attention_sink_size: parseInt(attentionSinkSliderEl?.value ?? '4', 10),
+          gpu_memory_utilization: parseInt(gpuMemSliderEl?.value ?? '85', 10) / 100,
         }
-      }
 
-      // Ultra-low VRAM defaults when picking Qwen 0.5B
-      if (preset?.tier === 'ultra') {
-        vramConfig.prefill_chunk_size = Math.min(vramConfig.prefill_chunk_size || 256, 256)
-        vramConfig.gpu_memory_utilization = Math.min(vramConfig.gpu_memory_utilization, 0.75)
-      }
+        const chosenMaxTokens = parseInt(maxTokensSliderEl?.value ?? '96', 10)
+        const selectedModel = modelSelectLaunch.value
+        const preset = getBlessedPreset(selectedModel)
+        console.log('[Launch] Load Model & Start', { selectedModel, enginePreference })
 
-      document.getElementById('model-picker')!.style.display = 'none'
-      document.getElementById('progress-section')!.style.display = 'block'
-      resolve({
-        selectedModelId: selectedModel,
-        preferredContext,
-        vramConfig,
-        chosenMaxTokens,
-        enginePreference,
-      })
+        // Storage warning for large downloads
+        if (preset && preset.downloadMB >= 3000) {
+          try {
+            const estimate = await navigator.storage?.estimate?.()
+            const quota = estimate?.quota ?? 0
+            const usage = estimate?.usage ?? 0
+            const freeGB = (quota - usage) / 1024 / 1024 / 1024
+            const needGB = preset.downloadMB / 1000
+            if (quota > 0 && freeGB < needGB) {
+              const proceed = confirm(
+                `⚠️ Storage Warning\n\n` +
+                  `This model downloads about ${needGB.toFixed(1)} GB.\n` +
+                  `You appear to have ~${freeGB.toFixed(1)} GB free.\n\n` +
+                  `Proceed anyway?`,
+              )
+              if (!proceed) {
+                launchBtn.disabled = false
+                return
+              }
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        // Ultra-low VRAM defaults when picking Qwen 0.5B
+        if (preset?.tier === 'ultra') {
+          vramConfig.prefill_chunk_size = Math.min(vramConfig.prefill_chunk_size || 256, 256)
+          vramConfig.gpu_memory_utilization = Math.min(vramConfig.gpu_memory_utilization, 0.75)
+        }
+
+        const note = document.getElementById('launch-engine-error')
+        if (note) {
+          note.style.display = 'block'
+          note.textContent = 'Checking whether this engine can start…'
+        }
+        const plan = await preflightLaunch(selectedModel, enginePreference)
+        if (plan) console.log(plan.announcement)
+        hideLaunchEngineError()
+
+        document.getElementById('model-picker')!.style.display = 'none'
+        document.getElementById('progress-section')!.style.display = 'block'
+        resolve({
+          selectedModelId: selectedModel,
+          preferredContext,
+          vramConfig,
+          chosenMaxTokens,
+          enginePreference,
+        })
+      } catch (error) {
+        launchBtn.disabled = false
+        console.error('[Launch] Load Model & Start failed:', error)
+        const picker = document.getElementById('model-picker')
+        const progress = document.getElementById('progress-section')
+        if (picker) picker.style.display = ''
+        if (progress) progress.style.display = 'none'
+        showLaunchEngineError(error)
+      }
     })
   })
 }

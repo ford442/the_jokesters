@@ -15,11 +15,24 @@ import type {
 } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
 import { VPS_STORAGE_ORIGIN } from '../config/models'
+import { resolveTransformersDevice, type TransformersDevice } from './engineSelection'
 
 export interface TransformersEngineConfig {
   model_id: string  // HuggingFace model ID
   device?: 'webgpu' | 'wasm' | 'cpu'
   dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
+}
+
+async function hasWebGpuAdapter(): Promise<boolean> {
+  try {
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter?: () => Promise<unknown> } }).gpu
+    if (!gpu?.requestAdapter) return false
+    const adapter = await gpu.requestAdapter()
+    return adapter != null
+  } catch (error) {
+    console.error('[Transformers] WebGPU adapter check failed:', error)
+    return false
+  }
 }
 
 export class TransformersEngineAdapter implements LLMEngine {
@@ -30,6 +43,11 @@ export class TransformersEngineAdapter implements LLMEngine {
   private generator: any = null
   private config: UnifiedModelConfig | null = null
   private abortController: AbortController | null = null
+  private readonly deviceOverride: TransformersDevice | undefined
+
+  constructor(options: { device?: TransformersDevice } = {}) {
+    this.deviceOverride = options.device
+  }
   
   async initialize(
     modelConfig: UnifiedModelConfig,
@@ -53,13 +71,24 @@ export class TransformersEngineAdapter implements LLMEngine {
     ;(env as any).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
     
     onProgress?.({ progress: 0, text: `Loading ${modelConfig.name}...`, timeElapsed: 0 })
+
+    const requested = this.deviceOverride ?? tfConfig.device ?? 'webgpu'
+    const adapterAvailable = requested === 'webgpu' ? await hasWebGpuAdapter() : true
+    const device = resolveTransformersDevice(tfConfig.device, this.deviceOverride, adapterAvailable)
+    if (requested === 'webgpu' && device !== 'webgpu') {
+      const message = 'No WebGPU adapter — Transformers.js using WASM'
+      console.warn(`[Transformers] ${message}`)
+      onProgress?.({ progress: 0, text: message, timeElapsed: 0 })
+    } else {
+      console.log(`[Transformers] Using device: ${device}`)
+    }
     
     try {
       this.generator = await pipeline(
         'text-generation',
         tfConfig.model_id,
         {
-          device: tfConfig.device || 'webgpu',
+          device,
           dtype: tfConfig.dtype || 'q4f16',
           progress_callback: (progress: any) => {
             if (progress.status === 'progress') {

@@ -2,6 +2,14 @@ import * as webllm from '@mlc-ai/web-llm'
 import type { LLMEngine } from '../llm/LLMEngine'
 import type { EngineType } from '../llm/EngineFactory'
 import { EngineFactory, getEngineFallbackOrder } from '../llm/EngineFactory'
+import {
+  EngineStartError,
+  NO_WEBGPU_ADAPTER_MESSAGE,
+  listViableEngines,
+  planEngineSelection,
+  type ConcreteEngine,
+  type EngineCapabilities,
+} from '../llm/engineSelection'
 import { MlcEngineAdapter } from '../llm/MlcEngineAdapter'
 import { isWllamaRuntimeMismatch } from '../llm/wllamaRuntime'
 import { getMlcEngineContextWindow, loadModelWithDynamicContext } from '../llm/mlcEngineCreate'
@@ -123,49 +131,100 @@ export class ModelSession {
     preferredContext?: number | 'auto',
     enginePreference: EngineType = 'auto',
   ): Promise<void> {
-    const caps = await EngineFactory.detectCapabilitiesWithAdapter();
-    this.engine = await EngineFactory.selectEngine(modelConfig, enginePreference, caps)
-    this.engineType = this.engine.id as EngineType
-
+    const caps = await EngineFactory.detectCapabilitiesWithAdapter()
+    let attempts: ConcreteEngine[]
     try {
-      await this.engine.initialize(modelConfig, (report) => {
-        onProgress?.({
-          progress: report.progress,
-          timeElapsed: report.timeElapsed,
-          text: report.text,
-        })
-      })
-
-      this.isInitialized = true
-      this.loadedModelId = modelConfig.id
-
-      let contextSize: number
-      if (preferredContext && preferredContext !== 'auto') {
-        contextSize = preferredContext
-      } else {
-        contextSize = this.engine.getContextWindowSize()
-      }
-      this.applyContextSize(contextSize)
-      await this.attachTokenEstimator()
-      console.log(`[ModelSession] Loaded ${modelConfig.id} (${this.engineType}) ctx=${contextSize}`)
+      attempts = enginesToAttempt(modelConfig, enginePreference, caps)
     } catch (error) {
-      this.engine = null
-      this.isInitialized = false
-      this.loadedModelId = null
-
-      if (isWllamaRuntimeMismatch(error)) {
-        const fallbacks = getEngineFallbackOrder(modelConfig, caps, ['llamacpp'])
-        for (const nextEngine of fallbacks) {
-          try {
-            await this.initializeUnified(modelConfig, onProgress, preferredContext, nextEngine)
-            return
-          } catch (fallbackError) {
-            console.warn(`[ModelSession] Fallback to ${nextEngine} failed:`, fallbackError)
-          }
-        }
-      }
+      console.error('[ModelSession] Engine cannot start:', error)
       throw error
     }
+
+    const autoPlan = enginePreference === 'auto'
+      ? planEngineSelection(modelConfig, 'auto', caps)
+      : null
+
+    let lastError: unknown = null
+    for (let i = 0; i < attempts.length; i++) {
+      const attempt = attempts[i]
+      let plan
+      try {
+        plan = i === 0 && autoPlan ? autoPlan : planEngineSelection(modelConfig, attempt, caps)
+      } catch (error) {
+        console.error('[ModelSession] Engine cannot start:', error)
+        lastError = error
+        if (enginePreference !== 'auto') break
+        continue
+      }
+
+      console.log(plan.announcement)
+      onProgress?.({
+        progress: 0,
+        timeElapsed: 0,
+        text: i === 0 ? plan.statusText : `Previous engine failed. ${plan.statusText}`,
+      })
+
+      try {
+        this.engine = EngineFactory.createEngine(plan.engine, {
+          transformersDevice: plan.transformersDevice,
+        })
+        if (this.engine instanceof MlcEngineAdapter) {
+          this.engine.setVRAMConfig(this.vramConfig)
+        }
+        this.engineType = plan.engine
+
+        await this.engine.initialize(modelConfig, (report) => {
+          onProgress?.({
+            progress: report.progress,
+            timeElapsed: report.timeElapsed,
+            text: report.text,
+          })
+        })
+
+        this.isInitialized = true
+        this.loadedModelId = modelConfig.id
+
+        let contextSize: number
+        if (preferredContext && preferredContext !== 'auto') {
+          contextSize = preferredContext
+        } else {
+          contextSize = this.engine.getContextWindowSize()
+        }
+        this.applyContextSize(contextSize)
+        await this.attachTokenEstimator()
+        console.log(`[ModelSession] Loaded ${modelConfig.id} (${this.engineType}) ctx=${contextSize}`)
+        return
+      } catch (error) {
+        console.error(`[ModelSession] ${plan.engine} failed to start:`, error)
+        lastError = error
+        try {
+          await this.engine?.terminate()
+        } catch (terminateError) {
+          console.warn('[ModelSession] terminate after failed start:', terminateError)
+        }
+        this.engine = null
+        this.isInitialized = false
+        this.loadedModelId = null
+
+        if (enginePreference !== 'auto' && isWllamaRuntimeMismatch(error)) {
+          const fallbacks = getEngineFallbackOrder(modelConfig, caps, ['llamacpp'])
+          for (const nextEngine of fallbacks) {
+            try {
+              await this.initializeUnified(modelConfig, onProgress, preferredContext, nextEngine)
+              return
+            } catch (fallbackError) {
+              console.error(`[ModelSession] Fallback to ${nextEngine} failed:`, fallbackError)
+              lastError = fallbackError
+            }
+          }
+        }
+
+        if (enginePreference !== 'auto') break
+      }
+    }
+
+    if (lastError instanceof Error) throw lastError
+    throw new EngineStartError(NO_WEBGPU_ADAPTER_MESSAGE)
   }
 
   private async initializeLegacy(
@@ -173,11 +232,11 @@ export class ModelSession {
     preferredModelId?: string,
     preferredContext?: number | 'auto',
   ): Promise<void> {
-    const gpu = (navigator as unknown as { gpu?: unknown }).gpu
-    if (!gpu) {
-      throw new Error(
-        'WebGPU is not supported in this browser. Please use Chrome 113+ or Edge 113+ with WebGPU enabled.',
-      )
+    const limits = await EngineFactory.detectWebGPULimits()
+    if (!limits.adapterAvailable) {
+      const error = new EngineStartError(NO_WEBGPU_ADAPTER_MESSAGE)
+      console.error('[ModelSession] Engine cannot start:', error)
+      throw error
     }
 
     const supportsF16 = await checkF16Support()
@@ -312,4 +371,19 @@ export class ModelSession {
     this.isInitialized = true
     this.applyContextSize(engine.getContextWindowSize())
   }
+}
+
+function enginesToAttempt(
+  modelConfig: import('../llm/LLMEngine').UnifiedModelConfig,
+  preference: EngineType,
+  caps: EngineCapabilities,
+): ConcreteEngine[] {
+  if (preference === 'auto') {
+    const viable = listViableEngines(modelConfig, caps)
+    if (viable.length === 0) {
+      throw new EngineStartError(NO_WEBGPU_ADAPTER_MESSAGE)
+    }
+    return viable
+  }
+  return [preference]
 }

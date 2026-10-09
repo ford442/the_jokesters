@@ -3,6 +3,7 @@ import {
   detectCapabilities,
   detectCapabilitiesWithAdapter,
   formatWebGPUCapabilityLabel,
+  planEngineSelection,
   resetWebGPUDetectionCache,
   resolveEngineChoice,
   type EngineCapabilities,
@@ -100,14 +101,16 @@ describe('detectCapabilitiesWithAdapter', () => {
 })
 
 describe('resolveEngineChoice', () => {
-  it('auto-selects llama.cpp when the API exists but no adapter does', () => {
+  it('auto-selects Transformers.js WASM when the API exists but no adapter does', () => {
     const choice = resolveEngineChoice(mlcAndLlama, 'auto', caps({ webgpuStatus: 'no-adapter' }))
-    expect(choice).toBe('llamacpp')
+    expect(choice).toBe('transformers')
+    expect(planEngineSelection(mlcAndLlama, 'auto', caps({ webgpuStatus: 'no-adapter' })).transformersDevice).toBe('wasm')
   })
 
-  it('auto-selects llama.cpp when WebGPU is missing entirely', () => {
+  it('auto-selects Transformers.js WASM when WebGPU is missing entirely', () => {
     const choice = resolveEngineChoice(mlcAndLlama, 'auto', caps({ webgpuStatus: 'unavailable' }))
-    expect(choice).toBe('llamacpp')
+    expect(choice).toBe('transformers')
+    expect(planEngineSelection(mlcAndLlama, 'auto', caps({ webgpuStatus: 'unavailable' })).transformersDevice).toBe('wasm')
   })
 
   it('auto-selects MLC when an adapter is available', () => {
@@ -120,11 +123,19 @@ describe('resolveEngineChoice', () => {
       transformers: { model_id: 'org/model', device: 'webgpu', dtype: 'q4f16' },
       llamaCpp: { gguf_url: 'g', context_size: 2048 },
     })
-    expect(resolveEngineChoice(onnx, 'auto', caps({ webgpuStatus: 'no-adapter' }))).toBe('llamacpp')
+    expect(planEngineSelection(onnx, 'auto', caps({ webgpuStatus: 'no-adapter' }))).toMatchObject({
+      engine: 'transformers',
+      transformersDevice: 'wasm',
+    })
     expect(resolveEngineChoice(onnx, 'auto', caps({ webgpuStatus: 'ready' }))).toBe('transformers')
   })
 
-  it('still honors an explicit MLC preference when the user overrides Auto', () => {
-    expect(resolveEngineChoice(mlcAndLlama, 'mlc', caps({ webgpuStatus: 'no-adapter' }))).toBe('mlc')
+  it('auto-selects llama.cpp when no Transformers.js fallback is configured', () => {
+    const gguf = model({ mlc: mlcAndLlama.mlc, llamaCpp: mlcAndLlama.llamaCpp })
+    expect(resolveEngineChoice(gguf, 'auto', caps({ webgpuStatus: 'no-adapter' }))).toBe('llamacpp')
+  })
+
+  it('rejects an explicit MLC preference without an adapter', () => {
+    expect(() => resolveEngineChoice(mlcAndLlama, 'mlc', caps({ webgpuStatus: 'no-adapter' }))).toThrow('No WebGPU adapter')
   })
 })

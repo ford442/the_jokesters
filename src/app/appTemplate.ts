@@ -32,7 +32,7 @@ export function getAppTemplate(): string {
 
           <!-- Engine selector -->
           <select id="engine-select" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
-            <option value="auto">🤖 Auto (MLC → Transformers.js → llama.cpp)</option>
+            <option value="auto">🤖 Auto (MLC → Transformers.js WASM → llama.cpp → API)</option>
             <option value="mlc">⚡ MLC WebLLM (Fastest WebGPU)</option>
             <option value="transformers">🤗 Transformers.js (HF Hub Models)</option>
             <option value="llamacpp">🧠 llama.cpp (Any GGUF)</option>
@@ -127,13 +127,15 @@ export function getAppTemplate(): string {
                 "Auto" uses half your context window. Attention sinks keep first N tokens for coherence.
               </p>
               <p class="vram-settings-note">
-                <strong>3D Renderer:</strong> Only affects avatar/stage drawing — LLM inference always uses WebGPU.
+                <strong>3D Renderer:</strong> Only affects avatar/stage drawing. LLM inference uses WebGPU when an
+                adapter is available, and falls through to Transformers.js WASM, llama.cpp, or API otherwise.
                 WebGL2 is universal and easiest to debug. WebGPU rendering is opt-in and shares GPU memory with the
                 model, so avoid it on ~4 GB cards. Applies on next "Load Model &amp; Start".
               </p>
             </div>
           </details>
 
+          <div id="launch-engine-error" class="launch-engine-error" role="alert" style="display:none;"></div>
           <div id="storage-info" style="color:#888;font-size:0.78em;margin-bottom:8px;min-height:1.5em;"></div>
           <button id="clear-cache-btn" style="width:100%;padding:8px;background:#2a2a4e;color:#ff6b6b;font-size:0.85em;border:1px solid #444;border-radius:6px;cursor:pointer;margin-bottom:8px;display:none;">Clear Model Cache</button>
           <button id="launch-btn" style="width:100%;padding:11px;background:#4ecdc4;color:#0a0a1a;font-weight:bold;font-size:1em;border:none;border-radius:6px;cursor:pointer;">Load Model &amp; Start</button>
