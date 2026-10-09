@@ -177,7 +177,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     }
 
     // History sync once per turn (prevents double-speak desync)
-    groupChatManager.addToHistory('(Continue)', turn.response)
+    groupChatManager.addToHistory('(Continue)', turn.response, turn.agentId)
 
     await speechQueue.waitUntilFinished()
     // Re-scored here (not when this turn was originally prerendered/generated) so the

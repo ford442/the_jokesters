@@ -64,7 +64,7 @@ export class MockLLMEngine implements LLMEngine {
     if (!this.initialized) {
       throw new Error('MockLLMEngine not initialized')
     }
-    this.chatCalls.push({ messages, options })
+    this.chatCalls.push({ messages: JSON.parse(JSON.stringify(messages)), options })
     this.abortController = new AbortController()
     const signal = this.abortController.signal
 
