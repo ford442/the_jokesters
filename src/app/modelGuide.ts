@@ -2,7 +2,12 @@
  * Guided model onboarding: capability probe, recommendations, last-success persistence.
  */
 
-import { detectCapabilities, detectWebGPULimits, type EngineType } from '../llm/EngineFactory'
+import {
+  detectCapabilitiesWithAdapter,
+  detectWebGPULimits,
+  type EngineType,
+  type WebGPUStatus,
+} from '../llm/EngineFactory'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
 import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 import {
@@ -24,7 +29,9 @@ export const OOM_FALLBACK_KEY = 'jokesters-oom-fallback-model'
 export const FORCE_ENGINE_KEY = 'jokesters-force-engine'
 
 export interface DeviceCapabilitySnapshot {
+  /** True only when a WebGPU adapter was obtained. */
   webgpu: boolean
+  webgpuStatus: WebGPUStatus
   wasm: boolean
   simd: boolean
   threads: boolean
@@ -55,21 +62,18 @@ export interface PersistedLaunchSuccess {
   savedAt: string
 }
 
-/** Probe device once for guided picker (async WebGPU limits + VRAM estimate). */
+/** Probe device once for guided picker (async WebGPU adapter + VRAM estimate). */
 export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapshot> {
-  const caps = detectCapabilities()
-  let supportsF16 = false
+  const caps = await detectCapabilitiesWithAdapter()
+  let supportsF16 = caps.shaderF16
   let maxBufferSize = 0
-  let availableVramMB = 2048
+  let availableVramMB = caps.webgpu ? 2048 : 0
 
   if (caps.webgpu) {
     try {
       const limits = await detectWebGPULimits()
       supportsF16 = limits.supportsF16
       maxBufferSize = limits.maxBufferSize
-      if (!limits.adapterAvailable) {
-        caps.webgpu = false;
-      }
     } catch {
       /* keep defaults */
     }
@@ -78,12 +82,12 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
     } catch {
       availableVramMB = 2048
     }
-  } else {
-    availableVramMB = 0
   }
 
   const parts: string[] = []
-  if (!caps.webgpu) {
+  if (caps.webgpuStatus === 'no-adapter') {
+    parts.push('WebGPU API present, no adapter — CPU fallback recommended')
+  } else if (!caps.webgpu) {
     parts.push('No WebGPU — CPU fallback recommended')
   } else {
     parts.push(`~${Math.round(availableVramMB)} MB VRAM free (est.)`)
@@ -95,6 +99,7 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
 
   return {
     webgpu: caps.webgpu,
+    webgpuStatus: caps.webgpuStatus,
     wasm: caps.wasm,
     simd: caps.simd,
     threads: caps.threads,
@@ -121,13 +126,15 @@ export function recommendModels(
   const qwenUltra = byId('Qwen2.5-0.5B-Instruct-ONNX')
   const cpuGguf = byId('vicuna-7b-v1.5-GGUF')
 
-  // No WebGPU → CPU path
+  // No working adapter → CPU path. API-present-but-no-adapter is not a usable GPU.
   if (!device.webgpu) {
+    const noAdapter = device.webgpuStatus === 'no-adapter'
     return {
       primary: cpuGguf,
       safeFallback: qwenUltra,
-      primaryReason:
-        'This browser has no WebGPU. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.',
+      primaryReason: noAdapter
+        ? 'WebGPU is in this browser, but no GPU adapter is available. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.'
+        : 'This browser has no WebGPU. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.',
       fallbackReason:
         'If you enable WebGPU later, Qwen 0.5B is a tiny GPU option for tight memory.',
       device,

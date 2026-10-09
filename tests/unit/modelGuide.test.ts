@@ -7,8 +7,10 @@ import {
 import { BLESSED_PRESETS } from '../../src/config/blessedPresets'
 
 function device(partial: Partial<DeviceCapabilitySnapshot>): DeviceCapabilitySnapshot {
+  const webgpu = partial.webgpu ?? true
   return {
-    webgpu: true,
+    webgpu,
+    webgpuStatus: partial.webgpuStatus ?? (webgpu ? 'ready' : 'unavailable'),
     wasm: true,
     simd: true,
     threads: false,
@@ -25,7 +27,14 @@ describe('recommendModels', () => {
     const r = recommendModels(device({ webgpu: false, availableVramMB: 0 }))
     expect(r.primary.tier).toBe('cpu')
     expect(r.enginePreference).toBe('llamacpp')
-    expect(r.primaryReason.toLowerCase()).toMatch(/webgpu|cpu/)
+    expect(r.primaryReason.toLowerCase()).toMatch(/no webgpu/)
+  })
+
+  it('recommends CPU GGUF when the API exists but no adapter does', () => {
+    const r = recommendModels(device({ webgpu: false, webgpuStatus: 'no-adapter', availableVramMB: 0 }))
+    expect(r.primary.tier).toBe('cpu')
+    expect(r.enginePreference).toBe('llamacpp')
+    expect(r.primaryReason.toLowerCase()).toMatch(/no gpu adapter/)
   })
 
   it('recommends Hermes instead of Vicuna after a prior Vicuna OOM', () => {

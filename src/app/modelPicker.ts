@@ -1,4 +1,9 @@
-import { EngineFactory, type EngineType } from '../llm/EngineFactory'
+import {
+  EngineFactory,
+  formatWebGPUCapabilityLabel,
+  type EngineCapabilities,
+  type EngineType,
+} from '../llm/EngineFactory'
 import {
   CPU_WASM_SWITCH,
   EngineStartError,
@@ -41,16 +46,11 @@ function updateEngineInfo(engineType: string): void {
   }
 }
 
-function updateCapabilityDisplay(extra?: string, adapterAvailable?: boolean): void {
-  const caps = EngineFactory.detectCapabilities()
+function updateCapabilityDisplay(caps: EngineCapabilities, extra?: string): void {
   const el = document.getElementById('engine-capabilities')
   if (el) {
-    let webGpuIcon = caps.webgpu ? '✅' : '❌'
-    if (caps.webgpu && adapterAvailable === false) {
-      webGpuIcon = '⚠️ (no adapter)'
-    }
     el.innerHTML = `
-      ${webGpuIcon} WebGPU
+      ${formatWebGPUCapabilityLabel(caps.webgpuStatus)}
       ${caps.wasm ? '✅' : '❌'} WASM
       ${caps.simd ? '✅' : '❌'} SIMD
       ${caps.threads ? '✅' : '❌'} Threads
@@ -292,7 +292,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
     })
   }
 
-  updateCapabilityDisplay()
+  updateCapabilityDisplay(EngineFactory.detectCapabilities())
 
   const engineSelectEl = document.getElementById('engine-select') as HTMLSelectElement
   engineSelectEl?.addEventListener('change', () => {
@@ -334,8 +334,16 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       const rec = recommendModels(device, { avoidVicuna: avoidVicunaFromLastOom() })
 
       updateCapabilityDisplay(
+        {
+          webgpu: device.webgpu,
+          webgpuApi: device.webgpuStatus !== 'unavailable',
+          webgpuStatus: device.webgpuStatus,
+          wasm: device.wasm,
+          simd: device.simd,
+          threads: device.threads,
+          shaderF16: device.supportsF16,
+        },
         `${device.supportsF16 ? '✅' : '❌'} f16 · ~${Math.round(device.availableVramMB)} MB free`,
-        device.webgpu
       )
 
       let rememberedLabel: string | undefined
@@ -360,6 +368,11 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       }
     } catch (e) {
       console.warn('[modelPicker] Guide probe failed:', e)
+      try {
+        updateCapabilityDisplay(await EngineFactory.detectCapabilitiesWithAdapter())
+      } catch {
+        /* keep the pre-probe line */
+      }
       const probe = document.getElementById('model-guide-probe')
       if (probe) {
         probe.textContent = 'Could not probe GPU — pick a Safe (3B q4f32) or CPU model below.'

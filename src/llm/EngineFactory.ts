@@ -15,13 +15,12 @@ import { ApiEngineAdapter } from './ApiEngineAdapter'
 import {
   getModelEngineSupport,
   planEngineSelection,
-  type EngineCapabilities,
+  type EngineCapabilities as SelectionCapabilities,
   type ModelEngineSupport,
 } from './engineSelection'
 
 export type {
   ConcreteEngine,
-  EngineCapabilities,
   EnginePlan,
   EngineSwitchTarget,
   ModelEngineSupport,
@@ -41,20 +40,55 @@ export {
 
 export type EngineType = 'auto' | 'mlc' | 'llamacpp' | 'transformers' | 'api'
 
+/**
+ * Adapter-aware WebGPU availability.
+ * - `ready`: `requestAdapter()` returned an adapter
+ * - `no-adapter`: `navigator.gpu` exists, but no adapter (null or request failed)
+ * - `unavailable`: no WebGPU API
+ * - `unknown`: API is present, but the adapter has not been requested yet
+ */
+export type WebGPUStatus = 'ready' | 'no-adapter' | 'unavailable' | 'unknown'
+
+export interface EngineCapabilities extends SelectionCapabilities {
+  /**
+   * True only when a WebGPU adapter was obtained.
+   * API presence alone is not enough — engines that need WebGPU will fail without an adapter.
+   */
+  webgpu: boolean
+  /** `navigator.gpu` exists, independent of whether an adapter can be created. */
+  webgpuApi: boolean
+  /** Three-state availability used by the capability line and engine selection. */
+  webgpuStatus: WebGPUStatus
+}
+
 export interface CreateEngineOptions {
   /** Forces Transformers.js onto WASM when no WebGPU adapter was granted. */
   transformersDevice?: 'webgpu' | 'wasm' | 'cpu'
+}
+
+/** Capability-line label. Same status drives Auto engine selection via `webgpu`. */
+export function formatWebGPUCapabilityLabel(status: WebGPUStatus): string {
+  switch (status) {
+    case 'ready':
+      return '✅ WebGPU (adapter OK)'
+    case 'no-adapter':
+      return '⚠️ WebGPU API present, no adapter'
+    case 'unavailable':
+      return '❌ no WebGPU'
+    case 'unknown':
+      return '… WebGPU (checking adapter)'
+  }
 }
 
 /**
  * Detect browser capabilities relevant to LLM engines.
  */
 export function detectCapabilities(): EngineCapabilities {
-  const nav = navigator as any
+  const nav = (typeof navigator !== 'undefined' ? navigator : {}) as any
 
-  // navigator.gpu existing is NOT an adapter. requestAdapter() may still return null.
-  // Engine choice must use detectCapabilitiesWithAdapter(), which overwrites this flag.
-  const webgpu = typeof nav.gpu !== 'undefined'
+  // API presence only. A working adapter is resolved by detectCapabilitiesWithAdapter().
+  const webgpuApi = typeof nav.gpu !== 'undefined'
+  const webgpuStatus: WebGPUStatus = webgpuApi ? 'unknown' : 'unavailable'
 
   // Check WASM
   const wasm = typeof WebAssembly === 'object' && 
@@ -86,7 +120,9 @@ export function detectCapabilities(): EngineCapabilities {
   const shaderF16 = false  // Actual check happens in checkF16Support() from config/models
 
   return {
-    webgpu,
+    webgpu: false,
+    webgpuApi,
+    webgpuStatus,
     wasm,
     simd,
     threads,
@@ -151,8 +187,21 @@ export async function detectWebGPULimits(): Promise<WebGPULimits> {
 
 export async function detectCapabilitiesWithAdapter(): Promise<EngineCapabilities> {
   const caps = detectCapabilities();
+  if (!caps.webgpuApi) {
+    return { ...caps, webgpu: false, webgpuStatus: 'unavailable', shaderF16: false };
+  }
+
   const limits = await detectWebGPULimits();
-  return { ...caps, webgpu: limits.adapterAvailable, shaderF16: limits.supportsF16 };
+  if (!limits.adapterAvailable) {
+    return { ...caps, webgpu: false, webgpuStatus: 'no-adapter', shaderF16: false };
+  }
+
+  return { ...caps, webgpu: true, webgpuStatus: 'ready', shaderF16: limits.supportsF16 };
+}
+
+/** Drop the cached adapter probe so a later call hits `requestAdapter()` again. */
+export function resetWebGPUDetectionCache(): void {
+  webgpuLimitsPromise = null;
 }
 
 /**
@@ -169,6 +218,18 @@ export async function getRecommendedEngineType(
   }
   
   return 'llamacpp'
+}
+
+/**
+ * Pick an engine id from model support and adapter-aware capabilities.
+ * `capabilities.webgpu` must come from `detectCapabilitiesWithAdapter()` (or an equivalent probe).
+ */
+export function resolveEngineChoice(
+  modelConfig: UnifiedModelConfig,
+  preference: EngineType,
+  capabilities: EngineCapabilities,
+): 'mlc' | 'llamacpp' | 'transformers' | 'api' {
+  return planEngineSelection(modelConfig, preference, capabilities).engine
 }
 
 /**

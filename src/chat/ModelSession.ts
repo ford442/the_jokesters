@@ -95,7 +95,8 @@ export class ModelSession {
       const gpuLimits = await EngineFactory.detectWebGPULimits()
       const lowBufferLimit = gpuLimits.maxBufferSize > 0 && gpuLimits.maxBufferSize < 512_000_000
       if (lowBufferLimit) {
-        const support = EngineFactory.getModelEngineSupport(unifiedModel)
+        const caps = await EngineFactory.detectCapabilitiesWithAdapter()
+        const support = EngineFactory.getModelEngineSupport(unifiedModel, caps)
         if (support.recommended === 'mlc' && (support.llamacpp || support.transformers)) {
           const forcedEngine: EngineType = support.llamacpp ? 'llamacpp' : 'transformers'
           await this.initializeUnified(unifiedModel, onProgress, preferredContext, forcedEngine)
