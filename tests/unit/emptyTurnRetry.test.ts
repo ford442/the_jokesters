@@ -74,4 +74,27 @@ describe('empty-turn retry / skip', () => {
     expect(turns[0].response).toMatch(/scientist/i)
     expect(turns.some((t) => /😂|🤣/.test(t.response))).toBe(false)
   })
+
+  it('cleans up hanging user prompt when chat throws an error', async () => {
+    const { manager, engine } = await makeManager()
+
+    // Override engine.chat to throw an error
+    engine.chat = async function* () {
+      throw new Error('Simulated network error')
+    }
+
+    const historyLengthBefore = manager.getHistoryLength()
+
+    try {
+      await manager.chat('This should be removed', () => {})
+    } catch (e) {
+      // Expected
+    }
+
+    const historyLengthAfter = manager.getHistoryLength()
+    expect(historyLengthAfter).toBe(historyLengthBefore)
+
+    const history = manager.getHistory()
+    expect(history.some(m => m.content.includes('This should be removed'))).toBe(false)
+  })
 })
