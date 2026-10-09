@@ -83,3 +83,70 @@ automatically.
 | `src/visuals/Stage.ts` | `initRenderer()` (mode selection + fallback), mode-aware render loop |
 | `src/main.ts` | Split WebGL/WebGPU construction in `initApp()`; wire the settings toggle |
 | `src/types/three.d.ts` | Ambient types for `three/webgpu` (three ships none) |
+| `src/visuals/stageKitIds.ts` | Kit ids (`void`, `talkshow`, `court`, `news`) and safe GLB URLs |
+| `src/visuals/kits/` | Load/dispose, camera director, prop meshes, shadow policy |
+| `public/sets/*.glb` | Static set meshes (not in the JS bundle) |
+
+## Stage kits
+
+Capsules stay the actors. A kit is extra set dressing parented into the same
+scene, loaded when a scenario starts and disposed when it stops.
+
+| Kit | Where it is selected | What you see |
+|-----|----------------------|--------------|
+| `void` | Default, and `improv` | Bare stage already built in `Stage`. Warmer house lights. |
+| `talkshow` | `talk_show` | Desk, front panel, curtain, screen |
+| `news` | `news_desk`, `newsroom`, `reporter` | Anchor desk, backdrop, monitor |
+| `court` | `trial` | Bench and two tables. Wider camera lens. |
+
+Registry entries carry an optional `stageKit`. A `Scenario.stageKit` (or
+`config.stageKit`) overrides that. Any other string, including a path, resolves
+to `void` and does not fall through to the mode default.
+
+### Assets stay out of the bundle
+
+GLBs live in `public/sets/` and are fetched at runtime (`./sets/talkshow.glb`).
+Nothing in `src/` imports a `.glb`. `GLTFLoader` is a dynamic `import()` inside
+`loadStageKit.ts`, so the loader chunk is separate from the main graph.
+Rebuild the files with `node scripts/build-stage-kits.mjs`. Each file is a few
+kilobytes; keep them under 1 MB before considering KTX2/DRACO.
+
+Kit loading does **not** call `CreateMLCEngine`. The stage renderer (WebGL2
+default, optional WebGPU) is independent of LLM WebGPU, so a software-WebGL
+page can still show a set.
+
+On scene stop, `StageKitSession.unmount()` walks the graph and calls `dispose()`
+on geometries, materials, and maps, then detaches the root. A newer request
+bumps an epoch so a late GLB cannot attach after the scene has moved on.
+
+The audience stays the existing crowd mesh. Kit GLBs are a handful of meshes
+(4 or fewer) and do not add a draw per audience member. If a 20-frame window
+averages under 30 FPS, directional shadows turn off for the rest of the
+session.
+
+### Camera
+
+`cameraDirector.ts` is plain data: `idle` with no speaker, a short `twoShot`
+on a handoff, then `speakerClose` (push-in). Court uses a wider fov than the
+talk show. The render loop copies the pose onto `camera.position` / `lookAt` /
+`fov` **after** `actor.update(volume)`, and it never writes actor scale, so
+lip-sync squash is left alone.
+
+A callback (`onCallbackRecorded`) calls `stage.whipCamera()` — a short lateral
+offset that decays in under half a second. `CallbackVisualizer` still owns
+badge/glow drawing; its mesh pulse writes `mesh.scale`, which fights the
+procedural lip-sync update, so the whip does not go through that class.
+
+### Props
+
+`propCatalog.ts` mirrors `sfxCatalog.ts`. Only `mug` and `briefcase` may appear.
+Tokens use the same shape as SFX:
+
+```
+[prop:mug]   [prop:mug:hide]   PROP:briefcase   PROP:briefcase:off
+```
+
+`takePropCues` strips every `[prop:…]` / `PROP:…` token from speech, including
+`[prop:../../etc/passwd]` and `[prop:gun]`, and returns cues only for whitelist
+hits. The mesh id is the catalog constant (`procedural:mug`), never the raw
+string, and nothing is fetched. Props are disposed with the kit on scene stop.

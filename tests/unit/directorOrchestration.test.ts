@@ -179,4 +179,61 @@ describe('Director orchestration', () => {
     const scenario: Scenario = { type: 'reaction', title: 'No Comedy', description: 'desc' }
     await director.playScenario(scenario)
   })
+
+  it('mounts the mode stage kit and unloads to void when the scene stops', async () => {
+    testModeDef.stageKit = 'talkshow'
+    testModeLoop = async () => {}
+
+    const { manager } = await makeManager()
+    const { callbacks } = makeCallbacks()
+    const kits: string[] = []
+    callbacks.onStageKit = (kitId) => kits.push(kitId)
+    const director = new Director(manager, callbacks)
+
+    await director.playScenario({ type: 'talk_show', title: 'Desk', description: 'desc' })
+
+    expect(kits[0]).toBe('talkshow')
+    expect(kits[kits.length - 1]).toBe('void')
+    delete testModeDef.stageKit
+  })
+
+  it('treats an unknown scenario stageKit as void instead of the mode default', async () => {
+    testModeDef.stageKit = 'talkshow'
+    testModeLoop = async () => {}
+
+    const { manager } = await makeManager()
+    const { callbacks } = makeCallbacks()
+    const kits: string[] = []
+    callbacks.onStageKit = (kitId) => kits.push(kitId)
+    const director = new Director(manager, callbacks)
+
+    await director.playScenario({
+      type: 'talk_show',
+      title: 'Nope',
+      description: 'desc',
+      stageKit: '../sets/secret.glb',
+    })
+
+    expect(kits[0]).toBe('void')
+    delete testModeDef.stageKit
+  })
+
+  it('forwards whitelisted PROP cues and ignores everything else', async () => {
+    testModeLoop = async (_scenario, ctx) => {
+      await ctx.processTurn('Set the desk PROP:mug then PROP:briefcase:hide and ignore PROP:gun PROP:../../etc/passwd')
+    }
+
+    const { manager } = await makeManager()
+    const { callbacks } = makeCallbacks()
+    const props: Array<{ name: string; action: string }> = []
+    callbacks.onProp = (name, action) => props.push({ name, action })
+    const director = new Director(manager, callbacks)
+
+    await director.playScenario({ type: 'improv', title: 'Props', description: 'desc' })
+
+    expect(props).toEqual([
+      { name: 'mug', action: 'show' },
+      { name: 'briefcase', action: 'hide' },
+    ])
+  })
 })

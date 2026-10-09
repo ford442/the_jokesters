@@ -2,7 +2,7 @@ import type { GroupChatManager } from '../GroupChatManager'
 import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
-import { stripSfxTokens } from '../audio/sfxTokens'
+import { stripStageTokens } from '../visuals/propTokens'
 import { computePrerenderDepth, median, type PrerenderDepthBudget } from './adaptiveDepth'
 
 export interface PrerenderedTurn {
@@ -267,7 +267,7 @@ export class PrerenderCoordinator {
     agentId: string,
     options: SynthesisOptions,
   ): Promise<Float32Array | null> {
-    const clean = stripSfxTokens(text).trim()
+    const clean = stripStageTokens(text).trim()
     if (!clean) return null
 
     if (turn && turn.generation === this.generation && sentenceIndex < turn.audioPromises.length) {
@@ -299,7 +299,7 @@ export class PrerenderCoordinator {
       if (i >= limited.length) {
         return Promise.resolve(null) // synthesize at play time
       }
-      const clean = stripSfxTokens(s).trim()
+      const clean = stripStageTokens(s).trim()
       if (!clean) return Promise.resolve(null)
       return this.speechQueue.prerenderOne(clean, t.agentId, synthOpts)
     })

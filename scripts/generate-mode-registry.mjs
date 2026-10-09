@@ -132,6 +132,16 @@ function inferCategory(id) {
   return 'dream';
 }
 
+/** Kept in sync with the catalog `stageKit` field. Regeneration must not drop these. */
+const STAGE_KIT_BY_ID = {
+  improv: 'void',
+  talk_show: 'talkshow',
+  news_desk: 'news',
+  newsroom: 'news',
+  reporter: 'news',
+  trial: 'court',
+};
+
 function inferTags(id, category) {
   const tokens = id.split('_').filter((w) => w.length > 2);
   return [...new Set([category, ...tokens])];
@@ -196,12 +206,14 @@ const catalogLines = valid.map(({ id }) => {
   const tags = inferTags(id, category);
   const showInPresets = preset !== undefined;
   const tagsStr = tags.map((t) => `'${escapeStr(t)}'`).join(', ');
+  const stageKit = STAGE_KIT_BY_ID[id];
+  const stageKitLine = stageKit ? `\n    stageKit: '${stageKit}',` : '';
   return `  {
     id: '${id}',
     title: '${escapeStr(title)}',
     category: '${category}',
     description: '${escapeStr(description)}',
-    tags: [${tagsStr}],
+    tags: [${tagsStr}],${stageKitLine}
     showInPresets: ${showInPresets},
   }`;
 });

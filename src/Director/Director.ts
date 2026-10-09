@@ -29,6 +29,9 @@ import {
 } from './productionCard';
 import type { AgentRelationship, ProductionCard, ProductionCardInput } from './productionCard';
 import { compileProductionInstruction, BEAT_LABELS } from './productionPrompt';
+import { resolveScenarioStageKit, type StageKitId } from '../visuals/stageKitIds';
+import { takePropCues } from '../visuals/propTokens';
+import type { PropAction } from '../visuals/propCatalog';
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -46,6 +49,10 @@ export interface DirectorCallbacks {
     onReactToText?: (agentId: string, text: string) => void;
     /** Play a director-injected SFX cue (e.g. "explosion" from SFX:explosion) without speaking it */
     onSfx?: (name: string, agentId?: string) => void;
+    /** Mount a stage kit for this scene. `void` unloads the set and disposes it. */
+    onStageKit?: (kitId: StageKitId) => void;
+    /** Show or hide a whitelisted prop (PROP:mug / [prop:mug:hide]). Unknown names are not forwarded. */
+    onProp?: (name: string, action: PropAction, agentId?: string) => void;
     /** Called when a callback/running gag is recorded for visual feedback */
     onCallbackRecorded?: (agentId: string, jokeId: string, count: number, status: 'fresh' | 'building' | 'peak' | 'declining' | 'dead') => void;
     /** Quality-scored audience mesh + SFX reaction (see src/comedy/audienceFeedback.ts). Rate-limiting is the implementation's job, not the caller's. */
@@ -76,6 +83,11 @@ export interface Scenario {
 
     title: string;
     description: string;
+    /**
+     * Stage kit for this scene. Overrides registry `stageKit`.
+     * Unknown ids resolve to `void` (bare stage) and do not fall through.
+     */
+    stageKit?: string;
     config?: {
         apocalypseType?: string;
         hauntedFeature?: string;
@@ -101,6 +113,8 @@ export interface Scenario {
         newsroomTopic?: string;
         weatherDisaster?: string;
         courtCase?: string;
+        /** Set dressing override. Unknown ids resolve to void. */
+        stageKit?: string;
         gameShowTopic?: string;
         breakingNews?: string;
         podcastConfig?: {
@@ -446,6 +460,7 @@ export class Director {
         }
 
         const modeDef = getMode(scenario.type);
+        this.callbacks.onStageKit?.(resolveScenarioStageKit(scenario, modeDef ?? null));
         const sceneDepth = scenario.config?.contextDepth
             ?? (modeDef ? getContextDepthForMode(modeDef) : null);
         this.manager.setSceneMemoryDepth(sceneDepth);
@@ -557,6 +572,7 @@ export class Director {
                 }
             }
 
+            this.callbacks.onStageKit?.('void');
             this.callbacks.onSceneStop();
             if (this.callbacks.onMusicControl) {
                 this.callbacks.onMusicControl('stop');
@@ -659,6 +675,15 @@ export class Director {
 
             let pacing = this.calculatePacing();
             let effectivePrompt = inputText;
+
+            // Director-only prop cues (PROP:mug / [prop:mug:hide]) — not spoken, whitelist only.
+            const propPass = takePropCues(effectivePrompt);
+            if (propPass.cues.length && this.callbacks.onProp) {
+                for (const cue of propPass.cues) {
+                    this.callbacks.onProp(cue.name, cue.action, currentAgent.id);
+                }
+            }
+            effectivePrompt = propPass.cleanText;
 
             // Director-only SFX cues embedded as "SFX:name" (not spoken)
             const directorSfx = effectivePrompt.match(/\bSFX:([a-zA-Z0-9_-]+)\b/gi);

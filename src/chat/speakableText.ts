@@ -1,4 +1,4 @@
-import { stripSfxTokens } from '../audio/sfxTokens'
+import { stripStageTokens } from '../visuals/propTokens'
 
 /** Appended on a one-shot retry when the first reply has no speakable English. */
 export const EMPTY_TURN_RETRY_SUFFIX =
@@ -10,7 +10,7 @@ const EMOJI_AND_VS_RE = /[\p{Extended_Pictographic}\u{FE00}-\u{FE0F}\u{200D}]/gu
 const EMOTICON_RE = /(?:(?<![A-Za-z])[:;=8][-o^']?[)(DPOpo3/\\*|]+)|\b(?:xD|XD|xP)\b|<3/g
 
 export function stripForSpeakability(text: string): string {
-  return stripSfxTokens(text)
+  return stripStageTokens(text)
     .replace(EMOJI_AND_VS_RE, ' ')
     .replace(EMOTICON_RE, ' ')
     .replace(/\s{2,}/g, ' ')

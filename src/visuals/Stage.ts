@@ -5,6 +5,20 @@ import { TechBroActor } from './TechBroActor';
 import { LipSync } from './LipSync';
 import type { RendererMode } from './rendererMode';
 import type { ReactionClip } from './actorAnimations';
+import {
+    createCameraDirectorState,
+    stepCameraDirector,
+    triggerWhip,
+    type CameraDirectorState,
+    type CameraPose,
+} from './kits/cameraDirector';
+import { disposeKitGraph } from './kits/disposeKit';
+import { KIT_LIGHT_PRESETS } from './kits/kitLighting';
+import { StageKitSession } from './kits/kitSession';
+import { PropRig } from './kits/propRig';
+import { shouldDisableShadows } from './kits/shadowPolicy';
+import type { PropAction } from './propCatalog';
+import { resolveStageKitId, type StageKitId } from './stageKitIds';
 
 /**
  * Minimal renderer surface shared by THREE.WebGLRenderer and the WebGPURenderer
@@ -46,6 +60,18 @@ export class Stage {
     private crowdMembers: { mesh: THREE.Mesh, basePos: THREE.Vector3, phase: number, speed: number }[] = [];
     private audienceReactionState: 'neutral' | 'cheer' | 'groan' = 'neutral';
     private crowdLight: THREE.PointLight | null = null;
+    private ambientLight!: THREE.AmbientLight;
+    private shadowLights: THREE.DirectionalLight[] = [];
+    private readonly kitSession = new StageKitSession();
+    private kitEpoch = 0;
+    /** Kit last requested, including one whose GLB has not finished loading. */
+    private requestedKit: StageKitId = 'void';
+    private propRig!: PropRig;
+    private cameraState: CameraDirectorState = createCameraDirectorState('void');
+    private previousActorId: string | null = null;
+    private lastFrameMs = 0;
+    private fpsWindow: number[] = [];
+    private shadowsDropped = false;
 
     constructor(canvas: HTMLCanvasElement, options: StageOptions = {}) {
         this.canvas = canvas;
@@ -64,6 +90,9 @@ export class Stage {
         this.setupGround();
         this.initActors();
         this.setupAudience();
+        this.propRig = new PropRig(this.scene);
+        this.applyCameraPose(this.cameraState.pose);
+        this.applyKitLook('void');
 
         window.addEventListener('resize', () => this.onWindowResize());
     }
@@ -125,9 +154,9 @@ export class Stage {
     }
 
     private setupLights() {
-        // Ambient light for base illumination
-        const ambient = new THREE.AmbientLight(0xffffff, 0.3);
-        this.scene.add(ambient);
+        // Ambient light for base illumination. Kit presets retint this in place.
+        this.ambientLight = new THREE.AmbientLight(0xffd2a8, 0.55);
+        this.scene.add(this.ambientLight);
 
         // Stage lights - Three colored lights from above for TV show feel
         const leftStageLight = new THREE.DirectionalLight(0xff6b6b, 0.5);
@@ -150,13 +179,14 @@ export class Stage {
         rimLight.position.set(0, 5, -5);
         this.scene.add(rimLight);
 
-        // Configure shadow quality
-        [leftStageLight, centerStageLight, rightStageLight].forEach(light => {
+        // Configure shadow quality. Dropped entirely if FPS stays under 30.
+        this.shadowLights = [leftStageLight, centerStageLight, rightStageLight];
+        for (const light of this.shadowLights) {
             light.shadow.mapSize.width = 1024;
             light.shadow.mapSize.height = 1024;
             light.shadow.camera.near = 0.5;
             light.shadow.camera.far = 50;
-        });
+        }
     }
 
     private setupGround() {
@@ -285,7 +315,7 @@ export class Stage {
     }
 
     public setActiveActor(id: string) {
-        this.activeActorId = id;
+        this.noteActiveActor(id);
         this.actors.forEach((actor, actorId) => {
             actor.setTalking(actorId === id);
             // Clear thinking on everyone else when spotlight moves
@@ -299,7 +329,7 @@ export class Stage {
         actor?.setThinking(isThinking);
         if (isThinking) {
             // Soft focus: not full talking, but mark as active for volume path
-            this.activeActorId = id;
+            this.noteActiveActor(id);
             this.actors.forEach((a, agentId) => {
                 if (agentId !== id) {
                     a.setTalking(false);
@@ -326,11 +356,142 @@ export class Stage {
         this.actors.get(id)?.playReaction('bounce');
     }
 
+    /**
+     * Mount a stage kit. Unknown ids become void. GLBs load from `public/sets/`
+     * and are disposed on the next kit change. This does not touch the LLM.
+     */
+    public async setStageKit(id: string): Promise<StageKitId> {
+        const resolved = resolveStageKitId(id);
+        const alreadyCurrent = resolved === this.requestedKit
+            && (resolved === 'void' || resolved === this.kitSession.activeKit);
+        if (alreadyCurrent) return resolved;
+
+        this.requestedKit = resolved;
+        const epoch = ++this.kitEpoch;
+        this.kitSession.unmount();
+        this.propRig.clear();
+        if (resolved === 'void') {
+            this.previousActorId = null;
+            this.activeActorId = null;
+            this.actors.forEach((actor) => {
+                actor.setTalking(false);
+                actor.setThinking(false);
+            });
+        }
+        this.applyKitLook(resolved);
+
+        if (resolved === 'void') return 'void';
+
+        try {
+            const { loadKitObject } = await import('./kits/loadStageKit');
+            const root = await loadKitObject(resolved);
+            if (epoch !== this.kitEpoch) {
+                disposeKitGraph(root);
+                return this.kitSession.activeKit;
+            }
+            this.scene.add(root);
+            this.kitSession.mount(resolved, root);
+            return resolved;
+        } catch (err) {
+            console.warn('[Stage] Stage kit failed to load; using void.', (err as Error)?.message ?? err);
+            if (epoch === this.kitEpoch) {
+                this.requestedKit = 'void';
+                this.kitSession.unmount();
+                this.applyKitLook('void');
+            }
+            return 'void';
+        }
+    }
+
+    public getStageKit(): StageKitId {
+        return this.kitSession.activeKit;
+    }
+
+    /** Callback / tag: a short lateral whip. Does not move actor meshes. */
+    public whipCamera(): void {
+        this.cameraState = triggerWhip(this.cameraState);
+    }
+
+    /**
+     * Show or hide one whitelisted prop. Unknown names (including path-like
+     * strings) return false and create nothing.
+     */
+    public applyPropCue(name: string, action: PropAction): boolean {
+        return this.propRig.apply(name, action, this.actorAnchor(), this.requestedKit !== 'void');
+    }
+
+    public applyPropCues(cues: ReadonlyArray<{ name: string; action: PropAction }>): void {
+        const anchor = this.actorAnchor();
+        const onDesk = this.requestedKit !== 'void';
+        for (const cue of cues) this.propRig.apply(cue.name, cue.action, anchor, onDesk);
+    }
+
+    private noteActiveActor(id: string): void {
+        if (this.activeActorId && this.activeActorId !== id) {
+            this.previousActorId = this.activeActorId;
+        }
+        this.activeActorId = id;
+    }
+
+    private actorAnchor(): { x: number; y: number; z: number } {
+        const actor = this.activeActorId ? this.actors.get(this.activeActorId) : undefined;
+        if (!actor) return { x: 0, y: 1, z: 0 };
+        return { x: actor.group.position.x, y: 1, z: actor.group.position.z };
+    }
+
+    private applyKitLook(kit: StageKitId): void {
+        const preset = KIT_LIGHT_PRESETS[kit];
+        this.ambientLight.color.setHex(preset.ambientColor);
+        this.ambientLight.intensity = preset.ambientIntensity;
+        if (this.scene.background instanceof THREE.Color) {
+            this.scene.background.setHex(preset.background);
+        }
+        this.cameraState = { ...this.cameraState, kit };
+    }
+
+    private applyCameraPose(pose: CameraPose): void {
+        this.camera.position.set(pose.position.x, pose.position.y, pose.position.z);
+        this.camera.lookAt(pose.lookAt.x, pose.lookAt.y, pose.lookAt.z);
+        if (Math.abs(this.camera.fov - pose.fov) > 0.05) {
+            this.camera.fov = pose.fov;
+            this.camera.updateProjectionMatrix();
+        }
+    }
+
+    private stepCamera(dt: number): void {
+        this.cameraState = stepCameraDirector(this.cameraState, {
+            dt,
+            activeActorId: this.activeActorId,
+            previousActorId: this.previousActorId,
+            kit: this.cameraState.kit,
+        });
+        this.applyCameraPose(this.cameraState.pose);
+    }
+
+    private noteFrame(rawDt: number): void {
+        if (!(rawDt > 0) || rawDt >= 0.2) return;
+        this.fpsWindow.push(1 / rawDt);
+        if (this.fpsWindow.length > 45) this.fpsWindow.shift();
+        if (!this.shadowsDropped && shouldDisableShadows(this.fpsWindow, false)) {
+            this.shadowsDropped = true;
+            if (this.renderer) this.renderer.shadowMap.enabled = false;
+            for (const light of this.shadowLights) light.castShadow = false;
+            console.warn('[Stage] Average FPS below 30 — shadows disabled.');
+        }
+    }
+
     public render() {
         requestAnimationFrame(() => this.render());
 
+        const nowMs = performance.now();
+        const rawDt = this.lastFrameMs === 0 ? 0.016 : (nowMs - this.lastFrameMs) / 1000;
+        this.lastFrameMs = nowMs;
+        const dt = Math.min(0.05, Math.max(0.001, rawDt));
+
         // Renderer may still be initializing (WebGPU init is async).
         if (!this.renderer) return;
+
+        this.noteFrame(rawDt);
 
         let volume = 0;
         if (this.lipSync) {
@@ -339,11 +500,14 @@ export class Stage {
 
         // Update every actor every frame (cheap procedural idle/think/react).
         // Only the active speaker gets audio volume for lip-sync squash.
-        const timeSec = performance.now() * 0.001;
+        // Camera stepping below writes the camera only — never actor scale.
+        const timeSec = nowMs * 0.001;
         this.actors.forEach((actor, actorId) => {
             const v = actorId === this.activeActorId ? volume : 0;
             actor.update(v, timeSec);
         });
+
+        this.stepCamera(dt);
 
         // Update audience
         const time = Date.now() * 0.001;
