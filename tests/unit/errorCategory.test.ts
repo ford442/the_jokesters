@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { GroupChatManager } from '../../src/GroupChatManager';
+import { EngineStartError, NO_WEBGPU_ADAPTER_MESSAGE } from '../../src/llm/engineSelection';
 
 describe('GroupChatManager.getErrorCategory', () => {
   it('classifies WebGPU errors', () => {
     expect(GroupChatManager.getErrorCategory(new Error('WebGPU not available'))).toBe('webgpu');
     expect(GroupChatManager.getErrorCategory('GPU not supported in this browser')).toBe('webgpu');
+    expect(GroupChatManager.getErrorCategory(new EngineStartError(NO_WEBGPU_ADAPTER_MESSAGE))).toBe('webgpu');
   });
 
   it('classifies OOM / GPU memory errors', () => {

@@ -32,6 +32,12 @@ describe('selectErrorPanelActions', () => {
     expect(plan.actions).not.toContain('retry_hf')
   })
 
+  it('offers CPU/WASM instead of another WebGPU model when there is no adapter', () => {
+    const plan = selectErrorPanelActions({ category: 'webgpu', modelId: HERMES })
+    expect(plan.actions).toEqual(['retry', 'switch_cpu'])
+    expect(plan.actions).not.toContain('try_smaller')
+  })
+
   it('steps down on OOM without HF or mirror buttons', () => {
     const plan = selectErrorPanelActions({ category: 'oom', modelId: VICUNA })
     expect(plan.actions).toEqual(['retry', 'try_smaller'])
