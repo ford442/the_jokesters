@@ -55,40 +55,43 @@
       #webgpu-error {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(720px, calc(100vw - 24px));
+        max-height: 168px;
+        overflow: auto;
+        box-sizing: border-box;
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         color: #fff;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        z-index: 9999;
-        padding: 40px;
+        z-index: 10050;
+        padding: 20px 24px 16px;
         text-align: center;
+        border: 1px solid #ff6b6b;
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
       }
       #webgpu-error.visible {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
+        display: block;
       }
       #webgpu-error h1 {
-        font-size: 2.5rem;
-        margin-bottom: 20px;
+        font-size: 1.15rem;
+        margin: 0 0 6px;
         color: #ff6b6b;
       }
       #webgpu-error p {
-        font-size: 1.2rem;
-        max-width: 600px;
-        line-height: 1.6;
-        margin-bottom: 15px;
+        font-size: 0.95rem;
+        max-width: 640px;
+        line-height: 1.4;
+        margin: 0 auto 8px;
         color: #e0e0e0;
       }
       #webgpu-error .browser-list {
         background: rgba(255,255,255,0.05);
         border-radius: 12px;
-        padding: 25px 40px;
-        margin: 20px 0;
+        padding: 10px 16px;
+        margin: 8px 0;
         text-align: left;
       }
       #webgpu-error .browser-list li {
@@ -112,9 +115,9 @@
   <body>
     <!-- WebGPU Error Screen -->
     <div id="webgpu-error">
-      <h1>⚠️ WebGPU Not Available</h1>
-      <p>The Jokesters requires <strong>WebGPU</strong> to run AI models directly in your browser.</p>
-      <p>Your current browser or device does not support WebGPU.</p>
+      <h1>⚠️ No WebGPU Adapter</h1>
+      <p>MLC WebLLM needs a WebGPU adapter, and this browser does not have one.</p>
+      <p>llama.cpp (CPU/WASM), Transformers.js (WASM), and the API engine can still run. <strong>Load Model &amp; Start</strong> stays clickable.</p>
       
       <div class="browser-list">
         <p><strong>Supported Browsers:</strong></p>
@@ -142,7 +145,9 @@
     </div>
 
     <script>
+      window.__jokestersWebgpuGateDismissed = false;
       document.getElementById('webgpu-continue-btn')?.addEventListener('click', () => {
+        window.__jokestersWebgpuGateDismissed = true;
         document.getElementById('webgpu-error')?.classList.remove('visible');
       });
     </script>
@@ -168,9 +173,15 @@
         
         browserInfo.textContent = `Browser: ${browserName} | User Agent: ${ua.substring(0, 100)}...`;
         
-        // Check for WebGPU support
-        if (!navigator.gpu) {
+        function showWebgpuGate() {
+          if (window.__jokestersWebgpuGateDismissed) return;
           webgpuError.classList.add('visible');
+        }
+
+        // Check for WebGPU support. The notice is a banner, not a fullscreen
+        // shield, so Load Model & Start stays clickable underneath.
+        if (!navigator.gpu) {
+          showWebgpuGate();
           console.error('WebGPU is not supported in this browser');
           return;
         }
@@ -178,14 +189,14 @@
         // Additional check: try to request adapter
         navigator.gpu.requestAdapter().then(adapter => {
           if (!adapter) {
-            webgpuError.classList.add('visible');
+            showWebgpuGate();
             browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
             console.error('WebGPU adapter not available');
           } else {
             console.log('WebGPU is supported:', adapter);
           }
         }).catch(err => {
-          webgpuError.classList.add('visible');
+          showWebgpuGate();
           browserInfo.innerHTML += `<br><br>Error requesting WebGPU adapter: ${err.message}`;
           console.error('Error requesting WebGPU adapter:', err);
         });

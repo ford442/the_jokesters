@@ -2,7 +2,13 @@ import type { ErrorCategory } from '../types/chat'
 import { isVicunaFamilyModelId } from '../config/loadFailover'
 import { getSmallerFallbackFor } from './modelGuide'
 
-export type ErrorPanelAction = 'retry' | 'try_smaller' | 'clear_cache' | 'retry_hf' | 'retry_mirror'
+export type ErrorPanelAction =
+  | 'retry'
+  | 'try_smaller'
+  | 'clear_cache'
+  | 'retry_hf'
+  | 'retry_mirror'
+  | 'switch_cpu'
 
 export interface ErrorPanelActionPlan {
   actions: ErrorPanelAction[]
@@ -25,7 +31,9 @@ export function selectErrorPanelActions(input: {
   const actions: ErrorPanelAction[] = ['retry']
   const downloadFail = DOWNLOAD_CATEGORIES.includes(category)
 
-  if (category === 'oom' || category === 'webgpu' || downloadFail) {
+  if (category === 'webgpu') {
+    actions.push('switch_cpu')
+  } else if (category === 'oom' || downloadFail) {
     actions.push('try_smaller')
   }
   if (downloadFail) {

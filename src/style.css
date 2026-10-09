@@ -582,6 +582,40 @@ input:focus, textarea:focus {
     filter: brightness(1.08);
 }
 
+.error-panel .switch-cpu-btn {
+    background: #4ecdc4 !important;
+    color: #0a0a1a !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+
+.launch-engine-error {
+    background: rgba(255, 107, 107, 0.12);
+    border: 1px solid #ff6b6b;
+    color: #ffd0d0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 0 0 10px;
+    font-size: 0.85em;
+    text-align: left;
+    line-height: 1.4;
+}
+
+.launch-engine-error p {
+    margin: 0;
+}
+
+.launch-engine-error button {
+    margin-top: 8px;
+    background: #4ecdc4;
+    color: #0a0a1a;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 /* Error Panel Styles */
 .error-panel {
     width: 100%;

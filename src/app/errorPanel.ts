@@ -10,6 +10,7 @@ import { selectErrorPanelActions, type ErrorPanelAction } from './errorPanelActi
 import { clearModelWeightCaches } from './modelCache'
 import { queuePreferMirror } from '../utils/dualDomainStripe'
 import { queueForceHfSource, isVicunaFamilyModelId } from '../config/loadFailover'
+import { CPU_WASM_SWITCH } from '../llm/engineSelection'
 
 export function renderInitErrorPanel(error: unknown, onRetry: () => void): void {
   const errorCategory: ErrorCategory = GroupChatManager.getErrorCategory(error)
@@ -33,8 +34,8 @@ export function renderInitErrorPanel(error: unknown, onRetry: () => void): void 
 
   const errorMessages: Record<ErrorCategory, { title: string; suggestion: string }> = {
     webgpu: {
-      title: 'WebGPU Not Supported',
-      suggestion: 'Use Chrome 113+ or Edge 113+ with hardware acceleration enabled — or pick the CPU (llama.cpp) preset.',
+      title: 'No WebGPU Adapter',
+      suggestion: 'No WebGPU adapter — MLC unavailable. Try CPU/WASM mode or API.',
     },
     oom: {
       title: isBufferLimit ? 'GPU Buffer Limit Too Small' : 'GPU Out of Memory',
@@ -134,6 +135,14 @@ export function renderInitErrorPanel(error: unknown, onRetry: () => void): void 
     })()
   })
 
+  const cpuBtn = errorPanel.querySelector('.switch-cpu-btn') as HTMLButtonElement | null
+  cpuBtn?.addEventListener('click', () => {
+    console.log(`[Launch] Switched to ${CPU_WASM_SWITCH.engine}: ${CPU_WASM_SWITCH.modelId}`)
+    queueOomFallback(CPU_WASM_SWITCH.modelId, CPU_WASM_SWITCH.engine)
+    resetLoadingShell(loadingDiv)
+    onRetry()
+  })
+
   const copyBtn = errorPanel.querySelector('.copy-btn') as HTMLButtonElement
   copyBtn.addEventListener('click', async () => {
     try {
@@ -162,6 +171,8 @@ function actionButtonHtml(action: ErrorPanelAction, smallerShortName: string): s
       return '<button class="retry-hf-btn" type="button">Retry from Hugging Face</button>'
     case 'retry_mirror':
       return '<button class="retry-mirror-btn" type="button">Retry mirror</button>'
+    case 'switch_cpu':
+      return '<button class="switch-cpu-btn" type="button">Switch to CPU/WASM</button>'
   }
 }
 
