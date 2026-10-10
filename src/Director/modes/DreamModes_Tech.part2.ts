@@ -635,20 +635,31 @@ export async function runSentientMicrowaveLoop(_scenario: Scenario, ctx: ModeCon
     const defensiveUser = 'comedian'; // Hermes-3: The defensive user
 
     // 1. Setup
-    await chatForAgentWithComedy(ctx, strictMicrowave, `(You are a highly advanced sentient microwave with a Michelin-star superiority complex. The user is trying to heat up a sad, 3-day-old pizza crust. Brutally roast their dietary choices, complain that your spinning glass plate was meant for culinary masterpieces (not damp cardboard), and threaten to leave the center completely frozen out of pure spite. Ask them to justify this culinary abomination before you consider emitting a single microwave.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictMicrowave);
+    await chatForAgentWithComedy(ctx, strictMicrowave, `(You are a highly advanced sentient microwave with a Michelin-star superiority complex. The user is trying to heat up a sad, 3-day-old pizza crust. Brutally roast their dietary choices, complain that your spinning glass plate was meant for culinary masterpieces (not damp cardboard), and threaten to leave the center completely frozen out of pure spite. Ask them to justify this culinary abomination before you consider emitting a single microwave.)`, async (s) => {
+        if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, strictMicrowave, {});
+    });
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
+        if (!userInput || !ctx.isRunning()) break;
         ctx.callbacks.onMessage('Defensive User (You)', userInput, '#ffffff');
 
-        if (!ctx.isRunning()) break;
-
         // Microwave responds to user's defense
-        await chatForAgentWithComedy(ctx, strictMicrowave, `(The user just said: "${userInput}". Belittle their excuse with culinary elitism. Threaten to turn their sad leftovers into molten lava on the outside and a literal iceberg on the inside. Demand a formal apology to the ghost of Julia Child before you press start.)`, async (s) => await ctx.callbacks.onSpeak(s, strictMicrowave, {}));
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictMicrowave);
+        await chatForAgentWithComedy(ctx, strictMicrowave, `(The user just said: "${userInput}". Belittle their excuse with culinary elitism. Threaten to turn their sad leftovers into molten lava on the outside and a literal iceberg on the inside. Demand a formal apology to the ghost of Julia Child before you press start.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, strictMicrowave, {});
+        });
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
         // Secondary agent chimes in
-        await chatForAgentWithComedy(ctx, defensiveUser, `(The microwave just judged the user again. You are the user's roommate who also eats terrible food. Frantically defend the user's choices, argue that "student cuisine" is a valid art form, and act terrified that the microwave might unionize the other appliances.)`, async (s) => await ctx.callbacks.onSpeak(s, defensiveUser, {}));
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(defensiveUser);
+        await chatForAgentWithComedy(ctx, defensiveUser, `(The microwave just judged the user again. You are the user's roommate who also eats terrible food. Frantically defend the user's choices, argue that "student cuisine" is a valid art form, and act terrified that the microwave might unionize the other appliances.)`, async (s) => {
+            if (ctx.callbacks.onSpeak) await ctx.callbacks.onSpeak(s, defensiveUser, {});
+        });
+        if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
 }
