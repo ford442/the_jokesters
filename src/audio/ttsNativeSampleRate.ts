@@ -23,7 +23,7 @@ export const TTS_SAMPLE_RATE_DISAGREE_FRACTION = 0.05
 export const TTS_SAMPLE_RATE_PAD_FRACTION = 0.2
 
 /** Below this, samples/duration is too jumpy — keep the config claim. */
-export const TTS_SAMPLE_RATE_MIN_DURATION_SEC = 0.05
+export const TTS_SAMPLE_RATE_MIN_DURATION_SEC = 0.5
 
 export interface TtsNativeSampleRate {
   configHz: number
@@ -83,8 +83,9 @@ export function resolveTtsNativeSampleRate(
     ? configHz > 0
       ? configHz
       : nativeHz
-    : padding
+    : padding || (configHz === 44100 && nativeHz === 48000)
       ? configHz
       : nativeHz
+  console.log('[TTS sampleRate decision]', { configHz, empiricalHz, nativeHz, samples, duration, sampleRate })
   return { configHz, empiricalHz, nativeHz, samples, duration, sampleRate }
 }

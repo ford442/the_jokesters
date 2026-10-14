@@ -2,7 +2,7 @@ import { stripStageTokens } from '../visuals/propTokens'
 
 /** Appended on a one-shot retry when the first reply has no speakable English. */
 export const EMPTY_TURN_RETRY_SUFFIX =
-  ' Reply in 1-2 full English sentences. No emoji-only messages.'
+  '\n\n(Reply with a full English sentence.)'
 
 export const EMPTY_TURN_RETRY_MIN_TOKENS = 96
 
