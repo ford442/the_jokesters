@@ -13,7 +13,7 @@ export interface PrerenderedTurn {
   /** Epoch when this turn was generated — discard if generation invalidated */
   generation: number
   /** TTS promises keyed by sentence index (filled eagerly after LLM) */
-  audioPromises: Promise<Float32Array | null>[]
+  audioPromises: Promise<{ audioData: Float32Array, sampleRate: number } | null>[]
 }
 
 export interface PrerenderMetricsSnapshot {
@@ -266,7 +266,7 @@ export class PrerenderCoordinator {
     text: string,
     agentId: string,
     options: SynthesisOptions,
-  ): Promise<Float32Array | null> {
+  ): Promise<{ audioData: Float32Array, sampleRate: number } | null> {
     const clean = stripStageTokens(text).trim()
     if (!clean) return null
 
