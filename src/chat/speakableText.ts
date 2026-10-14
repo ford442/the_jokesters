@@ -1,4 +1,5 @@
-import { stripStageTokens } from '../visuals/propTokens'
+import { stripStageTokens, hasPropTokens } from '../visuals/propTokens'
+import { hasSfxTokens } from '../audio/sfxTokens'
 
 /** Appended on a one-shot retry when the first reply has no speakable English. */
 export const EMPTY_TURN_RETRY_SUFFIX =
@@ -19,7 +20,7 @@ export function stripForSpeakability(text: string): string {
 
 /** True when the line has a real English token after SFX + emoji/emoticon strip. */
 export function isSpeakableText(text: string): boolean {
-  return /[A-Za-z]{3,}/.test(stripForSpeakability(text))
+  return /[A-Za-z]{2,}/.test(stripForSpeakability(text))
 }
 
 export function logTurnText(raw: string, cleaned: string): void {
@@ -40,4 +41,9 @@ export function retryMaxTokens(
     maxTokensPerTurn,
     Math.max(effectiveMaxTokens, EMPTY_TURN_RETRY_MIN_TOKENS),
   )
+}
+
+
+export function hasStageTokens(text: string): boolean {
+  return hasSfxTokens(text) || hasPropTokens(text)
 }

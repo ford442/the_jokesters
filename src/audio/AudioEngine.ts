@@ -15,7 +15,7 @@ export interface SynthesisOptions {
  */
 export interface TtsEngine {
     init(modelPath?: string): Promise<void>;
-    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<Float32Array>;
+    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<{ audioData: Float32Array; sampleRate?: number }>;
     /** Native sample rate of synthesized audio. Unset engines fall back to SpeechQueue's legacy default. */
     readonly sampleRate?: number;
 }
@@ -94,7 +94,7 @@ export class AudioEngine implements TtsEngine {
         text: string,
         speakerId: string = 'comedian',  // Agent ID
         options: SynthesisOptions = {}
-    ): Promise<Float32Array> {
+    ): Promise<{ audioData: Float32Array; sampleRate?: number }> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
         }
@@ -127,6 +127,6 @@ export class AudioEngine implements TtsEngine {
             seed
         );
 
-        return wav;
+        return { audioData: wav, sampleRate: this.sampleRate };
     }
 }

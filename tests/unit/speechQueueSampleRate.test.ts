@@ -63,7 +63,7 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
     const engine: TtsEngine = {
       sampleRate: 48000,
       init: async () => {},
-      synthesize: async () => new Float32Array(0),
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
     }
 
     const queue = new SpeechQueue(engine)
@@ -85,7 +85,7 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
   it('falls back to 44100 when the engine omits sampleRate (legacy AudioEngine)', async () => {
     const engine: TtsEngine = {
       init: async () => {},
-      synthesize: async () => new Float32Array(0),
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
     }
 
     const queue = new SpeechQueue(engine)
@@ -141,7 +141,7 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
     const engine: TtsEngine = {
       sampleRate: 24000,
       init: async () => {},
-      synthesize: async () => new Float32Array(0),
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
     }
 
     const queue = new SpeechQueue(engine)
@@ -159,7 +159,7 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
     const engine = {
       sampleRate: 44100,
       init: async () => {},
-      synthesize: async () => new Float32Array(0),
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
     }
 
     const queue = new SpeechQueue(engine)
@@ -171,4 +171,40 @@ describe('SpeechQueue sample-rate tagging (#332)', () => {
 
     expect(createBufferCalls[0]?.sampleRate).toBe(44100)
   })
+
+  it('stamps createBuffer with the cached rate instead of the live engine rate when added later', async () => {
+    const engine: TtsEngine = {
+      sampleRate: 48000,
+      init: async () => {},
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
+    }
+
+    const queue = new SpeechQueue(engine)
+    // Pass the cached rate
+    queue.add(new Float32Array(24000), 24000)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(createBufferCalls[0]?.sampleRate).toBe(24000)
+  })
+
+  it('multiple cached items retain their unique rates even if mixed', async () => {
+    const engine: TtsEngine = {
+      sampleRate: 48000,
+      init: async () => {},
+      synthesize: async () => ({ audioData: new Float32Array(0) }),
+    }
+
+    const queue = new SpeechQueue(engine)
+    queue.add(new Float32Array(22050), 22050)
+    queue.add(new Float32Array(16000), 16000)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(createBufferCalls[0]?.sampleRate).toBe(22050)
+    expect(createBufferCalls[1]?.sampleRate).toBe(16000)
+  })
+
 })
