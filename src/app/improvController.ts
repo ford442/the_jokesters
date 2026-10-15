@@ -149,20 +149,20 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       const clean = stripStageTokens(cued.cleanText)
       if (!clean.trim()) continue
 
-      const audioData = await coordinator.resolveSentenceAudio(
+      const resolvedAudio = await coordinator.resolveSentenceAudio(
         turn,
         i,
         sentence,
         turn.agentId,
         synthOpts,
       )
-      if (audioData) {
+      if (resolvedAudio) {
         if (firstAudio) {
           coordinator.recordTtfa(turnStart)
           firstAudio = false
         }
         stage.setActiveActor(turn.agentId)
-        speechQueue.add(audioData)
+        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate)
       } else {
         // Graceful live TTS fallback for this sentence
         await speakAndVisualize(sentence, turn.agentId, synthOpts)
