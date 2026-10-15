@@ -26,6 +26,7 @@ import { getStreamContent, isSentenceBoundaryEvent } from './llm/streamEvents'
 import {
   EMPTY_TURN_RETRY_SUFFIX,
   isSpeakableText,
+  hasStageTokens,
   logTurnText,
   retryMaxTokens,
 } from './chat/speakableText'
@@ -263,7 +264,7 @@ export class GroupChatManager {
           )
           logTurnText(raw, cleaned)
 
-          if (!isSpeakableText(cleaned)) {
+          if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
             this.patchLastUserMessage(chatMessages, retryPrompt)
             const retryTokens = retryMaxTokens(
@@ -284,7 +285,7 @@ export class GroupChatManager {
             logTurnText(raw, cleaned)
           }
 
-          if (!isSpeakableText(cleaned)) {
+          if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
             this.conversation.advanceAgent()
             continue
@@ -356,7 +357,7 @@ export class GroupChatManager {
 
     const emitIfSpeakable = (sentence: string) => {
       if (!sentence) return
-      if (isSpeakableText(fullResponse)) onSentence?.(sentence)
+      if (isSpeakableText(sentence) || hasStageTokens(sentence)) onSentence?.(sentence)
     }
 
     for await (const event of stream) {
@@ -602,7 +603,7 @@ export class GroupChatManager {
         let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
         logTurnText(raw, cleaned)
 
-        if (!isSpeakableText(cleaned)) {
+        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
           promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
           this.patchLastUserMessage(chatMessages, promptForTurn)
           const retryTokens = retryMaxTokens(
@@ -620,7 +621,7 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
         }
 
-        if (!isSpeakableText(cleaned)) {
+        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
