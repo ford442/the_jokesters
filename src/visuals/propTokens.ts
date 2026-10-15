@@ -105,3 +105,12 @@ export function takePropCues(text: string): { cleanText: string; cues: PropCue[]
 export function stripStageTokens(text: string): string {
   return stripPropTokens(stripSfxTokens(text)).replace(/\s{2,}/g, ' ').trim()
 }
+
+
+/** True if text contains any prop token form. */
+export function hasPropTokens(text: string): boolean {
+  BRACKET_PROP_RE.lastIndex = 0
+  if (BRACKET_PROP_RE.test(text)) return true
+  BARE_PROP_RE.lastIndex = 0
+  return BARE_PROP_RE.test(text)
+}

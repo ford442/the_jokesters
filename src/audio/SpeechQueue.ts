@@ -24,7 +24,7 @@ export class SpeechQueue {
     private destinationNode: AudioNode;
     private audioEngine: TtsEngine;
     /** Keyed TTS cache so prerendered sentences are reused (no double synth). */
-    private audioCache = new Map<string, Promise<Float32Array>>();
+    private audioCache = new Map<string, Promise<{ audioData: Float32Array; sampleRate?: number }>>();
     /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
     private cacheEpoch = 0;
     /** One-shot diagnostic for TTS buffer tagging (issue #332). */
@@ -55,10 +55,10 @@ export class SpeechQueue {
         this.ttsGain.connect(this.destinationNode);
     }
 
-    public add(audioData: Float32Array) {
+    public add(audioData: Float32Array, optionalSampleRate?: number) {
         // Capture the engine rate at enqueue — playNext is async (AudioContext resume)
         // and must not re-read a later synth's rate or the 24 kHz placeholder.
-        const sampleRate = this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
+        const sampleRate = optionalSampleRate || this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
         this.queue.push({ pcm: audioData, sampleRate });
         this.playNext();
     }
@@ -133,7 +133,7 @@ export class SpeechQueue {
         text: string,
         agentId: string,
         options: SynthesisOptions = {},
-    ): Promise<Float32Array> {
+    ): Promise<{ audioData: Float32Array; sampleRate?: number }> {
         const key = cacheKey(text, agentId, options);
         const existing = this.audioCache.get(key);
         if (existing) return existing;
@@ -174,7 +174,7 @@ export class SpeechQueue {
         text: string,
         agentId: string,
         options: SynthesisOptions = {},
-    ): Promise<Float32Array> {
+    ): Promise<{ audioData: Float32Array; sampleRate?: number }> {
         return this.prerenderOne(text, agentId, options);
     }
 

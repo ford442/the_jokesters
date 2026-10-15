@@ -9,6 +9,7 @@ import { MAX_PRERENDER_SENTENCES } from './types'
 import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { stripStageTokens, takePropCues } from '../visuals/propTokens'
+import { stripForSpeakability } from '../chat/speakableText'
 
 export interface ChatControllerDeps {
   agents: Agent[]
@@ -191,15 +192,15 @@ export function createAudioHelpers(
       const cued = takePropCues(text)
       stage.applyPropCues(cued.cues)
       const sfx = getSharedSfxManager()
-      const cleanText = sfx ? await sfx.processDialogue(cued.cleanText, agentId) : stripStageTokens(cued.cleanText)
+      const cleanText = stripForSpeakability(sfx ? await sfx.processDialogue(cued.cleanText, agentId) : stripStageTokens(cued.cleanText))
       if (!cleanText.trim()) return
       // Use keyed TTS cache so sentence prerender is actually consumed (no double synth)
-      const audioData = await speechQueue.synthesizeOrTakeCached(cleanText, agentId, {
+      const { audioData, sampleRate } = await speechQueue.synthesizeOrTakeCached(cleanText, agentId, {
         steps: options.steps,
         seed: options.seed,
         speed: options.speed,
       })
-      speechQueue.add(audioData)
+      speechQueue.add(audioData, sampleRate)
     } catch (e) {
       console.error('Speech synthesis failed', e)
     }
@@ -214,7 +215,7 @@ export function createAudioHelpers(
     const prerenderCount = Math.min(MAX_PRERENDER_SENTENCES, sentences.length)
     const toPrerender = sentences
       .slice(0, prerenderCount)
-      .map((s) => stripStageTokens(s))
+      .map((s) => stripForSpeakability(s))
       .filter((s) => s.trim().length > 0)
 
     if (toPrerender.length > 0) {

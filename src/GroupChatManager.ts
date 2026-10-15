@@ -26,6 +26,7 @@ import { getStreamContent, isSentenceBoundaryEvent } from './llm/streamEvents'
 import {
   EMPTY_TURN_RETRY_SUFFIX,
   isSpeakableText,
+  hasStageTokens,
   logTurnText,
   retryMaxTokens,
 } from './chat/speakableText'
@@ -185,6 +186,7 @@ export class GroupChatManager {
     const MAX_AGENT_ATTEMPTS = 3
     let lastAgentId = this.conversation.getCurrentAgent().id
     let success = false
+    let activeUserContent = historyContent
 
     try {
       for (let attempt = 0; attempt < MAX_AGENT_ATTEMPTS; attempt++) {
@@ -238,6 +240,8 @@ export class GroupChatManager {
             if (lastUserIdx >= 0) {
               chatMessages[lastUserIdx] = { role: 'user', content: originalContent }
             }
+          } else {
+            this.patchLastUserMessage(chatMessages, activeUserContent)
           }
 
           const sampling = options.sampling
@@ -263,9 +267,9 @@ export class GroupChatManager {
           )
           logTurnText(raw, cleaned)
 
-          if (!isSpeakableText(cleaned)) {
-            const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-            this.patchLastUserMessage(chatMessages, retryPrompt)
+          if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
+            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            this.patchLastUserMessage(chatMessages, activeUserContent)
             const retryTokens = retryMaxTokens(
               effectiveMaxTokens,
               this.maxTokensPerTurn,
@@ -284,7 +288,7 @@ export class GroupChatManager {
             logTurnText(raw, cleaned)
           }
 
-          if (!isSpeakableText(cleaned)) {
+          if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
             this.conversation.advanceAgent()
             continue
@@ -356,7 +360,7 @@ export class GroupChatManager {
 
     const emitIfSpeakable = (sentence: string) => {
       if (!sentence) return
-      if (isSpeakableText(fullResponse)) onSentence?.(sentence)
+      if (isSpeakableText(sentence) || hasStageTokens(sentence)) onSentence?.(sentence)
     }
 
     for await (const event of stream) {
@@ -549,6 +553,7 @@ export class GroupChatManager {
 
 
       let currentPrompt = initialPrompt
+      let activePrompt = initialPrompt
       let produced = 0
       let attempts = 0
       const maxAttempts = Math.max(turnCount * 5, turnCount + this.conversation.getAgents().length)
@@ -598,13 +603,13 @@ export class GroupChatManager {
           presence_penalty: this.PRESENCE_PENALTY,
         }
 
-        let promptForTurn = currentPrompt
+        this.patchLastUserMessage(chatMessages, activePrompt)
         let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
         logTurnText(raw, cleaned)
 
-        if (!isSpeakableText(cleaned)) {
-          promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, promptForTurn)
+        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
+          activePrompt = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, activePrompt)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,
@@ -620,7 +625,7 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
         }
 
-        if (!isSpeakableText(cleaned)) {
+        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
           console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
@@ -647,6 +652,7 @@ export class GroupChatManager {
 
         addLocalTurn(currentPrompt, cleaned)
         currentPrompt = '(Reply naturally to the last thing said)'
+        activePrompt = currentPrompt
         produced++
       }
 

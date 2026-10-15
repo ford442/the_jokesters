@@ -3,6 +3,7 @@ import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
 import { stripStageTokens } from '../visuals/propTokens'
+import { stripForSpeakability } from '../chat/speakableText'
 import { computePrerenderDepth, median, type PrerenderDepthBudget } from './adaptiveDepth'
 
 export interface PrerenderedTurn {
@@ -13,7 +14,7 @@ export interface PrerenderedTurn {
   /** Epoch when this turn was generated — discard if generation invalidated */
   generation: number
   /** TTS promises keyed by sentence index (filled eagerly after LLM) */
-  audioPromises: Promise<Float32Array | null>[]
+  audioPromises: Promise<{ audioData: Float32Array; sampleRate?: number } | null>[]
 }
 
 export interface PrerenderMetricsSnapshot {
@@ -266,8 +267,8 @@ export class PrerenderCoordinator {
     text: string,
     agentId: string,
     options: SynthesisOptions,
-  ): Promise<Float32Array | null> {
-    const clean = stripStageTokens(text).trim()
+  ): Promise<{ audioData: Float32Array; sampleRate?: number } | null> {
+    const clean = stripForSpeakability(text).trim()
     if (!clean) return null
 
     if (turn && turn.generation === this.generation && sentenceIndex < turn.audioPromises.length) {
@@ -299,7 +300,7 @@ export class PrerenderCoordinator {
       if (i >= limited.length) {
         return Promise.resolve(null) // synthesize at play time
       }
-      const clean = stripStageTokens(s).trim()
+      const clean = stripForSpeakability(s).trim()
       if (!clean) return Promise.resolve(null)
       return this.speechQueue.prerenderOne(clean, t.agentId, synthOpts)
     })
