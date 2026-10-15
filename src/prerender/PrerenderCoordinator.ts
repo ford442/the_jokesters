@@ -2,7 +2,6 @@ import type { GroupChatManager } from '../GroupChatManager'
 import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
-import { stripStageTokens } from '../visuals/propTokens'
 import { stripForSpeakability } from '../chat/speakableText'
 import { computePrerenderDepth, median, type PrerenderDepthBudget } from './adaptiveDepth'
 

@@ -626,6 +626,7 @@ export class GroupChatManager {
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
+          promptForTurn = currentPrompt
           continue
         }
 
