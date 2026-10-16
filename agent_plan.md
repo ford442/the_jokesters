@@ -3,11 +3,11 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 1
 
 ## Project Velocity Feedback
 Fixed #333 emoji-only follow-ups poisoning history. Maintained tasks_per_run at 1.
-Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 2` for a consistent, sustainable pace.
+Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 1` for a consistent, sustainable pace.
 Today was low friction so increased tasks_per_run to 1.
 Decreasing to 1 task for focus on the Sentient Microwave mode.
 Verified #305 missing custom ctx512/ctx1024 models on remote host. Re-uploaded via fixed script. Improved humor for Sentient Microwave mode.
@@ -122,7 +122,7 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
   - LLM pairings: Qwen2.5 for the sentient middleware, Hermes-3 for the confused developer.
 ## Dream Phase (Architectural Expansion)
 ### A. Creative Expansion (New Modes)
-- [ ] **New Mode Idea:** Alien Language Translator
+- [x] **New Mode Idea:** Alien Language Translator
   - Premise one-liner: An agent tries to translate an alien ambassador's extremely aggressive metaphors into friendly diplomatic terms for humanity.
   - LLM pairings: Qwen2.5 for the hostile alien, Phi-3 for the panicked translator.
 - [x] Sentient Internet Explorer Mode:

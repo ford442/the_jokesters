@@ -291,6 +291,7 @@ export class GroupChatManager {
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
             this.conversation.advanceAgent()
+            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
             continue
           }
 
@@ -607,9 +608,10 @@ export class GroupChatManager {
         let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
         logTurnText(raw, cleaned)
 
+        let currentPromptForTurn = currentPrompt
         if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, promptForTurn)
+          currentPromptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, currentPromptForTurn)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,
@@ -630,7 +632,8 @@ export class GroupChatManager {
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
-          promptForTurn = currentPrompt
+          // promptForTurn is gone
+          activePrompt = currentPromptForTurn
           continue
         }
 
