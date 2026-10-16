@@ -124,17 +124,13 @@ export default defineConfig(({ command }) => {
       }),
       compression({
         algorithm: 'brotliCompress',
-        ext: '.br',
         threshold: 512,
         deleteOriginalAssets: false,
-        verbose: true,
       }),
       compression({
         algorithm: 'gzip',
-        ext: '.gz',
         threshold: 512,
         deleteOriginalAssets: false,
-        verbose: true,
       }),
     ],
     optimizeDeps: {

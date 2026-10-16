@@ -6,7 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - 'tsconfig.json'
+      - 'tsconfig*.json'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
@@ -16,7 +16,7 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - 'tsconfig.json'
+      - 'tsconfig*.json'
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'

@@ -13,6 +13,7 @@ import {
   preferredStartSource,
   shouldAvoidVicunaRecommendation,
   wasmLibFallbackChain,
+  type HfFailoverConfig,
 } from '../../src/config/loadFailover'
 import { VPS_STORAGE_URL } from '../../src/utils/vpsStorageUrl'
 
@@ -107,13 +108,14 @@ describe('decideWeightFailover', () => {
 
 describe('applyHfWeightFailover', () => {
   it('rewrites Vicuna onto the HF Hub id/url and GitHub wasm, breaking retry loops', () => {
-    const next = applyHfWeightFailover({
+    const input: HfFailoverConfig = {
       model_id: 'vicuna-7b-q4f32-webllm-vps',
       model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
       model_lib: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
       hf_fallback_url: HF_VICUNA_MODEL_URL,
       overrides: { context_window_size: 2048 },
-    })
+    }
+    const next = applyHfWeightFailover(input)
     expect(next.model_id).toBe(HF_VICUNA_MODEL_ID)
     expect(next.model).toBe(HF_VICUNA_MODEL_URL)
     expect(next.model_lib).toBe(MLC_LLAMA2_7B_CTX4K_WASM)

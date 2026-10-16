@@ -2,12 +2,14 @@
 // Only mocks minimal necessary APIs to prevent crashes when loading modules
 
 if (typeof window === 'undefined') {
-  // @ts-ignore
-  global.window = global;
+  // The mocks below are deliberately partial, so they are installed through an
+  // untyped view of globalThis rather than against the DOM lib types.
+  const g = globalThis as unknown as Record<string, unknown>;
+
+  g.window = globalThis;
 
   // Minimal document mock for canvas creation
-  // @ts-ignore
-  global.document = {
+  g.document = {
     createElement: (tag: string) => {
       if (tag === 'canvas') {
         return {
@@ -30,8 +32,7 @@ if (typeof window === 'undefined') {
 
   // Mock localStorage
   const storage = new Map<string, string>();
-  // @ts-ignore
-  global.localStorage = {
+  g.localStorage = {
     getItem: (key: string) => storage.get(key) || null,
     setItem: (key: string, value: string) => storage.set(key, value),
     removeItem: (key: string) => storage.delete(key),
@@ -41,9 +42,7 @@ if (typeof window === 'undefined') {
   };
 
   // Mock Worker
-  // @ts-ignore
-  global.Worker = class Worker {
-    constructor() {}
+  g.Worker = class Worker {
     postMessage() {}
     terminate() {}
     addEventListener() {}
@@ -51,38 +50,31 @@ if (typeof window === 'undefined') {
   };
 
   // Mock performance.now if needed (usually available in recent Node)
-  if (!global.performance) {
-    // @ts-ignore
-    global.performance = { now: () => Date.now() };
+  if (!globalThis.performance) {
+    g.performance = { now: () => Date.now() };
   }
 
   // Mock requestAnimationFrame
-  // @ts-ignore
-  global.requestAnimationFrame = (cb) => setTimeout(() => cb(Date.now()), 16);
-  // @ts-ignore
-  global.cancelAnimationFrame = (id) => clearTimeout(id);
+  g.requestAnimationFrame = (cb: (t: number) => void) => setTimeout(() => cb(Date.now()), 16);
+  g.cancelAnimationFrame = (id: ReturnType<typeof setTimeout>) => clearTimeout(id);
 
   // Mock URL.createObjectURL - Only add if missing or if URL exists but createObjectURL doesn't
   if (typeof URL !== 'undefined') {
-      if (!URL.createObjectURL) {
-          // @ts-ignore
-          URL.createObjectURL = () => 'blob:mock';
-          // @ts-ignore
-          URL.revokeObjectURL = () => {};
-      }
+    if (!URL.createObjectURL) {
+      Object.assign(URL, {
+        createObjectURL: () => 'blob:mock',
+        revokeObjectURL: () => {}
+      });
+    }
   } else {
-      // @ts-ignore
-      global.URL = {
-          createObjectURL: () => 'blob:mock',
-          revokeObjectURL: () => {}
-      };
+    g.URL = {
+      createObjectURL: () => 'blob:mock',
+      revokeObjectURL: () => {}
+    };
   }
 
   // Mock Blob
-  if (!global.Blob) {
-      // @ts-ignore
-      global.Blob = class Blob {
-          constructor(content: any[], options: any) {}
-      };
+  if (!globalThis.Blob) {
+    g.Blob = class Blob {};
   }
 }

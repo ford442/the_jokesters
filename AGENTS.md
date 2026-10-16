@@ -240,7 +240,7 @@ the_jokesters/
 ├── verification/                  # Screenshot verification assets
 ├── index.html                     # HTML entry point (WebGPU detection, runtime error surfacing)
 ├── package.json                   # Node.js dependencies and scripts
-├── tsconfig.json                  # TypeScript configuration
+├── tsconfig.json                  # Solution file -> tsconfig.{app,sw,node,test}.json (shared: tsconfig.base.json)
 ├── vite.config.ts                 # Vite build configuration
 ├── perf-budget.json               # Performance budget thresholds
 ├── scripts/
@@ -286,7 +286,7 @@ npm run build
 ```bash
 npm run typecheck
 ```
-- Runs `tsc --noEmit` (same gate as `npx tsc --noEmit` in `CLAUDE.md`)
+- Runs `tsc -b` over the app, service-worker, node (vite.config.ts) and test projects
 - CI workflow `.github/workflows/typecheck.yml` runs this on every PR touching `src/`, `tests/`, or TypeScript config
 - Requires a full `npm ci` install — PWA client types come from the `vite-plugin-pwa` devDependency via `src/vite-env.d.ts`
 

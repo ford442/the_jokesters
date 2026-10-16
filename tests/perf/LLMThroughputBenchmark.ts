@@ -69,10 +69,10 @@ export class LLMThroughputBenchmark {
     
     this.manager = new GroupChatManager(agents);
     
-    await this.manager.initialize(this.options.modelId, (progress) => {
+    await this.manager.initialize((progress) => {
       console.log(`[LLMThroughputBenchmark] Loading: ${(progress.progress * 100).toFixed(1)}%`);
       onProgress?.(progress);
-    });
+    }, this.options.modelId);
     
     console.log('[LLMThroughputBenchmark] Manager ready');
   }

@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
     "build:webllm": "bash scripts/build-webllm.sh",
     "verify:webllm": "bash scripts/verify-webllm-dist.sh",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "typecheck:webllm": "npm run build:webllm && tsc --noEmit -p tsconfig.webllm.json",
     "build:custom-webllm": "npm run build:webllm && USE_CUSTOM_WEBLLM=1 npm run build",
     "preview": "vite preview",

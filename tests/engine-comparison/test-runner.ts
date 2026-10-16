@@ -3,6 +3,7 @@ import { MlcEngineAdapter } from '../../src/llm/MlcEngineAdapter'
 import { LlamaCppEngineAdapter } from '../../src/llm/LlamaCppEngineAdapter'
 import { TransformersEngineAdapter } from '../../src/llm/TransformersEngineAdapter'
 import type { LLMEngine } from '../../src/llm/LLMEngine'
+import { getStreamContent } from '../../src/llm/streamEvents'
 import { UNIFIED_MODELS } from '../../src/config/models'
 
 interface TestResult {
@@ -128,7 +129,7 @@ async function runComparison() {
   }
   
   // Show comparison summary
-  showComparisonSummary(results)
+  await showComparisonSummary(results)
   
   btn.disabled = false
   btn.textContent = 'Run Comparison Test'
@@ -188,9 +189,10 @@ async function testEngine(
     let output = ''
     
     for await (const chunk of stream) {
-      output += chunk
+      const text = getStreamContent(chunk)
+      output += text
       // Rough token count approximation
-      tokenCount += chunk.split(/\s+/).filter((s: string) => s.length > 0).length
+      tokenCount += text.split(/\s+/).filter((s: string) => s.length > 0).length
       outputEl.textContent = output
       outputEl.scrollTop = outputEl.scrollHeight
     }
@@ -216,7 +218,7 @@ async function testEngine(
   return result
 }
 
-function showComparisonSummary(results: { mlc?: TestResult; transformers?: TestResult; llamacpp?: TestResult }) {
+async function showComparisonSummary(results: { mlc?: TestResult; transformers?: TestResult; llamacpp?: TestResult }) {
   const summaryEl = document.getElementById('comparison-summary')!
   const contentEl = document.getElementById('summary-content')!
   

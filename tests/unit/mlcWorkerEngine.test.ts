@@ -107,10 +107,12 @@ describe('JokestersWorkerMLCEngine load', () => {
   it('sets up worker-side logit processors, then reloads with the dynamic appConfig + chatOpts', async () => {
     const worker = new FakeWorker()
     const progress: string[] = []
+    // prefill_chunk_size is honoured by mlc-chat-config merging but absent from web-llm's ChatConfig type.
+    const chatOpts = { context_window_size: 2048, prefill_chunk_size: 512 }
     const engine = await createMlcWorkerEngine(
       'Test-3B',
       { appConfig: APP_CONFIG, initProgressCallback: (r) => progress.push(r.text) },
-      { context_window_size: 2048, prefill_chunk_size: 512 },
+      chatOpts,
       () => worker,
     )
 

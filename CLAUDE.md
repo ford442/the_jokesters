@@ -58,9 +58,9 @@ shows download size estimate, persists last successful launch, and OOM panel can
 ```bash
 npm ci
 npm run dev          # http://localhost:5173
-npm run typecheck    # tsc --noEmit (required before commit)
+npm run typecheck    # tsc -b: src, service worker, vite.config.ts, tests (required before commit)
 npm test             # Vitest unit tests
-npm run build        # tsc + vite → dist/
+npm run build        # tsc -b + vite → dist/
 npm run perf:quick
 ./scripts/build-webllm.sh   # custom web-llm (optional)
 ```
@@ -68,7 +68,7 @@ npm run perf:quick
 ### TypeScript policy
 
 - `strict: true` is on.
-- `noUnusedLocals` / `noUnusedParameters` are currently **`false`** in `tsconfig.json` (legacy debt).
+- `noUnusedLocals` / `noUnusedParameters` are currently **`false`** in `tsconfig.base.json` (legacy debt).
   Prefer not introducing new unused symbols; do not claim they are compiler-enforced until flipped on.
 - PWA types: `/// <reference types="vite-plugin-pwa/client" />` in `src/vite-env.d.ts` — requires
   `npm ci` so `vite-plugin-pwa` is installed. Do **not** put `"types": ["vite-plugin-pwa/client"]`
