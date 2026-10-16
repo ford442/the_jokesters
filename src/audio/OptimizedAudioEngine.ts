@@ -18,6 +18,7 @@ import type {
 import { VisemePredictor, type Viseme } from './VisemePredictor';
 import type { TTSLatencyProfiler} from './TTSLatencyProfiler';
 import { ttsProfiler } from './TTSLatencyProfiler';
+import { getOrtWasmBaseUrl } from './ortWasmPath';
 import { VPS_STORAGE_URL } from '../config/models';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
 import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
@@ -95,7 +96,7 @@ export class OptimizedAudioEngine {
             };
 
             // Initialize worker
-            await this.sendToWorker({ type: 'init', modelPath });
+            await this.sendToWorker({ type: 'init', modelPath, wasmPath: getOrtWasmBaseUrl() });
 
             // Pre-load voice styles
             await this.loadVoiceStyles();

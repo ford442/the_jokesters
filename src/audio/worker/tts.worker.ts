@@ -15,6 +15,8 @@ import {
 export interface WorkerInitMessage {
     type: 'init';
     modelPath: string;
+    /** Absolute URL of the directory serving the ORT wasm runtime (see ortWasmPath.ts). */
+    wasmPath?: string;
 }
 
 export interface WorkerSynthesizeMessage {
@@ -350,6 +352,8 @@ async function handleInit(msg: WorkerInitMessage) {
         
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.proxy = false;
+        // Without this ORT falls back to a bundler-emitted copy of the wasm next to the worker chunk.
+        if (msg.wasmPath) ort.env.wasm.wasmPaths = msg.wasmPath;
         
         const modelPath = msg.modelPath;
 

@@ -1,4 +1,5 @@
 import { VitePWA } from 'vite-plugin-pwa';
+import type { Plugin } from 'vite';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import compression from 'vite-plugin-compression2';
@@ -6,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 
-const repoRoot = path.dirname(fileURLToPath(new URL('.', import.meta.url)));
+const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
 function useCustomWebLLM(): boolean {
   return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
@@ -22,6 +23,26 @@ function webllmResolveAlias(): Record<string, string> {
     );
   }
   return { '@mlc-ai/web-llm': distEntry };
+}
+
+/**
+ * onnxruntime-web bundles locate their wasm with `new URL('ort-wasm-*.wasm', import.meta.url)`,
+ * so Vite emits a private ~25 MB copy beside every bundle that imports it (about 75 MB in total).
+ * Those are only fallbacks: the app always sets `ort.env.wasm.wasmPaths` to the single copy in
+ * `assets/ort/` (see src/audio/ortWasmPath.ts) and transformers.js sets its own CDN path.
+ * Drop the unused copies so they are neither shipped nor precached by the service worker.
+ */
+function dropOrtFallbackWasm(): Plugin {
+  return {
+    name: 'drop-ort-fallback-wasm',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      for (const fileName of Object.keys(bundle)) {
+        if (/^assets\/ort-wasm-[^/]*\.wasm$/.test(fileName)) delete bundle[fileName];
+      }
+    },
+  };
 }
 
 const webllmAlias = webllmResolveAlias();
@@ -60,16 +81,14 @@ export default defineConfig(({ command }) => {
         },
         output: {
           manualChunks: (id) => {
-            if (id.includes('@wllama/wllama')) return 'llamacpp-engine';
+            // The `?url` wasm modules are tiny stubs referenced from the initial bundle (wllamaRuntime);
+            // keep them out of this chunk so the wllama JS is only fetched when llama.cpp is selected.
+            if (id.includes('@wllama/wllama') && !id.includes('.wasm')) return 'llamacpp-engine';
             if (id.includes('@huggingface/transformers')) return 'transformers-engine';
             if (id.includes('three/src')) return 'three-core';
             if (id.includes('three/examples')) return 'three-examples';
             if (id.includes('onnxruntime-web')) return 'onnx-runtime';
             if (id.includes('@mlc-ai/web-llm') || id.includes('3rd_party/web-llm-dist/lib/index.js')) return 'webllm-engine';
-            if (id.includes('src/Director/modes/DreamModes_Tech')) return 'director-modes-tech';
-            if (id.includes('src/Director/modes/DreamModes_Sentient')) return 'director-modes-sentient';
-            if (id.includes('src/Director/modes/DreamModes_Absurdist')) return 'director-modes-absurdist';
-            if (id.includes('src/Director/modes/ExpandedRealityModes')) return 'director-modes-expanded';
           },
           chunkFileNames: (chunkInfo) => `assets/${chunkInfo.name}-[hash].js`,
           entryFileNames: (chunkInfo) => {
@@ -114,10 +133,14 @@ export default defineConfig(({ command }) => {
         },
         devOptions: { enabled: true },
       }),
+      dropOrtFallbackWasm(),
       viteStaticCopy({
         targets: [
           {
-            src: 'node_modules/onnxruntime-web/dist/*.{wasm,mjs}',
+            // Only the variant the default `onnxruntime-web` entry (ort.bundle.min.mjs) requests:
+            // the JSEP build, which serves both the webgpu and wasm execution providers.
+            // The remaining dist/ files (asyncify, jspi, plain, webgl, all.*) are never fetched.
+            src: 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.{wasm,mjs}',
             dest: 'assets/ort',
           },
         ],

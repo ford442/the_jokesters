@@ -1,5 +1,5 @@
 import { registerSW } from 'virtual:pwa-register'
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
@@ -23,8 +23,6 @@ import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
 import { saveSuccessfulLaunch } from './modelGuide'
 import { consumeWasmFallbackWarning } from '../config/loadFailover'
-
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: { model_id: string }) => m.model_id))
 
 type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
 

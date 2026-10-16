@@ -52,7 +52,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Verify wllama WASM alignment
         run: npm run verify:wllama
@@ -76,7 +76,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       # ESLint errors fail the job; the `no-explicit-any` count is ratcheted
       # (scripts/lint-any-baseline.json) and may only go down.

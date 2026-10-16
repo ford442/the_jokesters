@@ -1,6 +1,7 @@
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import { RNG } from '../utils/RNG';
 import { VPS_STORAGE_URL } from '../utils/vpsStorageUrl';
+import { getOrtWasmBaseUrl } from './ortWasmPath';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE, trimVocoderPcm } from './ttsNativeSampleRate';
 
 // Note: We do NOT import 'onnxruntime-web' at the top level. 
@@ -94,7 +95,7 @@ export class SupertonicPipeline {
 
         // 3. SET ABSOLUTE WASM PATH (Fixes the assets/assets/ 404 error)
         // We use document.baseURI to ensure we are relative to the HTML page, not the JS script
-        const wasmPath = new URL('assets/ort/', document.baseURI || window.location.href).href;
+        const wasmPath = getOrtWasmBaseUrl();
         this.ort.env.wasm.wasmPaths = wasmPath;
 
         console.log(`[Supertonic] Initializing ONNX. Wasm Path: ${wasmPath}`);

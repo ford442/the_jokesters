@@ -13,7 +13,7 @@ import type { VRAMOptimizationConfig } from './utils/vramOverrides'
 import type { ContextWindowInfo, DynamicContextManager } from './utils/contextBudget'
 import type { ChatMessage, ContentPart, GenerationOptions, LLMEngine } from './llm/LLMEngine'
 import type { EngineType } from './llm/EngineFactory'
-import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
+import { isMlcEngine } from './llm/engineGuards'
 import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
 import { PROFANITY_LEVEL, PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_MAX_TOKENS } from './config/chatConfig'
 import { buildSystemMessage } from './llm/helpers/PromptCompiler'
@@ -697,7 +697,7 @@ export class GroupChatManager {
 
   get completion() {
     const engine = this.session.getEngine()
-    if (engine instanceof MlcEngineAdapter) {
+    if (isMlcEngine(engine)) {
       return (engine as unknown as { engine?: { chat?: { completions: unknown } } }).engine?.chat?.completions
     }
     return null

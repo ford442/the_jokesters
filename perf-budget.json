@@ -6,9 +6,15 @@
     "ci": {
       "note": "Headless/limited GPU environment - more lenient thresholds",
       "adjustments": {
-        "fps": { "tolerance": 0.7 },
-        "tokensPerSec": { "tolerance": 0.6 },
-        "ttsLatency": { "multiplier": 2.0 }
+        "fps": {
+          "tolerance": 0.7
+        },
+        "tokensPerSec": {
+          "tolerance": 0.6
+        },
+        "ttsLatency": {
+          "multiplier": 2.0
+        }
       }
     },
     "production": {
@@ -66,13 +72,18 @@
       }
     },
     "bundleSize": {
-      "max": 5000000,
-      "target": 3000000,
+      "max": 5750000,
+      "target": 5000000,
       "unit": "bytes",
-      "description": "Total JavaScript bundle size (gzipped)",
+      "description": "Total gzipped JavaScript in dist/assets (all chunks, including the MLC worker). Enforced by scripts/check-bundle-budget.mjs.",
       "files": [
         "dist/assets/*.js"
-      ]
+      ],
+      "initialGzipMax": 450000,
+      "initialGzipTarget": 300000,
+      "initialDescription": "Gzipped JS needed before first paint: the index.html entry script plus its static import graph and modulepreloads. Engine runtimes (web-llm, wllama, transformers.js) must stay out of it.",
+      "chunkGzipMax": 2500000,
+      "chunkDescription": "Largest single gzipped chunk. Catches accidental chunk merges (e.g. manualChunks swallowing per-mode lazy modules)."
     },
     "firstContentfulPaint": {
       "max": 2000,
@@ -85,20 +96,42 @@
       "target": 3000,
       "unit": "ms",
       "description": "Time until main thread is idle and input can be handled"
+    },
+    "distSize": {
+      "max": 70000000,
+      "target": 60000000,
+      "unit": "bytes",
+      "description": "Total size of dist/ (all files). Guards against re-shipping unused onnxruntime-web wasm variants or model binaries from public/."
     }
   },
   "budgetGroups": {
-    "critical": ["fps", "memoryLeak", "ttsLatency", "llmTokensPerSec"],
-    "important": ["bundleSize", "firstContentfulPaint"],
-    "informational": ["timeToInteractive"]
+    "critical": [
+      "fps",
+      "memoryLeak",
+      "ttsLatency",
+      "llmTokensPerSec"
+    ],
+    "important": [
+      "bundleSize",
+      "distSize",
+      "firstContentfulPaint"
+    ],
+    "informational": [
+      "timeToInteractive"
+    ]
   },
   "failureConditions": {
     "critical": "fail",
     "important": "warn",
-    "informational": "ignore"
+    "informational": "ignore",
+    "bundleChecks": "fail"
   },
   "reporting": {
-    "outputFormats": ["json", "html", "markdown"],
+    "outputFormats": [
+      "json",
+      "html",
+      "markdown"
+    ],
     "retainHistory": true,
     "historyLimit": 50,
     "compareWithBaseline": true
