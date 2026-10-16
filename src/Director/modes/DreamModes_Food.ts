@@ -198,15 +198,21 @@ export async function runOverDramaticBaristaLoop(_scenario: Scenario, ctx: ModeC
     const barista = 'comedian'; // Over-dramatic (Hermes-3)
     const customer = 'scientist'; // Impatient (Qwen2.5)
 
-    await chatForAgentWithComedy(ctx, barista, `(You are an over-dramatic barista. Treat making a vanilla latte like you are defusing a highly unstable nuclear bomb. Demand extreme precision from the customer.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(barista);
+    await chatForAgentWithComedy(ctx, barista, `(You are an extremely over-dramatic barista. Treat pulling an espresso shot like defusing a thermonuclear weapon. Demand the customer hold their breath to avoid disrupting the atmospheric pressure.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, customer, `(You are an impatient customer late for work. Demand your coffee and dismiss the barista's ridiculous safety concerns.)`, async (s) => await ctx.callbacks.onSpeak(s, customer, {}));
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(customer);
+    await chatForAgentWithComedy(ctx, customer, `(You are a stressed, impatient customer running late for a very boring corporate job. Demand your black drip coffee immediately and ruthlessly mock the barista's ridiculous theatrical safety concerns.)`, async (s) => await ctx.callbacks.onSpeak(s, customer, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, barista, `(Panic! The milk is frothing incorrectly. Describe the impending catastrophic chain reaction if the foam isn't stabilized immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(barista);
+    await chatForAgentWithComedy(ctx, barista, `(Absolute panic! The milk frother is making the wrong pitch. Describe the impending catastrophic chain reaction that will destroy the entire cafe if the foam isn't stabilized immediately. Blame the customer's negative energy.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 }
 
 
