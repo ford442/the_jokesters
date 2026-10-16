@@ -151,7 +151,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
     const samplingConfig: SamplingConfig = {
       temp: normalizedOpts.temperature,
       top_p: normalizedOpts.top_p,
-      penalty_repeat: normalizedOpts.repetition_penalty,
+      penalty_repeat: normalizedOpts.repetition_penalty ?? 1.1,
       penalty_present: normalizedOpts.presence_penalty,
     }
 
@@ -203,7 +203,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
     const samplingConfig: SamplingConfig = {
       temp: normalizedOpts.temperature,
       top_p: normalizedOpts.top_p,
-      penalty_repeat: normalizedOpts.repetition_penalty,
+      penalty_repeat: normalizedOpts.repetition_penalty ?? 1.1,
       penalty_present: normalizedOpts.presence_penalty,
     }
 

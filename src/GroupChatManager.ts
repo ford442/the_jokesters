@@ -58,7 +58,7 @@ export class GroupChatManager {
   private maxTokensPerTurn: number = DEFAULT_MAX_TOKENS
   private styleInstruction = PROFANITY_INSTRUCTIONS[PROFANITY_LEVEL]
   private currentProfanityLevel: ProfanityLevel = PROFANITY_LEVEL
-  private readonly REPETITION_PENALTY = 0.955
+  private readonly REPETITION_PENALTY = 1.05
   private readonly PRESENCE_PENALTY = 0.556
   private readonly DEFAULT_PRERENDER_TURNS = 3
 
@@ -268,8 +268,8 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-            this.patchLastUserMessage(chatMessages, activeUserContent)
+            const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            this.patchLastUserMessage(chatMessages, retryPrompt)
             const retryTokens = retryMaxTokens(
               effectiveMaxTokens,
               this.maxTokensPerTurn,
@@ -608,8 +608,8 @@ export class GroupChatManager {
         logTurnText(raw, cleaned)
 
         if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          activePrompt = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, activePrompt)
+          promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, promptForTurn)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,
@@ -630,6 +630,7 @@ export class GroupChatManager {
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
+          promptForTurn = currentPrompt
           continue
         }
 

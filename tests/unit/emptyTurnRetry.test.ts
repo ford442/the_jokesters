@@ -18,6 +18,36 @@ async function makeManager(engineId = 'mock') {
 }
 
 describe('empty-turn retry / skip', () => {
+
+  it('name-prefixed emoji-only replies never reach onSentence', async () => {
+    let emitted = false
+    const { manager, engine } = await makeManager()
+    engine.queueResponses('😂', '😂', '😂', '😂', '😂', '😂')
+
+    await manager.chat('Test', (sentence) => {
+      emitted = true
+    })
+
+    expect(emitted).toBe(false)
+  })
+
+  it('still emits the sfx cue if there is an emoji', async () => {
+    let emitted = false
+    const { manager, engine } = await makeManager()
+    engine.queueResponses('Great one. [sfx:rimshot] 😂')
+
+    await manager.chat('Test', (sentence) => {
+      if (sentence.includes('[sfx:rimshot]')) emitted = true
+    })
+
+    expect(emitted).toBe(true)
+  })
+
+  it('isSpeakableText is true for short lines like Oh no!', async () => {
+    const { isSpeakableText } = await import('../../src/chat/speakableText')
+    expect(isSpeakableText('Oh no!')).toBe(true)
+  })
+
   it('retries once with English suffix and max_tokens >= 96, then speaks the retry', async () => {
     const { manager, engine } = await makeManager()
     engine.queueResponses('😂', 'The banana is a contract.')
