@@ -268,8 +268,8 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-            const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-            this.patchLastUserMessage(chatMessages, retryPrompt)
+            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            this.patchLastUserMessage(chatMessages, activeUserContent)
             const retryTokens = retryMaxTokens(
               effectiveMaxTokens,
               this.maxTokensPerTurn,
@@ -608,8 +608,8 @@ export class GroupChatManager {
         logTurnText(raw, cleaned)
 
         if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          promptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, promptForTurn)
+          activePrompt = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, activePrompt)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,
@@ -630,7 +630,7 @@ export class GroupChatManager {
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
-          promptForTurn = currentPrompt
+          activePrompt = currentPrompt
           continue
         }
 
