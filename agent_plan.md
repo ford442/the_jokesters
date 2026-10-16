@@ -3,15 +3,10 @@
 This file is **not** a Dream Mode checklist. Mode spam is paused behind a quality bar.
 
 ## Project Velocity
-tasks_per_run: 2
+tasks_per_run: 1
 
 ## Project Velocity Feedback
-Fixed #333 emoji-only follow-ups poisoning history. Maintained tasks_per_run at 1.
-Today's run was extremely smooth and frictionless, easily accomplishing all planned roadmap items and cloud persistence expansions without blockers. We will maintain `tasks_per_run: 2` for a consistent, sustainable pace.
-Today was low friction so increased tasks_per_run to 1.
-Decreasing to 1 task for focus on the Sentient Microwave mode.
-Verified #305 missing custom ctx512/ctx1024 models on remote host. Re-uploaded via fixed script. Improved humor for Sentient Microwave mode.
-Improved humor for Interdimensional Cooking Show mode and removed duplicated mode loop.
+Improved humor of Over-dramatic Barista mode and deleted duplicate agent_plan.md sections.
 
 - [x] Read Configuration: Determine how much work to do based on the agent_plan.md settings.
 - [x] Execute: Implement the next set of features.
@@ -130,10 +125,6 @@ Audit notes (2026-08): custom Vicuna ctx512/1024 WASM URLs are now correctly poi
 - [x] Escape Room: The Backrooms (Phase 2 Expansion):
   - Premise one-liner: Agents are trapped in the backrooms, but they can't stop arguing about architectural zoning laws.
   - LLM pairings: Qwen2.5 for the strict zoning inspector, Hermes-3 for the panicked explorer.
-- [x] Cloud Persistence Expansion:
-  - [x] **Authenticating with the HF API:** Prompt users for a write-access Hugging Face token in the settings menu, validate it via `HFStorageManager.validateToken`, and store the credentials safely. (Completed via dashboard UI hookup to MemoryManager.setCloudCredentials).
-  - **Pushing finished "Episode Scripts" to a private Dataset:** Deeply serialize completed episodes and push the JSON files (e.g. `episodes/ep_{id}.json`) to a private HF Dataset at the end of each session.
-  - **Fetching "Previous Episode Summaries" at boot for continuity:** Fetch all recent episode summaries from HF during initialization and use semantic search to load relevant historical context for the upcoming scene.
 - [x] Superhero Therapy Group:
   - Premise one-liner: Superheroes attend a support group to complain about the logistical nightmares of their powers.
   - LLM pairings: Hermes-3 for the aggressive vigilante, Qwen2.5 for the logical group leader.
