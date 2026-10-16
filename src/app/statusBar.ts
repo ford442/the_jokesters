@@ -145,6 +145,6 @@ export function startSyncPolling(getMemoryManager: () => MemoryManager | null): 
 
   window.addEventListener('online', () => {
     console.log('App is back online, triggering MemoryManager sync retry...')
-    getMemoryManager()?.processSyncQueue()
+    void getMemoryManager()?.processSyncQueue()
   })
 }

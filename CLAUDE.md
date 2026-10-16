@@ -59,6 +59,7 @@ shows download size estimate, persists last successful launch, and OOM panel can
 npm ci
 npm run dev          # http://localhost:5173
 npm run typecheck    # tsc -b: src, service worker, vite.config.ts, tests (required before commit)
+npm run lint         # ESLint (typescript-eslint, type-aware); `npm run lint:ci` also ratchets explicit `any`
 npm test             # Vitest unit tests
 npm run build        # tsc -b + vite → dist/
 npm run perf:quick

@@ -3,11 +3,13 @@
  * Executes the chaos test suite and generates markdown report
  */
 
-import { 
-  runFullChaosTest, 
+import type { 
   ChaosTestReport, 
   RapidFireResult,
   TestResult 
+} from './chaosTest';
+import { 
+  runFullChaosTest 
 } from './chaosTest';
 
 // ============================================================================
@@ -330,7 +332,7 @@ async function main() {
 
 // Run if executed directly
 if (require.main === module) {
-  main();
+  void main();
 }
 
 export { generateMarkdownReport, calculateOverallResilience };

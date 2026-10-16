@@ -557,7 +557,7 @@ export async function runCustomerServiceHellLoop(scenario: Scenario, ctx: ModeCo
 
             ctx.callbacks.onMessage('System', `*Please hold, transferring you to another department...*`, '#95a5a6');
 
-            ctx.callbacks.onTurnStart(newRep);
+            await ctx.callbacks.onTurnStart(newRep);
             if (newRep === rep1) {
                 await chatForAgentWithComedy(ctx, newRep, `(CUSTOMER SERVICE: You are the new rep. The user just said "${userInput}" to the last rep. Ignore it entirely. Start over and demand they verify their account number using Roman numerals. Be strictly by the book.)`, async (s) => await ctx.callbacks.onSpeak(s, newRep, {}));
             } else if (newRep === rep2) {
@@ -569,7 +569,7 @@ export async function runCustomerServiceHellLoop(scenario: Scenario, ctx: ModeCo
         } else {
             // Same agent responds
             const currentRep = agents[currentAgentIndex];
-            ctx.callbacks.onTurnStart(currentRep);
+            await ctx.callbacks.onTurnStart(currentRep);
             if (currentRep === rep1) {
                 await chatForAgentWithComedy(ctx, currentRep, `(CUSTOMER SERVICE: The user said "${userInput}". Put them on "micro-holds". Say something unhelpful, claim you are checking the system, and make a "beep boop" sound.)`, async (s) => await ctx.callbacks.onSpeak(s, currentRep, {}));
             } else if (currentRep === rep2) {

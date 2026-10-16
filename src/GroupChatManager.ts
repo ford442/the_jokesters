@@ -8,7 +8,7 @@
  *
  * @see docs/GROUP_CHAT_FACADE.md
  */
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import type { VRAMOptimizationConfig } from './utils/vramOverrides'
 import type { ContextWindowInfo, DynamicContextManager } from './utils/contextBudget'
 import type { ChatMessage, ContentPart, GenerationOptions, LLMEngine } from './llm/LLMEngine'

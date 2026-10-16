@@ -12,6 +12,9 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/typecheck.yml'
+      - 'eslint.config.mjs'
+      - 'scripts/check-any-ratchet.mjs'
+      - 'scripts/lint-any-baseline.json'
       - 'scripts/wllama-wasm.manifest.json'
       - 'scripts/verify_wllama_wasm.sh'
   pull_request:
@@ -25,6 +28,9 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/typecheck.yml'
+      - 'eslint.config.mjs'
+      - 'scripts/check-any-ratchet.mjs'
+      - 'scripts/lint-any-baseline.json'
       - 'scripts/wllama-wasm.manifest.json'
       - 'scripts/verify_wllama_wasm.sh'
   workflow_dispatch:
@@ -53,3 +59,26 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # ESLint errors fail the job; the `no-explicit-any` count is ratcheted
+      # (scripts/lint-any-baseline.json) and may only go down.
+      - name: Lint
+        run: npm run lint:ci

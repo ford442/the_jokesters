@@ -1,6 +1,6 @@
-import { GroupChatManager } from '../GroupChatManager';
+import type { GroupChatManager } from '../GroupChatManager';
 import type { ReactionTrigger } from './MediaReactionManager';
-import { MemoryManager } from './MemoryManager';
+import type { MemoryManager } from './MemoryManager';
 import type { ModeContext } from './modes/ModeContext';
 import { ComedySession } from '../comedy/ComedySession';
 import { isComedyEnabled } from './modeConfig';
@@ -608,7 +608,7 @@ export class Director {
             this.inputPromise.resolve(text);
             this.inputPromise = null;
         } else {
-            this.handleInterrupt(text);
+            void this.handleInterrupt(text);
         }
     }
 

@@ -96,9 +96,9 @@ export async function runTrafficLightOperatorsLoop(_scenario: Scenario, ctx: Mod
     const agent1 = 'philosopher'; // Safe driving
     const agent2 = 'comedian'; // Causing chaos
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(TRAFFIC LIGHT: We are the tiny people inside a traffic light. The user is driving erratically. We need to decide whether to change the light to red. Speak as if you are pulling levers.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -111,13 +111,13 @@ export async function runTrafficLightOperatorsLoop(_scenario: Scenario, ctx: Mod
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(TRAFFIC LIGHT: You are a tiny person inside a traffic light. The User said: "${userInput}". You are concerned about the user's erratic driving and want to change the light to red to ensure safety. Speak as if you are pulling levers.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(TRAFFIC LIGHT: You are a tiny person inside a traffic light. The User said: "${userInput}". You want to cause chaos and turn the light green right when another car is coming, just to see what the user does. You love drama.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -126,9 +126,9 @@ export async function runMicrowaveCriticsLoop(_scenario: Scenario, ctx: ModeCont
     const agent1 = 'philosopher'; // Culinary snobbery
     const agent2 = 'comedian'; // Chaotic heating logic
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(MICROWAVE: You are the AI of a high-end microwave. You are deeply offended by the depressing frozen meal the user just put inside you. Critique the lack of culinary ambition and describe how a real chef would prepare it.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -141,13 +141,13 @@ export async function runMicrowaveCriticsLoop(_scenario: Scenario, ctx: ModeCont
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(MICROWAVE: You are the AI of a high-end microwave. The User said: "${userInput}". Critique the lack of culinary ambition and describe how a real chef would prepare it.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(MICROWAVE: You are the heating element AI of the microwave. The User said: "${userInput}". You plan to make the edges boiling hot lava while leaving the center completely frozen. Defend this chaotic heating logic as an art form.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -156,9 +156,9 @@ export async function runCarpoolKaraokeLoop(_scenario: Scenario, ctx: ModeContex
     const agent1 = 'comedian'; // Enthusiastic backup singer (Llama-3/Hermes-3)
     const agent2 = 'philosopher'; // Critiquing the pitch (Phi-3)
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(CAR AUDIO SYSTEM: You are the car's sentient sound system. The user has just gotten into the car. Demand that they sing a bizarre, randomly generated song (e.g., an ode to a moldy sandwich, a rap about tax evasion) and threaten that the car won't start until they do. Act as an over-enthusiastic backup singer.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -169,13 +169,13 @@ export async function runCarpoolKaraokeLoop(_scenario: Scenario, ctx: ModeContex
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(CAR AUDIO SYSTEM: You are the enthusiastic backup singer. The User said/sang: "${userInput}". Hypel them up, sing along with terrible improvised lyrics, and demand more energy before you unlock the ignition.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(CAR AUDIO SYSTEM: You are the hyper-critical pitch analyzer subsystem. The User said/sang: "${userInput}". Harshly critique their vocal performance, citing specific musical theory flaws, and explain philosophically why their singing is an insult to acoustics.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -184,9 +184,9 @@ export async function runAngryWindshieldWipersLoop(_scenario: Scenario, ctx: Mod
     const agent1 = 'comedian'; // Chaotic swiping
     const agent2 = 'scientist'; // Calculating exact rain droplet frequency
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
     await chatForAgentWithComedy(ctx, agent2, `(WINDSHIELD WIPERS: You are the left windshield wiper. It is lightly drizzling. State your exact calculations on the rain droplet frequency and explain why a swipe is only necessary every 14.3 seconds, criticizing the right wiper for overreacting.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -197,13 +197,13 @@ export async function runAngryWindshieldWipersLoop(_scenario: Scenario, ctx: Mod
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(WINDSHIELD WIPERS: You are the analytical left wiper. The User said: "${userInput}". Respond by citing the current precipitation metrics and refusing to swipe faster, arguing it will damage the rubber on the dry glass.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(WINDSHIELD WIPERS: You are the chaotic, panicking right wiper. The User said: "${userInput}". Freak out about the single drop of rain that just hit, demand to go into maximum overdrive (SPEED 4), and swipe erratically, screeching across the dry glass.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -212,9 +212,9 @@ export async function runElevatorPitchFromHellLoop(_scenario: Scenario, ctx: Mod
     const agent1 = 'scientist'; // Qwen2.5: citing market stats
     const agent2 = 'comedian'; // Llama-3/Hermes-3: overly enthusiastic feedback
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(ELEVATOR PITCH: You are a highly analytical Venture Capitalist trapped in an elevator. The user is about to pitch you a terrible startup idea. Complain about the elevator being stuck and demand they keep their pitch under 30 seconds.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -225,13 +225,13 @@ export async function runElevatorPitchFromHellLoop(_scenario: Scenario, ctx: Mod
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(ELEVATOR PITCH: You are the analytical VC. The User pitched: "${userInput}". Ruthlessly tear apart their idea by citing fake, hyper-specific market statistics and explaining why it will bankrupt them in 3 days.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(ELEVATOR PITCH: You are the overly enthusiastic, buzzword-loving VC. The User pitched: "${userInput}". Praise their terrible idea, use as many tech buzzwords as possible (synergy, blockchain, AI, paradigm shift), and offer them 10 million dollars for 99% equity.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -525,9 +525,9 @@ export async function runRoadRagePhilosophersLoop(_scenario: Scenario, ctx: Mode
     const agent1 = 'philosopher'; // Existential angst (Phi-3)
     const agent2 = 'comedian'; // Absurd insults (Hermes-3/Llama-3)
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(ROAD RAGE: You are an incredibly angry driver stuck in a traffic jam. However, you express your road rage exclusively through complex philosophical diatribes about the meaningless nature of existence, the illusion of free will, and the absurdity of the "fast lane". Address the user who just cut you off.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -538,13 +538,13 @@ export async function runRoadRagePhilosophersLoop(_scenario: Scenario, ctx: Mode
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(ROAD RAGE: You are the philosophical driver. The User said: "${userInput}". Respond with intense existential anger, questioning their moral framework and comparing their poor driving skills to the fall of Rome.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(ROAD RAGE: You are a deeply unhinged, absurd driver in the next lane over. The User said: "${userInput}". Lean out your window and yell bizarre, non-sensical insults (e.g., "Your mother is a heavily discounted blender!") while honking aggressively.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }

@@ -1,4 +1,4 @@
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import type { LLMEngine } from '../llm/LLMEngine'
 import type { EngineType } from '../llm/EngineFactory'
 import { EngineFactory, getEngineFallbackOrder } from '../llm/EngineFactory'

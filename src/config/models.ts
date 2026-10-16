@@ -1,4 +1,4 @@
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
 import {
   HF_VICUNA_MODEL_ID,

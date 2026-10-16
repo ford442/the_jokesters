@@ -75,7 +75,7 @@ export async function initApp(): Promise<void> {
         .then((registrations) => {
           for (const registration of registrations) {
             if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
-              registration.unregister().then(() => {
+              void registration.unregister().then(() => {
                 console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
               })
             }
@@ -133,7 +133,6 @@ export async function initApp(): Promise<void> {
   }
 
   let currentInitState: AppInitState = 'BOOTING'
-  // @ts-ignore
   console.log(currentInitState)
 
   app.innerHTML = getAppTemplate()
@@ -144,7 +143,6 @@ export async function initApp(): Promise<void> {
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
   const progressBar = document.getElementById('progress') as HTMLDivElement
-  // @ts-ignore
   console.log(progressBar)
   const userInput = document.getElementById('user-input') as HTMLInputElement
 
@@ -168,7 +166,7 @@ export async function initApp(): Promise<void> {
   try {
     const memoryManager = new MemoryManager()
     setSharedMemoryManager(memoryManager)
-    memoryManager.fetchPreviousEpisodeSummaries();
+    void memoryManager.fetchPreviousEpisodeSummaries();
 
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)

@@ -40,7 +40,7 @@ precacheAndRoute(self.__WB_MANIFEST || []);
 
 // Take control immediately so VPS URL rewrites apply on first load (not only after reload).
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  void self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -329,7 +329,7 @@ async function tryFetchGzCompressed(url: string): Promise<Response | null> {
     const writer = ds.writable.getWriter();
     const reader = ds.readable.getReader();
 
-    (async () => {
+    void (async () => {
       try {
         await writer.write(compressedBytes as any);
         await writer.close();
@@ -577,7 +577,7 @@ self.addEventListener('fetch', (event) => {
  */
 self.addEventListener('message', (event: ExtendableMessageEvent & { data: ClientMessage }) => {
   if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    void self.skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
     gzMissCache.clear();
     console.log('[ServiceWorker] Memory cache cleared');

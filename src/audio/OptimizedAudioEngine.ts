@@ -16,7 +16,8 @@ import type {
     WorkerSynthesisSuccess 
 } from './worker/tts.worker';
 import { VisemePredictor, type Viseme } from './VisemePredictor';
-import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
+import type { TTSLatencyProfiler} from './TTSLatencyProfiler';
+import { ttsProfiler } from './TTSLatencyProfiler';
 import { VPS_STORAGE_URL } from '../config/models';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
 import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';

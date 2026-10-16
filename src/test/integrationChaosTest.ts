@@ -4,11 +4,13 @@
  */
 
 import { CallbackEngine, getGlobalCallbackEngine, resetGlobalCallbackEngine } from '../comedy/callbackEngine';
+import type {
+  SentimentEvent 
+} from '../improv/branching';
 import { 
   createConversationTree, 
   evaluateSentiment, 
-  recordSentiment,
-  SentimentEvent 
+  recordSentiment 
 } from '../improv/branching';
 
 // ============================================================================

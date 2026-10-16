@@ -44,7 +44,7 @@ async function displayCapabilities() {
   `
 }
 
-displayCapabilities()
+void displayCapabilities()
 
 function setStatus(engineType: 'mlc' | 'llamacpp' | 'transformers', status: TestResult['status'], message?: string) {
   const statusEl = document.getElementById(`${engineType}-status`)!

@@ -6,8 +6,9 @@ import {
   saveMemoryDepthPreference,
   type MemoryHint,
 } from '../config/contextDepth'
+import type {
+  DynamicContextManager} from '../utils/contextBudget';
 import {
-  DynamicContextManager,
   type ChatMessage as ContextChatMessage,
   type ContextWindowInfo,
 } from '../utils/contextBudget'

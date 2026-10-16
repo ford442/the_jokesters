@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Actor } from './Actor';
 import { TechBroActor } from './TechBroActor';
-import { LipSync } from './LipSync';
+import type { LipSync } from './LipSync';
 import type { RendererMode } from './rendererMode';
 import type { ReactionClip } from './actorAnimations';
 import {
@@ -536,7 +536,7 @@ export class Stage {
                 });
             }
         } else {
-            this.renderer.render(this.scene, this.camera);
+            void this.renderer.render(this.scene, this.camera);
         }
     }
 

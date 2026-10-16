@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import type {
+  JokestersWorkerMLCEngine} from '../../src/llm/worker/mlcWorkerEngine';
 import {
-  JokestersWorkerMLCEngine,
   MlcWorkerStartupError,
   createMlcWorkerEngine,
   resolveMlcRuntime,
