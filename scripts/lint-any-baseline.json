@@ -1,4 +1,4 @@
 {
   "rule": "@typescript-eslint/no-explicit-any",
-  "count": 146
+  "count": 139
 }

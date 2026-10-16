@@ -64,22 +64,6 @@
     "handler": "runSentientNPCsLoop"
   },
   {
-    "id": "final_boss_therapy",
-    "handler": "runFinalBossTherapyLoop"
-  },
-  {
-    "id": "glitch_exploiters",
-    "handler": "runGlitchExploitersLoop"
-  },
-  {
-    "id": "escort_mission_survivor",
-    "handler": "runEscortMissionSurvivorLoop"
-  },
-  {
-    "id": "save_point_hoarders",
-    "handler": "runSavePointHoardersLoop"
-  },
-  {
     "id": "improv",
     "handler": "runImprovLoop"
   },
@@ -548,10 +532,6 @@
     "handler": "runOverDramaticAntColonyLoop"
   },
   {
-    "id": "reverse_heist",
-    "handler": "runReverseHeistLoop"
-  },
-  {
     "id": "sarcastic_overlord",
     "handler": "runSarcasticOverlordLoop"
   },
@@ -613,7 +593,7 @@
   },
   {
     "id": "sentient_wifi_router",
-    "handler": "runSentientWiFiRouterLoop"
+    "handler": "runSentientWifiRouterLoop"
   },
   {
     "id": "sentient_coffee_machine",
@@ -754,10 +734,6 @@
   {
     "id": "intergalactic_bake_off",
     "handler": "runIntergalacticBakeOffLoop"
-  },
-  {
-    "id": "infinite_escape_room",
-    "handler": "runInfiniteEscapeRoomLoop"
   },
   {
     "id": "reverse_auction",
@@ -996,16 +972,8 @@
     "handler": "runFloppyDiskDefendersLoop"
   },
   {
-    "id": "dial_up_modems",
-    "handler": "runDialUpModemsLoop"
-  },
-  {
     "id": "y2k_bug_survivor",
     "handler": "runY2KBugSurvivorLoop"
-  },
-  {
-    "id": "tamagotchi_caretakers",
-    "handler": "runTamagotchiCaretakersLoop"
   },
   {
     "id": "clippy_support_group",
@@ -1124,26 +1092,6 @@
     "handler": "runSentientLeftoversLoop"
   },
   {
-    "id": "abandoned_api_endpoint",
-    "handler": "runAbandonedAPIEndpointLoop"
-  },
-  {
-    "id": "deprecated_package",
-    "handler": "runDeprecatedPackageLoop"
-  },
-  {
-    "id": "loading_spinner_support_group",
-    "handler": "runLoadingSpinnerSupportGroupLoop"
-  },
-  {
-    "id": "unhandled_exception",
-    "handler": "runUnhandledExceptionLoop"
-  },
-  {
-    "id": "memory_leak_deniers",
-    "handler": "runMemoryLeakDeniersLoop"
-  },
-  {
     "id": "staplers_strike",
     "handler": "runStaplersStrikeLoop"
   },
@@ -1198,50 +1146,6 @@
   {
     "id": "escape_room_game_master",
     "handler": "runEscapeRoomGameMasterLoop"
-  },
-  {
-    "id": "myspace_top_8_dilemma",
-    "handler": "runMyspaceTop8DilemmaLoop"
-  },
-  {
-    "id": "neopets_starvation_guilt",
-    "handler": "runNeopetsStarvationGuiltLoop"
-  },
-  {
-    "id": "limewire_virus_roulette",
-    "handler": "runLimewireVirusRouletteLoop"
-  },
-  {
-    "id": "askjeeves_identity_crisis",
-    "handler": "runAskJeevesIdentityCrisisLoop"
-  },
-  {
-    "id": "flash_player_obituary",
-    "handler": "runFlashPlayerObituaryLoop"
-  },
-  {
-    "id": "winamp_skin_hoarders",
-    "handler": "runWinampSkinHoardersLoop"
-  },
-  {
-    "id": "floppy_disk_regret",
-    "handler": "runFloppyDiskRegretLoop"
-  },
-  {
-    "id": "tangled_headphone_wires",
-    "handler": "runTangledHeadphoneWiresLoop"
-  },
-  {
-    "id": "vhs_tracking_errors",
-    "handler": "runVHSTrackingErrorsLoop"
-  },
-  {
-    "id": "scratched_cd_skips",
-    "handler": "runScratchedCDSkipsLoop"
-  },
-  {
-    "id": "overheated_crt_monitor",
-    "handler": "runOverheatedCRTMonitorLoop"
   },
   {
     "id": "sentient_blender",
@@ -1450,14 +1354,6 @@
   {
     "id": "quantum_customer_service",
     "handler": "runQuantumCustomerServiceLoop"
-  },
-  {
-    "id": "sentient_codebase",
-    "handler": "runSentientCodebaseLoop"
-  },
-  {
-    "id": "sentient_wifi_router",
-    "handler": "runSentientWifiRouterLoop"
   },
   {
     "id": "philosophical_debugging",
