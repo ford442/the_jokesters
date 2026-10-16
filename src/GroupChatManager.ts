@@ -186,6 +186,7 @@ export class GroupChatManager {
     const MAX_AGENT_ATTEMPTS = 3
     let lastAgentId = this.conversation.getCurrentAgent().id
     let success = false
+    let activeUserContent = historyContent
 
     try {
       for (let attempt = 0; attempt < MAX_AGENT_ATTEMPTS; attempt++) {
@@ -239,6 +240,8 @@ export class GroupChatManager {
             if (lastUserIdx >= 0) {
               chatMessages[lastUserIdx] = { role: 'user', content: originalContent }
             }
+          } else {
+            this.patchLastUserMessage(chatMessages, activeUserContent)
           }
 
           const sampling = options.sampling
@@ -550,6 +553,7 @@ export class GroupChatManager {
 
 
       let currentPrompt = initialPrompt
+      let activePrompt = initialPrompt
       let produced = 0
       let attempts = 0
       const maxAttempts = Math.max(turnCount * 5, turnCount + this.conversation.getAgents().length)
@@ -599,7 +603,7 @@ export class GroupChatManager {
           presence_penalty: this.PRESENCE_PENALTY,
         }
 
-        let promptForTurn = currentPrompt
+        this.patchLastUserMessage(chatMessages, activePrompt)
         let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
         logTurnText(raw, cleaned)
 
@@ -649,6 +653,7 @@ export class GroupChatManager {
 
         addLocalTurn(currentPrompt, cleaned)
         currentPrompt = '(Reply naturally to the last thing said)'
+        activePrompt = currentPrompt
         produced++
       }
 
