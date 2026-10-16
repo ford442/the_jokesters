@@ -1,0 +1,8 @@
+{
+  "_comment": "Single source of truth for the custom Vicuna model_lib parameter sets. Read by scripts/build-vicuna-wasm.sh; mirrored in public/Jokesters_WebLLM_Compile.ipynb and src/config/models.ts (tests/unit/wasmToolchain.test.ts keeps them in sync). web-llm rejects sliding_window_size together with context_window_size (#398), so no sliding window is baked. The file name carries the real prefill chunk size.",
+  "model_prefix": "vicuna-7b",
+  "presets": {
+    "512": { "context_window_size": 512, "prefill_chunk_size": 512 },
+    "1024": { "context_window_size": 1024, "prefill_chunk_size": 1024 }
+  }
+}

@@ -9,12 +9,12 @@ describe('parseCompiledMaxContextFromModelLib', () => {
   it('parses ctx suffixes from wasm model_lib URLs', () => {
     expect(
       parseCompiledMaxContextFromModelLib(
-        'https://storage.1ink.us/models/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm',
+        'https://storage.1ink.us/models/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs512-webgpu.wasm',
       ),
     ).toBe(512);
     expect(
       parseCompiledMaxContextFromModelLib(
-        'https://storage.1ink.us/models/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm',
+        'https://storage.1ink.us/models/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1024-webgpu.wasm',
       ),
     ).toBe(1024);
     expect(

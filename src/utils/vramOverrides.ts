@@ -157,7 +157,7 @@ export function getContextConfigForVRAM(
 
 /**
  * Parse the baked-in max context from a model_lib filename.
- * Examples: `…-ctx512_cs1k-…` → 512, `…-ctx4k_cs1k-…` → 4096.
+ * Examples: `…-ctx512_cs512-…` → 512, `…-ctx4k_cs1k-…` → 4096.
  */
 export function parseCompiledMaxContextFromModelLib(modelLib: string): number | null {
   if (!modelLib) return null;

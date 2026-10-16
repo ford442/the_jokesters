@@ -48,17 +48,22 @@ on:
   # schedule:
   #   - cron: '0 6 * * 0'
 
+permissions:
+  contents: read
+
 jobs:
   build-wasm:
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
     env:
-      CONTEXT_SIZE: ${{ github.event.inputs.context_size || '512' }}
-      QUANTIZATION: ${{ github.event.inputs.quantization || 'q4f32_1' }}
-      SKIP_WEIGHT_CONV: ${{ github.event.inputs.skip_weight_conv && '1' || '0' }}
-      HF_UPLOAD: ${{ github.event.inputs.hf_upload && '1' || '0' }}
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      CONTEXT_SIZE: ${{ inputs.context_size || '512' }}
+      QUANTIZATION: ${{ inputs.quantization || 'q4f32_1' }}
+      # Boolean inputs are real booleans; comparing the string form would treat "false" as truthy.
+      SKIP_WEIGHT_CONV: ${{ inputs.skip_weight_conv == true && '1' || '0' }}
+      # Upload only when explicitly requested, never merely because HF_TOKEN exists.
+      HF_UPLOAD: ${{ inputs.hf_upload == true && '1' || '0' }}
+      HF_TOKEN: ${{ inputs.hf_upload == true && secrets.HF_TOKEN || '' }}
       HF_REPO_ID: ford442/vicuna-7b-q4f32-webllm
 
     steps:
@@ -70,29 +75,36 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Load pinned toolchain
+        run: |
+          # scripts/wasm-toolchain.env is the single source of truth for versions
+          grep -E '^[A-Z_]+=' scripts/wasm-toolchain.env >> "$GITHUB_ENV"
+
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y git-lfs cmake ninja-build
 
-      - name: Install MLC-LLM Python packages
+      - name: Install MLC-LLM Python packages (pinned)
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --pre -U -f https://mlc.ai/wheels \
-            mlc-llm-nightly-cu128 mlc-ai-nightly-cu128
+          python -m pip install --pre -f https://mlc.ai/wheels \
+            "mlc-llm-nightly-${MLC_WHEEL_FLAVOR}==${MLC_LLM_NIGHTLY_VERSION}" \
+            "mlc-ai-nightly-${MLC_WHEEL_FLAVOR}==${MLC_AI_NIGHTLY_VERSION}" \
+            huggingface_hub
 
       - name: Verify mlc_llm installation
         run: python -c "import mlc_llm; print(mlc_llm.__version__)"
 
-      - name: Install Emscripten SDK
+      - name: Install Emscripten SDK (pinned)
         run: |
           git clone https://github.com/emscripten-core/emsdk.git ~/emsdk
           cd ~/emsdk
-          ./emsdk install tot
-          ./emsdk activate tot
+          ./emsdk install "${EMSDK_VERSION}"
+          ./emsdk activate "${EMSDK_VERSION}"
 
       - name: Install Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-emscripten
 
@@ -121,11 +133,5 @@ jobs:
           echo "Built artifacts:"
           ls -lh .vps-staging/wasm-libs/
 
-      # -----------------------------------------------------------------------
-      # Optional: Upload to HuggingFace
-      # -----------------------------------------------------------------------
-      - name: Upload to HuggingFace
-        if: ${{ github.event.inputs.hf_upload == 'true' }}
-        run: |
-          echo "HuggingFace upload was triggered via workflow input."
-          echo "The build script handles this when HF_UPLOAD=1 and HF_TOKEN is set."
+      # HuggingFace upload is performed by build-vicuna-wasm.sh itself, and only when the
+      # `hf_upload` input is true (HF_UPLOAD=1 and HF_TOKEN are both set above conditionally).

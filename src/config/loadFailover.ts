@@ -40,11 +40,24 @@ export const HF_VICUNA_MODEL_URL = `https://huggingface.co/${HF_VICUNA_REPO}`
 /** Pin when a known-good commit is verified; `main` until then. */
 export const HF_VICUNA_REVISION = 'main'
 
-export const MLC_GITHUB_WASM_PREFIX =
-  'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80'
+/** model_lib ABI folder in mlc-ai/binary-mlc-llm-libs; must match the pinned @mlc-ai/web-llm version. */
+export const MLC_WEB_LLM_LIB_VERSION = 'v0_2_84'
 
-export const MLC_LLAMA2_7B_CTX4K_WASM =
-  `${MLC_GITHUB_WASM_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`
+export const MLC_GITHUB_WASM_PREFIX =
+  `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/${MLC_WEB_LLM_LIB_VERSION}/base`
+
+/**
+ * Upstream twin of one of our `wasm-libs/` file names. Our VPS keeps the historical
+ * `<model>-q4f32_1-ctx4k_cs1k-webgpu.wasm` names; since v0_2_8x upstream publishes the
+ * context-agnostic builds as `base/<model>-q4f32_1_cs1k-webgpu.wasm` (no `ctxNk` tag).
+ */
+export function mlcGithubWasmUrl(fileName: string): string {
+  return `${MLC_GITHUB_WASM_PREFIX}/${fileName.replace(/-ctx\d+k_cs/, '_cs')}`
+}
+
+export const MLC_LLAMA2_7B_CTX4K_WASM = mlcGithubWasmUrl(
+  'Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+)
 
 export const VPS_LLAMA2_7B_CTX4K_WASM =
   `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`
@@ -133,7 +146,7 @@ export function wasmLibFallbackChain(modelLib: string): string[] {
 
   const fileName = modelLib.split('/').pop() ?? ''
   if (fileName.endsWith('.wasm') && modelLib.includes('/wasm-libs/')) {
-    push(`${MLC_GITHUB_WASM_PREFIX}/${fileName}`)
+    push(mlcGithubWasmUrl(fileName))
   }
   return chain
 }
