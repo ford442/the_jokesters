@@ -11,6 +11,7 @@ import type { MemoryHint } from '../config/contextDepth';
 import { buildEpisodeFromHistory, setLastEpisode, SCENE_ARC_SCHEMA_VERSION } from '../episode';
 import type { JokestersEpisode } from '../episode';
 import type { AudienceFeedbackEvent } from '../comedy/audienceFeedback';
+import type { ShowCue } from '../audio/showCues';
 import {
     createSceneArc,
     updateSceneArc,
@@ -41,8 +42,12 @@ export interface DirectorCallbacks {
     onTurnEnd: () => Promise<void>;
     onError: (error: any) => void;
     onSceneStop: () => void;
+    /** A scene is starting (title card for recorded clips, etc.). */
+    onSceneStart?: (info: { title: string; type: string }) => void;
     getSeed: () => number | undefined;
     onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
+    /** Show music stinger at a structural beat: cold open, act break, tag (see src/audio/showCues.ts). */
+    onShowCue?: (cue: ShowCue) => void;
     /** Avatar thinking pose while LLM generates */
     onThinking?: (agentId: string, thinking: boolean) => void;
     /** Map utterance text to avatar reaction clips */
@@ -313,7 +318,9 @@ export class Director {
      */
     public applyArcMemoryHint(hint: MemoryHint): void {
         if (hint === 'advance_act' && this.sceneArc) {
+            const before = this.sceneArc.act;
             this.sceneArc = advanceSceneAct(this.sceneArc);
+            if (this.sceneArc.act !== before && this.productionCard?.beat !== 'tag') this.callbacks.onShowCue?.('act_break');
         }
     }
 
@@ -325,14 +332,18 @@ export class Director {
     /** Heuristic scene-arc + production update after a turn's text is finalized. No-op without an active arc. */
     private recordSceneBeat(agentId: string, text: string): void {
         if (!text.trim()) return;
+        const actBefore = this.sceneArc?.act;
+        let cued = false;
         if (this.sceneArc) {
             this.sceneArc = updateSceneArc(this.sceneArc, { agentId, text });
         }
         if (this.productionCard) {
             const result = recordProductionTurn(this.productionCard, agentId, text);
             this.productionCard = result.card;
-            if (result.beatChanged) this.onProductionBeatChanged();
-            else if (this.productionCard.beat === 'tag') this.forceArcClose();
+            if (result.beatChanged) {
+                this.onProductionBeatChanged();
+                cued = true;
+            } else if (this.productionCard.beat === 'tag') this.forceArcClose();
             if (result.guestEntered && this.productionCard.guestNpc) {
                 this.callbacks.onMessage('Director', `🚪 Guest enters: ${this.productionCard.guestNpc.name}`, '#888');
             }
@@ -340,6 +351,10 @@ export class Director {
                 // Deliberately never names the goal — the objective stays secret.
                 this.callbacks.onMessage('Director', `🤫 ${this.agentName(id)} is up to something…`, '#888');
             }
+        }
+        // The arc moving into a new act is an act break, unless a production beat already got its own cue.
+        if (!cued && this.sceneArc && actBefore && this.sceneArc.act !== actBefore && this.productionCard?.beat !== 'tag') {
+            this.callbacks.onShowCue?.('act_break');
         }
     }
 
@@ -360,6 +375,10 @@ export class Director {
         if (beat === 'tag') this.forceArcClose();
         this.callbacks.onMessage('Director', BEAT_LABELS[beat], '#888');
         this.callbacks.onTicker?.(BEAT_LABELS[beat]);
+        // cold open → theme, tag → button. Entering the main sketch is not a cue of its own: the
+        // theme just played, and the arc's open→middle act break (see recordSceneBeat) is the bumper.
+        if (beat === 'cold_open') this.callbacks.onShowCue?.('cold_open');
+        else if (beat === 'tag') this.callbacks.onShowCue?.('tag');
     }
 
     private setSceneTurnBudget(turns: number | null): void {
@@ -460,6 +479,7 @@ export class Director {
         }
 
         const modeDef = getMode(scenario.type);
+        this.callbacks.onSceneStart?.({ title: scenario.title, type: String(scenario.type) });
         this.callbacks.onStageKit?.(resolveScenarioStageKit(scenario, modeDef ?? null));
         const sceneDepth = scenario.config?.contextDepth
             ?? (modeDef ? getContextDepthForMode(modeDef) : null);

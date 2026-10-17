@@ -49,14 +49,15 @@ export class SfxManager {
   /**
    * Attach to the shared AudioContext used by SpeechQueue / lip-sync.
    * @param ttsGain - GainNode that all TTS sources route through (for duck mode)
+   * @param output - where SFX are mixed to (the show's master bus); defaults to the speakers
    */
-  async init(ctx: AudioContext, ttsGain: GainNode): Promise<void> {
+  async init(ctx: AudioContext, ttsGain: GainNode, output?: AudioNode): Promise<void> {
     this.ctx = ctx
     this.ttsGain = ttsGain
 
     this.sfxGain = ctx.createGain()
     this.sfxGain.gain.value = this.volume
-    this.sfxGain.connect(ctx.destination)
+    this.sfxGain.connect(output ?? ctx.destination)
 
     await this.preloadAll()
     this.ready = true

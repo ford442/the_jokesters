@@ -36,3 +36,27 @@ export function resolveVoiceStyle(agentId: string): SupertonicStyleId {
   const mapped = AGENT_VOICE_MAP[agentId as AgentVoiceId]
   return mapped ?? DEFAULT_VOICE_STYLE
 }
+
+/** Runtime per-agent voice overrides (custom cast). Empty by default, so shipped behavior is unchanged. */
+const voiceOverrides = new Map<string, SupertonicStyleId>()
+
+export function setVoiceOverrides(overrides: Readonly<Record<string, SupertonicStyleId>>): void {
+  voiceOverrides.clear()
+  for (const [agentId, style] of Object.entries(overrides)) {
+    if (SUPERTONIC_STYLE_IDS.includes(style)) voiceOverrides.set(agentId, style)
+  }
+}
+
+/** Set (or clear with null) one agent's voice — used by the cast editor's live voice preview. */
+export function setVoiceOverride(agentId: string, style: SupertonicStyleId | null): void {
+  if (style && SUPERTONIC_STYLE_IDS.includes(style)) voiceOverrides.set(agentId, style)
+  else voiceOverrides.delete(agentId)
+}
+
+/**
+ * Style id for an agent as the TTS engines should see it: cast override → canonical map →
+ * the id itself (the engines validate it against SUPERTONIC_STYLE_IDS and fall back to the default).
+ */
+export function voiceFor(agentId: string): string {
+  return voiceOverrides.get(agentId) ?? AGENT_VOICE_MAP[agentId as AgentVoiceId] ?? agentId
+}

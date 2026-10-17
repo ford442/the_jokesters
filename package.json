@@ -51,7 +51,9 @@
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "@mlc-ai/web-llm": "0.2.84",
+    "@pixiv/three-vrm": "^3.5.5",
     "@wllama/wllama": "2.4.0",
+    "mp4-muxer": "^5.2.2",
     "onnxruntime-web": "~1.26.0",
     "three": "0.170.0",
     "yjs": "^13.6.31",

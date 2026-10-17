@@ -19,6 +19,8 @@ import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
 import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
+import { getSharedShowMusic } from '../audio/ShowMusic'
+import { getSharedClipRecorder } from './clipUi'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
 
@@ -89,6 +91,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => stage.triggerAudienceReaction(reaction),
     playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
   })
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
@@ -162,7 +165,11 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
           firstAudio = false
         }
         stage.setActiveActor(turn.agentId)
-        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate)
+        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate, {
+          agentId: turn.agentId,
+          text: clean,
+          visemes: resolvedAudio!.visemes,
+        })
       } else {
         // Graceful live TTS fallback for this sentence
         await speakAndVisualize(sentence, turn.agentId, synthOpts)
@@ -357,6 +364,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       return
     }
 
+    getSharedClipRecorder()?.setSceneTitle(title, true)
     sceneTitleInput.disabled = true
     sceneDescriptionInput.disabled = true
     startImprovBtn.style.display = 'none'

@@ -11,14 +11,19 @@ import {
   type PoseSample,
   type ReactionClip,
 } from './actorAnimations';
+import { disposeKitGraph } from './kits/disposeKit';
+import { frameToPrimitiveMouth, type MouthFrame } from './mouth';
+import type { StageActor } from './stageActor';
 
-export class Actor {
+export class Actor implements StageActor {
     public group: THREE.Group;
     protected mesh: THREE.Mesh;
     private spotlight: THREE.SpotLight;
     protected leftEye!: THREE.Mesh;
     protected rightEye!: THREE.Mesh;
     protected mouth!: THREE.Line;
+    private leftPupil!: THREE.Mesh;
+    private rightPupil!: THREE.Mesh;
     private eyeGlow: THREE.PointLight;
     private blinkTimer: number = 0;
     private isBlinking: boolean = false;
@@ -34,6 +39,13 @@ export class Actor {
     private reactionClip: ReactionClip | null = null;
     private reactionElapsed = 0;
     private reactionDur = 0;
+
+    /** Phoneme-driven mouth pose for the active speaker (null → loudness-only). */
+    private mouthFrame: MouthFrame | null = null;
+    private gazeTarget: THREE.Vector3 | null = null;
+    private readonly gazeLocal = new THREE.Vector3();
+    private gazeX = 0;
+    private gazeY = 0;
 
     private readonly baseMeshY = 0.8;
     private lastTimeSec = performance.now() * 0.001;
@@ -106,13 +118,13 @@ export class Actor {
         const pupilGeo = new THREE.SphereGeometry(0.04, 8, 8);
         const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
-        const leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
-        leftPupil.position.set(0, 0, 0.05);
-        this.leftEye.add(leftPupil);
+        this.leftPupil = new THREE.Mesh(pupilGeo, pupilMat);
+        this.leftPupil.position.set(0, 0, 0.05);
+        this.leftEye.add(this.leftPupil);
 
-        const rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
-        rightPupil.position.set(0, 0, 0.05);
-        this.rightEye.add(rightPupil);
+        this.rightPupil = new THREE.Mesh(pupilGeo, pupilMat);
+        this.rightPupil.position.set(0, 0, 0.05);
+        this.rightEye.add(this.rightPupil);
 
         const mouthCurve = new THREE.EllipseCurve(
             0, 0,
@@ -165,6 +177,18 @@ export class Actor {
         const ball = new THREE.Mesh(ballGeo, ballMat);
         ball.position.y = 1.1;
         this.mesh.add(ball);
+    }
+
+    setMouth(frame: MouthFrame | null): void {
+        this.mouthFrame = frame;
+    }
+
+    setGazeTarget(point: THREE.Vector3 | null): void {
+        this.gazeTarget = point ? (this.gazeTarget ?? new THREE.Vector3()).copy(point) : null;
+    }
+
+    dispose(): void {
+        disposeKitGraph(this.group);
     }
 
     setTalking(isTalking: boolean) {
@@ -276,14 +300,44 @@ export class Actor {
         this.mesh.rotation.z = pose.meshRotZ;
 
         if (this.mouth) {
-            const mouthScale = 1 + volume * 0.3 + pose.mouthOpen * 0.5;
-            this.mouth.scale.set(mouthScale, mouthScale, 1);
+            if (this.mouthFrame) {
+                // Same viseme stream as VrmActor, collapsed onto one line: open/round/spread.
+                const { sx, sy } = frameToPrimitiveMouth(this.mouthFrame);
+                const extra = pose.mouthOpen * 0.5;
+                this.mouth.scale.set(sx, sy + extra, 1);
+            } else {
+                const mouthScale = 1 + volume * 0.3 + pose.mouthOpen * 0.5;
+                this.mouth.scale.set(mouthScale, mouthScale, 1);
+            }
         }
+
+        this.updatePupils(dt);
 
         // Eyes: blink vs pose squint
         this.updateEyes(volume, pose.eyeScaleY, dt);
 
         this.onExtraUpdate?.(volume, now, dt);
+    }
+
+    /** Slide pupils toward the gaze target (bounded to the eye surface). */
+    private updatePupils(dt: number): void {
+        let tx = 0;
+        let ty = 0;
+        if (this.gazeTarget) {
+            this.gazeLocal.copy(this.gazeTarget);
+            this.group.worldToLocal(this.gazeLocal);
+            const dx = this.gazeLocal.x;
+            const dz = Math.max(0.5, this.gazeLocal.z + 3);
+            tx = Math.max(-1, Math.min(1, dx / dz));
+            ty = Math.max(-1, Math.min(1, (this.gazeLocal.y - 1.4) / dz));
+        }
+        const k = 1 - Math.exp(-10 * dt);
+        this.gazeX += (tx - this.gazeX) * k;
+        this.gazeY += (ty - this.gazeY) * k;
+        const ox = this.gazeX * 0.035;
+        const oy = this.gazeY * 0.03;
+        this.leftPupil.position.set(ox, oy, 0.05);
+        this.rightPupil.position.set(ox, oy, 0.05);
     }
 
     /** Optional hook for subclasses (TechBro props, etc.) */

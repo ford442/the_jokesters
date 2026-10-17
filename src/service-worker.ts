@@ -267,7 +267,7 @@ function isModelFile(url: string): boolean {
   const isModelHost = MODEL_HOSTS.some(host => url.includes(host));
   if (!isModelHost) return false;
   // Weight / runtime binaries
-  if (url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm')) {
+  if (url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm') || url.includes('.vrm')) {
     return true;
   }
   // Config + tokenizer JSON (WebLLM fetches these before shards)
@@ -549,7 +549,7 @@ self.addEventListener('fetch', (event) => {
         // Small JSON/config files — fetch directly (no parallel chunking or compression)
         const isSmallConfig =
           fetchUrl.includes('.json') ||
-          (!fetchUrl.includes('.bin') && !fetchUrl.includes('.wasm') && !fetchUrl.includes('.gguf') && !fetchUrl.includes('.safetensors'));
+          (!fetchUrl.includes('.bin') && !fetchUrl.includes('.wasm') && !fetchUrl.includes('.gguf') && !fetchUrl.includes('.safetensors') && !fetchUrl.includes('.vrm'));
 
         if (isSmallConfig) {
           return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);

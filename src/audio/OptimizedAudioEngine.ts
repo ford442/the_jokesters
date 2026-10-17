@@ -21,7 +21,7 @@ import { ttsProfiler } from './TTSLatencyProfiler';
 import { getOrtWasmBaseUrl } from './ortWasmPath';
 import { VPS_STORAGE_URL } from '../config/models';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
-import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
+import { DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS, voiceFor } from './voiceMap';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -130,7 +130,7 @@ export class OptimizedAudioEngine {
         const startTime = performance.now();
 
         // Resolve voice
-        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
+        let realVoiceId: string = voiceFor(speakerId);
         if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {
             realVoiceId = DEFAULT_VOICE_STYLE;
         }

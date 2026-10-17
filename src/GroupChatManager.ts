@@ -30,6 +30,7 @@ const loadStructured = () =>
   )
 import { ModelSession } from './chat/ModelSession'
 import { PersonalityStore } from './chat/PersonalityStore'
+import { personaFor } from './cast/profanity'
 import { categorizeChatError } from './chat/chatErrors'
 import { getStreamContent, isSentenceBoundaryEvent } from './llm/streamEvents'
 import {
@@ -385,6 +386,7 @@ export class GroupChatManager {
       // Default chars/token on purpose: the prefix must not shift when the estimator recalibrates.
       contextTokens: ctx.getMaxContextTokens(),
       summary,
+      profanity: this.currentProfanityLevel,
     })
   }
 
@@ -431,7 +433,7 @@ export class GroupChatManager {
       return { chatMessages, lastUser, info: win.info, trimmed: win.trimmed, cue }
     }
 
-    let fullSystemPrompt = `${agent.systemPrompt}\n\n${this.styleInstruction}`
+    let fullSystemPrompt = `${personaFor(agent, this.currentProfanityLevel)}\n\n${this.styleInstruction}`
     if (directorNote?.trim()) {
       fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${directorNote}\n(You MUST incorporate this note immediately!)`
     }

@@ -218,6 +218,24 @@ export function getAppTemplate(): string {
               <div id="sfx-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
             </div>
 
+            <!-- Cast editor: names, personas, voices, avatars; export/import cast cards -->
+            <div class="cast-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <button type="button" id="cast-editor-btn" class="episode-btn episode-btn-primary" title="Edit the five performers and share cast cards">🎭 Cast editor</button>
+            </div>
+
+            <!-- Show music (cold-open theme, act-break bumper, tag sting, sad trombone) -->
+            <div class="music-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+                <label style="color: #888; font-size: 0.8em; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="music-enabled" checked style="cursor: pointer;">
+                  🎵 Show music
+                </label>
+                <input type="range" id="music-volume" min="0" max="100" value="70" style="flex: 1;" title="Music volume (ducks under speech)">
+                <span id="music-volume-val" style="color: #4ecdc4; font-size: 0.8em; width: 32px;">70%</span>
+              </div>
+              <div id="music-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+            </div>
+
             <!-- Voice previews -->
             <div class="voice-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
               <label style="color: #888; font-size: 0.8em; display: block; margin-bottom: 6px;">Voice Preview</label>
@@ -329,6 +347,7 @@ export function getAppTemplate(): string {
               <button type="button" id="export-episode-copy-btn" class="episode-btn" title="Copy plain text">📋 Copy</button>
               <button type="button" id="replay-episode-btn" class="episode-btn episode-btn-primary" title="Replay with TTS only (no LLM)">▶️ Replay</button>
               <button type="button" id="stop-replay-btn" class="episode-btn episode-btn-danger" style="display: none;">⏹ Stop Replay</button>
+              <button type="button" class="episode-btn episode-btn-primary clip-last-btn" title="Save the last ~30 seconds as a shareable video, with captions">🎬 Clip last 30 s</button>
               <button type="button" id="import-episode-btn" class="episode-btn" title="Import .jokesters.json">📥 Import</button>
               <button type="button" id="dismiss-episode-bar-btn" class="episode-btn episode-btn-ghost" title="Dismiss">✕</button>
             </div>
@@ -336,6 +355,12 @@ export function getAppTemplate(): string {
           </div>
           <div class="episode-always-row">
             <button type="button" id="import-episode-always-btn" class="episode-btn episode-btn-ghost" title="Import episode for TTS-only replay">📥 Import Episode</button>
+            <button type="button" class="episode-btn episode-btn-primary clip-last-btn" title="Save the last ~30 seconds as a shareable video, with captions">🎬 Clip last 30 s</button>
+            <select id="clip-format" class="episode-btn" title="Clip format" style="display:none;">
+              <option value="webm">WebM</option>
+              <option value="mp4">MP4</option>
+            </select>
+            <span id="clip-status" class="episode-export-meta" aria-live="polite"></span>
           </div>
           
           <div class="agent-info">

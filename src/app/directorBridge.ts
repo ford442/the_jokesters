@@ -12,6 +12,8 @@ import { CHARACTER_SPEEDS } from './chatLog'
 import type { SpeakAndVisualizeFn } from './chatController'
 import { updateNextAgentUI } from './statusBar'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
+import { getSharedShowMusic } from '../audio/ShowMusic'
+import { getSharedClipRecorder } from './clipUi'
 
 export interface DirectorBridgeDeps {
   groupChatManager: GroupChatManager
@@ -30,6 +32,7 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => deps.stage.triggerAudienceReaction(reaction),
     playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
   })
 
   const callbacks: DirectorCallbacks = {
@@ -67,7 +70,15 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
       void getSharedSfxManager()?.play(name, agentId)
     },
     onStageKit: (kitId) => {
+      // Music palette follows the kit (talk show band / courtroom organ / news desk).
+      getSharedShowMusic()?.setKit(kitId)
       void deps.stage.setStageKit(kitId)
+    },
+    onShowCue: (cue) => getSharedShowMusic()?.cue(cue),
+    onSceneStart: ({ title }) => getSharedClipRecorder()?.setSceneTitle(title, true),
+    musicControls: {
+      startBeat: (bpm) => getSharedShowMusic()?.startBeat(bpm),
+      stopBeat: () => getSharedShowMusic()?.stopBeat(),
     },
     onProp: (name, action) => {
       deps.stage.applyPropCue(name, action)
