@@ -218,6 +218,11 @@ export function getAppTemplate(): string {
               <div id="sfx-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
             </div>
 
+            <!-- Cast editor: names, personas, voices, avatars; export/import cast cards -->
+            <div class="cast-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <button type="button" id="cast-editor-btn" class="episode-btn episode-btn-primary" title="Edit the five performers and share cast cards">🎭 Cast editor</button>
+            </div>
+
             <!-- Show music (cold-open theme, act-break bumper, tag sting, sad trombone) -->
             <div class="music-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
               <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">

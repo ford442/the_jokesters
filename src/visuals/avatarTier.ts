@@ -133,3 +133,14 @@ export function readGlRendererString(gl: GlLike | null | undefined): string | nu
     return null
   }
 }
+
+let sharedTier: AvatarTier = 'primitive'
+
+/** The tier bootstrap decided on, for UI that needs to explain what "default avatar" means here. */
+export function setSharedAvatarTier(tier: AvatarTier): void {
+  sharedTier = tier
+}
+
+export function getSharedAvatarTier(): AvatarTier {
+  return sharedTier
+}

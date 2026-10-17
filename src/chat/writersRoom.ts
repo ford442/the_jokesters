@@ -5,7 +5,8 @@
  * web-llm (and wllama `useCache`) only reuse the KV cache when a request exactly extends the
  * previous conversation, so nothing before the newest user message may change between turns.
  */
-import type { Agent } from '../types/chat'
+import type { Agent, ProfanityLevel } from '../types/chat'
+import { personaFor } from '../cast/profanity'
 
 /** Persona boilerplate that moves into the shared rules (said once instead of five times). */
 const BOILERPLATE = [
@@ -43,11 +44,11 @@ const RULES_CHARS = RULES.length + 120
 export function buildWritersRoomSystemPrompt(
   agents: Agent[],
   styleInstruction: string,
-  options: { contextTokens: number; charsPerToken?: number; summary?: string | null },
+  options: { contextTokens: number; charsPerToken?: number; summary?: string | null; profanity?: ProfanityLevel },
 ): string {
   const budget = personaCharBudget(options.contextTokens, agents.length, options.charsPerToken)
   const cast = agents
-    .map((a) => `### ${a.name}\n${compactPersona(a.systemPrompt, budget)}`)
+    .map((a) => `### ${a.name}\n${compactPersona(options.profanity ? personaFor(a, options.profanity) : a.systemPrompt, budget)}`)
     .join('\n\n')
   let prompt =
     `You are the writers' room of a live improv comedy show. The cast:\n\n${cast}\n\n` +

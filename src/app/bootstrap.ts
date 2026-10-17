@@ -5,8 +5,9 @@ import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
-import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier } from '../visuals/avatarTier'
+import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier, setSharedAvatarTier } from '../visuals/avatarTier'
 import { bundledAvatarUrl } from '../visuals/avatarManifest'
+import { hasStoredCast } from '../cast/castKeys'
 import { AudioEngine } from '../audio/AudioEngine'
 import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
@@ -173,6 +174,15 @@ export async function initApp(): Promise<void> {
     setSharedMemoryManager(memoryManager)
     void memoryManager.fetchPreviousEpisodeSummaries();
 
+    // Custom cast (names, personas, voices, optional agents) applies to the shared roster
+    // before the manager exists. Loaded lazily — no stored cast means no zod, no editor code.
+    const storedCast = hasStoredCast()
+      ? await import('../cast/castBoot').then((m) => m.applyStoredCastToRoster(agents)).catch((err) => {
+          console.warn('[Cast] could not apply stored cast:', err)
+          return null
+        })
+      : null
+
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)
     groupChatManager.setMaxTokensPerTurn(chosenMaxTokens)
@@ -225,8 +235,17 @@ export async function initApp(): Promise<void> {
     // VRM avatars on capable GPUs; low tiers keep the primitive capsule actors. Loads in the
     // background — each agent swaps in as its model arrives, and a failure leaves the capsule.
     const avatarTier = selectAvatarTier(readAvatarTierEnv(loadDeviceSnapshot(), glRenderer))
+    setSharedAvatarTier(avatarTier.tier)
     console.log(`[Avatars] tier=${avatarTier.tier} (${avatarTier.reason})`)
-    if (avatarTier.tier === 'vrm') {
+    if (storedCast) {
+      // The cast decides per slot: uploads/URLs load on any tier, defaults follow the tier.
+      void import('../cast/castBoot')
+        .then((m) => m.applyStoredCastAvatars(storedCast, stage, avatarTier.tier))
+        .then(({ loaded, failed }) => {
+          console.log(`[Avatars] cast avatars loaded: ${loaded.join(', ') || 'none'}${failed.length ? ` · failed: ${failed.map((f) => f.id).join(', ')}` : ''}`)
+        })
+        .catch((err) => console.warn('[Avatars] cast avatars failed:', err))
+    } else if (avatarTier.tier === 'vrm') {
       void stage.useVrmActors((id) => bundledAvatarUrl(id)).then(({ loaded, failed }) => {
         console.log(`[Avatars] VRM loaded: ${loaded.join(', ') || 'none'}${failed.length ? ` · kept primitive: ${failed.join(', ')}` : ''}`)
       })

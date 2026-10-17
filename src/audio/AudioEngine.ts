@@ -1,7 +1,7 @@
 import type { Style } from './SupertonicPipeline';
 import { SupertonicPipeline } from './SupertonicPipeline';
 import { VPS_STORAGE_URL } from '../config/models';
-import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
+import { DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS, voiceFor } from './voiceMap';
 
 import type { Viseme } from './VisemePredictor';
 
@@ -110,7 +110,7 @@ export class AudioEngine implements TtsEngine {
         }
 
         // 1. Map agent ID to actual voice file ID
-        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
+        let realVoiceId: string = voiceFor(speakerId);
 
         // Validate it's an actual voice file, not an unmapped agent ID
         if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {

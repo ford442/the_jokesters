@@ -7,6 +7,11 @@ export interface Agent {
   temperature: number
   top_p: number
   color: string
+  /**
+   * Persona authored in the cast editor. PromptCompiler masks explicit words in it according to
+   * the current profanity level (see src/cast/profanity.ts).
+   */
+  custom?: boolean
 }
 
 export interface Message {

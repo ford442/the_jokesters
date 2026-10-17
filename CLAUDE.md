@@ -37,8 +37,17 @@ src/
   utils/vpsStorageUrl.ts    Canonical storage host (+ Vite env override)
   utils/dualDomainStripe.ts Dual-domain Range striping (SW + PDM planner)
   config/loadFailover.ts    Vicuna VPS → HF Hub source selection
-  visuals/Stage.ts          Three.js stage + 5 actors
+  visuals/Stage.ts          Three.js stage + 5 actors (capsule `Actor` or `VrmActor`, both `StageActor`)
+  visuals/VrmActor.ts       VRM avatar: viseme vowels, emotions, blink, gaze (lazy chunk)
+  visuals/mouth.ts          Viseme → mouth frame (coarticulation, loudness fallback)
+  audio/visemeTiming.ts     Text → timed visemes, shared by TTS worker + main thread
+  audio/MusicEngine.ts      Show music: stingers per kit palette, TTS-ducked (ShowMusic.ts)
+  audio/showAudioBus.ts     Master bus (TTS + SFX + music) + recording tap
+  recording/ClipRecorder.ts Rolling "clip last 30 s" (WebM ring / WebCodecs+mp4-muxer MP4)
+  cast/                     Cast editor: card schema (zod), apply, IndexedDB avatars
 ```
+
+Avatars, show music, clips and cast cards: [docs/SHOW_PRODUCTION.md](./docs/SHOW_PRODUCTION.md).
 
 ## Model hosting
 

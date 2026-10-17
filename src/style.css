@@ -1064,3 +1064,122 @@ input:focus, textarea:focus {
   flex: 1 1 140px;
   min-width: 0;
 }
+
+/* Cast editor modal */
+.cast-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(5, 5, 15, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.cast-panel {
+    background: #12122a;
+    border: 1px solid #444;
+    border-radius: 10px;
+    width: min(1100px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    padding: 16px;
+    color: #ddd;
+    font-size: 0.85em;
+}
+
+.cast-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cast-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.cast-title {
+    flex: 1;
+    min-width: 180px;
+}
+
+.cast-help {
+    color: #888;
+    margin: 8px 0 12px;
+}
+
+.cast-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.cast-slot {
+    background: #0f1630;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cast-slot-head,
+.cast-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.cast-slot-head input[type='text'] {
+    flex: 1;
+}
+
+.cast-slot input,
+.cast-slot select,
+.cast-slot textarea,
+.cast-title {
+    background: #0f3460;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 4px;
+    padding: 4px 6px;
+    font: inherit;
+}
+
+.cast-slot textarea {
+    width: 100%;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.cast-slot input[type='range'] {
+    flex: 1;
+    min-width: 80px;
+    padding: 0;
+}
+
+.cast-meter {
+    font-size: 0.8em;
+}
+
+.cast-avatar-label {
+    color: #4ecdc4;
+    word-break: break-all;
+}
+
+.cast-status {
+    min-height: 1.4em;
+    margin: 10px 0 4px;
+}
+
+.cast-footer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
