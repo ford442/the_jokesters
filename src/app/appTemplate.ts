@@ -218,6 +218,19 @@ export function getAppTemplate(): string {
               <div id="sfx-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
             </div>
 
+            <!-- Show music (cold-open theme, act-break bumper, tag sting, sad trombone) -->
+            <div class="music-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
+              <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+                <label style="color: #888; font-size: 0.8em; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                  <input type="checkbox" id="music-enabled" checked style="cursor: pointer;">
+                  🎵 Show music
+                </label>
+                <input type="range" id="music-volume" min="0" max="100" value="70" style="flex: 1;" title="Music volume (ducks under speech)">
+                <span id="music-volume-val" style="color: #4ecdc4; font-size: 0.8em; width: 32px;">70%</span>
+              </div>
+              <div id="music-preview-row" class="sfx-preview-row" style="display: flex; flex-wrap: wrap; gap: 4px;"></div>
+            </div>
+
             <!-- Voice previews -->
             <div class="voice-settings" style="margin-top: 10px; border-top: 1px solid #444; padding-top: 10px;">
               <label style="color: #888; font-size: 0.8em; display: block; margin-bottom: 6px;">Voice Preview</label>

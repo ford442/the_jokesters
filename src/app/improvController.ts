@@ -19,6 +19,7 @@ import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
 import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
+import { getSharedShowMusic } from '../audio/ShowMusic'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
 
@@ -89,6 +90,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => stage.triggerAudienceReaction(reaction),
     playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
   })
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement

@@ -12,6 +12,9 @@ import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
 import { SpeechQueue } from '../audio/SpeechQueue'
 import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
+import { ShowAudioBus, setSharedShowAudioBus } from '../audio/showAudioBus'
+import { MusicEngine } from '../audio/MusicEngine'
+import { ShowMusic, setSharedShowMusic } from '../audio/ShowMusic'
 import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
@@ -205,9 +208,13 @@ export async function initApp(): Promise<void> {
     console.log(`[Renderer] Active 3D renderer: ${activeRenderer.toUpperCase()} · LLM inference: WebGPU (independent)`)
 
     const lipSync = new LipSync(speechQueue.getAudioContext())
-    // TTS → ttsGain → analyser → speakers (gain enables SFX ducking)
+    // TTS → ttsGain → analyser → master bus → speakers (+ recording tap). SFX and music join
+    // the same master bus, so a recorded clip hears exactly what the audience hears.
+    const audioCtx = speechQueue.getAudioContext()
+    const audioBus = new ShowAudioBus(audioCtx)
+    setSharedShowAudioBus(audioBus)
     speechQueue.setDestination(lipSync.analyser)
-    lipSync.analyser.connect(speechQueue.getAudioContext().destination)
+    lipSync.analyser.connect(audioBus.master)
     stage.setLipSync(lipSync)
     // Phoneme timing + audible clock → viseme-accurate mouths (loudness is the fallback).
     stage.setAudioClock(() => speechQueue.getAudioContext().currentTime)
@@ -226,9 +233,14 @@ export async function initApp(): Promise<void> {
     }
 
     const sfxManager = new SfxManager({ basePath: './sfx' })
-    await sfxManager.init(speechQueue.getAudioContext(), speechQueue.getTtsGainNode())
+    await sfxManager.init(audioCtx, speechQueue.getTtsGainNode(), audioBus.master)
     sfxManager.setInterruptHandler(() => speechQueue.stop())
     setSharedSfxManager(sfxManager)
+
+    // Show music: stingers per beat/act/tag, ducked under TTS (settings toggle, default on).
+    const showMusic = new ShowMusic(new MusicEngine({ ctx: audioCtx, output: audioBus.master }))
+    showMusic.attachSpeech(speechQueue, () => lipSync.getVolume())
+    setSharedShowMusic(showMusic)
 
     currentInitState = 'BOOTING'
     setProgress('Setting up graphics...', 10)

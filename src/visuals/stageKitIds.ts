@@ -16,6 +16,21 @@ const KIT_FILES: Record<Exclude<StageKitId, 'void'>, string> = {
   news: 'news.glb',
 }
 
+/**
+ * Music palette per kit (see src/audio/musicPalettes.ts). The Record type makes adding a kit
+ * pick a palette; `void` (the bare stage) gets the house band.
+ */
+export const KIT_MUSIC_PALETTE: Record<StageKitId, 'house' | 'talkshow' | 'court' | 'news'> = {
+  void: 'house',
+  talkshow: 'talkshow',
+  court: 'court',
+  news: 'news',
+}
+
+export function musicPaletteIdForKit(kit: string | null | undefined): 'house' | 'talkshow' | 'court' | 'news' {
+  return KIT_MUSIC_PALETTE[resolveStageKitId(kit)]
+}
+
 export function isStageKitId(id: string): id is StageKitId {
   return STAGE_KIT_SET.has(id)
 }

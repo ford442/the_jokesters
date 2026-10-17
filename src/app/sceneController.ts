@@ -11,9 +11,11 @@ import { loadMemoryDepthPreference } from '../config/contextDepth'
 import { getDOM } from '../ui/uiHelpers'
 import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
+import { wireMusicUi } from './musicUi'
 import { wireVoiceUi } from './voiceUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
+import { getSharedShowMusic } from '../audio/ShowMusic'
 import type { MemoryManager } from '../Director/MemoryManager'
 
 export interface SceneControllerDeps {
@@ -96,6 +98,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     ttsStepsSlider: dom.ttsStepsSlider,
     speakAndVisualize,
     onSceneStop: () => {
+      getSharedShowMusic()?.stopBeat()
       updateNextAgentUI(groupChatManager)
       updateVRAMInfoBar(groupChatManager)
     },
@@ -161,6 +164,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   })
 
   wireSfxUi()
+  wireMusicUi()
   wireVoiceUi(speechQueue, agents)
 
   dom.userInput.focus()
