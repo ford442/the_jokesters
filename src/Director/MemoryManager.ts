@@ -1,4 +1,4 @@
-import { MemorySnippet } from '../utils/SemanticSearch';
+import type { MemorySnippet } from '../utils/SemanticSearch';
 import { HFStorageManager } from './HFStorageManager';
 import type { Message } from '../types/chat';
 import type { ScriptBeat } from './Director';
@@ -77,8 +77,8 @@ export class MemoryManager {
         this.summaries = new MemorySummaryCache(this.idb, this.hfStorage, creds);
 
         this.loadCloudCredentials();
-        this.syncQueue.processSyncQueue();
-        this.summaries.ensureCloudSummaryCache();
+        void this.syncQueue.processSyncQueue();
+        void this.summaries.ensureCloudSummaryCache();
         this.syncQueue.startDeltaConsolidationTask(() => this.episodes.listEpisodes());
         this.syncQueue.startAutoSyncTask();
         this.syncQueue.startPeriodicAutoSync();

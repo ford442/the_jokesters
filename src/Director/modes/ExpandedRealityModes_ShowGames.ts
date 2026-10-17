@@ -364,7 +364,7 @@ export async function runRealityTVSentientFurnitureLoop(_scenario: Scenario, ctx
     const owner = 'philosopher'; // Phi-3
 
     // 1. Intro
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(couch);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(couch);
     await chatForAgentWithComedy(ctx, couch, `(COUCH: You are a sassy, judgmental couch on a reality TV show. The User is the messy owner who just sat on you with outside clothes. Confront them about their lifestyle choices and the crumbs between your cushions.)`, async (s: string) => await ctx.callbacks.onSpeak(s, couch, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
@@ -372,11 +372,11 @@ export async function runRealityTVSentientFurnitureLoop(_scenario: Scenario, ctx
         const userInput = await ctx.waitForInput();
         if (!userInput) continue;
 
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(owner);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(owner);
         await chatForAgentWithComedy(ctx, owner, `(OWNER: The sassy couch just complained to you and the User said: "${userInput}". Try to defend your messy habits using convoluted philosophical arguments about entropy and lived-in spaces.)`, async (s: string) => await ctx.callbacks.onSpeak(s, owner, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(couch);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(couch);
         await chatForAgentWithComedy(ctx, couch, `(COUCH: The owner just made a ridiculous excuse. Roast them for it. Threaten to swallow their remote control or keys if they don't clean up.)`, async (s: string) => await ctx.callbacks.onSpeak(s, couch, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }

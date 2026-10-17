@@ -40,7 +40,18 @@ CONTEXT_SIZE=512  ./scripts/build-vicuna-wasm.sh
 CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
 ```
 
-**Output:** `.vps-staging/wasm-libs/vicuna-7b-q4f32_1-ctx{512,1024}_cs1k-webgpu.wasm`
+**Output:** `.vps-staging/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs512-webgpu.wasm` and `…-ctx1024_cs1024-webgpu.wasm`
+(the `cs` part is the real prefill chunk size).
+
+**Reproducibility.** The toolchain is pinned in [`scripts/wasm-toolchain.env`](../scripts/wasm-toolchain.env)
+(emsdk 3.1.56, mlc-llm commit, `mlc-llm-nightly` / `mlc-ai-nightly` wheel versions) and the parameter sets in
+[`scripts/wasm-presets.json`](../scripts/wasm-presets.json). The script, the CI workflow, the Colab notebook and
+`src/config/models.ts` are checked against both by `tests/unit/wasmToolchain.test.ts`. Sizes are passed to
+`mlc_llm compile --overrides`; no sliding window is baked (web-llm rejects it next to a context window).
+
+**Known gap.** web-llm 0.2.84's upstream libs were built on TVM 0.25; `mlc.ai/wheels` only serves the latest
+nightly (TVM 0.26), so the pinned pair is the oldest installable one. Load a freshly built `.wasm` in a browser
+with web-llm 0.2.84 before uploading it. Also remember to rename/re-upload anything previously hosted as `…_cs1k…`.
 
 **Upload:** `python scripts/upload_staged_to_vps.py` → `https://storage.1ink.us/models/wasm-libs/`
 

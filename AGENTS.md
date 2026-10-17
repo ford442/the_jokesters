@@ -64,11 +64,11 @@ Foundation focus list: [agent_plan.md](./agent_plan.md) (not a mode checklist).
 | **TypeScript** | Primary language | ~5.9.3, ES2022 target |
 | **Vite** | Build tool and dev server | ^7.2.4 |
 | **Three.js** | 3D visualization and WebGL rendering | 0.170.0 |
-| **@mlc-ai/web-llm** | In-browser LLM inference via WebGPU | ^0.2.8 |
-| **@wllama/wllama** | llama.cpp WASM engine for GGUF models | ^2.3.7 |
-| **@huggingface/transformers** | Transformers.js ONNX/WebGPU engine | ^4.0.1 |
-| **onnxruntime-web** | TTS model inference | ^1.17.0 |
-| **vite-plugin-static-copy** | Asset copying | ^3.1.4 |
+| **@mlc-ai/web-llm** | In-browser LLM inference via WebGPU | 0.2.84 (exact; model_lib ABI `v0_2_84`) |
+| **@wllama/wllama** | llama.cpp WASM engine for GGUF models | 2.4.0 |
+| **@huggingface/transformers** | Transformers.js ONNX/WebGPU engine | ^4.2.0 |
+| **onnxruntime-web** | TTS model inference | ~1.26.0 (deduped via `overrides`) |
+| **vite-plugin-static-copy** | Asset copying (devDependency) | ^3.1.4 |
 
 ### Development Dependencies
 - `typescript`: ~5.9.3 with strict mode enabled
@@ -130,7 +130,6 @@ the_jokesters/
 │   │   ├── TTSLatencyProfiler.ts  # TTS performance profiling
 │   │   ├── TTSBenchmark.ts        # TTS benchmarking utilities
 │   │   └── worker/                # Web Workers
-│   │       ├── audio.worker.ts    # Web Worker for audio processing
 │   │       └── tts.worker.ts      # Web Worker for TTS synthesis
 │   ├── comedy/                    # Comedy engine components
 │   │   ├── callbackEngine.ts      # Running gag callback tracking with bell curve decay
@@ -155,8 +154,6 @@ the_jokesters/
 │   │   ├── Stage.ts               # Three.js scene management, lighting, rendering, audience InstancedMesh
 │   │   ├── LipSync.ts             # Lip synchronization with audio volume
 │   │   └── CallbackVisualizer.ts  # Visual feedback for callbacks
-│   ├── services/                  # External services
-│   │   └── DataFetchService.ts    # Wikipedia, Hacker News fetching for Reporter mode
 │   ├── config/                    # Configuration
 │   │   ├── agents.ts              # Agent definitions (personalities, prompts, colors)
 │   │   ├── models.ts              # LLM model configurations (VPS, HF, unified, triple-engine)
@@ -165,25 +162,16 @@ the_jokesters/
 │   │   └── BeatGenerator.ts       # Simple beat animation for musical mode
 │   ├── utils/                     # Utilities
 │   │   ├── RNG.ts                 # Seeded random number generator
-│   │   ├── performanceTest.ts     # Performance testing utilities
 │   │   ├── dynamicContext.ts      # Dynamic context window / VRAM optimization
 │   │   ├── vpsStorageUrl.ts       # Canonical storage host + /resolve/main/ rewrite
 │   │   └── dualDomainStripe.ts    # Shared Range stripe planner (SW parallel downloads)
 │   ├── prompts/                   # Persona prompts (loaded as text)
 │   │   ├── robot.ts               # Robot persona prompt
 │   │   └── techBro.ts             # Tech Bro persona prompt
-│   ├── types/                     # TypeScript type declarations
-│   │   ├── webllm.d.ts
-│   │   ├── three.d.ts
-│   │   ├── onnxruntime-web.d.ts
-│   │   ├── vite-plugin-static-copy.d.ts
-│   │   ├── vite.d.ts
+│   ├── types/                     # App types (library types come from the packages themselves)
 │   │   └── style.d.ts
 │   ├── test/                      # Test utilities
-│   │   ├── chaosTest.ts           # Chaos testing
-│   │   ├── chaosTestRunner.cjs    # Chaos test runner (CommonJS)
-│   │   ├── integrationChaosTest.ts # Integration chaos tests
-│   │   └── runChaosTests.ts       # Chaos test runner
+│   │   └── chaosTest.ts           # Chaos testing (library only; its runner was removed)
 │   ├── service-worker.ts          # Parallel Range downloads + dual-domain striping / failover
 │   ├── improv/                    # Conversation branching utilities
 │   │   └── branching.ts
@@ -240,7 +228,7 @@ the_jokesters/
 ├── verification/                  # Screenshot verification assets
 ├── index.html                     # HTML entry point (WebGPU detection, runtime error surfacing)
 ├── package.json                   # Node.js dependencies and scripts
-├── tsconfig.json                  # TypeScript configuration
+├── tsconfig.json                  # Solution file -> tsconfig.{app,sw,node,test}.json (shared: tsconfig.base.json)
 ├── vite.config.ts                 # Vite build configuration
 ├── perf-budget.json               # Performance budget thresholds
 ├── scripts/
@@ -286,7 +274,7 @@ npm run build
 ```bash
 npm run typecheck
 ```
-- Runs `tsc --noEmit` (same gate as `npx tsc --noEmit` in `CLAUDE.md`)
+- Runs `tsc -b` over the app, service-worker, node (vite.config.ts) and test projects
 - CI workflow `.github/workflows/typecheck.yml` runs this on every PR touching `src/`, `tests/`, or TypeScript config
 - Requires a full `npm ci` install — PWA client types come from the `vite-plugin-pwa` devDependency via `src/vite-env.d.ts`
 
@@ -366,7 +354,7 @@ npm run deploy:verify   # build + upload + SHA-256 sample check
 ### Code Organization
 - One class per file (generally)
 - Group related functionality into directories (`audio/`, `visuals/`, `Director/`, `llm/`)
-- Type declarations in `src/types/`
+- App-level types in `src/types/`; do not add ambient `declare module '<pkg>'` stubs — they shadow the package's real types
 - Utilities in `src/utils/`
 - Configuration in `src/config/`
 - UI helpers in `src/ui/`
@@ -733,8 +721,6 @@ and the prompt-injection builders. No GPU/LLM involved.
   Node. `Worker` is left undefined so the constructor's `typeof Worker !== 'undefined'` guard skips
   sync-worker setup entirely — no need to mock `src/workers/hfSync.worker.ts`.
 
-**Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
-
 Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python smoke_test.py` from repo root).
 
 ### Performance Testing
@@ -770,7 +756,7 @@ CI runner: `tests/perf/ci-runner.ts`
 6. TTS system is configured
 
 ### Chaos Testing
-`src/test/chaosTest.ts` and `src/test/integrationChaosTest.ts` provide randomized stress testing for the conversation and mode systems.
+`src/test/chaosTest.ts` provides randomized stress testing for the conversation and mode systems. The old `chaosTestRunner.cjs` / `runChaosTests.ts` / `integrationChaosTest.ts` mocked the app and so only tested themselves; they were removed. `docs/chaos-report.md` is a historical report.
 
 ### Manual Testing Checklist
 1. **Model Loading**: Verify model loads successfully with progress indicator

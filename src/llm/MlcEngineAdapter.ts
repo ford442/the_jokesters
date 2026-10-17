@@ -9,7 +9,7 @@
  * in-process `CreateMLCEngine` (also used automatically where `Worker` is unavailable).
  */
 
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import {
   type ChatMessage,
   type GenerationOptions,
@@ -122,7 +122,6 @@ export class MlcEngineAdapter implements LLMEngine {
       max_tokens: normalizedOpts.max_tokens,
       stream: true,
       stop: normalizedOpts.stop,
-      // @ts-ignore - WebLLM-specific options
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,
@@ -199,7 +198,6 @@ export class MlcEngineAdapter implements LLMEngine {
       max_tokens: normalizedOpts.max_tokens,
       stream: false,
       stop: normalizedOpts.stop,
-      // @ts-ignore - WebLLM-specific options
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,

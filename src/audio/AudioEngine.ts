@@ -1,4 +1,5 @@
-import { SupertonicPipeline, Style } from './SupertonicPipeline';
+import type { Style } from './SupertonicPipeline';
+import { SupertonicPipeline } from './SupertonicPipeline';
 import { VPS_STORAGE_URL } from '../config/models';
 import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
 

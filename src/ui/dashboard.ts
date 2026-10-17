@@ -228,7 +228,7 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
 
     dashboardBtn.addEventListener('click', () => {
         dashboardModal.style.display = 'flex';
-        loadHistory();
+        void loadHistory();
     });
 
     closeBtn.addEventListener('click', () => {
@@ -236,7 +236,7 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
     });
 
     refreshBtn.addEventListener('click', () => {
-        loadHistory();
+        void loadHistory();
     });
 
     if (checkDeltasBtn && deltasContainer && deltasList) {
@@ -296,7 +296,7 @@ export const setupDashboard = (getMemoryManager: () => MemoryManager | null) => 
 
                 // Refresh lists
                 if (checkDeltasBtn) checkDeltasBtn.click();
-                loadHistory();
+                void loadHistory();
             } catch(e) {
                 console.error(e);
                 forceMergeBtn.textContent = 'Error (Retry)';

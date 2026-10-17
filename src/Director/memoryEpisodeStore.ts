@@ -1,4 +1,4 @@
-import { HFStorageManager } from './HFStorageManager';
+import type { HFStorageManager } from './HFStorageManager';
 import type { Message } from '../types/chat';
 import type { ScriptBeat } from './Director';
 import { resolveEpisodeConflict, applyManualResolution } from './memoryConflict';
@@ -9,8 +9,8 @@ import type {
     HFHistoryEntry,
     PendingDelta,
 } from './memoryTypes';
-import { MemoryIdbStore } from './memoryIdbStore';
-import { MemorySyncQueue } from './memorySyncQueue';
+import type { MemoryIdbStore } from './memoryIdbStore';
+import type { MemorySyncQueue } from './memorySyncQueue';
 import type { CloudCredentialsSource } from './memoryCredentials';
 
 /**

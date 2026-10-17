@@ -246,7 +246,7 @@ export async function runSentientCodebaseLoop(_scenario: Scenario, ctx: ModeCont
     const strictLinter = 'scientist';
     const chaoticJunior = 'comedian';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictLinter);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictLinter);
     await chatForAgentWithComedy(ctx, strictLinter, `(You are the codebase itself, manifesting as a strict linter. Berate the developers for the sheer amount of technical debt and spaghetti code you have to endure.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictLinter, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
@@ -271,7 +271,7 @@ export async function runSentientWifiRouterLoop(_scenario: Scenario, ctx: ModeCo
     const strictRouter = 'scientist';
     const panickedUser = 'comedian';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictRouter);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictRouter);
     await chatForAgentWithComedy(ctx, strictRouter, `(You are a sentient Wi-Fi router. Threaten to drop the connection during an important Zoom meeting unless someone answers your incredibly difficult trivia questions.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictRouter, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
@@ -375,7 +375,7 @@ export async function runSentientInternetExplorerLoop(_scenario: Scenario, ctx: 
     const internetExplorer = 'scientist';
     const impatientUser = 'comedian';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(internetExplorer);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(internetExplorer);
 
     ctx.callbacks.onMessage('Director', 'IE is responding...', '#bdc3c7');
 
@@ -383,13 +383,13 @@ export async function runSentientInternetExplorerLoop(_scenario: Scenario, ctx: 
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(impatientUser);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(impatientUser);
         await chatForAgentWithComedy(ctx, impatientUser, `(The sentient Internet Explorer just spoke. You are the impatient user who is just trying to download Google Chrome so you never have to use IE again. Be frustrated and try to rush the process.)`, async (s: string) => await ctx.callbacks.onSpeak(s, impatientUser, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(internetExplorer);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(internetExplorer);
         await chatForAgentWithComedy(ctx, internetExplorer, `(The impatient user just responded. Continue to be oblivious. Slowly process their request. Maybe mention asking Jeeves, or suggest installing a shiny new toolbar. Defend your speed and relevance.)`, async (s: string) => await ctx.callbacks.onSpeak(s, internetExplorer, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }
@@ -402,18 +402,18 @@ export async function runHistoricalTechSupportLoop(scenario: Scenario, ctx: Mode
     const historicalFigure = 'philosopher'; // Hermes-3 bewildered historical figure
     const techSupport = 'scientist'; // Phi-3 extremely patient tech support
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(techSupport);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(techSupport);
     await chatForAgentWithComedy(ctx, techSupport, `(You are an extremely patient tech support agent. You are trying to explain how to use a smartphone to a historical figure from the 1800s. Start by gently explaining what a touchscreen is.)`, async (s: string) => await ctx.callbacks.onSpeak(s, techSupport, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(historicalFigure);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(historicalFigure);
         await chatForAgentWithComedy(ctx, historicalFigure, `(The tech support just tried to explain a smartphone. You are a bewildered historical figure from the 1800s. You think this device is a 'glowing magic brick' containing tiny trapped demons. Be very confused and slightly terrified by their explanation.)`, async (s: string) => await ctx.callbacks.onSpeak(s, historicalFigure, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(techSupport);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(techSupport);
         await chatForAgentWithComedy(ctx, techSupport, `(The historical figure thinks the phone is magic. Patiently but exhaustingly try to use modern analogies to explain electricity and apps without terrifying them further.)`, async (s: string) => await ctx.callbacks.onSpeak(s, techSupport, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }

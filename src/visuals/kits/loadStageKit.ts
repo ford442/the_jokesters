@@ -6,7 +6,7 @@
  * Independent of LLM WebGPU. A software-WebGL page can still show the set.
  */
 
-import * as THREE from 'three'
+import type * as THREE from 'three'
 import { kitAssetUrl, type StageKitId } from '../stageKitIds'
 
 export async function loadKitObject(kit: Exclude<StageKitId, 'void'>): Promise<THREE.Group> {

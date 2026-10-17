@@ -1,5 +1,5 @@
-import { Scenario } from '../Director';
-import { ModeContext } from './ModeContext';
+import type { Scenario } from '../Director';
+import type { ModeContext } from './ModeContext';
 import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 // Re-export philosophical absurdist functions split across two files
 export * from './DreamModes_Absurdist_Philosophical_PartA';

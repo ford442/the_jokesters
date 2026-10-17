@@ -6,10 +6,17 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - 'vitest.config.ts'
+      - 'tsconfig*.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/typecheck.yml'
+      - 'eslint.config.mjs'
+      - 'scripts/check-any-ratchet.mjs'
+      - 'scripts/generate-mode-registry.mjs'
+      - 'scripts/mode-id-map.json'
+      - 'scripts/lint-any-baseline.json'
       - 'scripts/wllama-wasm.manifest.json'
       - 'scripts/verify_wllama_wasm.sh'
   pull_request:
@@ -17,10 +24,17 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-      - 'tsconfig.json'
+      - 'vite.config.ts'
+      - 'vitest.config.ts'
+      - 'tsconfig*.json'
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/typecheck.yml'
+      - 'eslint.config.mjs'
+      - 'scripts/check-any-ratchet.mjs'
+      - 'scripts/generate-mode-registry.mjs'
+      - 'scripts/mode-id-map.json'
+      - 'scripts/lint-any-baseline.json'
       - 'scripts/wllama-wasm.manifest.json'
       - 'scripts/verify_wllama_wasm.sh'
   workflow_dispatch:
@@ -42,10 +56,38 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Verify wllama WASM alignment
         run: npm run verify:wllama
 
       - name: Typecheck
         run: npm run typecheck
+
+      # Fails when registryCatalog*.ts / modeLoaders.ts drift from the mode files,
+      # or scripts/mode-id-map.json has duplicate / phantom ids.
+      - name: Mode registry is up to date
+        run: npm run registry:check
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ESLint errors fail the job; the `no-explicit-any` count is ratcheted
+      # (scripts/lint-any-baseline.json) and may only go down.
+      - name: Lint
+        run: npm run lint:ci

@@ -244,7 +244,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
           const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1)
           const maxS = coordinator.getDepth().maxSentences
-          prerenderAhead(upcomingSentences.slice(0, maxS), agent.id, {
+          void prerenderAhead(upcomingSentences.slice(0, maxS), agent.id, {
             steps: pacing.ttsSteps,
             speed: CHARACTER_SPEEDS[agent.id] || 1.0,
             seed: turnSeed,

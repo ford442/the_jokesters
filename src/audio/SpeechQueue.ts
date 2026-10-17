@@ -60,7 +60,7 @@ export class SpeechQueue {
         // and must not re-read a later synth's rate or the 24 kHz placeholder.
         const sampleRate = optionalSampleRate || this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
         this.queue.push({ pcm: audioData, sampleRate });
-        this.playNext();
+        void this.playNext();
     }
 
     private async playNext() {
@@ -93,7 +93,7 @@ export class SpeechQueue {
 
         source.onended = () => {
             this.isPlaying = false;
-            this.playNext();
+            void this.playNext();
         };
 
         this.currentSource = source;

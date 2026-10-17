@@ -1,5 +1,5 @@
 import { registerSW } from 'virtual:pwa-register'
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
@@ -23,8 +23,6 @@ import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
 import { saveSuccessfulLaunch } from './modelGuide'
 import { consumeWasmFallbackWarning } from '../config/loadFailover'
-
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: { model_id: string }) => m.model_id))
 
 type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
 
@@ -75,7 +73,7 @@ export async function initApp(): Promise<void> {
         .then((registrations) => {
           for (const registration of registrations) {
             if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
-              registration.unregister().then(() => {
+              void registration.unregister().then(() => {
                 console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
               })
             }
@@ -133,7 +131,6 @@ export async function initApp(): Promise<void> {
   }
 
   let currentInitState: AppInitState = 'BOOTING'
-  // @ts-ignore
   console.log(currentInitState)
 
   app.innerHTML = getAppTemplate()
@@ -144,7 +141,6 @@ export async function initApp(): Promise<void> {
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
   const progressBar = document.getElementById('progress') as HTMLDivElement
-  // @ts-ignore
   console.log(progressBar)
   const userInput = document.getElementById('user-input') as HTMLInputElement
 
@@ -168,7 +164,7 @@ export async function initApp(): Promise<void> {
   try {
     const memoryManager = new MemoryManager()
     setSharedMemoryManager(memoryManager)
-    memoryManager.fetchPreviousEpisodeSummaries();
+    void memoryManager.fetchPreviousEpisodeSummaries();
 
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)

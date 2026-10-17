@@ -1,5 +1,5 @@
-import { ModeContext } from './ModeContext';
-import { Scenario } from '../Director';
+import type { ModeContext } from './ModeContext';
+import type { Scenario } from '../Director';
 import { chatForAgentWithComedy } from '../../comedy/comedyModeHelpers';
 
 export async function runParanormalTechSupportLoop(_scenario: Scenario, ctx: ModeContext) {

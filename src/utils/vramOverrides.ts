@@ -11,7 +11,6 @@
  *
  * Message-count depth (`memoryDepth` / `memoryHint`) lives in `contextBudget.ts`.
  */
-import * as webllm from '@mlc-ai/web-llm';
 
 export interface ContextConfig {
   context_window_size: number;
@@ -158,7 +157,7 @@ export function getContextConfigForVRAM(
 
 /**
  * Parse the baked-in max context from a model_lib filename.
- * Examples: `…-ctx512_cs1k-…` → 512, `…-ctx4k_cs1k-…` → 4096.
+ * Examples: `…-ctx512_cs512-…` → 512, `…-ctx4k_cs1k-…` → 4096.
  */
 export function parseCompiledMaxContextFromModelLib(modelLib: string): number | null {
   if (!modelLib) return null;
@@ -210,13 +209,10 @@ export function getModelSize(modelId: string): '3b' | '7b' | '8b' {
  */
 export function detectKVCacheSupport(): boolean {
   try {
-    // WebLLM exposes its config shape through prebuiltAppConfig.
-    // If the library supports kv_cache_quantization it will appear in
-    // the model_list override schema. Since we can't introspect types at
-    // runtime we just check that the library is present and return true
-    // as a signal to *try* passing the override (the engine will ignore
-    // unknown keys gracefully).
-    return typeof webllm.CreateMLCEngine === 'function';
+    // WebLLM is a hard dependency, so this is always a signal to *try* passing the
+    // override (the engine ignores unknown keys gracefully). Deliberately does not
+    // import the web-llm runtime: this module is part of the initial bundle.
+    return true;
   } catch {
     return false;
   }

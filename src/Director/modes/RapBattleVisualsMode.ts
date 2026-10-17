@@ -23,7 +23,7 @@ export async function runRapBattleVisualsLoop(_scenario: Scenario, ctx: ModeCont
                 continue;
             }
 
-            ctx.callbacks.onTurnStart(agent);
+            await ctx.callbacks.onTurnStart(agent);
 
             // Visual flair for the active rapper
             ctx.callbacks.onMessage('Director', `🔥 ${agent.toUpperCase()} IS ON THE MIC 🔥`, '#ff00ff');

@@ -64,7 +64,7 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     onThinking: (agentId, thinking) => deps.stage.setThinking(agentId, thinking),
     onReactToText: (agentId, text) => deps.stage.reactToText(agentId, text),
     onSfx: (name, agentId) => {
-      getSharedSfxManager()?.play(name, agentId)
+      void getSharedSfxManager()?.play(name, agentId)
     },
     onStageKit: (kitId) => {
       void deps.stage.setStageKit(kitId)

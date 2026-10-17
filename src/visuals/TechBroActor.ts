@@ -43,7 +43,7 @@ export class TechBroActor extends Actor {
      */
     constructor(id: string, x: number) {
         // Call parent with orange Tech Bro color (z=0 for center-right positioning)
-        super(id as any, '#FF6B35' as any, x as any);
+        super(id, '#FF6B35', x);
         
         // Setup Tech Bro specific visual elements
         this.setupTechBroElements();
@@ -57,8 +57,8 @@ export class TechBroActor extends Actor {
      */
     private getCurrentMesh(): THREE.Mesh | null {
         // Access the mesh through the group (first child that's a THREE.Mesh)
-        const mesh = (this.group as any).children.find((child: any) => (child as any).isMesh) as THREE.Mesh;
-        return mesh || null;
+        const mesh = this.group.children.find((child): child is THREE.Mesh => child instanceof THREE.Mesh);
+        return mesh ?? null;
     }
     
     /**
@@ -71,7 +71,7 @@ export class TechBroActor extends Actor {
         this.currentMesh = mesh;
         
         // Create "hair" element - a small curved piece on top to simulate hair
-        const hairGeo = new (THREE as any).CapsuleGeometry(0.15, 0.3, 4, 8);
+        const hairGeo = new THREE.CapsuleGeometry(0.15, 0.3, 4, 8);
         const hairMat = new THREE.MeshPhongMaterial({
             color: 0x8B4513, // Brown hair color
             shininess: 50
@@ -90,7 +90,7 @@ export class TechBroActor extends Actor {
         this.wristElement = new THREE.Mesh(wristGeo, wristMat);
         // Position on left "wrist" (side of capsule)
         this.wristElement.position.set(-0.32, 0.1, 0);
-        (this.wristElement as any).visible = false; // Hidden by default
+        this.wristElement.visible = false; // Hidden by default
         mesh.add(this.wristElement);
     }
     
@@ -170,7 +170,7 @@ export class TechBroActor extends Actor {
         this.removeGunHands();
         
         // Hand geometry
-        const handGeo = new (THREE as any).CapsuleGeometry(0.08, 0.25, 4, 8);
+        const handGeo = new THREE.CapsuleGeometry(0.08, 0.25, 4, 8);
         const handMat = new THREE.MeshPhongMaterial({ color: 0xFF6B35 });
         
         // Left gun hand (extending from left side)
@@ -197,14 +197,14 @@ export class TechBroActor extends Actor {
         
         if (this.gunHandLeft) {
             mesh.remove(this.gunHandLeft);
-            (this.gunHandLeft as any).geometry.dispose();
-            (this.gunHandLeft.material as any).dispose();
+            this.gunHandLeft.geometry.dispose();
+            (this.gunHandLeft.material as THREE.Material).dispose();
             this.gunHandLeft = null;
         }
         if (this.gunHandRight) {
             mesh.remove(this.gunHandRight);
-            (this.gunHandRight as any).geometry.dispose();
-            (this.gunHandRight.material as any).dispose();
+            this.gunHandRight.geometry.dispose();
+            (this.gunHandRight.material as THREE.Material).dispose();
             this.gunHandRight = null;
         }
     }
@@ -236,7 +236,7 @@ export class TechBroActor extends Actor {
         
         // Show the wrist element
         if (this.wristElement) {
-            (this.wristElement as any).visible = true;
+            this.wristElement.visible = true;
         }
     }
     
@@ -420,7 +420,7 @@ export class TechBroActor extends Actor {
         
         // Hide wrist element
         if (this.wristElement) {
-            (this.wristElement as any).visible = false;
+            this.wristElement.visible = false;
         }
         
         // Reset animation type
@@ -446,23 +446,20 @@ export class TechBroActor extends Actor {
     }
     
     /**
-     * Cleanup resources - extends parent dispose
+     * Cleanup resources (Actor has no dispose of its own)
      */
     dispose(): void {
         // Clean up Tech Bro specific resources
         this.removeGunHands();
         
         if (this.hairElement) {
-            (this.hairElement as any).geometry.dispose();
-            (this.hairElement.material as any).dispose();
+            this.hairElement.geometry.dispose();
+            (this.hairElement.material as THREE.Material).dispose();
         }
         
         if (this.wristElement) {
-            (this.wristElement as any).geometry.dispose();
-            (this.wristElement.material as any).dispose();
+            this.wristElement.geometry.dispose();
+            (this.wristElement.material as THREE.Material).dispose();
         }
-        
-        // Call parent dispose
-        (Actor.prototype as any).dispose?.call(this);
     }
 }
