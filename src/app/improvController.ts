@@ -20,6 +20,7 @@ import { wireModeBrowser } from './modeBrowser'
 import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 import { getSharedShowMusic } from '../audio/ShowMusic'
+import { getSharedClipRecorder } from './clipUi'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
 
@@ -363,6 +364,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       return
     }
 
+    getSharedClipRecorder()?.setSceneTitle(title, true)
     sceneTitleInput.disabled = true
     sceneDescriptionInput.disabled = true
     startImprovBtn.style.display = 'none'

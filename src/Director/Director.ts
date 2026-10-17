@@ -42,6 +42,8 @@ export interface DirectorCallbacks {
     onTurnEnd: () => Promise<void>;
     onError: (error: any) => void;
     onSceneStop: () => void;
+    /** A scene is starting (title card for recorded clips, etc.). */
+    onSceneStart?: (info: { title: string; type: string }) => void;
     getSeed: () => number | undefined;
     onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
     /** Show music stinger at a structural beat: cold open, act break, tag (see src/audio/showCues.ts). */
@@ -477,6 +479,7 @@ export class Director {
         }
 
         const modeDef = getMode(scenario.type);
+        this.callbacks.onSceneStart?.({ title: scenario.title, type: String(scenario.type) });
         this.callbacks.onStageKit?.(resolveScenarioStageKit(scenario, modeDef ?? null));
         const sceneDepth = scenario.config?.contextDepth
             ?? (modeDef ? getContextDepthForMode(modeDef) : null);

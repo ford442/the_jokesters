@@ -13,6 +13,7 @@ import type { SpeakAndVisualizeFn } from './chatController'
 import { updateNextAgentUI } from './statusBar'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 import { getSharedShowMusic } from '../audio/ShowMusic'
+import { getSharedClipRecorder } from './clipUi'
 
 export interface DirectorBridgeDeps {
   groupChatManager: GroupChatManager
@@ -74,6 +75,7 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
       void deps.stage.setStageKit(kitId)
     },
     onShowCue: (cue) => getSharedShowMusic()?.cue(cue),
+    onSceneStart: ({ title }) => getSharedClipRecorder()?.setSceneTitle(title, true),
     musicControls: {
       startBeat: (bpm) => getSharedShowMusic()?.startBeat(bpm),
       stopBeat: () => getSharedShowMusic()?.stopBeat(),

@@ -884,7 +884,20 @@ input:focus, textarea:focus {
 .episode-always-row {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-top: 6px;
+}
+
+.clip-last-btn[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+#clip-status {
+    font-size: 0.75em;
+    color: #888;
 }
 
 /* Mode browser (categorized discovery) */

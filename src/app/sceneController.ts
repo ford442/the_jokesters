@@ -12,6 +12,7 @@ import { getDOM } from '../ui/uiHelpers'
 import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
 import { wireMusicUi } from './musicUi'
+import { wireClipUi } from './clipUi'
 import { wireVoiceUi } from './voiceUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
@@ -165,6 +166,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
 
   wireSfxUi()
   wireMusicUi()
+  wireClipUi({ agents, speechQueue, stage, chatLog })
   wireVoiceUi(speechQueue, agents)
 
   dom.userInput.focus()
