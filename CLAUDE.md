@@ -27,17 +27,22 @@ src/
   utils/vramOverrides.ts    Compiled-ctx clamp, prefill align, KV quant, sliding window
   llm/mlcEngineCreate.ts    CreateMLCEngine + device-lost race + OOM step-down
   llm/worker/               MLC Web Worker (default runtime; `?legacyLlm` = main thread)
+  llm/engineSelection.ts    Adapter-aware engine choice + fallback order (MLC → Transformers → wllama → API)
   utils/dynamicContext.ts   Back-compat re-export barrel for the three above
   config/models.ts          Model registry (uses VPS_STORAGE_URL)
   config/blessedPresets.ts  Curated 5-model launch list
   app/modelGuide.ts         Guided onboarding recommendations
   Director/Director.ts      Scene orchestrator (100+ modes via registry)
+  Director/productionCard.ts  Episode beats / relationships / secrets → productionPrompt.ts hiddenInstruction
+  comedy/comedySamplingPlan.ts  Per-turn sampling tweaks from act + callback heat
+  audio/voiceMap.ts         Canonical agent → voice style map
   prerender/                Adaptive LLM+TTS prerender coordinator
   audio/SfxManager.ts       Whitelisted SFX
   utils/vpsStorageUrl.ts    Canonical storage host (+ Vite env override)
   utils/dualDomainStripe.ts Dual-domain Range striping (SW + PDM planner)
   config/loadFailover.ts    Vicuna VPS → HF Hub source selection
   visuals/Stage.ts          Three.js stage + 5 actors
+  visuals/kits/             Stage kits (public/sets/*.glb), camera director, whitelisted props
 ```
 
 ## Model hosting
@@ -79,12 +84,12 @@ npm run perf:quick
 | Error | Fix |
 |-------|-----|
 | `ExitStatus: exit(1)` | Wrong WASM for model / GPU OOM — pass `appConfig`; use q4f16/q4f32 appropriately |
-| `WebGPU not supported` | Chrome/Edge 113+; or use llama.cpp blessed preset |
+| `No WebGPU adapter` | Chrome/Edge 113+ with HW accel; or use llama.cpp blessed preset (`CPU_WASM_SWITCH`) |
 | Model 404 `/resolve/main/` | VPS rewrites must be installed (`installVpsStorageRewrites`) |
 
 ## Known issues / blockers
 
-- Repo gets pushed to by many parallel automated branches (`jules-*`, `claude/*`, `checkin-sprint-*`). `git pull --ff-only` before starting — this checkout was found 20 commits behind on 2026-09-07 with no local changes, which had made two already-fixed "file too big" issues (`registryCatalog.ts`, `DreamModes_Sentient.ts`, now split into `.partN.ts` files) look unresolved.
+- Repo gets pushed to by many parallel automated branches (`jules-*`, `claude/*`, `checkin-sprint-*`). `git pull --ff-only` before starting — this checkout was found 20 commits behind on 2026-09-07 with no local changes, which had made two already-fixed "file too big" issues (`registryCatalog.ts`, `DreamModes_Sentient.ts`, now barrels over `.partN.ts` files — edit the parts / `scripts/generate-mode-registry.mjs`, not the barrels) look unresolved.
 - The seven ad-hoc `patch_*.py` regex scripts that used to sit at the repo root now live in `scripts/archive/obsolete/` with a do-not-run README. They are historical records only — their hardcoded paths and regexes no longer match current source (notably the split `dynamicContext.ts`) and running one will corrupt files.
 
 ## Deployment

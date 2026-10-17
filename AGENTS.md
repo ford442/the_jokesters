@@ -65,7 +65,7 @@ Foundation focus list: [agent_plan.md](./agent_plan.md) (not a mode checklist).
 | **Vite** | Build tool and dev server | ^7.2.4 |
 | **Three.js** | 3D visualization and WebGL rendering | 0.170.0 |
 | **@mlc-ai/web-llm** | In-browser LLM inference via WebGPU | ^0.2.8 |
-| **@wllama/wllama** | llama.cpp WASM engine for GGUF models | ^2.3.7 |
+| **@wllama/wllama** | llama.cpp WASM engine for GGUF models | 2.4.0 (pinned) |
 | **@huggingface/transformers** | Transformers.js ONNX/WebGPU engine | ^4.0.1 |
 | **onnxruntime-web** | TTS model inference | ^1.17.0 |
 | **vite-plugin-static-copy** | Asset copying | ^3.1.4 |
@@ -98,6 +98,9 @@ the_jokesters/
 │   │   ├── ScriptGenerator.ts     # AI-powered script generation
 │   │   ├── ScriptParser.ts        # Script parsing utilities
 │   │   ├── MediaReactionManager.ts # Video reaction trigger handling
+│   │   ├── sceneArc.ts            # Rolling scene summary (acts, beats, running gags)
+│   │   ├── productionCard.ts      # Episode beats, relationships, secret objectives, guest NPC
+│   │   ├── productionPrompt.ts    # Compiles the production card into per-agent hiddenInstruction
 │   │   └── modes/                 # Mode implementations (100+ modes)
 │   │       ├── ModeContext.ts     # Shared context interface for all modes
 │   │       ├── ImprovMode.ts      # Improv and autonomous conversation loops
@@ -108,8 +111,10 @@ the_jokesters/
 │   │       ├── CreativeMode.ts    # Creative writing, mystery, pitch, procedural
 │   │       ├── TherapyMode.ts     # Therapy/support mode
 │   │       ├── CodeReviewMode.ts  # Code review mode
-│   │       ├── DreamModes.ts      # 40+ surreal/absurdist modes
-│   │       ├── ExpandedRealityModes.ts # 40+ reality-expanded modes
+│   │       ├── DreamModes_*.ts    # 40+ surreal/absurdist modes, split by category (barrel: DreamModes_index.ts)
+│   │       ├── ExpandedRealityModes*.ts # 40+ reality-expanded modes, split by category (barrel: ExpandedRealityModes_index.ts)
+│   │       ├── registry.ts / registryCatalog.part1-5.ts # MODE_REGISTRY + generated catalog
+│   │       ├── modeLoaders.ts     # Dynamic import() per mode
 │   │       ├── RapidFireMode.ts   # Rapid-fire trivia/roast/association/this-or-that
 │   │       ├── LightningRoundMode.ts
 │   │       ├── PhilosopherMode.ts
@@ -119,6 +124,8 @@ the_jokesters/
 │   │   ├── AudioEngine.ts         # Legacy main-thread TTS synthesis (fallback behind ?legacyAudio)
 │   │   ├── OptimizedAudioEngine.ts # Default TTS: Web Worker synthesis, phoneme cache, viseme lookahead
 │   │   ├── OptimizedAudioEngineAdapter.ts # Adapts OptimizedAudioEngine to the plain TtsEngine contract
+│   │   ├── voiceMap.ts            # Canonical agent → voice style map (AGENT_VOICE_MAP)
+│   │   ├── ttsNativeSampleRate.ts # Vocoder-grounded playback sample rate (44.1 kHz Supertonic)
 │   │   ├── MusicEngine.ts         # Beat generation for musical mode
 │   │   ├── SpeechQueue.ts         # Speech playback queue, prerender cache, SFX ducking (engine-agnostic)
 │   │   ├── OptimizedSpeechQueue.ts # Standalone text-in queue — not wired into bootstrap (see below)
@@ -136,12 +143,14 @@ the_jokesters/
 │   │   ├── callbackEngine.ts      # Running gag callback tracking with bell curve decay
 │   │   ├── jokeLoader.ts          # Joke database loading
 │   │   ├── qualityFilter.ts       # Joke quality rating/filtering, homograph detection for TTS
+│   │   ├── comedySamplingPlan.ts  # Per-turn sampling tuning from act/callback heat/pacing
 │   │   └── bits/                  # Pre-written comedy bits (JSON)
 │   │       ├── absurdist.json
 │   │       ├── crowd_work.json
 │   │       └── dark_tech.json
 │   ├── llm/                       # Triple-engine LLM abstraction + API fallback
 │   │   ├── EngineFactory.ts       # Factory for selecting/creating engines
+│   │   ├── engineSelection.ts     # Pure, adapter-aware engine selection / fallback order
 │   │   ├── LLMEngine.ts           # Unified engine interface
 │   │   ├── MlcEngineAdapter.ts    # MLC WebLLM adapter
 │   │   ├── LlamaCppEngineAdapter.ts # wllama (llama.cpp WASM) adapter
@@ -153,6 +162,9 @@ the_jokesters/
 │   │   ├── TechBroActor.ts        # Custom Tech Bro actor with gesture animations
 │   │   ├── DeadpanRobotActor.ts   # Custom Robot actor with mechanical animations
 │   │   ├── Stage.ts               # Three.js scene management, lighting, rendering, audience InstancedMesh
+│   │   ├── kits/                  # Stage kits (GLB sets), camera director, prop rig, shadow policy
+│   │   ├── stageKitIds.ts         # Whitelisted stage kit ids (void/talkshow/court/news)
+│   │   ├── propCatalog.ts / propTokens.ts # Whitelisted props + [prop:x] dialogue cue parsing
 │   │   ├── LipSync.ts             # Lip synchronization with audio volume
 │   │   └── CallbackVisualizer.ts  # Visual feedback for callbacks
 │   ├── services/                  # External services
@@ -207,6 +219,7 @@ the_jokesters/
 │   └── llama_proxy.py             # FastAPI OpenAI-compatible proxy for llama-server
 ├── public/                        # Static assets served directly
 │   ├── jokes/                     # Joke databases
+│   ├── sets/                      # Stage kit GLBs (built by scripts/build-stage-kits.mjs)
 │   ├── scenarios/                 # Test scenarios
 │   └── tts/                       # TTS assets (if bundled locally)
 ├── docs/                          # Documentation
@@ -236,7 +249,7 @@ the_jokesters/
 │   ├── config.json
 │   ├── tokenizer.json
 │   └── tokenizer_config.json
-├── .vps-staging/                  # Staged model files for VPS deployment
+├── .vps-staging/                  # Staged model files for VPS upload (gitignored, local only)
 ├── verification/                  # Screenshot verification assets
 ├── index.html                     # HTML entry point (WebGPU detection, runtime error surfacing)
 ├── package.json                   # Node.js dependencies and scripts
@@ -286,7 +299,7 @@ npm run build
 ```bash
 npm run typecheck
 ```
-- Runs `tsc --noEmit` (same gate as `npx tsc --noEmit` in `CLAUDE.md`)
+- Runs `tsc --noEmit` (the required pre-commit gate in `CLAUDE.md`)
 - CI workflow `.github/workflows/typecheck.yml` runs this on every PR touching `src/`, `tests/`, or TypeScript config
 - Requires a full `npm ci` install — PWA client types come from the `vite-plugin-pwa` devDependency via `src/vite-env.d.ts`
 
@@ -412,7 +425,11 @@ Central orchestrator for all interaction modes. Supports 100+ scenario types inc
 **File**: `src/llm/EngineFactory.ts`
 
 Factory for creating and selecting LLM engines:
-- Detects browser capabilities (WebGPU, WASM, SIMD, threads, shader-f16)
+- Detects browser capabilities (WebGPU, WASM, SIMD, threads, shader-f16) — WebGPU counts only when
+  `requestAdapter()` actually returns an adapter (`navigator.gpu` existing is not enough)
+- Pure selection logic lives in `src/llm/engineSelection.ts` (`listViableEngines`,
+  `getEngineFallbackOrder`, `EngineStartError` with a CPU/WASM `switchTo` target); unit tested in
+  `tests/unit/engineSelection.test.ts` / `webgpuCapabilities.test.ts`
 - Auto-selects the best engine: MLC WebLLM (WebGPU) → Transformers.js (ONNX/WebGPU) → llama.cpp WASM (CPU) → API fallback
 - Supports manual engine preference override
 - Validates model compatibility per engine
@@ -452,9 +469,10 @@ with phoneme caching and viseme-lookahead prediction. The adapter unwraps `Optim
 richer `SynthesisResult` down to the plain `Promise<Float32Array>` shape (`TtsEngine` interface in
 `AudioEngine.ts`) that `SpeechQueue` / `PrerenderCoordinator` already depend on, so playback,
 prerendering, and SFX ducking (`SpeechQueue`'s `ttsGain` node) are all untouched — only the
-synthesis backend changed. `SpeechQueue` reads `engine.sampleRate` when the engine provides one
-(Optimized: 24kHz) and otherwise keeps its historical 44.1kHz buffer rate (legacy `AudioEngine`
-doesn't expose `sampleRate`, so its behavior is unchanged).
+synthesis backend changed. `SpeechQueue` stamps buffers with `engine.sampleRate` when the engine
+provides one, else `SUPERTONIC_NATIVE_SAMPLE_RATE` (44.1kHz) — never `audioContext.sampleRate`.
+The rate is resolved in `src/audio/ttsNativeSampleRate.ts` (trim vocoder chunk padding, then snap;
+keeps 44.1kHz rather than mis-snapping to 48kHz, which caused the #332 pitch/speed bug).
 
 Append `?legacyAudio` to the app URL to force the old main-thread `AudioEngine` instead, kept as a
 fallback for one release if the optimized path regresses on some device.
@@ -485,6 +503,14 @@ Three.js scene management:
 - Spotlight highlighting for active speaker
 - InstancedMesh for audience members (single draw call)
 - Professional stage lighting: three colored directional lights + rim light + ambient
+- Renderer: WebGL2 by default, WebGPU opt-in (`?renderer=webgpu`) — see `docs/RENDERING.md`
+- **Stage kits** (`src/visuals/kits/`): a registry entry's optional `stageKit` (`void`/`talkshow`/
+  `court`/`news`, validated by `validateRegistry()`) loads a GLB from `public/sets/`; ids/URLs come
+  only from the whitelist in `stageKitIds.ts`. Regenerate GLBs with `node scripts/build-stage-kits.mjs`.
+- **Camera director** (`kits/cameraDirector.ts`): pure shot grammar (idle / speakerClose / twoShot)
+  applied to the camera only, never to actor meshes (keeps lip-sync squash/stretch intact)
+- **Props**: `[prop:mug]` / `PROP:briefcase:hide` cues are stripped from dialogue before TTS
+  (`propTokens.ts`); only names in `propCatalog.ts`'s `ALLOWED_PROPS` become procedural props
 
 ### MemoryManager
 **Files**: `src/Director/MemoryManager.ts`, `src/Director/memoryTypes.ts`, `src/Director/memoryConflict.ts`
@@ -612,6 +638,19 @@ LLM calls:
 - Out of scope: `GroupChatManager.getDirectorCritique()` ("Silent Coach") stays limited to the
   legacy classic improv quick-start path; not wired into Director-mediated modes here.
 
+### Production Card / Comedy Sampling
+**Files**: `src/Director/productionCard.ts`, `src/Director/productionPrompt.ts`, `src/app/productionCardUi.ts`,
+`src/comedy/comedySamplingPlan.ts`
+
+- **Production card** — the dramatic layer on top of the scene arc, one per scene, owned by Director:
+  episode beat (`cold_open` → `main` → `tag`), relationships, secret objectives, optional guest NPC.
+  `compileProductionInstruction` is the single compiler into a per-agent `hiddenInstruction`
+  (system prompt only — never in visible history). Modes reach it via `ModeContext.production`
+  (`getBeat`, `setTurnBudget`, `ensureRelationships`) and `getProductionInstruction(agentId)`.
+- **Comedy sampling plan** — pure, deterministic per-turn sampling tweaks (temperature delta etc.)
+  from scene act, callback heat, and setup/punchline pacing; applied by `chatForAgentWithComedy`
+  through `GroupChatManager.chat`'s `sampling` option. Stock web-llm params only.
+
 ### Service Worker
 **File**: `src/service-worker.ts`
 
@@ -735,7 +774,7 @@ and the prompt-injection builders. No GPU/LLM involved.
 
 **Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
 
-Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python smoke_test.py` from repo root).
+Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python scripts/smoke_test.py`).
 
 ### Performance Testing
 The application includes comprehensive performance benchmarks defined in `perf-budget.json`:
@@ -755,13 +794,13 @@ CI runner: `tests/perf/ci-runner.ts`
 - Uses `tests/perf/setup-env.ts` to mock browser globals (window, document, localStorage, Worker, URL, Blob)
 - Exits with code 1 if thresholds are violated
 - GitHub Actions workflow `.github/workflows/performance.yml` runs on push/PR to `main`/`master`
-- Bundle size check enforces <7.5MB total JS
+- Bundle size check enforces ≤25MB total JS in `dist/assets` (`MAX_SIZE` in `performance.yml`)
 
 ### Engine Comparison Tests
 `tests/engine-comparison/` contains browser-based tests for comparing LLM engine performance.
 
 ### Smoke Testing
-`smoke_test.py` validates:
+`scripts/smoke_test.py` validates:
 1. Project builds successfully
 2. Page loads without console errors
 3. All 5 personas initialize correctly
@@ -883,7 +922,7 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 ## Known Issues / Blockers
 
 - **This repo gets pushed to by many parallel automated branches** (`jules-*`, `claude/*`, `checkin-sprint-*`, `fix-bugs-*`). A local clone goes stale fast — as of 2026-09-07 this checkout was 20 commits behind `origin/main` with no local changes, and two files this doc used to warn about as oversized (`registryCatalog.ts`, `DreamModes_Sentient.ts`) had already been split upstream. **Always `git pull --ff-only origin main` before starting work** — otherwise you risk re-fixing things that are already fixed, or losing work to a fast-forward.
-- **`registryCatalog.ts`** is now a thin barrel re-exporting `registryCatalog.part1.ts`–`part5.ts` (generated by `scripts/generate-mode-registry.mjs`), and **`DreamModes_Sentient.ts`** is a barrel re-exporting `DreamModes_Sentient.part1.ts`–`part3.ts`. Don't hand-edit the barrels; edit the parts (or the generator for the catalog).
+- **`registryCatalog.ts`** is now a thin barrel re-exporting `registryCatalog.part1.ts`–`part5.ts` (generated by `scripts/generate-mode-registry.mjs`), and **`DreamModes_Sentient.ts`** is a barrel re-exporting `DreamModes_Sentient.part1.ts`–`part4.ts`. Don't hand-edit the barrels; edit the parts (or the generator for the catalog).
 - **The seven one-off `patch_*.py` scripts have been archived** to `scripts/archive/obsolete/` (with a `README.md` marking them do-not-run). They are ad-hoc regex patchers that read/write specific source files by hardcoded path; running one against current source will silently corrupt it, and their main target `src/utils/dynamicContext.ts` no longer exists in the shape they expect — it was split (#345) into `src/utils/contextBudget.ts`, `src/utils/vramOverrides.ts`, `src/llm/mlcEngineCreate.ts`, with `resolveModelLibUrl` folded into `src/config/loadFailover.ts` and a re-export barrel left at the old path.
 
 ## Documentation References
@@ -895,9 +934,10 @@ The application uses a base-relative path (`base: './'` in `vite.config.ts`) for
 - [docs/PARALLEL_DOWNLOADS.md](./docs/PARALLEL_DOWNLOADS.md) - Parallel download docs
 - [docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md](./docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md) - VRAM optimization details
 - [docs/VRAM_RESEARCH_SUMMARY.md](./docs/VRAM_RESEARCH_SUMMARY.md) - VRAM research summary
-- [REPORTER_MODE_CHANGES.md](./REPORTER_MODE_CHANGES.md) - Reporter mode implementation details
-- [REPORTER_MODE_IMPROVEMENTS.md](./REPORTER_MODE_IMPROVEMENTS.md) - Reporter mode enhancements
-- [DEPLOY_CHECKLIST.md](./DEPLOY_CHECKLIST.md) - Deployment checklist
+- [docs/RENDERING.md](./docs/RENDERING.md) - WebGL2 vs. WebGPU stage renderer, stage kits
+- [docs/REPORTER_MODE_CHANGES.md](./docs/REPORTER_MODE_CHANGES.md) - Reporter mode implementation details
+- [docs/REPORTER_MODE_IMPROVEMENTS.md](./docs/REPORTER_MODE_IMPROVEMENTS.md) - Reporter mode enhancements
+- [docs/DEPLOY_CHECKLIST.md](./docs/DEPLOY_CHECKLIST.md) - Deployment checklist
 - [README.md](./README.md) - User-facing documentation
 
 ---
@@ -920,9 +960,10 @@ The notes below capture non-obvious gotchas discovered when running this app in 
 - `python scripts/smoke_test.py` hardcodes `cwd='/app'` (Docker-oriented) and is not suited to this VM.
 
 ### Running the app in a browser (WebGPU is mandatory)
-- `index.html` hard-gates on `navigator.gpu.requestAdapter()`; with no adapter it shows
-  **"WebGPU Not Available"** and never renders the app. The default headless Chrome here only has
-  `swiftshader-webgl` (WebGL, **not** WebGPU), so the gate fails out of the box.
+- `index.html` probes `navigator.gpu.requestAdapter()`; with no adapter it shows a **"No WebGPU
+  Adapter"** notice with a **Continue without WebGPU (slower)** button that just dismisses it — MLC models
+  still cannot load. The default headless Chrome here only has `swiftshader-webgl` (WebGL, **not**
+  WebGPU), so there is no adapter out of the box.
 - To get a **software WebGPU** adapter, launch Chrome with `--enable-unsafe-webgpu
   --enable-features=Vulkan` **and** point the Vulkan loader at Chrome's bundled SwiftShader ICD:
   `VK_ICD_FILENAMES=/opt/google/chrome/vk_swiftshader_icd.json`. (WebGPU is only exposed on secure
