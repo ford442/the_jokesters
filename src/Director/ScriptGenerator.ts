@@ -1,4 +1,4 @@
-import { GroupChatManager, type Message } from '../GroupChatManager';
+import type { GroupChatManager, Message } from '../GroupChatManager';
 import type { ScriptBeat } from './Director';
 
 export class ScriptGenerator {

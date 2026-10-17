@@ -106,14 +106,14 @@ export function wireChatController(deps: ChatControllerDeps): void {
 
         if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
           const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1)
-          prerenderAhead(upcomingSentences, agent.id, {
+          void prerenderAhead(upcomingSentences, agent.id, {
             steps: parseInt(ttsStepsSlider.value || '10'),
             speed: CHARACTER_SPEEDS[agent.id] || 1.0,
             seed: baseTurnSeed,
           })
         }
 
-        speakAndVisualize(sentence, agent.id, {
+        void speakAndVisualize(sentence, agent.id, {
           steps: parseInt(ttsStepsSlider.value || '10'),
           speed: CHARACTER_SPEEDS[agent.id] || 1.0,
           seed: baseTurnSeed,
@@ -160,7 +160,7 @@ export function wireChatController(deps: ChatControllerDeps): void {
   sendBtn.addEventListener('click', sendMessage)
   userInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      sendMessage()
+      void sendMessage()
     }
   })
 }

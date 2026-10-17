@@ -441,8 +441,8 @@ export async function loadModelWithDynamicContext(
         }
 
         await new Promise(r => setTimeout(r, 500));
-        // @ts-ignore
-        if (typeof gc !== 'undefined') gc();
+        // `gc` only exists when the host exposes it (e.g. chrome --js-flags=--expose-gc).
+        (globalThis as { gc?: () => void }).gc?.();
 
         return loadModelWithDynamicContext(
           { ...modelConfig, skipSourceFailover: true },

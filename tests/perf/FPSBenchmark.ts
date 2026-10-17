@@ -145,10 +145,8 @@ export class FPSBenchmark {
   dispose(): void {
     this.monitor.stop();
     
-    if (this.stage) {
-      this.stage.dispose();
-      this.stage = null;
-    }
+    // Stage exposes no teardown API; drop the reference and let GC reclaim it.
+    this.stage = null;
     
     this.canvas = null;
   }

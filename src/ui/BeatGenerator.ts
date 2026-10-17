@@ -32,7 +32,7 @@ export const startBeat = () => {
     if (isPlayingBeat) return;
     if (!musicAudioContext) musicAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     // Resume context if suspended (browser policy)
-    if (musicAudioContext.state === 'suspended') musicAudioContext.resume();
+    if (musicAudioContext.state === 'suspended') void musicAudioContext.resume();
 
     isPlayingBeat = true;
     nextNoteTime = musicAudioContext.currentTime;

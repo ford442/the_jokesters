@@ -130,7 +130,7 @@ export class SupertonicTTS {
             noise[i] = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
         }
 
-        let xtTensor = new ort.Tensor('float32', noise, [1, latentDim, latentWidth]);
+        let xtTensor: ort.Tensor = new ort.Tensor('float32', noise, [1, latentDim, latentWidth]);
 
         // Create Masks for Latent
         const latentMaskData = new Float32Array(latentWidth).fill(1.0);

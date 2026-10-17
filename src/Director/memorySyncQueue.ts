@@ -1,5 +1,5 @@
 import type { SyncQueueItem, SyncState } from './memoryTypes';
-import { MemoryIdbStore } from './memoryIdbStore';
+import type { MemoryIdbStore } from './memoryIdbStore';
 import type { CloudCredentialsSource } from './memoryCredentials';
 
 type SyncWorkerMessage =
@@ -100,7 +100,7 @@ export class MemorySyncQueue {
         queue.push({ id: jobId, ...item });
 
         await this.idb.setQueue(queueKey, queue);
-        this.processSyncQueue();
+        void this.processSyncQueue();
     }
 
     async processSyncQueue(): Promise<void> {

@@ -10,7 +10,7 @@
  * Supports viseme lookahead for smooth lip-sync
  */
 
-import { OptimizedAudioEngine } from './OptimizedAudioEngine';
+import type { OptimizedAudioEngine } from './OptimizedAudioEngine';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
 import { type Viseme } from './VisemePredictor';
 
@@ -80,10 +80,10 @@ export class OptimizedSpeechQueue {
 
         // If not playing, start
         if (!this.isPlaying) {
-            this.playNext();
+            void this.playNext();
         } else if (this.options.preloadNext && this.queue.length === 1) {
             // Preload the next utterance
-            this.preload(utterance);
+            void this.preload(utterance);
         }
     }
 
@@ -202,7 +202,7 @@ export class OptimizedSpeechQueue {
             } catch (e) {
                 console.error('[SpeechQueue] Synthesis failed:', e);
                 this.isPlaying = false;
-                this.playNext();
+                void this.playNext();
                 return;
             }
         } else {
@@ -211,7 +211,7 @@ export class OptimizedSpeechQueue {
 
         // Start preloading next if enabled
         if (this.options.preloadNext && this.queue.length > 0 && !this.isPreloading) {
-            this.preload(this.queue[0]);
+            void this.preload(this.queue[0]);
         }
 
         // Play audio
@@ -234,7 +234,7 @@ export class OptimizedSpeechQueue {
         source.onended = () => {
             this.isPlaying = false;
             this.currentSource = null;
-            this.playNext();
+            void this.playNext();
         };
 
         this.currentSource = source;

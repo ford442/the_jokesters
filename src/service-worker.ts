@@ -23,12 +23,24 @@ import {
   type StripeConfig,
 } from './utils/dualDomainStripe';
 
-// @ts-ignore
+// The sw project compiles with lib "WebWorker" (tsconfig.sw.json), so `self` is a WorkerGlobalScope;
+// narrow it to the service-worker scope plus the manifest vite-plugin-pwa injects.
+declare const self: ServiceWorkerGlobalScope & {
+  __WB_MANIFEST?: Array<string | { url: string; revision?: string | null }>;
+};
+
+interface ClientMessage {
+  type?: string;
+  enabled?: boolean;
+  raceFirstByte?: boolean;
+  invertOrigins?: boolean;
+}
+
 precacheAndRoute(self.__WB_MANIFEST || []);
 
 // Take control immediately so VPS URL rewrites apply on first load (not only after reload).
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  void self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -58,9 +70,6 @@ self.addEventListener('activate', (event) => {
  * negative-caches missing `.gz` HEADs for 1 hour.
  */
 
-// Service worker context (use any to avoid type conflicts with DOM types)
-// @ts-ignore
-declare const self: ServiceWorkerGlobalScope;
 
 const CHUNK_SIZE = STRIPE_CHUNK_SIZE;
 const MODEL_HOSTS = [
@@ -320,7 +329,7 @@ async function tryFetchGzCompressed(url: string): Promise<Response | null> {
     const writer = ds.writable.getWriter();
     const reader = ds.readable.getReader();
 
-    (async () => {
+    void (async () => {
       try {
         await writer.write(compressedBytes as any);
         await writer.close();
@@ -491,8 +500,7 @@ async function downloadParallel(
 /**
  * Fetch event listener - intercept model file downloads
  */
-// @ts-ignore - FetchEvent is service worker specific
-self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondWith(r: Promise<Response> | Response): void }) => {
+self.addEventListener('fetch', (event) => {
   const requestUrl = event.request.url;
 
   if (!isModelFile(requestUrl)) {
@@ -567,12 +575,9 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
 /**
  * Handle messages from the client
  */
-// @ts-ignore - ExtendableMessageEvent is service worker specific
-self.addEventListener('message', (event: ExtendableMessageEvent & {
-  data: { type?: string; enabled?: boolean; raceFirstByte?: boolean; invertOrigins?: boolean }
-}) => {
+self.addEventListener('message', (event: ExtendableMessageEvent & { data: ClientMessage }) => {
   if (event.data?.type === 'SKIP_WAITING') {
-    (self as any).skipWaiting();
+    void self.skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
     gzMissCache.clear();
     console.log('[ServiceWorker] Memory cache cleared');

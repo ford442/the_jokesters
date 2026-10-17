@@ -328,7 +328,7 @@ export async function runSuperheroTherapyGroupLoop(_scenario: Scenario, ctx: Mod
     const aggressiveVigilante = 'comedian';
     const logicalLeader = 'scientist';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(logicalLeader);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(logicalLeader);
     await chatForAgentWithComedy(ctx, logicalLeader, `(You are the logical, level-headed leader of a superhero therapy group. Welcome everyone and ask the aggressive vigilante to share their feelings without destroying the room.)`, async (s: string) => await ctx.callbacks.onSpeak(s, logicalLeader, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 

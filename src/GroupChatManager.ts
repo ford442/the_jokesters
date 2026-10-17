@@ -8,12 +8,12 @@
  *
  * @see docs/GROUP_CHAT_FACADE.md
  */
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import type { VRAMOptimizationConfig } from './utils/vramOverrides'
 import type { ContextWindowInfo, DynamicContextManager } from './utils/contextBudget'
 import type { ChatMessage, ContentPart, GenerationOptions, LLMEngine } from './llm/LLMEngine'
 import type { EngineType } from './llm/EngineFactory'
-import { MlcEngineAdapter } from './llm/MlcEngineAdapter'
+import { isMlcEngine } from './llm/engineGuards'
 import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
 import { PROFANITY_LEVEL, PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_MAX_TOKENS } from './config/chatConfig'
 import { buildSystemMessage } from './llm/helpers/PromptCompiler'
@@ -268,8 +268,8 @@ export class GroupChatManager {
           logTurnText(raw, cleaned)
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-            const retryPrompt = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-            this.patchLastUserMessage(chatMessages, retryPrompt)
+            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            this.patchLastUserMessage(chatMessages, activeUserContent)
             const retryTokens = retryMaxTokens(
               effectiveMaxTokens,
               this.maxTokensPerTurn,
@@ -610,8 +610,8 @@ export class GroupChatManager {
 
         let currentPromptForTurn = currentPrompt
         if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          currentPromptForTurn = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, currentPromptForTurn)
+          activePrompt = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
+          this.patchLastUserMessage(chatMessages, activePrompt)
           const retryTokens = retryMaxTokens(
             effectiveMaxTokens,
             this.maxTokensPerTurn,
@@ -632,8 +632,7 @@ export class GroupChatManager {
           advanceLocalAgent()
           // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
           // rebuild prompt for next agent inside the loop
-          // promptForTurn is gone
-          activePrompt = currentPromptForTurn
+          activePrompt = currentPrompt
           continue
         }
 
@@ -700,7 +699,7 @@ export class GroupChatManager {
 
   get completion() {
     const engine = this.session.getEngine()
-    if (engine instanceof MlcEngineAdapter) {
+    if (isMlcEngine(engine)) {
       return (engine as unknown as { engine?: { chat?: { completions: unknown } } }).engine?.chat?.completions
     }
     return null

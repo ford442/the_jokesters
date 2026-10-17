@@ -295,7 +295,7 @@ The custom `.wasm` is just another `model_lib` URL in `src/config/models.ts`. Th
 VPS_VICUNA_7B_CTX512: {
   model_id: "vicuna-7b-q4f32-webllm-ctx512",
   model: `${VPS_STORAGE_URL}/vicuna-7b-q4f32-webllm/`,
-  model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+  model_lib: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs512-webgpu.wasm`,
   overrides: { context_window_size: 512, prefill_chunk_size: 512 },
   vram_required_MB: 3200,
 }

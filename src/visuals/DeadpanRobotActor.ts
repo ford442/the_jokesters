@@ -25,8 +25,8 @@ export class DeadpanRobotActor {
     public group: THREE.Group;
     private bodyMesh: THREE.Mesh;
     private headGroup: THREE.Group;
-    private leftEye: THREE.Mesh;
-    private rightEye: THREE.Mesh;
+    private leftEye: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+    private rightEye: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
     private spotlight: THREE.SpotLight;
     
     // Animation state
@@ -87,10 +87,10 @@ export class DeadpanRobotActor {
         this.bodyMesh.add(chest);
 
         // Status light on chest
-        const statusGeo = new (THREE as any).CircleGeometry(0.04, 16);
+        const statusGeo = new THREE.CircleGeometry(0.04, 16);
         this.processingEyeMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ff00,
-            side: (THREE as any).DoubleSide
+            side: THREE.DoubleSide
         });
         const status = new THREE.Mesh(statusGeo, this.processingEyeMaterial);
         status.position.set(0, 0.1, 0.23);
@@ -115,17 +115,17 @@ export class DeadpanRobotActor {
         // LED Eyes - Glowing panels
         this.eyeMaterial = new THREE.MeshBasicMaterial({
             color: 0x00ffff, // Cyan LED color
-            side: (THREE as any).DoubleSide
+            side: THREE.DoubleSide
         });
 
         // Left eye
         const eyeGeo = new THREE.PlaneGeometry(0.08, 0.04);
-        this.leftEye = new THREE.Mesh(eyeGeo, (this.eyeMaterial as any).clone());
+        this.leftEye = new THREE.Mesh(eyeGeo, this.eyeMaterial.clone());
         this.leftEye.position.set(-0.1, 0, 0.23);
         head.add(this.leftEye);
 
         // Right eye
-        this.rightEye = new THREE.Mesh(eyeGeo, (this.eyeMaterial as any).clone());
+        this.rightEye = new THREE.Mesh(eyeGeo, this.eyeMaterial.clone());
         this.rightEye.position.set(0.1, 0, 0.23);
         head.add(this.rightEye);
 
@@ -205,15 +205,15 @@ export class DeadpanRobotActor {
         if (isProcessing) {
             this.animationState = 'processing';
             // Change eyes to indicate processing
-            (this.leftEye.material as any).color.setHex(0xffaa00); // Orange
-            (this.rightEye.material as any).color.setHex(0xffaa00);
-            (this.processingEyeMaterial as any).color.setHex(0xffaa00); // Status light
+            this.leftEye.material.color.setHex(0xffaa00); // Orange
+            this.rightEye.material.color.setHex(0xffaa00);
+            this.processingEyeMaterial.color.setHex(0xffaa00); // Status light
         } else {
             this.animationState = 'idle';
             // Reset eyes to cyan
-            (this.leftEye.material as any).color.setHex(0x00ffff);
-            (this.rightEye.material as any).color.setHex(0x00ffff);
-            (this.processingEyeMaterial as any).color.setHex(0x00ff00); // Status light
+            this.leftEye.material.color.setHex(0x00ffff);
+            this.rightEye.material.color.setHex(0x00ffff);
+            this.processingEyeMaterial.color.setHex(0x00ff00); // Status light
         }
     }
 
@@ -224,13 +224,13 @@ export class DeadpanRobotActor {
         if (isPaused) {
             this.animationState = 'paused';
             // Dim eyes slightly during pause
-            (this.leftEye.material as any).color.multiplyScalar(0.5);
-            (this.rightEye.material as any).color.multiplyScalar(0.5);
+            this.leftEye.material.color.multiplyScalar(0.5);
+            this.rightEye.material.color.multiplyScalar(0.5);
         } else {
             this.animationState = 'idle';
             // Restore eye brightness
-            (this.leftEye.material as any).color.setHex(0x00ffff);
-            (this.rightEye.material as any).color.setHex(0x00ffff);
+            this.leftEye.material.color.setHex(0x00ffff);
+            this.rightEye.material.color.setHex(0x00ffff);
         }
     }
 
@@ -326,11 +326,11 @@ export class DeadpanRobotActor {
      * Dispose of resources
      */
     dispose() {
-        (this.group as any).traverse((child: any) => {
-            if ((child as any).isMesh) {
-                (child as any).geometry.dispose();
+        this.group.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+                child.geometry.dispose();
                 if (Array.isArray(child.material)) {
-                    child.material.forEach((m: any) => m.dispose());
+                    child.material.forEach((m: THREE.Material) => m.dispose());
                 } else {
                     child.material.dispose();
                 }
