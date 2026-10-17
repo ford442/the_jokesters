@@ -8,6 +8,7 @@
 import singleThreadWasm from '@wllama/wllama/esm/single-thread/wllama.wasm?url'
 import multiThreadWasm from '@wllama/wllama/esm/multi-thread/wllama.wasm?url'
 import type { AssetsPathConfig } from '@wllama/wllama'
+import { probeIsolation, wasmThreadCount } from '../utils/crossOriginIsolation'
 
 /** Bundled WASM paths keyed for Wllama constructor (must match wllama internal paths). */
 export const WLLAMA_WASM_PATHS: AssetsPathConfig = {
@@ -65,4 +66,20 @@ export function rethrowWllamaRuntimeError(error: unknown): never {
   }
 
   throw error
+}
+
+/** llama.cpp load tuning: threads when isolated, larger batch, q8_0 K cache, flash attention. */
+export function wllamaLoadTuning(
+  contextTokens: number,
+  env: { isolated?: boolean; hardwareConcurrency?: number } = {},
+): { n_ctx: number; n_threads: number; n_batch: number; cache_type_k: 'q8_0'; flash_attn: boolean } {
+  const probe = probeIsolation()
+  return {
+    n_ctx: contextTokens,
+    // Single-thread wasm (not isolated) ignores n_threads > 1.
+    n_threads: wasmThreadCount(env.isolated ?? probe.status === 'isolated', env.hardwareConcurrency ?? probe.hardwareConcurrency),
+    n_batch: Math.min(512, contextTokens),
+    cache_type_k: 'q8_0',
+    flash_attn: true,
+  }
 }

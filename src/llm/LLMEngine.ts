@@ -26,6 +26,34 @@ export interface ChatMessage {
   content: string | ContentPart[]
 }
 
+/**
+ * Constrained-output request (#400 C). Adapters that support it map this to their native
+ * mechanism (MLC xgrammar `response_format`, wllama `sampling.grammar`); others ignore it.
+ */
+export type StructuredResponseFormat =
+  | {
+      type: 'json_schema'
+      /** JSON Schema (from `z.toJSONSchema`). */
+      schema: Record<string, unknown>
+      /** Equivalent GBNF, for engines that take a grammar instead of a schema. */
+      grammar?: string
+    }
+  | {
+      /** GBNF / xgrammar EBNF grammar for non-JSON shapes. */
+      type: 'grammar'
+      grammar: string
+    }
+
+/** Per-request timing reported by engines that expose it (perf harness, #400 B). */
+export interface GenerationUsage {
+  /** Prompt tokens actually prefilled (KV-reused prefix excluded where the engine reports it). */
+  prefillTokens: number
+  completionTokens: number
+  ttftMs?: number
+  decodeTokPerSec?: number
+  prefillTokPerSec?: number
+}
+
 export interface GenerationOptions {
   temperature?: number
   top_p?: number
@@ -35,6 +63,9 @@ export interface GenerationOptions {
   presence_penalty?: number
   stop?: string[]
   stream?: boolean
+  response_format?: StructuredResponseFormat
+  /** Called once per request when the engine reports usage. */
+  onUsage?: (usage: GenerationUsage) => void
 }
 
 export type { ChatStreamChunk, ChatStreamEvent } from './streamEvents'

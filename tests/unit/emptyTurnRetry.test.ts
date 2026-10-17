@@ -77,7 +77,7 @@ describe('empty-turn retry / skip', () => {
 
     expect(result.response).toBe('Mock response.')
     expect(spoken).toEqual(['Mock response.'])
-    expect(manager.getHistory()).toEqual([{ role: 'user', content: '(Reply naturally to the last thing said)' }, { role: 'assistant', content: 'Mock response.' }])
+    expect(manager.getHistory().map(({ role, content }) => ({ role, content }))).toEqual([{ role: 'user', content: '(Reply naturally to the last thing said)' }, { role: 'assistant', content: 'Mock response.' }])
     expect(manager.getCurrentAgent().id).not.toBe(firstAgent)
     expect(engine.chatCalls.length).toBeGreaterThanOrEqual(3)
   })
@@ -107,7 +107,8 @@ describe('empty-turn retry / skip', () => {
 
     const newAgentCall = engine.chatCalls[3]
     const newAgentPrompt = newAgentCall.messages.filter(m => m.role === 'user').at(-1)
-    expect(String(newAgentPrompt?.content)).toBe('Second prompt')
+    // Writers' room appends the speaker cue to the prompt; the retry suffix must not carry over.
+    expect(String(newAgentPrompt?.content).startsWith('Second prompt')).toBe(true)
     expect(String(newAgentPrompt?.content)).not.toContain(EMPTY_TURN_RETRY_SUFFIX.trim())
   })
 

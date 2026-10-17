@@ -16,7 +16,16 @@ import type {
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
-import { WLLAMA_WASM_PATHS, rethrowWllamaRuntimeError } from './wllamaRuntime'
+import { WLLAMA_WASM_PATHS, rethrowWllamaRuntimeError, wllamaLoadTuning } from './wllamaRuntime'
+import { jsonSchemaToGbnf } from './structured/jsonSchemaToGbnf'
+
+/** GBNF for `sampling.grammar` from the engine-neutral response format (#400 C). */
+function grammarFor(options: GenerationOptions): { grammar?: string } {
+  const format = options.response_format
+  if (!format) return {}
+  if (format.type === 'grammar') return { grammar: format.grammar }
+  return { grammar: format.grammar ?? jsonSchemaToGbnf(format.schema) }
+}
 
 export class LlamaCppEngineAdapter implements LLMEngine {
   readonly id = 'llamacpp'
@@ -65,8 +74,12 @@ export class LlamaCppEngineAdapter implements LLMEngine {
 
       const startTime = performance.now()
 
+      // n_ctx follows the context budget (user / guided-launch choice), not a fixed 4096.
+      const contextTokens = modelConfig.context_window_size || llamaCppConfig.context_size || 4096
+      const tuning = wllamaLoadTuning(contextTokens)
+      console.log('[LlamaCppEngineAdapter] Load tuning', tuning)
       const loadConfig = {
-        n_ctx: llamaCppConfig.context_size || 4096,
+        ...tuning,
         progressCallback: ({ loaded, total }: { loaded: number; total: number }) => {
           const progress = total > 0 ? loaded / total : 0
           onProgress?.({
@@ -104,6 +117,15 @@ export class LlamaCppEngineAdapter implements LLMEngine {
             ...loadConfig,
             useCache: false,
           })
+        } else if (!isCacheCorrupted && (loadConfig.flash_attn || loadConfig.cache_type_k)) {
+          // Older wasm builds may reject flash attention / quantized K; retry with defaults once.
+          console.warn('[LlamaCppEngineAdapter] Tuned load failed, retrying with default KV settings:', errMsg)
+          const { flash_attn: _fa, cache_type_k: _ck, ...plain } = loadConfig
+          if (llamaCppConfig.hf_repo) {
+            await this.wllama.loadModelFromHF(llamaCppConfig.hf_repo, llamaCppConfig.hf_file || ggufUrl, plain)
+          } else {
+            await this.wllama.loadModelFromUrl(ggufUrl, plain)
+          }
         } else {
           throw firstError
         }
@@ -153,22 +175,45 @@ export class LlamaCppEngineAdapter implements LLMEngine {
       top_p: normalizedOpts.top_p,
       penalty_repeat: normalizedOpts.repetition_penalty ?? 1.1,
       penalty_present: normalizedOpts.presence_penalty,
+      ...grammarFor(options),
     }
 
     try {
       // Use wllama's native streaming support
+      const startedAt = performance.now()
       const stream = await this.wllama.createChatCompletion(wllamaMessages, {
         nPredict: normalizedOpts.max_tokens,
         sampling: samplingConfig,
         stream: true,
+        // Keep the KV cache between turns: only the new suffix of an append-only chat is evaluated.
+        useCache: true,
         abortSignal: this.abortController.signal,
       })
 
+      // wllama chunks carry the cumulative text; yield only the new suffix.
+      let emitted = ''
+      let tokens = 0
+      let firstTokenAt: number | null = null
       for await (const chunk of stream) {
-        const text = chunk.currentText || ''
-        if (text) {
-          yield text
+        tokens++
+        firstTokenAt ??= performance.now()
+        // Hold back a trailing U+FFFD: a multi-byte character split across tokens.
+        const raw = chunk.currentText || ''
+        const text = raw.endsWith('\uFFFD') ? raw.slice(0, -1) : raw
+        if (text.length > emitted.length && text.startsWith(emitted)) {
+          const delta = text.slice(emitted.length)
+          emitted = text
+          yield delta
         }
+      }
+      if (firstTokenAt != null) {
+        const decodeMs = performance.now() - firstTokenAt
+        options.onUsage?.({
+          prefillTokens: -1,
+          completionTokens: tokens,
+          ttftMs: firstTokenAt - startedAt,
+          decodeTokPerSec: decodeMs > 0 && tokens > 1 ? ((tokens - 1) * 1000) / decodeMs : undefined,
+        })
       }
 
     } catch (error) {
@@ -205,12 +250,14 @@ export class LlamaCppEngineAdapter implements LLMEngine {
       top_p: normalizedOpts.top_p,
       penalty_repeat: normalizedOpts.repetition_penalty ?? 1.1,
       penalty_present: normalizedOpts.presence_penalty,
+      ...grammarFor(options),
     }
 
     const result = await this.wllama.createChatCompletion(wllamaMessages, {
       nPredict: normalizedOpts.max_tokens,
       sampling: samplingConfig,
       stream: false,
+      useCache: true,
     })
 
     return result

@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 // Inject manifest from vite-plugin-pwa
-import { precacheAndRoute } from 'workbox-precaching';
+import { addPlugins, getCacheKeyForURL, precacheAndRoute } from 'workbox-precaching';
+import { withIsolationHeaders } from './utils/crossOriginIsolation';
 import {
   isVpsStorageUrl,
   rewriteVpsModelUrl,
@@ -35,6 +36,22 @@ interface ClientMessage {
   raceFirstByte?: boolean;
   invertOrigins?: boolean;
 }
+
+/**
+ * Cross-origin isolation fallback (#400 A, coi-serviceworker approach): add COOP/COEP to the
+ * documents and worker scripts we serve when the host did not send them. Precached responses
+ * get them via a workbox plugin; non-precached same-origin documents / workers via the listener
+ * below (registered before precacheAndRoute so it never competes for the same request).
+ */
+addPlugins([{ handlerWillRespond: async ({ response }) => withIsolationHeaders(response) }]);
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.mode !== 'navigate' && request.destination !== 'worker' && request.destination !== 'sharedworker') return;
+  if (new URL(request.url).origin !== self.location.origin) return;
+  if (getCacheKeyForURL(request.url)) return; // precache route answers (plugin adds headers)
+  event.respondWith(fetch(request).then(withIsolationHeaders));
+});
 
 precacheAndRoute(self.__WB_MANIFEST || []);
 

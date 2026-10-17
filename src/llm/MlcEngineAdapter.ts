@@ -33,8 +33,30 @@ export interface MlcModelConfig extends UnifiedModelConfig {
   }
 }
 
-import type { LLMEngine } from './LLMEngine'
+import type { GenerationUsage, LLMEngine, StructuredResponseFormat } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
+
+/** Map the engine-neutral format to web-llm's xgrammar `response_format` (#400 C). */
+export function toMlcResponseFormat(
+  format: StructuredResponseFormat | undefined,
+): { response_format?: webllm.ResponseFormat } {
+  if (!format) return {}
+  if (format.type === 'json_schema') {
+    return { response_format: { type: 'json_object', schema: JSON.stringify(format.schema) } }
+  }
+  return { response_format: { type: 'grammar', grammar: format.grammar } }
+}
+
+/** web-llm counts only the newly prefilled suffix in `prompt_tokens` when it reuses the KV cache. */
+export function toGenerationUsage(usage: webllm.CompletionUsage): GenerationUsage {
+  return {
+    prefillTokens: usage.prompt_tokens,
+    completionTokens: usage.completion_tokens,
+    ttftMs: usage.extra?.time_to_first_token_s != null ? usage.extra.time_to_first_token_s * 1000 : undefined,
+    decodeTokPerSec: usage.extra?.decode_tokens_per_s,
+    prefillTokPerSec: usage.extra?.prefill_tokens_per_s,
+  }
+}
 
 export class MlcEngineAdapter implements LLMEngine {
   readonly id = 'mlc'
@@ -125,6 +147,8 @@ export class MlcEngineAdapter implements LLMEngine {
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,
+      ...toMlcResponseFormat(options.response_format),
+      stream_options: { include_usage: true },
     })
 
     const iterator = (completion as AsyncIterable<any>)[Symbol.asyncIterator]()
@@ -136,6 +160,7 @@ export class MlcEngineAdapter implements LLMEngine {
           exhausted = true
           break
         }
+        if (chunk?.usage) options.onUsage?.(toGenerationUsage(chunk.usage))
         const delta = chunk?.choices?.[0]?.delta
         const content = delta?.content || ''
         if (!content) continue
@@ -201,8 +226,10 @@ export class MlcEngineAdapter implements LLMEngine {
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,
+      ...toMlcResponseFormat(options.response_format),
     })
 
+    if (completion.usage) options.onUsage?.(toGenerationUsage(completion.usage))
     return completion.choices[0]?.message?.content || ''
   }
 

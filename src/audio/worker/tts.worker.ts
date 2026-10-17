@@ -4,6 +4,7 @@
  * Includes: phoneme caching, viseme prediction, and latency profiling
  */
 
+import { wasmThreadCount } from '../../utils/crossOriginIsolation';
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import {
     resolveTtsNativeSampleRate,
@@ -17,6 +18,8 @@ export interface WorkerInitMessage {
     modelPath: string;
     /** Absolute URL of the directory serving the ORT wasm runtime (see ortWasmPath.ts). */
     wasmPath?: string;
+    /** `webgpu` tries ORT's WebGPU EP first and falls back to wasm (opt-in: `?ttsWebgpu`). */
+    executionProvider?: 'wasm' | 'webgpu';
 }
 
 export interface WorkerSynthesizeMessage {
@@ -55,6 +58,10 @@ export interface WorkerInitSuccess {
     type: 'init-success';
     /** From tts.json ae.sample_rate — available before the first synth. */
     sampleRate: number;
+    /** Execution provider the sessions were created with. */
+    executionProvider?: 'wasm' | 'webgpu';
+    /** ORT wasm threads (> 1 only when cross-origin isolated). */
+    numThreads?: number;
 }
 
 export interface WorkerInitError {
@@ -350,7 +357,10 @@ async function handleInit(msg: WorkerInitMessage) {
         // Dynamic import of ONNX Runtime
         ort = await import('onnxruntime-web');
         
-        ort.env.wasm.numThreads = 1;
+        // Multithreaded wasm needs SharedArrayBuffer (COOP/COEP, #400 A). Capped at 4: the LLM
+        // (wllama) and the render loop compete for the same cores.
+        const numThreads = wasmThreadCount(self.crossOriginIsolated === true, navigator.hardwareConcurrency ?? 1, 4);
+        ort.env.wasm.numThreads = numThreads;
         ort.env.wasm.proxy = false;
         // Without this ORT falls back to a bundler-emitted copy of the wasm next to the worker chunk.
         if (msg.wasmPath) ort.env.wasm.wasmPaths = msg.wasmPath;
@@ -368,20 +378,35 @@ async function handleInit(msg: WorkerInitMessage) {
         textProcessor = new UnicodeProcessor(indexer);
 
         // Load ONNX models
-        const sessionOpts: InferenceSession.SessionOptions = {
-            executionProviders: ['wasm'],
-            graphOptimizationLevel: 'all'
+        const createSessions = (providers: InferenceSession.SessionOptions['executionProviders']) => {
+            const sessionOpts: InferenceSession.SessionOptions = {
+                executionProviders: providers,
+                graphOptimizationLevel: 'all'
+            };
+            return Promise.all([
+                ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
+            ]);
         };
 
-        [dpSession, textEncSession, vectorEstSession, vocoderSession] = await Promise.all([
-            ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
-        ]);
+        let executionProvider: 'wasm' | 'webgpu' = 'wasm';
+        let sessions: InferenceSession[] | null = null;
+        if (msg.executionProvider === 'webgpu' && 'gpu' in navigator) {
+            try {
+                sessions = await createSessions(['webgpu', 'wasm']);
+                executionProvider = 'webgpu';
+            } catch (gpuErr) {
+                console.warn('[TTS Worker] WebGPU execution provider failed, falling back to wasm:', gpuErr);
+            }
+        }
+        sessions ??= await createSessions(['wasm']);
+        [dpSession, textEncSession, vectorEstSession, vocoderSession] = sessions;
+        console.log(`[TTS Worker] ORT ready: ep=${executionProvider} threads=${numThreads}`);
 
         const initHz = config.ae.sample_rate || SUPERTONIC_NATIVE_SAMPLE_RATE;
-        self.postMessage({ type: 'init-success', sampleRate: initHz } as WorkerInitSuccess);
+        self.postMessage({ type: 'init-success', sampleRate: initHz, executionProvider, numThreads } as WorkerInitSuccess);
     } catch (err: any) {
         self.postMessage({ type: 'init-error', error: err.message } as WorkerInitError);
     }

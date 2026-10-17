@@ -29,6 +29,9 @@ const SECRET_GOAL = 'steer to marmalade'
 
 async function makeManager() {
   const manager = new GroupChatManager(agents.map((a) => ({ ...a })))
+  // Asserts hidden notes land in per-speaker system prompts (legacy layout); the writers'-room
+  // layout carries them in the speaker cue instead — see tests/unit/writersRoom.test.ts.
+  manager.setPromptLayout('per-speaker')
   const engine = new MockLLMEngine('mock', 'Mock')
   await engine.initialize({ id: 'mock-model', name: 'Mock', vram_required_MB: 0, context_window_size: 4096 })
   engine.queueResponses(
