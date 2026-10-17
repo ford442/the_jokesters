@@ -6,6 +6,8 @@ export interface TokenEstimator {
   estimateText(text: string): number;
   getSource(): TokenEstimationSource;
   getCharsPerToken?(): number;
+  /** Pre-compute exact counts with an async tokenizer before a synchronous budget pass. */
+  prime?(texts: Iterable<string>): Promise<void>;
 }
 
 /** Default chars/token ratios by model family (English prose, empirically tuned). */
@@ -71,11 +73,20 @@ export class CachedRatioTokenEstimator implements TokenEstimator {
   }
 }
 
-/** Delegates to an engine adapter's live tokenizer when available. */
+/** Max texts whose exact async token counts are memoised (history is append-only, so hits dominate). */
+const ASYNC_COUNT_CACHE_SIZE = 1024;
+
+/**
+ * Delegates to an engine adapter's live tokenizer when available.
+ *
+ * Engines with only an async tokenizer (wllama, the MLC worker) get exact counts too: `prime()`
+ * tokenizes texts ahead of a turn and memoises them; unprimed texts fall back to the calibrated ratio.
+ */
 export class EngineTokenEstimator implements TokenEstimator {
   private readonly engine: LLMEngine;
   private fallback: CachedRatioTokenEstimator;
   private tokenizerVerified = false;
+  private readonly asyncCounts = new Map<string, number>();
 
   constructor(engine: LLMEngine, modelFamily = 'default') {
     this.engine = engine;
@@ -89,7 +100,36 @@ export class EngineTokenEstimator implements TokenEstimator {
       this.tokenizerVerified = true;
       return exact;
     }
+    const cached = this.asyncCounts.get(text);
+    if (cached != null) return cached;
     return this.fallback.estimateText(text);
+  }
+
+  /** Tokenize `texts` with the engine's async tokenizer and memoise the counts. Never throws. */
+  async prime(texts: Iterable<string>): Promise<void> {
+    if (!this.engine.countTokensAsync) return;
+    const pending: string[] = [];
+    for (const text of texts) {
+      if (!text || this.asyncCounts.has(text)) continue;
+      if (this.engine.countTokens?.(text) != null) return; // sync tokenizer: nothing to prime
+      pending.push(text);
+    }
+    await Promise.all(
+      pending.map(async (text) => {
+        try {
+          const count = await this.engine.countTokensAsync!(text);
+          if (count > 0) {
+            this.asyncCounts.set(text, count);
+            this.tokenizerVerified = true;
+          }
+        } catch {
+          // Tokenizer unavailable (unloading / worker restart): keep the ratio estimate.
+        }
+      }),
+    );
+    while (this.asyncCounts.size > ASYNC_COUNT_CACHE_SIZE) {
+      this.asyncCounts.delete(this.asyncCounts.keys().next().value!);
+    }
   }
 
   getSource(): TokenEstimationSource {

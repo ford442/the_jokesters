@@ -11,7 +11,7 @@
 import type * as webllm from '@mlc-ai/web-llm'
 import type { VRAMOptimizationConfig } from './utils/vramOverrides'
 import type { ContextWindowInfo, DynamicContextManager } from './utils/contextBudget'
-import type { ChatMessage, ContentPart, GenerationOptions, LLMEngine } from './llm/LLMEngine'
+import type { ChatMessage, ContentPart, GenerationOptions, GenerationUsage, LLMEngine } from './llm/LLMEngine'
 import type { EngineType } from './llm/EngineFactory'
 import { isMlcEngine } from './llm/engineGuards'
 import type { ProfanityLevel, Agent, Message, ErrorCategory } from './types/chat'
@@ -19,6 +19,15 @@ import { PROFANITY_LEVEL, PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_M
 import { buildSystemMessage } from './llm/helpers/PromptCompiler'
 import { getDirectorCritiqueDepth, parseMemoryHint, type MemoryHint } from './config/contextDepth'
 import { ConversationStore } from './chat/ConversationStore'
+import { buildSpeakerCue, buildWritersRoomSystemPrompt, composeCuedUserMessage } from './chat/writersRoom'
+import type { z } from 'zod'
+import type { StructuredResult } from './llm/structured/completeStructured'
+
+/** zod + the schema/grammar helpers load on the first structured call, outside the initial bundle. */
+const loadStructured = () =>
+  Promise.all([import('./llm/structured/completeStructured'), import('./llm/structured/schemas')]).then(
+    ([complete, schemas]) => ({ ...complete, ...schemas }),
+  )
 import { ModelSession } from './chat/ModelSession'
 import { PersonalityStore } from './chat/PersonalityStore'
 import { categorizeChatError } from './chat/chatErrors'
@@ -43,6 +52,38 @@ export interface ChatSamplingOverrides {
 export type { ProfanityLevel, Agent, Message, ErrorCategory }
 export { PROFANITY_LEVEL }
 
+/** `writers-room`: shared prefix for KV reuse (#400 B). `per-speaker`: legacy layout (`?legacyPrompt`). */
+export type PromptLayout = 'writers-room' | 'per-speaker'
+
+export function resolvePromptLayout(search?: string): PromptLayout {
+  let query = search
+  if (query === undefined) {
+    try {
+      query = typeof location !== 'undefined' ? location.search : ''
+    } catch {
+      query = ''
+    }
+  }
+  return new URLSearchParams(query).has('legacyPrompt') ? 'per-speaker' : 'writers-room'
+}
+
+export interface TurnMetrics extends GenerationUsage {
+  agentId: string
+  at: number
+  /** Why the KV prefix was rebuilt before this turn, if known. */
+  chainBreak: 'trim' | 'critique' | null
+}
+
+export interface PrerenderedTurnText {
+  agentId: string
+  agentName: string
+  response: string
+  sentences: string[]
+  /** Writers' room: exact cued prompt + raw output, for addToHistory (keeps the KV chain). */
+  engineUser?: string
+  engineResponse?: string
+}
+
 export interface DirectorCritiqueResult {
   instruction: string
   status: 'flowing' | 'stagnant' | 'unknown'
@@ -61,6 +102,14 @@ export class GroupChatManager {
   private readonly REPETITION_PENALTY = 1.05
   private readonly PRESENCE_PENALTY = 0.556
   private readonly DEFAULT_PRERENDER_TURNS = 3
+  private promptLayout: PromptLayout = resolvePromptLayout()
+  private turnMetrics: TurnMetrics[] = []
+  private pendingChainBreak: TurnMetrics['chainBreak'] = null
+  /** Optional second engine (e.g. llama.cpp) for Director critiques, keeping the main KV chain intact. */
+  private auxiliaryEngine: LLMEngine | null = null
+  /** Minimum assistant turns between critiques on the main engine (each one rebuilds the KV prefix). */
+  private critiqueMinTurns = 3
+  private turnsSinceCritique = Number.POSITIVE_INFINITY
 
   constructor(agents: Agent[]) {
     this.conversation = new ConversationStore(agents)
@@ -182,6 +231,9 @@ export class GroupChatManager {
             .join('\n')
 
     this.conversation.appendUser(historyContent)
+    this.turnsSinceCritique++
+
+    await this.primeTokenCounts()
 
     const MAX_AGENT_ATTEMPTS = 3
     let lastAgentId = this.conversation.getCurrentAgent().id
@@ -193,30 +245,23 @@ export class GroupChatManager {
         const currentAgent = this.conversation.getCurrentAgent()
         lastAgentId = currentAgent.id
 
-        let fullSystemPrompt = `${currentAgent.systemPrompt}\n\n${this.styleInstruction}`
-        if (options.hiddenInstruction?.trim()) {
-          fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${options.hiddenInstruction}\n(You MUST incorporate this note immediately!)`
-        }
-
-        const { history: depthSlicedHistory, depthLimit, hintLabel } =
-          this.conversation.prepareHistoryForContext(false)
-
         const effectiveMaxTokens = Math.min(
           options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
           this.maxTokensPerTurn,
           ABSOLUTE_MAX_TOKENS,
         )
 
-        const { messages, info: ctxInfo } = this.conversation.truncateForTurn(
-          this.session.getContextManager(),
-          fullSystemPrompt,
-          depthSlicedHistory,
+        const turn = this.buildTurnMessages(
+          this.conversation,
+          currentAgent,
+          activeUserContent,
+          originalContent,
+          options.hiddenInstruction,
           effectiveMaxTokens,
-          depthLimit,
-          hintLabel,
         )
+        const ctxInfo = turn.info
 
-        if (ctxInfo.droppedMessages > 0 && attempt === 0) {
+        if (ctxInfo.droppedMessages > 0 && attempt === 0 && (turn.trimmed || !this.isWritersRoom())) {
           console.log(
             `[ContextTruncation] Dropped ${ctxInfo.droppedMessages} messages ` +
               `(${ctxInfo.usedTokens}/${ctxInfo.maxTokens} tokens used, summary: ${ctxInfo.hasSummary})`,
@@ -224,25 +269,8 @@ export class GroupChatManager {
         }
 
         try {
-          const chatMessages: ChatMessage[] = messages.map((m) => ({
-            role: m.role as 'system' | 'user' | 'assistant',
-            content: m.content,
-          }))
-
-          if (typeof originalContent !== 'string') {
-            let lastUserIdx = -1
-            for (let i = chatMessages.length - 1; i >= 0; i--) {
-              if (chatMessages[i].role === 'user') {
-                lastUserIdx = i
-                break
-              }
-            }
-            if (lastUserIdx >= 0) {
-              chatMessages[lastUserIdx] = { role: 'user', content: originalContent }
-            }
-          } else {
-            this.patchLastUserMessage(chatMessages, activeUserContent)
-          }
+          const chatMessages = turn.chatMessages
+          let sentUser = turn.lastUser
 
           const sampling = options.sampling
           const genOpts = {
@@ -256,6 +284,8 @@ export class GroupChatManager {
             presence_penalty: sampling?.presence_penalty ?? this.PRESENCE_PENALTY,
             stop: ['###', 'Director:', 'User:', ...(sampling?.stop ?? [])] as string[],
             stream: true as const,
+            onUsage: (usage: GenerationUsage) =>
+              this.recordTurnUsage(currentAgent.id, usage, turn.trimmed ? 'trim' : this.pendingChainBreak),
           }
 
           let { raw, cleaned } = await this.streamAssistant(
@@ -269,7 +299,8 @@ export class GroupChatManager {
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
-            this.patchLastUserMessage(chatMessages, activeUserContent)
+            sentUser = turn.cue(activeUserContent)
+            this.patchLastUserMessage(chatMessages, sentUser)
             const retryTokens = retryMaxTokens(
               effectiveMaxTokens,
               this.maxTokensPerTurn,
@@ -295,7 +326,13 @@ export class GroupChatManager {
             continue
           }
 
-          this.conversation.appendAssistant(cleaned)
+          if (this.isWritersRoom()) {
+            // Raw output + the cued prompt as sent: the next request extends this one exactly.
+            this.conversation.setLastUserEngineContent(sentUser)
+            this.conversation.appendAssistant(cleaned, raw)
+          } else {
+            this.conversation.appendAssistant(cleaned)
+          }
           this.conversation.advanceAgent()
           success = true
           return { agentId: currentAgent.id, response: cleaned }
@@ -328,6 +365,127 @@ export class GroupChatManager {
     return { agentId: lastAgentId, response: '' }
   }
 
+
+  /** Prompt layout: shared writers'-room prefix (default) or legacy per-speaker system prompts. */
+  setPromptLayout(layout: PromptLayout): void {
+    this.promptLayout = layout
+  }
+
+  getPromptLayout(): PromptLayout {
+    return this.promptLayout
+  }
+
+  private isWritersRoom(): boolean {
+    return this.promptLayout === 'writers-room'
+  }
+
+  private writersRoomSystemPrompt(summary: string | null): string {
+    const ctx = this.session.getContextManager()
+    return buildWritersRoomSystemPrompt(this.conversation.getAgents(), this.styleInstruction, {
+      // Default chars/token on purpose: the prefix must not shift when the estimator recalibrates.
+      contextTokens: ctx.getMaxContextTokens(),
+      summary,
+    })
+  }
+
+  /**
+   * Messages for one turn. `store` must already end with the pending user message.
+   * Writers' room: shared system prompt + append-only engine history + cued last user message.
+   * Legacy: per-speaker system prompt (+ Director note) + depth-sliced, token-truncated history.
+   */
+  private buildTurnMessages(
+    store: ConversationStore,
+    agent: Agent,
+    userContent: string,
+    originalContent: string | ContentPart[],
+    directorNote: string | undefined,
+    reserveTokens: number,
+  ): {
+    chatMessages: ChatMessage[]
+    lastUser: string
+    info: ContextWindowInfo
+    trimmed: boolean
+    cue: (content: string) => string
+  } {
+    const contextManager = this.session.getContextManager()
+
+    if (this.isWritersRoom()) {
+      let note = directorNote?.trim() || undefined
+      let cue = (content: string) => composeCuedUserMessage(content, agent, note)
+      const win = store.prepareWritersRoomWindow(
+        contextManager,
+        (summary) => this.writersRoomSystemPrompt(summary),
+        cue(userContent),
+        reserveTokens,
+      )
+      if (win.recallSnippets.length > 0) {
+        const callback = `Call back to earlier: "${win.recallSnippets.join('" / "')}"`
+        note = note ? `${note} ${callback}` : callback
+        cue = (content: string) => composeCuedUserMessage(content, agent, note)
+      }
+      const chatMessages: ChatMessage[] = win.messages.map((m) => ({ role: m.role, content: m.content }))
+      const lastUser = cue(userContent)
+      chatMessages[chatMessages.length - 1] = typeof originalContent !== 'string'
+        ? { role: 'user', content: [...originalContent, { type: 'text', text: `\n\n${buildSpeakerCue(agent, note)}` }] }
+        : { role: 'user', content: lastUser }
+      return { chatMessages, lastUser, info: win.info, trimmed: win.trimmed, cue }
+    }
+
+    let fullSystemPrompt = `${agent.systemPrompt}\n\n${this.styleInstruction}`
+    if (directorNote?.trim()) {
+      fullSystemPrompt += `\n\n### DIRECTOR'S SECRET NOTE ###\n${directorNote}\n(You MUST incorporate this note immediately!)`
+    }
+    const { history: depthSlicedHistory, depthLimit, hintLabel } = store.prepareHistoryForContext(false)
+    const { messages, info } = store.truncateForTurn(
+      contextManager,
+      fullSystemPrompt,
+      depthSlicedHistory,
+      reserveTokens,
+      depthLimit,
+      hintLabel,
+    )
+    const chatMessages: ChatMessage[] = messages.map((m) => ({ role: m.role, content: m.content }))
+    if (typeof originalContent !== 'string') {
+      for (let i = chatMessages.length - 1; i >= 0; i--) {
+        if (chatMessages[i].role === 'user') {
+          chatMessages[i] = { role: 'user', content: originalContent }
+          break
+        }
+      }
+    } else {
+      this.patchLastUserMessage(chatMessages, userContent)
+    }
+    return { chatMessages, lastUser: userContent, info, trimmed: false, cue: (content) => content }
+  }
+
+  /** Real tokenizer counts for the budget pass (async tokenizers: wllama, MLC worker). */
+  private async primeTokenCounts(): Promise<void> {
+    const estimator = this.session.getContextManager().getTokenEstimator()
+    if (!estimator.prime) return
+    const texts = this.conversation.getHistory().map((m) => m.engineContent ?? m.content)
+    if (this.isWritersRoom()) texts.push(this.writersRoomSystemPrompt(null))
+    try {
+      await estimator.prime(texts)
+    } catch {
+      // Heuristic estimate is fine for this turn.
+    }
+  }
+
+  private recordTurnUsage(agentId: string, usage: GenerationUsage, chainBreak: TurnMetrics['chainBreak']): void {
+    const metrics: TurnMetrics = { agentId, at: Date.now(), chainBreak, ...usage }
+    this.turnMetrics.push(metrics)
+    if (this.turnMetrics.length > 500) this.turnMetrics.shift()
+    this.pendingChainBreak = null
+    console.log(
+      `[TurnPerf] ${agentId} prefill=${usage.prefillTokens} ttft=${usage.ttftMs?.toFixed(0) ?? '?'}ms ` +
+        `decode=${usage.decodeTokPerSec?.toFixed(1) ?? '?'} tok/s${chainBreak ? ` (chain break: ${chainBreak})` : ''}`,
+    )
+  }
+
+  /** Per-turn prefill / TTFT / decode metrics (perf harness, #400 B). */
+  getTurnMetrics(): readonly TurnMetrics[] {
+    return this.turnMetrics
+  }
 
   private patchLastUserMessage(chatMessages: ChatMessage[], content: string): void {
     for (let i = chatMessages.length - 1; i >= 0; i--) {
@@ -412,6 +570,40 @@ export class GroupChatManager {
     }
   }
 
+  /**
+   * Schema-constrained call on the loaded engine (grammar on MLC / llama.cpp, validated
+   * extraction + one retry elsewhere). Like a critique, it resets the main engine's KV chain.
+   */
+  async completeStructured<T>(
+    messages: ChatMessage[],
+    schema: z.ZodType<T>,
+    options: GenerationOptions & { retries?: number } = {},
+  ): Promise<StructuredResult<T>> {
+    const engine = this.session.getEngine()
+    if (!engine || !this.session.isReady()) {
+      throw new Error('GroupChatManager not initialized. Call initialize() first.')
+    }
+    this.pendingChainBreak = 'critique'
+    const { completeStructured } = await loadStructured()
+    return completeStructured(engine, messages, schema, options)
+  }
+
+  /** Route Director critiques to a second loaded engine so they never break the main KV chain. */
+  setAuxiliaryEngine(engine: LLMEngine | null): void {
+    this.auxiliaryEngine = engine
+  }
+
+  /** Minimum turns between main-engine critiques (0 = every call). Ignored with an auxiliary engine. */
+  setCritiqueMinTurns(turns: number): void {
+    this.critiqueMinTurns = Math.max(0, Math.floor(turns))
+  }
+
+  /**
+   * Director critique as a schema-constrained JSON decision (#400 C) — no `split(':')` parsing.
+   * On the main engine the critique replaces the conversation, so the next turn re-prefills the
+   * whole prompt; calls are rate-limited to one per `critiqueMinTurns` turns unless an auxiliary
+   * engine is attached.
+   */
   async getDirectorCritique(): Promise<DirectorCritiqueResult> {
     const empty: DirectorCritiqueResult = {
       instruction: '',
@@ -419,8 +611,10 @@ export class GroupChatManager {
       memoryHint: null,
       raw: '',
     }
-    const engine = this.session.getEngine()
-    if (!engine || !this.session.isReady()) return empty
+    const aux = this.auxiliaryEngine?.isInitialized() ? this.auxiliaryEngine : null
+    const engine = aux ?? this.session.getEngine()
+    if (!engine || (!aux && !this.session.isReady())) return empty
+    if (!aux && this.turnsSinceCritique < this.critiqueMinTurns) return empty
 
     const critiqueDepth = getDirectorCritiqueDepth(this.conversation.getEffectiveMemoryDepth())
     const recentHistory = this.conversation.getHistory().slice(-critiqueDepth)
@@ -432,56 +626,46 @@ export class GroupChatManager {
 
     const directorSystemPrompt =
       `You are an expert Improv Director. Watch the scene below.\n` +
-      `First, judge the scene: is it "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive)?\n` +
-      `Then, provide a ONE-SENTENCE direction to the NEXT actor.\n` +
-      `Optionally add a memory hint on its own line when the scene needs tighter focus or callback recall:\n` +
-      `MEMORY: zoom_in | zoom_out | recall:TOPIC\n` +
+      `Judge it: "FLOWING" (funny, good chemistry) or "STAGNANT" (boring, repetitive).\n` +
+      `Give a ONE-SENTENCE "instruction" to the NEXT actor.\n` +
+      `Optionally set "memory" to zoom_in, zoom_out or recall:TOPIC when the scene needs ` +
+      `tighter focus or a callback.\n` +
       `Rules:\n` +
       `- If STAGNANT: Intervene! Raise the stakes, add a disaster, or force a topic change.\n` +
       `- If FLOWING: Coach silently. Give a subtle note (e.g. "Be more suspicious," "Whisper this line").\n` +
-      `Output format:\n` +
-      `[STATUS]: [INSTRUCTION]\n` +
-      `MEMORY: [hint] (optional)`
+      `Output JSON: {"status": "FLOWING" | "STAGNANT", "instruction": "...", "memory": "..."}`
 
     try {
-      const stream = await engine.chat(
+      if (!aux) {
+        this.turnsSinceCritique = 0
+        this.pendingChainBreak = 'critique'
+      }
+      const { completeStructured, DirectorDecisionSchema } = await loadStructured()
+      const result = await completeStructured(
+        engine,
         [
           { role: 'system', content: directorSystemPrompt },
           { role: 'user', content: `RECENT DIALOGUE:\n${historyText}\n\nDIRECTOR DECISION:` },
         ],
-        { temperature: 0.6, max_tokens: 80, stream: false },
+        DirectorDecisionSchema,
+        { temperature: 0.6, max_tokens: 120, stream: false },
       )
-
-      let response = ''
-      for await (const chunk of stream) {
-        response += getStreamContent(chunk)
+      if (!result.ok) {
+        console.warn(`[Director] Critique did not match schema after ${result.attempts} attempt(s): ${result.error}`)
+        return { ...empty, raw: result.raw }
       }
 
-      const raw = response.trim()
-      if (!raw) return empty
-
-      let memoryHint: MemoryHint | null = null
-      const memoryLine = raw.split('\n').find((line) => line.trim().toUpperCase().startsWith('MEMORY:'))
-      if (memoryLine) {
-        memoryHint = parseMemoryHint(memoryLine.split(':').slice(1).join(':'))
-      }
-
-      const critiqueLine =
-        raw.split('\n').find((line) => line.includes(':') && !line.trim().toUpperCase().startsWith('MEMORY:')) ??
-        raw
-      const parts = critiqueLine.split(':')
-      const statusRaw = parts[0].trim().toUpperCase()
-      const instruction = parts.slice(1).join(':').trim()
-
-      let status: DirectorCritiqueResult['status'] = 'unknown'
-      if (statusRaw.includes('FLOWING')) status = 'flowing'
-      else if (statusRaw.includes('STAGNANT')) status = 'stagnant'
-
+      const decision = result.data
+      const memoryHint = decision.memory ? parseMemoryHint(decision.memory) : null
       if (memoryHint) {
         this.conversation.applyMemoryHint(memoryHint)
       }
-
-      return { instruction: instruction || raw, status, memoryHint, raw }
+      return {
+        instruction: decision.instruction?.trim() ?? '',
+        status: decision.status === 'FLOWING' ? 'flowing' : 'stagnant',
+        memoryHint,
+        raw: result.raw,
+      }
     } catch (e) {
       console.warn('Director failed to think:', e)
       return empty
@@ -508,12 +692,26 @@ export class GroupChatManager {
     return this.conversation.getAgents()
   }
 
-  addToHistory(userMessage: string, assistantResponse: string, agentId?: string): void {
+  /**
+   * Commit a turn generated elsewhere (prerender). Pass the prerendered `engineUser` /
+   * `engineResponse` so the stored engine history matches what the model actually saw.
+   */
+  addToHistory(
+    userMessage: string,
+    assistantResponse: string,
+    agentId?: string,
+    engine?: { user?: string; assistant?: string },
+  ): void {
     if (agentId) {
       const agentIndex = this.getAgents().findIndex(a => a.id === agentId)
       if (agentIndex !== -1) this.conversation.setAgentIndex(agentIndex)
     }
-    this.conversation.addTurn(userMessage, assistantResponse)
+    const engineTurn =
+      this.isWritersRoom() && engine?.user && engine.assistant
+        ? { user: engine.user, assistant: engine.assistant }
+        : undefined
+    this.conversation.addTurn(userMessage, assistantResponse, engineTurn)
+    this.turnsSinceCritique++
   }
 
   async prerenderTurns(
@@ -525,142 +723,138 @@ export class GroupChatManager {
       hiddenInstruction?: string
       enablePerfTracking?: boolean
     } = {},
-  ): Promise<Array<{ agentId: string; agentName: string; response: string; sentences: string[] }>> {
+  ): Promise<PrerenderedTurnText[]> {
     const engine = this.session.getEngine()
     if (!engine || !this.session.isReady()) {
       throw new Error('GroupChatManager not initialized. Call initialize() first.')
     }
 
 
-    const allAgents = this.conversation.getAgents()
-    let localAgentIndex = this.conversation.getAgentIndex()
-    const getLocalAgent = () => allAgents[localAgentIndex]
-    const advanceLocalAgent = () => { localAgentIndex = (localAgentIndex + 1) % allAgents.length }
-    const localHistory = [...this.conversation.getHistory()]
-    const addLocalTurn = (userMsg: string, asstMsg: string) => {
-      localHistory.push({ role: 'user', content: userMsg })
-      localHistory.push({ role: 'assistant', content: asstMsg })
-      advanceLocalAgent()
-    }
+    // Prerender runs ahead on a fork of the live conversation: same prompt layout, so the
+    // engine's KV chain extends through prerendered turns and into the live ones that follow.
+    const store = this.conversation.fork()
 
-    const prerenderedTurns: Array<{
-      agentId: string
-      agentName: string
-      response: string
-      sentences: string[]
-    }> = []
+    const prerenderedTurns: PrerenderedTurnText[] = []
 
+    let currentPrompt = initialPrompt
+    let produced = 0
+    let attempts = 0
+    const maxAttempts = Math.max(turnCount * 5, turnCount + store.getAgents().length)
 
+    while (produced < turnCount && attempts < maxAttempts) {
+      attempts++
+      const currentAgent = store.getCurrentAgent()
 
+      const effectiveMaxTokens = Math.min(
+        options.maxTokens || this.maxTokensPerTurn,
+        this.maxTokensPerTurn,
+        ABSOLUTE_MAX_TOKENS,
+      )
 
-      let currentPrompt = initialPrompt
-      let activePrompt = initialPrompt
-      let produced = 0
-      let attempts = 0
-      const maxAttempts = Math.max(turnCount * 5, turnCount + this.conversation.getAgents().length)
-
-      while (produced < turnCount && attempts < maxAttempts) {
-        attempts++
-        const currentAgent = getLocalAgent()
+      store.appendUser(currentPrompt)
+      let turn
+      if (this.isWritersRoom()) {
+        turn = this.buildTurnMessages(
+          store,
+          currentAgent,
+          currentPrompt,
+          currentPrompt,
+          options.hiddenInstruction,
+          effectiveMaxTokens,
+        )
+      } else {
+        // Legacy prerender prompt: compiled per-agent system message, depth-sliced history.
         const systemMessage = buildSystemMessage(
           currentAgent,
           undefined,
           this.currentProfanityLevel,
           options.hiddenInstruction,
         )
-
-        const effectiveMaxTokens = Math.min(
-          options.maxTokens || this.maxTokensPerTurn,
-          this.maxTokensPerTurn,
-          ABSOLUTE_MAX_TOKENS,
-        )
-
-        const depth = this.conversation.getEffectiveMemoryDepth()
-        const historyWithPrompt: Message[] = [
-          ...localHistory,
-          { role: 'user', content: currentPrompt },
-        ]
-        const depthSliced = this.conversation.sliceHistoryByDepth(historyWithPrompt, depth)
-
-        const { messages } = this.session.getContextManager().truncate(
+        const depthSliced = store.sliceHistoryByDepth(store.getHistory(), store.getEffectiveMemoryDepth())
+        const { messages, info } = this.session.getContextManager().truncate(
           systemMessage,
           depthSliced,
           effectiveMaxTokens,
         )
-
-        const chatMessages: ChatMessage[] = messages.map((m) => ({
-          role: m.role as 'system' | 'user' | 'assistant',
-          content: m.content,
-        }))
-
-        const genOpts: GenerationOptions = {
-          temperature: currentAgent.temperature,
-          top_p: currentAgent.top_p,
-          max_tokens: effectiveMaxTokens,
-          stream: false,
-          stop: ['###', 'Director:', 'User:'],
-          seed: options.seed ? options.seed + attempts : undefined,
-          repetition_penalty: this.REPETITION_PENALTY,
-          presence_penalty: this.PRESENCE_PENALTY,
+        turn = {
+          chatMessages: messages.map((m) => ({ role: m.role, content: m.content })) as ChatMessage[],
+          lastUser: currentPrompt,
+          info,
+          trimmed: false,
+          cue: (content: string) => content,
         }
+      }
+      const chatMessages = turn.chatMessages
+      let sentUser = turn.lastUser
 
-        this.patchLastUserMessage(chatMessages, activePrompt)
-        let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
-        logTurnText(raw, cleaned)
-
-        let currentPromptForTurn = currentPrompt
-        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          activePrompt = `${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`
-          this.patchLastUserMessage(chatMessages, activePrompt)
-          const retryTokens = retryMaxTokens(
-            effectiveMaxTokens,
-            this.maxTokensPerTurn,
-            ABSOLUTE_MAX_TOKENS,
-          )
-          console.warn(
-            `[EmptyTurn] Unspeakable prerender from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
-          )
-          ;({ raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, {
-            ...genOpts,
-            max_tokens: retryTokens,
-          }))
-          logTurnText(raw, cleaned)
-        }
-
-        if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
-          console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
-          advanceLocalAgent()
-          // Do not append assistant "…" and do not change currentPrompt so the next agent can answer it
-          // rebuild prompt for next agent inside the loop
-          activePrompt = currentPrompt
-          continue
-        }
-
-        const sentences = cleaned
-          .split(/([.!?])\s+/)
-          .reduce((acc: string[], part: string, idx: number, arr: string[]) => {
-            if (idx % 2 === 0 && part.trim()) {
-              acc.push((part + (arr[idx + 1] || '')).trim())
-            }
-            return acc
-          }, [])
-          .filter((s: string) => s.length > 0)
-
-        prerenderedTurns.push({
-          agentId: currentAgent.id,
-          agentName: currentAgent.name,
-          response: cleaned,
-          sentences,
-        })
-
-        addLocalTurn(currentPrompt, cleaned)
-        currentPrompt = '(Reply naturally to the last thing said)'
-        activePrompt = currentPrompt
-        produced++
+      const genOpts: GenerationOptions = {
+        temperature: currentAgent.temperature,
+        top_p: currentAgent.top_p,
+        max_tokens: effectiveMaxTokens,
+        stream: false,
+        stop: ['###', 'Director:', 'User:'],
+        seed: options.seed ? options.seed + attempts : undefined,
+        repetition_penalty: this.REPETITION_PENALTY,
+        presence_penalty: this.PRESENCE_PENALTY,
+        onUsage: (usage) => this.recordTurnUsage(currentAgent.id, usage, turn.trimmed ? 'trim' : this.pendingChainBreak),
       }
 
-      return prerenderedTurns
+      let { raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, genOpts)
+      logTurnText(raw, cleaned)
 
+      if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
+        sentUser = turn.cue(`${currentPrompt}${EMPTY_TURN_RETRY_SUFFIX}`)
+        this.patchLastUserMessage(chatMessages, sentUser)
+        const retryTokens = retryMaxTokens(
+          effectiveMaxTokens,
+          this.maxTokensPerTurn,
+          ABSOLUTE_MAX_TOKENS,
+        )
+        console.warn(
+          `[EmptyTurn] Unspeakable prerender from ${currentAgent.id}; retrying once (max_tokens=${retryTokens})`,
+        )
+        ;({ raw, cleaned } = await this.streamAssistant(engine, chatMessages, currentAgent, {
+          ...genOpts,
+          max_tokens: retryTokens,
+        }))
+        logTurnText(raw, cleaned)
+      }
+
+      if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
+        console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
+        // Do not append "…"; keep the prompt so the next agent can answer it.
+        store.popLastIfUser()
+        store.advanceAgent()
+        continue
+      }
+
+      const sentences = cleaned
+        .split(/([.!?])\s+/)
+        .reduce((acc: string[], part: string, idx: number, arr: string[]) => {
+          if (idx % 2 === 0 && part.trim()) {
+            acc.push((part + (arr[idx + 1] || '')).trim())
+          }
+          return acc
+        }, [])
+        .filter((s: string) => s.length > 0)
+
+      const writersRoom = this.isWritersRoom()
+      prerenderedTurns.push({
+        agentId: currentAgent.id,
+        agentName: currentAgent.name,
+        response: cleaned,
+        sentences,
+        ...(writersRoom ? { engineUser: sentUser, engineResponse: raw } : {}),
+      })
+
+      if (writersRoom) store.setLastUserEngineContent(sentUser)
+      store.appendAssistant(cleaned, writersRoom ? raw : undefined)
+      store.advanceAgent()
+      currentPrompt = '(Reply naturally to the last thing said)'
+      produced++
+    }
+
+    return prerenderedTurns
   }
 
   async chatForAgent(

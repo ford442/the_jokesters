@@ -8,6 +8,7 @@
 import { GroupChatManager } from '../../src/GroupChatManager';
 import { agents } from '../../src/config/agents';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { prefillReduction, summarizeTurnMetrics, type TurnMetricsSummary } from '../../src/chat/turnMetrics';
 
 export interface LLMThroughputOptions {
   iterations?: number;
@@ -25,6 +26,15 @@ export interface LLMThroughputResult {
   maxTokensPerSec: number;
   iterations: number;
   totalTokens: number;
+  /** Engine-reported prefillTokens / ttftMs / decodeTokPerSec per turn (MLC; wllama has no prefill count). */
+  turnMetrics: TurnMetricsSummary;
+}
+
+export interface KvReuseComparison {
+  writersRoom: TurnMetricsSummary;
+  perSpeaker: TurnMetricsSummary;
+  /** 1 - writersRoom / perSpeaker median prefill tokens after turn 3 (acceptance: ≥ 0.6). */
+  prefillReduction: number | null;
 }
 
 export class LLMThroughputBenchmark {
@@ -104,6 +114,7 @@ export class LLMThroughputBenchmark {
 
     // Start monitoring
     this.monitor.start();
+    const metricsStart = this.manager.getTurnMetrics().length;
 
     // Benchmark phase
     console.log('[LLMThroughputBenchmark] Running benchmark...');
@@ -157,7 +168,8 @@ export class LLMThroughputBenchmark {
       minTokensPerSec: report.llm.minTokensPerSec,
       maxTokensPerSec: report.llm.maxTokensPerSec,
       iterations: validSamples.length,
-      totalTokens
+      totalTokens,
+      turnMetrics: summarizeTurnMetrics(this.manager.getTurnMetrics().slice(metricsStart)),
     };
 
     console.log('[LLMThroughputBenchmark] Complete:');
@@ -165,9 +177,44 @@ export class LLMThroughputBenchmark {
     console.log(`  P95: ${result.p95TokensPerSec.toFixed(2)} tokens/sec`);
     console.log(`  Min/Max: ${result.minTokensPerSec.toFixed(2)} / ${result.maxTokensPerSec.toFixed(2)} tokens/sec`);
     console.log(`  Total Tokens: ${result.totalTokens}`);
+    console.log(
+      `  Per turn (after turn 3): prefill=${result.turnMetrics.medianPrefillTokens ?? '?'} tok, ` +
+        `TTFT=${result.turnMetrics.medianTtftMs?.toFixed(0) ?? '?'} ms, ` +
+        `decode=${result.turnMetrics.medianDecodeTokPerSec?.toFixed(1) ?? '?'} tok/s`,
+    );
     console.log(`  Passed: ${result.passed}`);
 
     return result;
+  }
+
+  /**
+   * KV-reuse A/B (#400 B): the same improv loop with the writers'-room prefix and with legacy
+   * per-speaker prompts. Reports median prefill tokens per turn after turn 3 for each layout.
+   */
+  async runKvReuseComparison(turns = 12): Promise<KvReuseComparison> {
+    if (!this.manager) {
+      throw new Error('LLMThroughputBenchmark not initialized. Call init() first.');
+    }
+    const runLayout = async (layout: 'writers-room' | 'per-speaker') => {
+      const manager = this.manager!;
+      manager.setPromptLayout(layout);
+      manager.resetConversation();
+      const start = manager.getTurnMetrics().length;
+      for (let i = 0; i < turns; i++) {
+        const prompt = i === 0 ? this.testPrompts[0] : '(Reply naturally to the last thing said)';
+        try {
+          await manager.chat(prompt, undefined, { maxTokens: this.options.maxTokens });
+        } catch (e) {
+          console.warn(`[LLMThroughputBenchmark] ${layout} turn ${i} failed:`, e);
+        }
+      }
+      return summarizeTurnMetrics(manager.getTurnMetrics().slice(start));
+    };
+    const perSpeaker = await runLayout('per-speaker');
+    const writersRoom = await runLayout('writers-room');
+    const comparison = { writersRoom, perSpeaker, prefillReduction: prefillReduction(perSpeaker, writersRoom) };
+    console.log('[LLMThroughputBenchmark] KV reuse comparison:', JSON.stringify(comparison, null, 2));
+    return comparison;
   }
 
   /**

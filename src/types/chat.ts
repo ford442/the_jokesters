@@ -11,7 +11,13 @@ export interface Agent {
 
 export interface Message {
   role: 'system' | 'user' | 'assistant'
+  /** Cleaned text for display, TTS and memory. */
   content: string
+  /**
+   * Exact text the engine saw (cued user prompt / raw model output). Re-sent verbatim so
+   * the request extends the previous one and the KV cache is reused (#400 B).
+   */
+  engineContent?: string
 }
 
 export type ErrorCategory =

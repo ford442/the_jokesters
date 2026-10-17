@@ -96,7 +96,12 @@ export class OptimizedAudioEngine {
             };
 
             // Initialize worker
-            await this.sendToWorker({ type: 'init', modelPath, wasmPath: getOrtWasmBaseUrl() });
+            await this.sendToWorker({
+                type: 'init',
+                modelPath,
+                wasmPath: getOrtWasmBaseUrl(),
+                executionProvider: ttsExecutionProviderFromQuery(),
+            });
 
             // Pre-load voice styles
             await this.loadVoiceStyles();
@@ -456,3 +461,17 @@ export class OptimizedAudioEngine {
 
 // Singleton instance
 export const optimizedAudioEngine = new OptimizedAudioEngine();
+
+/** `?ttsWebgpu` opts the Supertonic worker into ORT's WebGPU EP (falls back to wasm on failure). */
+export function ttsExecutionProviderFromQuery(search?: string): 'wasm' | 'webgpu' {
+    let query = search;
+    if (query === undefined) {
+        try {
+            query = typeof location !== 'undefined' ? location.search : '';
+        } catch {
+            query = '';
+        }
+    }
+    const value = new URLSearchParams(query).get('ttsWebgpu');
+    return value !== null && value !== '0' && value !== 'false' ? 'webgpu' : 'wasm';
+}

@@ -9,6 +9,16 @@ import fs from 'node:fs';
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Cross-origin isolation (#400 A) → SharedArrayBuffer → multithreaded wllama / ORT.
+ * Mirrors ISOLATION_HEADERS in src/utils/crossOriginIsolation.ts (also served by public/.htaccess
+ * and, as a fallback, the service worker).
+ */
+const isolationHeaders = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'credentialless',
+};
+
 function useCustomWebLLM(): boolean {
   return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
 }
@@ -65,9 +75,13 @@ export default defineConfig(({ command }) => {
       alias: webllmAlias,
     },
     server: {
+      headers: isolationHeaders,
       fs: {
         allow: ['..'],
       },
+    },
+    preview: {
+      headers: isolationHeaders,
     },
     build: {
       target: 'es2022',

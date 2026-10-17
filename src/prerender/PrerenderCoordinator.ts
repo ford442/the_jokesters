@@ -1,4 +1,4 @@
-import type { GroupChatManager } from '../GroupChatManager'
+import type { GroupChatManager, PrerenderedTurnText } from '../GroupChatManager'
 import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
@@ -13,6 +13,9 @@ export interface PrerenderedTurn {
   sentences: string[]
   /** Epoch when this turn was generated — discard if generation invalidated */
   generation: number
+  /** Writers' room: exact engine prompt / raw output to commit with addToHistory. */
+  engineUser?: string
+  engineResponse?: string
   /** TTS promises keyed by sentence index (filled eagerly after LLM) */
   audioPromises: Promise<{ audioData: Float32Array; sampleRate?: number } | null>[]
 }
@@ -284,7 +287,7 @@ export class PrerenderCoordinator {
   }
 
   private attachAudio(
-    t: { agentId: string; agentName: string; response: string; sentences: string[] },
+    t: PrerenderedTurnText,
     gen: number,
     options: TurnOptions,
   ): PrerenderedTurn {
@@ -309,6 +312,8 @@ export class PrerenderCoordinator {
       agentId: t.agentId,
       agentName: t.agentName,
       response: t.response,
+      engineUser: t.engineUser,
+      engineResponse: t.engineResponse,
       sentences,
       generation: gen,
       audioPromises,

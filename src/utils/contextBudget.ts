@@ -205,7 +205,7 @@ export class DynamicContextManager {
    * continuity. This is a deterministic stub — an LLM-generated summary could
    * replace it in the future.
    */
-  private buildSummaryStub(dropped: ChatMessage[]): string {
+  buildSummaryStub(dropped: ChatMessage[]): string {
     const turnCount = dropped.length;
     const lastUser = [...dropped].reverse().find(m => m.role === 'user');
     const lastAssistant = [...dropped].reverse().find(m => m.role === 'assistant');

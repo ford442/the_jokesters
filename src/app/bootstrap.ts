@@ -1,4 +1,5 @@
 import { registerSW } from 'virtual:pwa-register'
+import { reloadOnceForIsolation } from './isolationReload'
 import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
@@ -83,6 +84,7 @@ export async function initApp(): Promise<void> {
           console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
         })
 
+      reloadOnceForIsolation()
       registerSW({
         onNeedRefresh() {
           console.log('[ServiceWorker] New content available, please refresh.')
