@@ -34,7 +34,7 @@ export const STRIPE_RACE_STORAGE_KEY = 'jokesters-stripe-race'
 /** One-load session flag: invert even/odd origin preference (Retry mirror). */
 export const STRIPE_INVERT_SESSION_KEY = 'jokesters-prefer-mirror'
 
-export const STRIPE_ELIGIBLE_EXTENSIONS = ['.bin', '.safetensors', '.gguf', '.wasm'] as const
+export const STRIPE_ELIGIBLE_EXTENSIONS = ['.bin', '.safetensors', '.gguf', '.wasm', '.vrm'] as const
 
 export type StripeOrigin = 'primary' | 'mirror'
 

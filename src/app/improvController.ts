@@ -162,7 +162,11 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
           firstAudio = false
         }
         stage.setActiveActor(turn.agentId)
-        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate)
+        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate, {
+          agentId: turn.agentId,
+          text: clean,
+          visemes: resolvedAudio!.visemes,
+        })
       } else {
         // Graceful live TTS fallback for this sentence
         await speakAndVisualize(sentence, turn.agentId, synthOpts)

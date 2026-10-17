@@ -23,6 +23,7 @@ import {
   shouldAvoidVicunaRecommendation,
 } from '../config/loadFailover'
 import type { LaunchConfig } from './types'
+import { persistDeviceSnapshot } from '../visuals/avatarTier'
 
 export const LAST_SUCCESS_KEY = 'jokesters-last-success-launch'
 export const OOM_FALLBACK_KEY = 'jokesters-oom-fallback-model'
@@ -96,6 +97,9 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
       parts.push('small GPU buffers')
     }
   }
+
+  // Stage reads this to pick VRM vs primitive actors without re-probing the GPU.
+  persistDeviceSnapshot({ webgpu: caps.webgpu, availableVramMB })
 
   return {
     webgpu: caps.webgpu,

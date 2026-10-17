@@ -1,5 +1,5 @@
 import { OptimizedAudioEngine } from './OptimizedAudioEngine';
-import type { SynthesisOptions, TtsEngine } from './AudioEngine';
+import type { SynthesisOptions, SynthesizedAudio, TtsEngine } from './AudioEngine';
 
 /**
  * Adapts OptimizedAudioEngine's rich SynthesisResult (worker-based synthesis,
@@ -24,11 +24,12 @@ export class OptimizedAudioEngineAdapter implements TtsEngine {
         text: string,
         speakerId: string = 'comedian',
         options: SynthesisOptions = {},
-    ): Promise<{ audioData: Float32Array; sampleRate?: number }> {
+    ): Promise<SynthesizedAudio> {
         const result = await this.engine.synthesize(text, speakerId, options);
         // Engine.sampleRate is set at init from tts.json and refreshed on each
         // synthesis-success; SpeechQueue captures it at add(), not at play time.
-        return { audioData: result.audioData, sampleRate: result.sampleRate };
+        // Worker phoneme timing rides along so the stage can drive visemes from it.
+        return { audioData: result.audioData, sampleRate: result.sampleRate, visemes: result.visemes };
     }
 
     /** Escape hatch for callers that want the richer engine (viseme lookahead, stats, etc). */

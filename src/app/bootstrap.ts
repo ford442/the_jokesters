@@ -5,6 +5,8 @@ import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
+import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier } from '../visuals/avatarTier'
+import { bundledAvatarUrl } from '../visuals/avatarManifest'
 import { AudioEngine } from '../audio/AudioEngine'
 import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
@@ -184,6 +186,7 @@ export async function initApp(): Promise<void> {
 
     const requestedRenderer = getRequestedRendererMode()
     let stage: Stage
+    let glRenderer: string | null = null
     if (requestedRenderer === 'webgpu' && isWebGPUAvailable()) {
       console.log('[Renderer] WebGPU scene rendering requested (opt-in). WebLLM shares the GPU — prefer high-VRAM devices.')
       stage = new Stage(canvas, { rendererMode: 'webgpu' })
@@ -195,6 +198,7 @@ export async function initApp(): Promise<void> {
       if (!gl) {
         throw new Error('WebGL 2 is not supported or is disabled in this environment.')
       }
+      glRenderer = readGlRendererString(gl as WebGL2RenderingContext)
       stage = new Stage(canvas, { context: gl as WebGLRenderingContext, rendererMode: 'webgl' })
     }
     const activeRenderer = await stage.initRenderer()
@@ -205,7 +209,21 @@ export async function initApp(): Promise<void> {
     speechQueue.setDestination(lipSync.analyser)
     lipSync.analyser.connect(speechQueue.getAudioContext().destination)
     stage.setLipSync(lipSync)
+    // Phoneme timing + audible clock → viseme-accurate mouths (loudness is the fallback).
+    stage.setAudioClock(() => speechQueue.getAudioContext().currentTime)
+    speechQueue.onUtteranceStart((e) => stage.beginUtterance(e))
+    speechQueue.onUtteranceEnd(() => stage.endUtterance())
     stage.render()
+
+    // VRM avatars on capable GPUs; low tiers keep the primitive capsule actors. Loads in the
+    // background — each agent swaps in as its model arrives, and a failure leaves the capsule.
+    const avatarTier = selectAvatarTier(readAvatarTierEnv(loadDeviceSnapshot(), glRenderer))
+    console.log(`[Avatars] tier=${avatarTier.tier} (${avatarTier.reason})`)
+    if (avatarTier.tier === 'vrm') {
+      void stage.useVrmActors((id) => bundledAvatarUrl(id)).then(({ loaded, failed }) => {
+        console.log(`[Avatars] VRM loaded: ${loaded.join(', ') || 'none'}${failed.length ? ` · kept primitive: ${failed.join(', ')}` : ''}`)
+      })
+    }
 
     const sfxManager = new SfxManager({ basePath: './sfx' })
     await sfxManager.init(speechQueue.getAudioContext(), speechQueue.getTtsGainNode())

@@ -3,6 +3,15 @@ import { SupertonicPipeline } from './SupertonicPipeline';
 import { VPS_STORAGE_URL } from '../config/models';
 import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
 
+import type { Viseme } from './VisemePredictor';
+
+/** What a TTS engine hands back; `visemes` is present when the engine has real phoneme timing. */
+export interface SynthesizedAudio {
+    audioData: Float32Array;
+    sampleRate?: number;
+    visemes?: Viseme[];
+}
+
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
     steps?: number;  // Diffusion steps for quality (default: 10)
@@ -16,7 +25,7 @@ export interface SynthesisOptions {
  */
 export interface TtsEngine {
     init(modelPath?: string): Promise<void>;
-    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<{ audioData: Float32Array; sampleRate?: number }>;
+    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<SynthesizedAudio>;
     /** Native sample rate of synthesized audio. Unset engines fall back to SpeechQueue's legacy default. */
     readonly sampleRate?: number;
 }

@@ -1,5 +1,5 @@
 import type { GroupChatManager, PrerenderedTurnText } from '../GroupChatManager'
-import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
+import type { SynthesisOptions, SynthesizedAudio, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
 import { stripStageTokens } from '../visuals/propTokens'
@@ -17,7 +17,7 @@ export interface PrerenderedTurn {
   engineUser?: string
   engineResponse?: string
   /** TTS promises keyed by sentence index (filled eagerly after LLM) */
-  audioPromises: Promise<{ audioData: Float32Array; sampleRate?: number } | null>[]
+  audioPromises: Promise<SynthesizedAudio | null>[]
 }
 
 export interface PrerenderMetricsSnapshot {
@@ -270,7 +270,7 @@ export class PrerenderCoordinator {
     text: string,
     agentId: string,
     options: SynthesisOptions,
-  ): Promise<{ audioData: Float32Array; sampleRate?: number } | null> {
+  ): Promise<SynthesizedAudio | null> {
     const clean = stripForSpeakability(text).trim()
     if (!clean) return null
 

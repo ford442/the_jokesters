@@ -195,12 +195,12 @@ export function createAudioHelpers(
       const cleanText = stripForSpeakability(sfx ? await sfx.processDialogue(cued.cleanText, agentId) : stripStageTokens(cued.cleanText))
       if (!cleanText.trim()) return
       // Use keyed TTS cache so sentence prerender is actually consumed (no double synth)
-      const { audioData, sampleRate } = await speechQueue.synthesizeOrTakeCached(cleanText, agentId, {
+      const { audioData, sampleRate, visemes } = await speechQueue.synthesizeOrTakeCached(cleanText, agentId, {
         steps: options.steps,
         seed: options.seed,
         speed: options.speed,
       })
-      speechQueue.add(audioData, sampleRate)
+      speechQueue.add(audioData, sampleRate, { agentId, text: cleanText, visemes })
     } catch (e) {
       console.error('Speech synthesis failed', e)
     }
