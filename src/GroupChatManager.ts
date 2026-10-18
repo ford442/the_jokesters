@@ -322,6 +322,8 @@ export class GroupChatManager {
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
+            this.conversation.popLastIfUser()
+            this.conversation.appendUser(historyContent)
             this.conversation.advanceAgent()
             activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
             continue
@@ -825,7 +827,6 @@ export class GroupChatManager {
       if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
         console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
         // Do not append "…"; keep the prompt so the next agent can answer it.
-        store.popLastIfUser()
         store.advanceAgent()
         continue
       }
