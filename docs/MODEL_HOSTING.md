@@ -94,6 +94,37 @@ This checks:
 - `Accept-Ranges: bytes` is present
 - CORS headers are present
 
+
+## CDN / Object Storage Evaluation (Issue #303)
+
+This section evaluates third-party hosting options for large LLM weights (e.g., Vicuna ~4GB shards + `model_lib.wasm`) to improve reliability over the current dual-VPS setup.
+
+### Comparison Table
+
+| Provider | Egress Cost ($/TB) | Range Support | CORS Support | Latency (TTFB)* | Recommendation |
+|----------|--------------------|---------------|--------------|-----------------|----------------|
+| **Current Dual-VPS** | Included | Yes | Yes | ~265ms | **Baseline** |
+| **Hugging Face** | Free | Yes | Yes | ~145ms | **Baseline** |
+| **Cloudflare R2** | [$0.00](https://developers.cloudflare.com/r2/pricing/) | [Yes](https://developers.cloudflare.com/r2/api/s3/api/) | [Yes](https://developers.cloudflare.com/r2/buckets/cors/) | Not measured | **Recommended** |
+| **BunnyCDN** | [$5.00 - $10.00](https://bunny.net/pricing/) | [Yes](https://support.bunny.net/hc/en-us/articles/115000574045-Does-BunnyCDN-support-byte-range-requests) | [Yes](https://support.bunny.net/hc/en-us/articles/115001309852-How-to-enable-CORS-headers-in-BunnyCDN) | Not measured | Good alternative |
+| **Backblaze B2** | [$10.00/TB](https://www.backblaze.com/b2/cloud-storage-pricing.html) | [Yes](https://www.backblaze.com/docs/cloud-storage-s3-get-object) | [Yes](https://www.backblaze.com/docs/cloud-storage-cross-origin-resource-sharing-rules-cors) | Not measured | Costly at high traffic |
+| **Fastly** | [Varies (High)](https://www.fastly.com/pricing/) | [Yes](https://docs.fastly.com/en/guides/serving-content#enabling-support-for-range-requests) | [Yes](https://docs.fastly.com/en/guides/enabling-cross-origin-resource-sharing-cors) | Not measured | Overkill / Expensive |
+
+*\* Note: Latency measured via `curl -o /dev/null -s -w "%{time_starttransfer}\n" -H "Range: bytes=0-1023" <URL>` against current public VPS and HuggingFace URLs. Third-party CDNs were not measured directly.*
+*(Data checked on October 20, 2026)*
+
+### Proof of Concept (PoC) URL
+* **pending: needs Noah's account**
+* **Setup steps for Noah:**
+  1. Create a Cloudflare R2 bucket.
+  2. Configure a custom domain (e.g., `models.thejokesters.com`) and enable public access.
+  3. Upload the Vicuna model weights and config (`mlc-chat-config.json`, `tokenizer.model`, shards).
+  4. Ensure CORS settings allow `GET, HEAD, OPTIONS` from `*` with `Range` headers allowed.
+
+### Go/No-Go Recommendation
+**Go with Cloudflare R2.**
+* **Reasons:** R2 offers zero-cost egress, which is crucial for delivering ~4GB of model weights to multiple users. It fully supports `Accept-Ranges` and CORS, matching the technical requirements of the Service Worker parallel chunking. It eliminates the maintenance burden of the current dual-VPS setup without incurring the unpredictable bandwidth costs of traditional object storage or CDNs.
+
 ## Directory Structure on VPS
 
 After upload, the VPS should look like this:
