@@ -325,6 +325,9 @@ export class GroupChatManager {
             this.conversation.popLastIfUser()
             this.conversation.appendUser(historyContent)
             this.conversation.advanceAgent()
+            // Keep the suffix in activeUserContent for the next loop iteration (follow-up agent)
+            // so they are forced to speak, but because we appended `historyContent` (without suffix)
+            // to this.conversation above, the actual stored history is NOT poisoned.
             activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
             continue
           }

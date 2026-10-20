@@ -74,18 +74,24 @@ export function resolveTtsNativeSampleRate(
     duration > TTS_SAMPLE_RATE_MIN_DURATION_SEC ? Math.round(samples / duration) : configHz
   const nativeHz = snapSampleRate(empiricalHz)
   const denom = Math.max(Math.abs(configHz), 1)
-  const disagree = Math.abs(nativeHz - configHz) / denom > TTS_SAMPLE_RATE_DISAGREE_FRACTION
-  const padding =
-    configHz > 0 &&
-    empiricalHz >= configHz &&
-    (empiricalHz - configHz) / denom <= TTS_SAMPLE_RATE_PAD_FRACTION
-  const sampleRate = !disagree
-    ? configHz > 0
-      ? configHz
-      : nativeHz
-    : padding || (configHz === 44100 && nativeHz === 48000)
-      ? configHz
-      : nativeHz
-  console.log('[TTS sampleRate decision]', { configHz, empiricalHz, nativeHz, samples, duration, sampleRate })
+
+  let sampleRate: number;
+  if (duration <= TTS_SAMPLE_RATE_MIN_DURATION_SEC && configHz > 0) {
+    // Trust configured rate on short lines to avoid false padding inflation
+    sampleRate = configHz;
+  } else {
+    const disagree = Math.abs(nativeHz - configHz) / denom > TTS_SAMPLE_RATE_DISAGREE_FRACTION
+    const padding =
+      configHz > 0 &&
+      empiricalHz >= configHz &&
+      (empiricalHz - configHz) / denom <= TTS_SAMPLE_RATE_PAD_FRACTION
+    sampleRate = !disagree
+      ? configHz > 0
+        ? configHz
+        : nativeHz
+      : padding || (configHz === 44100 && nativeHz === 48000)
+        ? configHz
+        : nativeHz
+  }
   return { configHz, empiricalHz, nativeHz, samples, duration, sampleRate }
 }
