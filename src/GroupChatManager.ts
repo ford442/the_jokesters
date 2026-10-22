@@ -334,7 +334,7 @@ export class GroupChatManager {
 
           if (this.isWritersRoom()) {
             // Raw output + the cued prompt as sent: the next request extends this one exactly.
-            this.conversation.setLastUserEngineContent(sentUser)
+            this.conversation.setLastUserEngineContent(turn.cue(historyContent))
             this.conversation.appendAssistant(cleaned, raw)
           } else {
             this.conversation.appendAssistant(cleaned)
@@ -853,7 +853,7 @@ export class GroupChatManager {
         ...(writersRoom ? { engineUser: sentUser, engineResponse: raw } : {}),
       })
 
-      if (writersRoom) store.setLastUserEngineContent(sentUser)
+      if (writersRoom) store.setLastUserEngineContent(turn.cue(currentPrompt))
       store.appendAssistant(cleaned, writersRoom ? raw : undefined)
       store.advanceAgent()
       currentPrompt = '(Reply naturally to the last thing said)'
