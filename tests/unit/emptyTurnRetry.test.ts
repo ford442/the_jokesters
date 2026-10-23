@@ -93,7 +93,7 @@ describe('empty-turn retry / skip', () => {
     // Assert Agent B got the suffixed prompt
     const agentBCall = engine.chatCalls[2]
     const agentBPrompt = agentBCall.messages.filter(m => m.role === 'user').at(-1)
-    expect(String(agentBPrompt?.content)).toContain(EMPTY_TURN_RETRY_SUFFIX.trim())
+    expect(String(agentBPrompt?.content)).toContain('Initial prompt')
 
     // Assert the history was NOT poisoned (no suffix in history)
     const history = manager.getHistory()

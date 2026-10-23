@@ -325,10 +325,8 @@ export class GroupChatManager {
             this.conversation.popLastIfUser()
             this.conversation.appendUser(historyContent)
             this.conversation.advanceAgent()
-            // Keep the suffix in activeUserContent for the next loop iteration (follow-up agent)
-            // so they are forced to speak, but because we appended `historyContent` (without suffix)
-            // to this.conversation above, the actual stored history is NOT poisoned.
-            activeUserContent = `${historyContent}${EMPTY_TURN_RETRY_SUFFIX}`
+            // Reset activeUserContent so we don't poison follow-up turns
+            activeUserContent = historyContent
             continue
           }
 
@@ -829,7 +827,9 @@ export class GroupChatManager {
 
       if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
         console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
+        store.popLastIfUser()
         // Do not append "…"; keep the prompt so the next agent can answer it.
+        store.appendUser(currentPrompt)
         store.advanceAgent()
         continue
       }
