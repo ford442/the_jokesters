@@ -146,7 +146,9 @@ After upload, the VPS should look like this:
 ├── gguf/
 │   ├── Hermes-3-Llama-3.1-8B.Q4_K_M.gguf
 │   ├── vicuna-7b-v1.5.Q4_K_M.gguf
-│   └── Hermes-3-Llama-3.2-3B.Q4_K_M.gguf
+│   ├── Hermes-3-Llama-3.2-3B.Q4_K_M.gguf
+│   ├── Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf
+│   └── mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf
 ├── transformers/
 │   └── onnx-community/
 │       ├── Qwen2.5-0.5B-Instruct/
@@ -170,6 +172,35 @@ After upload, the VPS should look like this:
     ├── single-thread.wasm
     └── multi-thread.wasm
 ```
+
+## GGUF Models
+
+GGUF files live in `gguf/` and are registered in `src/config/models.ts` with `${VPS_STORAGE_URL}/gguf/<file>`.
+Any URL containing `.gguf` goes through the service worker's dual-domain Range striping, and the Cache API key stays
+the primary-host URL, so a new GGUF needs no extra wiring.
+
+### Kimi-VL (vision) smoke note
+
+`Kimi-VL-A3B-Thinking-2506-GGUF` pairs the model with a vision projector via `llamaCpp.mmprojUrl`:
+
+| File | Role |
+|------|------|
+| `Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf` | Language model (~10 GB) |
+| `mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf` | Vision projector, loaded only when wllama supports image input |
+
+1. Confirm both files are served (200/206 with `Accept-Ranges: bytes`) from the **public** host, not just the Contabo origin
+   — run the VPS → `storage.1ink.us` sync first:
+   ```bash
+   for f in Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf; do
+     curl -sI -H "Range: bytes=0-0" "https://storage.1ink.us/models/gguf/$f" | head -1
+   done
+   ```
+2. `npm test -- kimiVlGguf` checks the registry entry, striping eligibility and primary-host cache keys for both files.
+3. Runtime: with `@wllama/wllama` 2.x the adapter logs `installed wllama has no image input; skipping mmproj, text only` and loads
+   the language model alone. Image input needs wllama 3.x (`supportInputModality('image')`), which is a breaking API change
+   and is not yet adopted; the chat path also still flattens messages to text.
+4. The Q4_K_M file is far larger than the other GGUFs. Expect memory limits on typical browsers; treat as experimental
+   and keep `Kimi-VL-A3B-Thinking-2506` (server API) as the working path.
 
 ## Nginx Configuration
 

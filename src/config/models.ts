@@ -708,6 +708,24 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
       context_size: 4096,
     },
   },
+  /**
+   * Kimi-VL A3B Thinking (2506) — MoE vision-language model.
+   * mmproj is the vision projector; it is only fetched when the installed wllama supports image input.
+   * vram_required_MB is an estimate from the ~10 GB Q4_K_M file, not a measurement.
+   */
+  {
+    id: 'Kimi-VL-A3B-Thinking-2506-GGUF',
+    name: 'Kimi-VL A3B Thinking (GGUF)',
+    vram_required_MB: 11000,
+    context_window_size: 4096,
+    llamaCpp: {
+      gguf_url: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
+      hf_repo: '',
+      hf_file: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
+      mmprojUrl: `${VPS_STORAGE_URL}/gguf/mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf`,
+      context_size: 4096,
+    },
+  },
   {
     id: 'Hermes-3-Llama-3.2-3B-GGUF',
     name: 'Hermes 3 Llama 3.2 3B (GGUF)',
