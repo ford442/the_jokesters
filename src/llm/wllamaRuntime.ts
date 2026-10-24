@@ -83,3 +83,18 @@ export function wllamaLoadTuning(
     flash_attn: true,
   }
 }
+
+/** wllama 3.x exposes supportInputModality(); 2.x has no mmproj / image-input API at all. */
+export function wllamaSupportsMultimodal(wllama: object): boolean {
+  return typeof (wllama as { supportInputModality?: unknown }).supportInputModality === 'function'
+}
+
+/**
+ * First argument for `loadModelFromUrl`. With an mmproj and a multimodal-capable wllama this is the
+ * 3.x `{ url, mmprojUrl }` source; otherwise the plain GGUF URL (mmproj is never downloaded).
+ * The 2.x typings only declare `string | string[]`, hence the cast.
+ */
+export function wllamaModelSource(wllama: object, ggufUrl: string, mmprojUrl?: string): string {
+  if (!mmprojUrl || !wllamaSupportsMultimodal(wllama)) return ggufUrl
+  return { url: ggufUrl, mmprojUrl } as unknown as string
+}

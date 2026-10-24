@@ -126,6 +126,8 @@ export interface LlamaCppEngineConfig {
   gguf_url: string
   hf_repo?: string
   hf_file?: string
+  /** Vision projector GGUF for multimodal models (needs a wllama build with image input). */
+  mmprojUrl?: string
   context_size: number
 }
 

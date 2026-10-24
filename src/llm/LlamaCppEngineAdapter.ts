@@ -16,7 +16,13 @@ import type {
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
-import { WLLAMA_WASM_PATHS, rethrowWllamaRuntimeError, wllamaLoadTuning } from './wllamaRuntime'
+import {
+  WLLAMA_WASM_PATHS,
+  rethrowWllamaRuntimeError,
+  wllamaLoadTuning,
+  wllamaModelSource,
+  wllamaSupportsMultimodal,
+} from './wllamaRuntime'
 import { jsonSchemaToGbnf } from './structured/jsonSchemaToGbnf'
 
 /** GBNF for `sampling.grammar` from the engine-neutral response format (#400 C). */
@@ -65,6 +71,13 @@ export class LlamaCppEngineAdapter implements LLMEngine {
       throw new Error('Missing GGUF URL in modelConfig')
     }
 
+    // mmproj (image input) needs a multimodal wllama; otherwise load the text model alone.
+    const mmprojUrl = llamaCppConfig.mmprojUrl
+    if (mmprojUrl && !wllamaSupportsMultimodal(this.wllama)) {
+      console.warn(`[LlamaCppEngineAdapter] ${modelConfig.id}: installed wllama has no image input; skipping mmproj, text only`)
+    }
+    const modelSource = wllamaModelSource(this.wllama, ggufUrl, mmprojUrl)
+
     try {
       onProgress?.({
         progress: 0.1,
@@ -95,7 +108,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
         if (llamaCppConfig.hf_repo) {
           await this.wllama.loadModelFromHF(llamaCppConfig.hf_repo, llamaCppConfig.hf_file || ggufUrl, loadConfig)
         } else {
-          await this.wllama.loadModelFromUrl(ggufUrl, loadConfig)
+          await this.wllama.loadModelFromUrl(modelSource, loadConfig)
         }
       } catch (firstError) {
         const errMsg = firstError instanceof Error ? firstError.message : String(firstError)
@@ -113,7 +126,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
             timeElapsed: 0,
             text: 'Corrupted cache detected. Re-downloading...',
           })
-          await this.wllama.loadModelFromUrl(ggufUrl, {
+          await this.wllama.loadModelFromUrl(modelSource, {
             ...loadConfig,
             useCache: false,
           })
@@ -124,7 +137,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
           if (llamaCppConfig.hf_repo) {
             await this.wllama.loadModelFromHF(llamaCppConfig.hf_repo, llamaCppConfig.hf_file || ggufUrl, plain)
           } else {
-            await this.wllama.loadModelFromUrl(ggufUrl, plain)
+            await this.wllama.loadModelFromUrl(modelSource, plain)
           }
         } else {
           throw firstError
