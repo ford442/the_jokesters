@@ -14,7 +14,8 @@ export interface StoredEpisode {
   vectorClock?: VectorClock;
   updatedAt?: number;
   timestamp?: number;
-  yjsState?: string; // base64 encoded Y.Doc state
+  /** @deprecated Ignored. Old blobs may still carry it; nothing reads or writes it any more. */
+  yjsState?: string;
 }
 
 /** Per-client logical clock: clientId -> monotonically increasing counter. */

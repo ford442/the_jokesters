@@ -1,4 +1,5 @@
 import type { Agent, Message } from '../types/chat'
+import { newMessageId } from './messageId'
 import {
   applyMemoryHint,
   clampMemoryDepth,
@@ -64,14 +65,18 @@ export class ConversationStore {
   }
 
   appendUser(content: string, engineContent?: string): void {
-    this.history.push(engineContent ? { role: 'user', content, engineContent } : { role: 'user', content })
+    this.history.push(
+      engineContent
+        ? { id: newMessageId(), role: 'user', content, engineContent }
+        : { id: newMessageId(), role: 'user', content },
+    )
   }
 
   appendAssistant(content: string, engineContent?: string): void {
     this.history.push(
       engineContent && engineContent !== content
-        ? { role: 'assistant', content, engineContent }
-        : { role: 'assistant', content },
+        ? { id: newMessageId(), role: 'assistant', content, engineContent }
+        : { id: newMessageId(), role: 'assistant', content },
     )
   }
 
@@ -85,7 +90,7 @@ export class ConversationStore {
   replaceLastUser(content: string): boolean {
     for (let i = this.history.length - 1; i >= 0; i--) {
       if (this.history[i].role === 'user') {
-        this.history[i] = { role: 'user', content }
+        this.history[i] = { id: newMessageId(), role: 'user', content }
         return true
       }
     }
