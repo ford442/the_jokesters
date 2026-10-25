@@ -28,6 +28,7 @@ import {
   recommendModels,
   consumeOomFallback,
   avoidVicunaFromLastOom,
+  loadLastOomModelId,
   type ModelRecommendation,
 } from './modelGuide'
 
@@ -341,7 +342,10 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       const oom = consumeOomFallback()
       const last = loadLastSuccessfulLaunch()
       const device = await probeDeviceCapabilities()
-      const rec = recommendModels(device, { avoidVicuna: avoidVicunaFromLastOom() })
+      const rec = recommendModels(device, {
+        avoidVicuna: avoidVicunaFromLastOom(),
+        lastOomModelId: loadLastOomModelId(),
+      })
 
       updateCapabilityDisplay(
         {

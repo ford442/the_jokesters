@@ -94,9 +94,19 @@ describe('getSmallerFallbackFor', () => {
   })
 })
 
+describe('recommendModels after a ctx4k Vicuna OOM', () => {
+  it('starts on the ctx1024 lib instead of skipping Vicuna', () => {
+    const r = recommendModels(device({ availableVramMB: 4096 }), {
+      avoidVicuna: false,
+      lastOomModelId: 'vicuna-7b-q4f32-webllm-vps',
+    })
+    expect(r.primary.id).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+  })
+})
+
 describe('BLESSED_PRESETS', () => {
-  it('curates 3–5 presets only', () => {
+  it('curates 3–7 presets only', () => {
     expect(BLESSED_PRESETS.length).toBeGreaterThanOrEqual(3)
-    expect(BLESSED_PRESETS.length).toBeLessThanOrEqual(5)
+    expect(BLESSED_PRESETS.length).toBeLessThanOrEqual(7)
   })
 })

@@ -188,8 +188,10 @@ describe('preferredStartSource / last success', () => {
 })
 
 describe('shouldAvoidVicunaRecommendation', () => {
-  it('is true after a Vicuna OOM', () => {
-    expect(shouldAvoidVicunaRecommendation('vicuna-7b-q4f32-webllm-vps')).toBe(true)
+  it('is true only after the smallest compiled Vicuna plan OOMs', () => {
+    expect(shouldAvoidVicunaRecommendation('vicuna-7b-q4f32-webllm-ctx512')).toBe(true)
+    expect(shouldAvoidVicunaRecommendation('vicuna-7b-q4f32-webllm-vps')).toBe(false)
+    expect(shouldAvoidVicunaRecommendation('vicuna-7b-q4f32-webllm-ctx1024')).toBe(false)
     expect(shouldAvoidVicunaRecommendation('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')).toBe(false)
     expect(shouldAvoidVicunaRecommendation(null)).toBe(false)
   })

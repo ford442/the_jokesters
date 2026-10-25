@@ -1,6 +1,7 @@
 /**
  * Curated "blessed" model presets for guided onboarding.
- * Keep this list short (3–5) — do not dump the full registry into the launch UI.
+ * Keep this list short (≤7) — do not dump the full registry into the launch UI.
+ * Order mirrors the OOM ladder (`OOM_MODEL_LADDER` in utils/vramOverrides.ts).
  */
 
 import type { EngineType } from '../llm/EngineFactory'
@@ -30,7 +31,7 @@ export interface BlessedPreset {
 }
 
 /**
- * Five blessed presets — primary recommendation ladder + CPU escape hatch.
+ * Blessed presets — primary recommendation ladder (incl. compiled ctx1024/ctx512 Vicuna) + CPU escape hatch.
  */
 export const BLESSED_PRESETS: readonly BlessedPreset[] = [
   {
@@ -71,6 +72,32 @@ export const BLESSED_PRESETS: readonly BlessedPreset[] = [
     needsWebGPU: true,
     tier: 'quality',
     blurb: 'Higher quality multi-agent banter when you have ~4+ GB free VRAM.',
+  },
+  {
+    id: 'vicuna-7b-q4f32-webllm-ctx1024',
+    shortName: 'Vicuna 7B ctx1024',
+    label: 'Vicuna 7B · compiled 1K ctx · MLC · ~3.6 GB',
+    engine: 'mlc',
+    engines: ['mlc', 'auto'],
+    vramMB: 3600,
+    downloadMB: 3800,
+    needsF16: false,
+    needsWebGPU: true,
+    tier: 'quality',
+    blurb: 'Same Vicuna weights with a wasm compiled for 1024 tokens — lower peak VRAM than the 4K lib.',
+  },
+  {
+    id: 'vicuna-7b-q4f32-webllm-ctx512',
+    shortName: 'Vicuna 7B ctx512',
+    label: 'Vicuna 7B · compiled 512 ctx · MLC · ~3.2 GB',
+    engine: 'mlc',
+    engines: ['mlc', 'auto'],
+    vramMB: 3200,
+    downloadMB: 3800,
+    needsF16: false,
+    needsWebGPU: true,
+    tier: 'quality',
+    blurb: 'Smallest Vicuna plan for ~4 GB cards. Shorter memory, still 7B banter.',
   },
   {
     id: 'Qwen2.5-0.5B-Instruct-ONNX',
