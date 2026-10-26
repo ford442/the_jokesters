@@ -318,6 +318,7 @@ export class GroupChatManager {
               onSentence,
             ))
             logTurnText(raw, cleaned)
+            activeUserContent = historyContent
           }
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
