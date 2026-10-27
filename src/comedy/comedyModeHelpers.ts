@@ -121,6 +121,9 @@ export async function processTurnWithComedy(
 
 /**
  * chatForAgent wrapper that registers agent output with the comedy session.
+ *
+ * NOTE: Callers must NOT wrap this function with `ctx.callbacks.onTurnStart`
+ * and `ctx.callbacks.onTurnEnd`. This helper already handles bracketing internally.
  */
 export async function chatForAgentWithComedy(
   ctx: ModeContext,
