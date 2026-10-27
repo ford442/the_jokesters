@@ -831,6 +831,8 @@ export class GroupChatManager {
         console.warn(`[EmptyTurn] Skipping prerender slot for ${currentAgent.id}`)
         store.popLastIfUser()
         // Do not append "…"; keep the prompt so the next agent can answer it.
+        // Also strip any retry suffix that might have been applied to currentPrompt
+        currentPrompt = currentPrompt.replace(EMPTY_TURN_RETRY_SUFFIX, '')
         store.appendUser(currentPrompt)
         store.advanceAgent()
         continue
