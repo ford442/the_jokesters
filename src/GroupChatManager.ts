@@ -243,6 +243,7 @@ export class GroupChatManager {
 
     try {
       for (let attempt = 0; attempt < MAX_AGENT_ATTEMPTS; attempt++) {
+        activeUserContent = historyContent
         const currentAgent = this.conversation.getCurrentAgent()
         lastAgentId = currentAgent.id
 
@@ -851,7 +852,7 @@ export class GroupChatManager {
         agentName: currentAgent.name,
         response: cleaned,
         sentences,
-        ...(writersRoom ? { engineUser: sentUser, engineResponse: raw } : {}),
+        ...(writersRoom ? { engineUser: turn.cue(currentPrompt), engineResponse: raw } : {}),
       })
 
       if (writersRoom) store.setLastUserEngineContent(turn.cue(currentPrompt))
