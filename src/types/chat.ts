@@ -15,6 +15,8 @@ export interface Agent {
 }
 
 export interface Message {
+  /** Stable identity, assigned when the message is appended; cloud merge keys on it, never on text. */
+  id?: string
   role: 'system' | 'user' | 'assistant'
   /** Cleaned text for display, TTS and memory. */
   content: string

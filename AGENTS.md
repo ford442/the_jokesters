@@ -484,7 +484,7 @@ Episode persistence system:
 - Profile-based namespacing
 
 **Types** (`memoryTypes.ts`): `StoredEpisode` is the internal local/cloud sync record
-(`{ history: Message[], scenario?, vectorClock?, updatedAt?, timestamp? }`) — **not** the same as
+(`{ history: Message[], scenario?, vectorClock?, updatedAt?, timestamp? }`; legacy `yjsState` ignored) — **not** the same as
 the portable `.jokesters.json` export format (`JokestersEpisode` in `src/episode/types.ts`, which
 stores rendered `turns`). The two never convert into each other; `MemoryManager` and `src/episode/`
 are independent persistence paths that both ultimately read from `GroupChatManager.getHistory()`.
@@ -495,7 +495,11 @@ doesn't itself guarantee), `PendingDelta`, `ConflictResolution`.
 
 **Conflict resolution** (`memoryConflict.ts`, pure functions — no IDB/network, fully unit tested):
 - `compareVectorClocks` decides `'cloud' | 'local' | 'concurrent' | 'equal'` from two vector clocks
-- `mergeHistories` / `mergeVectorClocks` — the actual merge for the concurrent case
+- `mergeHistories` — the one history merge. A decisive/equal clock returns that side as-is; only `'concurrent'`
+  merges, by `Message.id` (never role+content), ordered by the side with the larger clock total, other side's
+  unseen ids appended, clock max-merged and the resolving client bumped. `mergeVectorClocks` is its clock half.
+  No Yjs: `yjsState` on `StoredEpisode` is an ignored legacy field. Ids are minted in `ConversationStore.append*`;
+  `saveEpisode` stamps deterministic `legacy-*` ids on messages saved before ids existed (`src/chat/messageId.ts`).
 - `resolveEpisodeConflict` — automatic strategy used by `syncAllHistoryFromCloud`'s two-way sync
 - `applyManualResolution` — backs `MemoryManager.resolveConflict`, the dashboard's user-driven
   Accept Local / Accept Cloud / Merge choice (independent of the automatic vector-clock strategy)

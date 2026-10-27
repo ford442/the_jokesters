@@ -56,7 +56,6 @@
     "mp4-muxer": "^5.2.2",
     "onnxruntime-web": "~1.26.0",
     "three": "0.170.0",
-    "yjs": "^13.6.31",
     "zod": "^4.6.7"
   },
   "overrides": {
