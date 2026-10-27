@@ -52,7 +52,7 @@ export class ModelSession {
   }
 
   getContextWindowSize(): number {
-    return this.engine?.getContextWindowSize() ?? this.activeContextTokens
+    return this.engine?.getContextInfo()?.effective ?? this.activeContextTokens
   }
 
   getContextManager(): DynamicContextManager {
@@ -187,7 +187,7 @@ export class ModelSession {
         if (preferredContext && preferredContext !== 'auto') {
           contextSize = preferredContext
         } else {
-          contextSize = this.engine.getContextWindowSize()
+          contextSize = this.engine.getContextInfo().effective
         }
         this.applyContextSize(contextSize)
         await this.attachTokenEstimator()
@@ -296,7 +296,7 @@ export class ModelSession {
         this.loadedModelId = modelId
         this.engineType = 'mlc'
 
-        const actualContext = adapter.getContextWindowSize()
+        const actualContext = adapter.getContextInfo().effective
         this.applyContextSize(actualContext)
         await this.attachTokenEstimator()
         return
@@ -345,7 +345,7 @@ export class ModelSession {
   /** Re-sync context budget after hot-swap (may differ from prior engine). */
   syncContextFromEngine(): void {
     if (!this.engine) return
-    this.applyContextSize(this.engine.getContextWindowSize())
+    this.applyContextSize(this.engine.getContextInfo().effective)
   }
 
   async interrupt(): Promise<void> {
@@ -371,7 +371,7 @@ export class ModelSession {
     this.loadedModelId = modelId
     this.engineType = engineType
     this.isInitialized = true
-    this.applyContextSize(engine.getContextWindowSize())
+    this.applyContextSize(engine.getContextInfo().effective)
   }
 }
 

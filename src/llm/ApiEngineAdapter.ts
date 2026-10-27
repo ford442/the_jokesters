@@ -6,13 +6,17 @@
  */
 
 import type {
+
   LLMEngine,
   ChatMessage,
   GenerationOptions,
   InitProgressReport,
   UnifiedModelConfig,
   EngineType,
-  ContentPart,
+  ContentPart} from './LLMEngine';
+import {
+  type EngineContextInfo,
+  DEFAULT_CONTEXT_WINDOW_SIZE
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
@@ -210,8 +214,13 @@ export class ApiEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
-  getContextWindowSize(): number {
-    return this.config?.context_window_size ?? 4096
+  getContextInfo(): EngineContextInfo {
+    const requested = this.config?.context_window_size ?? DEFAULT_CONTEXT_WINDOW_SIZE
+    return {
+      requested,
+      effective: requested,
+      source: this.config?.context_window_size ? 'config' : 'adapter_default'
+    }
   }
 
   getEngineType(): EngineType {
