@@ -24,6 +24,7 @@ import {
   type MlcEngineHandle,
 } from './mlcEngineCreate'
 import { isWorkerMlcEngine, type MlcRuntime } from './worker/mlcWorkerEngine'
+import { type EngineContextInfo, DEFAULT_CONTEXT_WINDOW_SIZE } from './LLMEngine'
 import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 
 export interface MlcModelConfig extends UnifiedModelConfig {
@@ -263,18 +264,23 @@ export class MlcEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
-  getContextWindowSize(): number {
-    if (this.config?.context_window_size) {
-      return this.config.context_window_size
+  getContextInfo(): EngineContextInfo {
+    const fromEngine = getMlcEngineContextWindow(this.engine) ?? (this.engine as { chatConfig?: { context_window_size?: number } })?.chatConfig?.context_window_size as number | undefined
+    const fromConfig = this.config?.context_window_size
+    const fromOverrides = this.config?.mlc?.overrides?.context_window_size as number | undefined
+
+    const effective = fromEngine ?? fromConfig ?? fromOverrides ?? DEFAULT_CONTEXT_WINDOW_SIZE
+    const requested = fromConfig ?? fromOverrides ?? DEFAULT_CONTEXT_WINDOW_SIZE
+
+    let source: EngineContextInfo['source'] = 'adapter_default'
+    if (fromEngine !== undefined) source = 'model_lib'
+    else if (fromConfig !== undefined || fromOverrides !== undefined) source = 'config'
+
+    return {
+      requested,
+      effective,
+      source
     }
-    const engine = this.engine as {
-      chatConfig?: { context_window_size?: number }
-    } | null
-    return (
-      getMlcEngineContextWindow(engine) ??
-      engine?.chatConfig?.context_window_size ??
-      4096
-    )
   }
 
   /** Where the loaded engine runs, or null when nothing is loaded. */

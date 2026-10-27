@@ -81,6 +81,15 @@ export interface NormalizedGenerationOptions {
   stream: boolean
 }
 
+export const DEFAULT_CONTEXT_WINDOW_SIZE = 4096;
+
+export interface EngineContextInfo {
+  requested: number
+  compiledMax?: number
+  effective: number
+  source: 'model_lib' | 'config' | 'oom_stepdown' | 'adapter_default' | 'user_override'
+}
+
 export interface InitProgressReport {
   progress: number
   text: string
@@ -212,7 +221,7 @@ export interface LLMEngine {
   /**
    * Active context window size in tokens (after load / user override).
    */
-  getContextWindowSize(): number
+  getContextInfo(): EngineContextInfo
 
   /**
    * Interrupt in-flight generation. Must be idempotent and must not throw.

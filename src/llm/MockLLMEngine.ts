@@ -2,6 +2,7 @@
  * Mock LLM engine for unit tests — tracks interrupt and context window semantics.
  */
 import type {
+  EngineContextInfo,
   ChatMessage,
   ChatStreamEvent,
   EngineType,
@@ -92,8 +93,12 @@ export class MockLLMEngine implements LLMEngine {
     return this.config?.id ?? null
   }
 
-  getContextWindowSize(): number {
-    return this.contextWindowSize
+  getContextInfo(): EngineContextInfo {
+    return {
+      requested: this.contextWindowSize,
+      effective: this.contextWindowSize,
+      source: 'config'
+    }
   }
 
   setContextWindowSize(tokens: number): void {

@@ -295,7 +295,7 @@ describe('MlcEngineAdapter over the worker client', () => {
     }
     expect(text).toBe('Hello there.')
     expect(adapter.getRuntime()).toBe('worker')
-    expect(adapter.getContextWindowSize()).toBe(1024)
+    expect(adapter.getContextInfo().effective).toBe(1024)
   })
 
   it('an abandoned stream is interrupted and drained so the next request is not deadlocked', async () => {

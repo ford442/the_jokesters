@@ -7,12 +7,16 @@
 
 import { Wllama, type WllamaChatMessage, type SamplingConfig } from '@wllama/wllama'
 import type {
+
   ChatMessage,
   GenerationOptions,
   InitProgressReport,
   UnifiedModelConfig,
   EngineType,
-  LLMEngine,
+  LLMEngine} from './LLMEngine';
+import {
+  type EngineContextInfo,
+  DEFAULT_CONTEXT_WINDOW_SIZE
 } from './LLMEngine'
 import { normalizeOptions } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
@@ -88,7 +92,7 @@ export class LlamaCppEngineAdapter implements LLMEngine {
       const startTime = performance.now()
 
       // n_ctx follows the context budget (user / guided-launch choice), not a fixed 4096.
-      const contextTokens = modelConfig.context_window_size || llamaCppConfig.context_size || 4096
+      const contextTokens = modelConfig.context_window_size || llamaCppConfig.context_size || DEFAULT_CONTEXT_WINDOW_SIZE
       const tuning = wllamaLoadTuning(contextTokens)
       console.log('[LlamaCppEngineAdapter] Load tuning', tuning)
       const loadConfig = {
@@ -299,8 +303,13 @@ export class LlamaCppEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
-  getContextWindowSize(): number {
-    return this.config?.context_window_size ?? this.config?.llamaCpp?.context_size ?? 4096
+  getContextInfo(): EngineContextInfo {
+    const requested = this.config?.context_window_size ?? this.config?.llamaCpp?.context_size ?? DEFAULT_CONTEXT_WINDOW_SIZE
+    return {
+      requested,
+      effective: requested,
+      source: (this.config?.context_window_size || this.config?.llamaCpp?.context_size) ? 'config' : 'adapter_default'
+    }
   }
 
   getEngineType(): EngineType {
