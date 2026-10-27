@@ -21,6 +21,20 @@ New modes are welcome only if they clear **all** of the following:
 | 4 | **No premise clone** | PR documents how this differs from freeform improv **and** from nearest existing modes (search `MODE_REGISTRY` / mode files for similar titles). |
 | 5 | **Humor over volume** | PR answers: why this is funnier than freeform improv; lists callback opportunities; notes token budget (short/long). |
 
+### Script or loop?
+
+A mode that is "an opener, then react to each user line" ships a **`SceneScript`**
+(`src/Director/modes/sceneRunner.ts`), not a new `runXLoop` body: `banner`, `userLabel`, `roles`
+(role name → agent id) and `beats` (`when: 'open'` once, otherwise every round; `skipChance` for an
+optional beat; `{ oneOf: [...] }` to pick one). Prompts use `{{input}}` for the user's line and
+`{{name}}` for config values, passed as `vars`. The exported `runXLoop` is a one-liner that calls
+`runSceneScript(SCRIPT, ctx, vars)`, so the registry generator still finds it. The runner owns the loop,
+user echo and `chatForAgentWithComedy`, so comedy, production card, scene arc and audience scoring
+come for free; a script never calls `chatForAgent`. Example: `ExpandedRealityModes_ShowGames.ts`.
+
+Modes that need real rules (trivia scoring, trial phases, musical bar count) keep a hand-written
+loop. Do not force them into the schema.
+
 ### Explicit non-goals for mode PRs
 
 - Drive-by dream modes with no registry entry  
