@@ -44,8 +44,8 @@ export const WASM_LIBS = {
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)
  * Guided launch order lives in `recommendModels` (Hermes-first mid-band;
- * Vicuna 7B only when VRAM looks healthy). Auto-fallback after a Vicuna
- * failure jumps to Hermes 3B — ctx512/ctx1024 stay explicit picker entries.
+ * Vicuna 7B only when VRAM looks healthy). An OOM inside CreateMLCEngine steps
+ * the compiled lib ctx4k → ctx1024 → ctx512 → Hermes 3B (`OOM_MODEL_LADDER`).
  *
  * WASM ↔ override coupling:
  * - `model_lib` sets the compiled TVM memory plan (peak allocation at CreateMLCEngine).
@@ -547,8 +547,8 @@ export function getModelInfo(modelId: string): any {
 
 /**
  * Auto-fallback after the preferred model fails.
- * Vicuna 7B ctx variants are picker-only — a failed Vicuna load steps to
- * Hermes-3 3B, then ultra-low / CPU, not another 7B.
+ * OOM step-down through the compiled Vicuna ctx1024/ctx512 libs already happens
+ * inside `loadModelWithDynamicContext`; this chain covers what is left after that.
  */
 const SMALLER_FALLBACK_ORDER: string[] = [
   VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id,

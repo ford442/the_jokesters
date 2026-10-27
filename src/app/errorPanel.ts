@@ -26,7 +26,7 @@ export function renderInitErrorPanel(error: unknown, onRetry: () => void): void 
     'vicuna-7b-q4f32-webllm-vps'
 
   const plan = selectErrorPanelActions({ category: errorCategory, modelId: failedId })
-  const smaller = getSmallerFallbackFor(failedId)
+  const smaller = getSmallerFallbackFor(failedId, errorCategory === 'oom' ? 'oom' : 'download')
 
   if (errorCategory === 'oom') {
     recordOomFailure(failedId)
@@ -41,7 +41,7 @@ export function renderInitErrorPanel(error: unknown, onRetry: () => void): void 
       title: isBufferLimit ? 'GPU Buffer Limit Too Small' : 'GPU Out of Memory',
       suggestion: isBufferLimit
         ? `Your GPU only allows very small buffers. Try ${smaller.shortName} below.`
-        : `Close other GPU-heavy tabs, or jump to ${smaller.shortName}.`,
+        : `Close other GPU-heavy tabs, or step down to ${smaller.shortName} (${smaller.label}).`,
     },
     llamacpp_mismatch: {
       title: 'llama.cpp Runtime Mismatch',

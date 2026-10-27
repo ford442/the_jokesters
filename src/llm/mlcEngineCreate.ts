@@ -24,11 +24,9 @@ import {
 import { categorizeChatError } from '../chat/chatErrors';
 import {
   DEFAULT_VRAM_CONFIG,
-  buildVRAMOverrides,
-  clampContextToCompiledMax,
   estimateAvailableVRAM,
-  getContextConfigForVRAM,
-  getModelSize,
+  nextMlcOomStep,
+  resolveContextPolicy,
   type VRAMOptimizationConfig,
 } from '../utils/vramOverrides';
 import {
@@ -44,6 +42,7 @@ import {
   LAST_LOAD_SOURCE_KEY,
   type LoadSource,
 } from '../config/loadFailover';
+import { appConfig } from '../config/models';
 
 /** Model config shape used by loadModelWithDynamicContext (legacy + unified MLC path). */
 export interface DynamicModelConfig {
@@ -146,6 +145,10 @@ async function createEngineForRuntime(
   return createMainThreadEngine(modelId, engineConfig, chatOpts);
 }
 
+function findModelConfig(modelId: string): DynamicModelConfig | undefined {
+  return (appConfig.model_list as unknown as DynamicModelConfig[]).find((m) => m.model_id === modelId);
+}
+
 // ============================================================================
 // Model Loading
 // ============================================================================
@@ -240,38 +243,24 @@ export async function loadModelWithDynamicContext(
     ms: Math.round(performance.now() - loadStarted),
   });
 
-  // Determine context size
-  let contextSize: number;
-  if (preferredContext === 'auto') {
-    // First, check if the model has an explicit context_window_size in overrides
-    if (modelConfig.overrides?.context_window_size) {
-      contextSize = modelConfig.overrides.context_window_size as number;
-      console.log(`[DynamicContext] Using explicit model config context_window_size: ${contextSize}`);
-    } else {
-      const vramMB = await estimateAvailableVRAM();
-      const modelSize = getModelSize(modelConfig.model_id);
-      const ctxConfig = getContextConfigForVRAM(vramMB, modelSize);
-      contextSize = ctxConfig.context_window_size;
-      console.log(`[DynamicContext] Auto-selected ${contextSize} context for ${modelConfig.model_id}`);
-    }
-  } else {
-    contextSize = preferredContext;
-    console.log(`[DynamicContext] User-selected ${contextSize} context`);
-  }
-
-  contextSize = clampContextToCompiledMax(contextSize, compiledMaxContext);
-
-  // Build overrides with VRAM optimizations
-  const overrides = buildVRAMOverrides(
-    modelConfig.overrides || {},
-    contextSize,
-    vramConfig,
-    modelConfig.model_id,
+  // Window only consults the VRAM table when neither preset nor wasm filename pins one.
+  const needsVramProbe =
+    preferredContext === 'auto' &&
+    typeof modelConfig.overrides?.context_window_size !== 'number' &&
+    compiledMaxContext == null;
+  const policy = resolveContextPolicy({
+    modelId: modelConfig.model_id,
+    vramMB: needsVramProbe ? await estimateAvailableVRAM() : undefined,
     compiledMaxContext,
-  );
-
-  const effectiveContext = overrides['context_window_size'] as number;
-  const effectivePrefill = overrides['prefill_chunk_size'] as number;
+    preferredContext,
+    presetOverrides: modelConfig.overrides,
+    vramConfig,
+  });
+  const contextSize = policy.context_window_size;
+  const overrides = policy.overrides;
+  const effectiveContext = contextSize;
+  const effectivePrefill = policy.prefill_chunk_size;
+  console.log(`[DynamicContext] ${modelConfig.model_id}: context ${contextSize}, prefill ${effectivePrefill}`);
 
   const dynamicAppConfig: {
     model_list: Array<DynamicModelConfig & { overrides: Record<string, unknown> }>;
@@ -418,47 +407,36 @@ export async function loadModelWithDynamicContext(
       );
     }
 
-    // On OOM, retry with smaller context and optionally force KV cache quantization
+    // On OOM, step the compiled model_lib down the ladder (ctx4k → ctx1024 → ctx512 → 3B).
+    // Halving context_window_size cannot shrink a baked TVM plan (docs/WASM_CONTEXT_GUIDE.md).
     if (category === 'oom' || errorMsg.includes('memory') || errorMsg.includes('OOM') || errorMsg.includes('createBuffer')) {
-      // Floor: 128 for 3B, 256 for 7B/8B (was 512 — lowered for constrained 4 GB GPUs)
-      const isSmallModel = modelConfig.model_id.toLowerCase().includes('3b');
-      const minContext = isSmallModel ? 128 : 256;
-
-      const oomFloor = compiledMaxContext != null
-        ? Math.max(minContext, Math.min(compiledMaxContext, contextSize))
-        : minContext;
-
-      if (contextSize > oomFloor) {
-        // Halve the context window each OOM retry until we hit the floor
-        const smallerContext = Math.max(oomFloor, Math.floor(contextSize / 2));
-        if (smallerContext === oomFloor) {
-          console.warn(
-            `[DynamicContext] OOM — reached minimum context (${oomFloor} tokens) for ${modelConfig.model_id}. ` +
-            `Response quality will be very limited. Consider switching to a 3B model if this fails.`
-          );
-        } else {
-          console.warn(`[DynamicContext] OOM with context=${contextSize}, retrying at ${smallerContext}`);
-        }
-
+      const nextId = nextMlcOomStep(requestedId);
+      const nextConfig = nextId ? findModelConfig(nextId) : undefined;
+      if (nextId && nextConfig) {
+        console.warn(`[DynamicContext] OOM on ${requestedId} (compiled max ${compiledMaxContext ?? '?'}) — stepping to ${nextId}`);
+        onProgress?.({ progress: 0, timeElapsed: 0, text: `Out of GPU memory — retrying with ${nextId}…` });
+        try {
+          // The OOM panel records whichever preset actually failed last.
+          sessionStorage.setItem('jokesters-last-attempt-model', nextId);
+        } catch { /* ignore */ }
         await new Promise(r => setTimeout(r, 500));
         // `gc` only exists when the host exposes it (e.g. chrome --js-flags=--expose-gc).
         (globalThis as { gc?: () => void }).gc?.();
-
         return loadModelWithDynamicContext(
-          { ...modelConfig, skipSourceFailover: true },
-          smallerContext,
+          { ...nextConfig, requestedModelId: nextId, skipSourceFailover: true },
+          'auto',
           onProgress,
           vramConfig,
           retryOptions,
         );
       }
 
-      // Already at floor — try forcing int8 KV quantization as the last resort
+      // Off-ladder or bottom MLC rung — one int8 KV retry before surfacing the OOM panel.
       if (vramConfig.kv_cache_quantization === 'none' || vramConfig.kv_cache_quantization === 'auto') {
-        console.warn('[DynamicContext] OOM at minimum context — forcing int8 KV cache quantization and retrying');
+        console.warn('[DynamicContext] OOM with no smaller MLC lib — forcing int8 KV cache quantization and retrying');
         return loadModelWithDynamicContext(
           { ...modelConfig, skipSourceFailover: true },
-          oomFloor,
+          contextSize,
           onProgress,
           { ...vramConfig, kv_cache_quantization: 'int8' },
           retryOptions,

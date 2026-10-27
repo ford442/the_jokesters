@@ -111,7 +111,7 @@ export function invalidateVRAMCache(): void {
 }
 
 /**
- * Get context config based on VRAM and model size
+ * Get context config based on VRAM (input is *net* VRAM from `estimateAvailableVRAM`). and model size
  */
 export function getContextConfigForVRAM(
   vramMB: number,
@@ -143,7 +143,9 @@ export function getContextConfigForVRAM(
   };
 
   const modelConfigs = configs[modelParams];
-  const safeVRAM = vramMB * 0.85; // 85% safety margin (generous — overhead already subtracted by estimateAvailableVRAM)
+  // `vramMB` is already net of APP_OVERHEAD_MB (estimateAvailableVRAM) — no second margin here,
+  // or a 4 GB probe (4096 − 900 = 3196) would fall through every 7B row to 128 tokens.
+  const safeVRAM = vramMB;
 
   // Return the largest context window that fits within the VRAM budget
   for (const config of modelConfigs) {
@@ -275,4 +277,101 @@ export function buildVRAMOverrides(
   }
 
   return overrides;
+}
+
+// ============================================================================
+// Context policy + OOM model_lib ladder
+// ============================================================================
+
+/**
+ * OOM step-down order. Peak VRAM is set by the compiled `model_lib`, so recovery
+ * changes *which wasm* loads (same Vicuna weights, smaller baked plan — see
+ * `scripts/wasm-presets.json`), never just the runtime `context_window_size`.
+ */
+export const OOM_MODEL_LADDER = [
+  'vicuna-7b-q4f32-webllm-vps',
+  'vicuna-7b-q4f32-webllm-ctx1024',
+  'vicuna-7b-q4f32-webllm-ctx512',
+  'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
+  'Qwen2.5-0.5B-Instruct-ONNX',
+] as const;
+
+/** Ladder rungs `CreateMLCEngine` can load itself (Qwen ONNX needs the Transformers.js engine). */
+const MLC_LADDER_IDS: ReadonlySet<string> = new Set(OOM_MODEL_LADDER.slice(0, 4));
+
+/** Generic-ctx4k Vicuna presets that share the top rung's peak VRAM. */
+const LADDER_ALIASES: Record<string, string> = {
+  'vicuna-7b-q4f32-webllm-ultra-low': 'vicuna-7b-q4f32-webllm-vps',
+  'ford442/vicuna-7b-q4f32-webllm': 'vicuna-7b-q4f32-webllm-vps',
+};
+
+/** Next smaller preset after an OOM on `modelId`, or null when off-ladder / at the bottom. */
+export function nextOomLadderModelId(modelId: string): string | null {
+  const id = LADDER_ALIASES[modelId] ?? modelId;
+  const i = (OOM_MODEL_LADDER as readonly string[]).indexOf(id);
+  if (i < 0 || i >= OOM_MODEL_LADDER.length - 1) return null;
+  return OOM_MODEL_LADDER[i + 1];
+}
+
+/** Next rung the MLC engine can retry in-process, or null (hand off to the OOM panel). */
+export function nextMlcOomStep(modelId: string): string | null {
+  const next = nextOomLadderModelId(modelId);
+  return next && MLC_LADDER_IDS.has(next) ? next : null;
+}
+
+export interface ContextPolicyInput {
+  modelId: string;
+  /** Net VRAM (after APP_OVERHEAD_MB); only consulted when neither preset nor wasm pins a window. */
+  vramMB?: number;
+  compiledMaxContext: number | null;
+  /** Caller/user preference; 'auto' defers to the preset, then the compiled plan, then VRAM. */
+  preferredContext: number | 'auto';
+  presetOverrides?: Record<string, unknown>;
+  vramConfig?: VRAMOptimizationConfig;
+}
+
+export interface ContextPolicy {
+  modelId: string;
+  context_window_size: number;
+  prefill_chunk_size: number;
+  kv_cache_quantization?: string;
+  overrides: Record<string, unknown>;
+}
+
+/**
+ * Single context policy for an MLC load. Precedence for the window:
+ * explicit number → preset `context_window_size` → compiled max → VRAM table;
+ * always clamped to the compiled plan.
+ */
+export function resolveContextPolicy(input: ContextPolicyInput): ContextPolicy {
+  const { modelId, compiledMaxContext, preferredContext } = input;
+  const presetOverrides = input.presetOverrides ?? {};
+  const vramConfig = input.vramConfig ?? DEFAULT_VRAM_CONFIG;
+  const presetCtx = presetOverrides.context_window_size;
+
+  let requested: number;
+  if (typeof preferredContext === 'number') {
+    requested = preferredContext;
+  } else if (typeof presetCtx === 'number' && presetCtx > 0) {
+    requested = presetCtx;
+  } else if (compiledMaxContext != null && compiledMaxContext > 0) {
+    requested = compiledMaxContext;
+  } else {
+    requested = getContextConfigForVRAM(input.vramMB ?? 2048, getModelSize(modelId)).context_window_size;
+  }
+
+  const overrides = buildVRAMOverrides(
+    presetOverrides,
+    clampContextToCompiledMax(requested, compiledMaxContext),
+    vramConfig,
+    modelId,
+    compiledMaxContext,
+  );
+  return {
+    modelId,
+    context_window_size: overrides.context_window_size as number,
+    prefill_chunk_size: overrides.prefill_chunk_size as number,
+    kv_cache_quantization: overrides.kv_cache_quantization as string | undefined,
+    overrides,
+  };
 }

@@ -162,13 +162,23 @@ export interface HfFailoverConfig {
   overrides?: Record<string, unknown>
 }
 
+/**
+ * HF Hub hosts weights only. Keep the caller's compiled context class: a custom
+ * ctx512/ctx1024 lib stays put (same weights, smaller plan); only generic/unknown
+ * libs move to the upstream Llama-2 4K build.
+ */
+export function hfFailoverModelLib(modelLib: string): string {
+  const compiled = parseCompiledMaxContextFromModelLib(modelLib)
+  return compiled != null && compiled <= 1024 ? modelLib : MLC_LLAMA2_7B_CTX4K_WASM
+}
+
 export function applyHfWeightFailover<T extends HfFailoverConfig>(config: T): T {
   return {
     ...config,
     requestedModelId: config.requestedModelId ?? config.model_id,
     model_id: HF_VICUNA_MODEL_ID,
     model: HF_VICUNA_MODEL_URL,
-    model_lib: MLC_LLAMA2_7B_CTX4K_WASM,
+    model_lib: hfFailoverModelLib(config.model_lib),
     hf_fallback_url: undefined,
     loadSource: 'hf',
     skipSourceFailover: true,
@@ -235,9 +245,13 @@ export function parseLastLoadSource(raw: string | null): LastLoadSource | null {
   }
 }
 
+/**
+ * Only the smallest compiled Vicuna plan (ctx512) blacklists Vicuna outright; a
+ * ctx4k/ctx1024 OOM should step to the next lib, not skip the family.
+ */
 export function shouldAvoidVicunaRecommendation(lastOomModelId: string | null): boolean {
   if (!lastOomModelId) return false
-  return isVicunaFamilyModelId(lastOomModelId) || lastOomModelId.toLowerCase().includes('vicuna')
+  return lastOomModelId === 'vicuna-7b-q4f32-webllm-ctx512'
 }
 
 export function formatLoadTelemetry(event: LoadTelemetry): string {

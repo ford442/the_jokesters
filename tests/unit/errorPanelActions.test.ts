@@ -38,10 +38,11 @@ describe('selectErrorPanelActions', () => {
     expect(plan.actions).not.toContain('try_smaller')
   })
 
-  it('steps down on OOM without HF or mirror buttons', () => {
+  it('steps down on OOM to the compiled ctx1024 lib without HF or mirror buttons', () => {
     const plan = selectErrorPanelActions({ category: 'oom', modelId: VICUNA })
     expect(plan.actions).toEqual(['retry', 'try_smaller'])
-    expect(plan.smallerPresetId).toBe(HERMES)
+    expect(plan.smallerPresetId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    expect(plan.smallerShortName).toContain('ctx1024')
   })
 
   it('offers the same recovery set for config and wasm_missing', () => {
