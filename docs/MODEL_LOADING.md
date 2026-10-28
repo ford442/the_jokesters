@@ -216,7 +216,7 @@ The Jokesters loads LLM weights at runtime in the user's browser. Three engines 
 
 1. **MLC WebLLM (preferred)** — WebGPU-accelerated, ~80% of native performance. Used for any model with an `mlc` config block.
 2. **Transformers.js** — WebGPU via ONNX Runtime Web. Used as a fallback for HuggingFace ONNX models.
-3. **wllama (llama.cpp/WASM)** — CPU-only, GGUF format. Last resort for browsers without WebGPU. WASM is bundled with the app (not fetched from VPS) so it always matches the JS glue.
+3. **wllama (llama.cpp/WASM)** — CPU by default (`n_gpu_layers: 0`; models opt into WebGPU via `llamaCpp.gpuLayers`), GGUF format. Last resort for browsers without WebGPU. WASM is bundled with the app (not fetched from VPS) so it always matches the JS glue.
 
 ### Engine selection by environment
 

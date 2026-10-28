@@ -135,8 +135,14 @@ export interface LlamaCppEngineConfig {
   gguf_url: string
   hf_repo?: string
   hf_file?: string
-  /** Vision projector GGUF for multimodal models (needs a wllama build with image input). */
+  /** Vision projector GGUF for multimodal models; loaded together with the model, enables image input. */
   mmprojUrl?: string
+  /** Layers offloaded to WebGPU. Omitted = CPU only (0). */
+  gpuLayers?: number
+  /** Parse the chat template with Jinja (llama-server style) instead of llama.cpp's built-in template matcher. */
+  jinja?: boolean
+  /** Needs wllama's JSPI + 64-bit-memory build; fail fast instead of falling back to the 32-bit CDN compat build. */
+  requiresMem64?: boolean
   context_size: number
 }
 

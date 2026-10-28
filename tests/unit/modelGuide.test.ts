@@ -5,6 +5,7 @@ import {
   type DeviceCapabilitySnapshot,
 } from '../../src/app/modelGuide'
 import { BLESSED_PRESETS } from '../../src/config/blessedPresets'
+import { getUnifiedModelById } from '../../src/config/models'
 
 function device(partial: Partial<DeviceCapabilitySnapshot>): DeviceCapabilitySnapshot {
   const webgpu = partial.webgpu ?? true
@@ -105,8 +106,29 @@ describe('recommendModels after a ctx4k Vicuna OOM', () => {
 })
 
 describe('BLESSED_PRESETS', () => {
-  it('curates 3–7 presets only', () => {
+  it('offers Kimi-VL as a selectable vision preset without making it a recommendation', () => {
+    const kimi = BLESSED_PRESETS.find((p) => p.id === 'Kimi-VL-A3B-Thinking-2506-GGUF')
+    expect(kimi?.tier).toBe('vision')
+    expect(kimi?.engine).toBe('llamacpp')
+    expect(getUnifiedModelById(kimi!.id)?.llamaCpp?.mmprojUrl).toBeDefined()
+    const devices = [
+      { webgpu: false, availableVramMB: 0 },
+      { webgpu: true, availableVramMB: 16000, supportsF16: true },
+      { webgpu: true, availableVramMB: 8000, supportsF16: false },
+    ]
+    for (const d of devices) {
+      const r = recommendModels(device(d))
+      expect(r.primary.id).not.toBe(kimi!.id)
+      expect(r.safeFallback.id).not.toBe(kimi!.id)
+    }
+  })
+
+  it('falls back from a failed Kimi-VL load to the safe Hermes preset', () => {
+    expect(getSmallerFallbackFor('Kimi-VL-A3B-Thinking-2506-GGUF').id).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
+  })
+
+  it('curates 3–8 presets only', () => {
     expect(BLESSED_PRESETS.length).toBeGreaterThanOrEqual(3)
-    expect(BLESSED_PRESETS.length).toBeLessThanOrEqual(7)
+    expect(BLESSED_PRESETS.length).toBeLessThanOrEqual(8)
   })
 })

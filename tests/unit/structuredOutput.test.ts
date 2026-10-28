@@ -146,18 +146,18 @@ describe('completeStructured', () => {
     expect(toMlcResponseFormat(undefined)).toEqual({})
   })
 
-  it('passes GBNF to wllama sampling.grammar and reuses the KV cache', async () => {
+  it('passes GBNF as the wllama request grammar and reuses the KV cache', async () => {
     const adapter = new LlamaCppEngineAdapter() as unknown as {
       wllama: { createChatCompletion: ReturnType<typeof vi.fn> }
       initialized: boolean
       chatComplete: LlamaCppEngineAdapter['chatComplete']
     }
-    adapter.wllama = { createChatCompletion: vi.fn().mockResolvedValue('{"status":"FLOWING"}') }
+    adapter.wllama = { createChatCompletion: vi.fn().mockResolvedValue({ choices: [{ message: { content: '{"status":"FLOWING"}' } }] }) }
     adapter.initialized = true
     const format = buildResponseFormat(DirectorDecisionSchema)
     await adapter.chatComplete([{ role: 'user', content: 'judge' }], { response_format: format })
-    const opts = adapter.wllama.createChatCompletion.mock.calls[0][1]
-    expect(opts.sampling.grammar).toBe(format.type === 'json_schema' ? format.grammar : undefined)
-    expect(opts.useCache).toBe(true)
+    const opts = adapter.wllama.createChatCompletion.mock.calls[0][0]
+    expect(opts.grammar).toBe(format.type === 'json_schema' ? format.grammar : undefined)
+    expect(opts.cache_prompt).toBe(true)
   })
 })

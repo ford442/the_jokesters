@@ -186,7 +186,7 @@ the primary-host URL, so a new GGUF needs no extra wiring.
 | File | Role |
 |------|------|
 | `Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf` | Language model (~10 GB) |
-| `mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf` | Vision projector, loaded only when wllama supports image input |
+| `mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf` | Vision projector, loaded together with the model |
 
 1. Confirm both files are served (200/206 with `Accept-Ranges: bytes`) from the **public** host, not just the Contabo origin
    — run the VPS → `storage.1ink.us` sync first:
@@ -196,11 +196,16 @@ the primary-host URL, so a new GGUF needs no extra wiring.
    done
    ```
 2. `npm test -- kimiVlGguf` checks the registry entry, striping eligibility and primary-host cache keys for both files.
-3. Runtime: with `@wllama/wllama` 2.x the adapter logs `installed wllama has no image input; skipping mmproj, text only` and loads
-   the language model alone. Image input needs wllama 3.x (`supportInputModality('image')`), which is a breaking API change
-   and is not yet adopted; the chat path also still flattens messages to text.
-4. The Q4_K_M file is far larger than the other GGUFs. Expect memory limits on typical browsers; treat as experimental
+3. Runtime (`@wllama/wllama` 3.8.1): the adapter loads `{ url, mmprojUrl }`, offloads all layers to WebGPU (`gpuLayers: 99`),
+   parses the chat template with Jinja, and sends `image_url` message parts as image buffers once
+   `supportInputModality('image')` is true after load. It needs wllama's JSPI + 64-bit-memory build (recent Chrome/Edge);
+   elsewhere wllama would swap in a 32-bit compat build from a CDN, so the adapter throws a clear error first (`requiresMem64`).
+   This path has unit coverage with a mocked wllama but has not been run against the real 10.5 GB model.
+4. The launch picker lists it as a `vision` tier preset in `src/config/blessedPresets.ts` ("high VRAM / multimodal", ~13 GB
+   peak estimate). It is never returned by `recommendModels`, and a failed load steps down to Hermes-3 3B q4f32.
+5. The Q4_K_M file is far larger than the other GGUFs. Expect memory limits on typical browsers; treat as experimental
    and keep `Kimi-VL-A3B-Thinking-2506` (server API) as the working path.
+6. wllama 3.x has no tokenizer API, so GGUF models use the token estimator's calibrated ratio instead of exact counts.
 
 ## Nginx Configuration
 

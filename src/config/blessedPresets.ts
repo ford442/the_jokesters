@@ -1,12 +1,12 @@
 /**
  * Curated "blessed" model presets for guided onboarding.
- * Keep this list short (≤7) — do not dump the full registry into the launch UI.
+ * Keep this list short (≤8) — do not dump the full registry into the launch UI.
  * Order mirrors the OOM ladder (`OOM_MODEL_LADDER` in utils/vramOverrides.ts).
  */
 
 import type { EngineType } from '../llm/EngineFactory'
 
-export type BlessedTier = 'quality' | 'balanced' | 'safe' | 'ultra' | 'cpu'
+export type BlessedTier = 'quality' | 'balanced' | 'safe' | 'ultra' | 'cpu' | 'vision'
 
 export interface BlessedPreset {
   /** Model id registered in appConfig / UNIFIED_MODELS */
@@ -124,6 +124,19 @@ export const BLESSED_PRESETS: readonly BlessedPreset[] = [
     needsWebGPU: false,
     tier: 'cpu',
     blurb: 'Runs on CPU via WASM when WebGPU is missing or broken. Slow but works.',
+  },
+  {
+    id: 'Kimi-VL-A3B-Thinking-2506-GGUF',
+    shortName: 'Kimi-VL A3B (vision)',
+    label: 'Kimi-VL A3B Thinking Q4_K_M · llama.cpp WASM · ~13 GB · high VRAM / multimodal',
+    engine: 'llamacpp',
+    engines: ['llamacpp', 'auto'],
+    vramMB: 13000,
+    downloadMB: 10500,
+    needsF16: false,
+    needsWebGPU: true,
+    tier: 'vision',
+    blurb: 'Experimental vision-language model. Needs ~12–14 GB peak memory; first load is a ~10.5 GB download (+0.9 GB vision projector). Never auto-recommended.',
   },
 ] as const
 
