@@ -4,13 +4,17 @@
  *   - registryCatalog.ts  (metadata only — safe for first paint)
  *   - modeLoaders.ts      (lazy dynamic import() per mode)
  *
- * Run: node scripts/generate-mode-registry.mjs
+ * Run:   node scripts/generate-mode-registry.mjs
+ * Check: node scripts/generate-mode-registry.mjs --check   (writes nothing; exits 1 if any
+ *        generated file is stale, or scripts/mode-id-map.json has duplicate ids or ids
+ *        whose handler no mode file exports). Wired up as `npm run registry:check`.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const CHECK = process.argv.includes('--check');
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 const modesDir = path.join(root, 'src/Director/modes');
@@ -184,7 +188,11 @@ const improvPresets = presetsSrc
   : parseImprovSetups(readFile('src/config/improvSetups.ts'));
 
 const byId = new Map();
-for (const e of idHandlers) byId.set(e.id, e.handler);
+const duplicateIds = new Set();
+for (const e of idHandlers) {
+  if (byId.has(e.id)) duplicateIds.add(e.id);
+  byId.set(e.id, e.handler);
+}
 
 const skipped = [];
 const valid = [];
@@ -228,12 +236,8 @@ const loaderLines = valid.map(({ id, handler, file }) =>
 const CATALOG_ENTRIES_PER_PART = 75;
 const numParts = Math.max(1, Math.ceil(catalogLines.length / CATALOG_ENTRIES_PER_PART));
 
-// Remove stale partition files from a previous run with a different count.
-for (const f of fs.readdirSync(modesDir)) {
-  if (/^registryCatalog\.part\d+\.ts$/.test(f)) {
-    fs.unlinkSync(path.join(modesDir, f));
-  }
-}
+/** fileName -> content for everything this script owns in modesDir */
+const outputs = new Map();
 
 const partFiles = [];
 for (let i = 0; i < numParts; i++) {
@@ -255,7 +259,7 @@ export const ${constName}: ModeCatalogEntry[] = [
 ${partLines.join(',\n')},
 ];
 `;
-  fs.writeFileSync(path.join(modesDir, fileName), partOut);
+  outputs.set(fileName, partOut);
   partFiles.push({ fileName, constName });
 }
 
@@ -284,11 +288,43 @@ ${loaderLines.join('\n')}
 };
 `;
 
-fs.writeFileSync(path.join(modesDir, 'registryCatalog.ts'), catalogOut);
-fs.writeFileSync(path.join(modesDir, 'modeLoaders.ts'), loadersOut);
+outputs.set('registryCatalog.ts', catalogOut);
+outputs.set('modeLoaders.ts', loadersOut);
+
+const existingParts = fs
+  .readdirSync(modesDir)
+  .filter((f) => /^registryCatalog\.part\d+\.ts$/.test(f));
+const legacy = path.join(modesDir, 'registryEntries.ts');
+
+if (CHECK) {
+  const problems = [];
+  for (const [fileName, content] of outputs) {
+    const file = path.join(modesDir, fileName);
+    if (!fs.existsSync(file)) problems.push(`missing: src/Director/modes/${fileName}`);
+    else if (fs.readFileSync(file, 'utf8') !== content) problems.push(`stale:   src/Director/modes/${fileName}`);
+  }
+  for (const f of existingParts) {
+    if (!outputs.has(f)) problems.push(`orphan:  src/Director/modes/${f}`);
+  }
+  if (fs.existsSync(legacy)) problems.push('legacy: src/Director/modes/registryEntries.ts');
+  for (const id of duplicateIds) problems.push(`duplicate id in scripts/mode-id-map.json: ${id}`);
+  for (const { id, handler } of skipped) {
+    problems.push(`phantom id in scripts/mode-id-map.json: ${id} -> ${handler} (no mode file exports it)`);
+  }
+  if (problems.length) {
+    console.error(problems.join('\n'));
+    console.error('\nRegistry is out of date. Run: node scripts/generate-mode-registry.mjs');
+    process.exit(1);
+  }
+  console.log(`Registry up to date (${valid.length} modes, ${outputs.size} generated files).`);
+  process.exit(0);
+}
+
+// Remove stale partition files from a previous run with a different count.
+for (const f of existingParts) fs.unlinkSync(path.join(modesDir, f));
+for (const [fileName, content] of outputs) fs.writeFileSync(path.join(modesDir, fileName), content);
 
 // Remove legacy eager bundle if present
-const legacy = path.join(modesDir, 'registryEntries.ts');
 if (fs.existsSync(legacy)) {
   fs.unlinkSync(legacy);
   console.log('Removed legacy registryEntries.ts (eager imports)');

@@ -94,6 +94,37 @@ This checks:
 - `Accept-Ranges: bytes` is present
 - CORS headers are present
 
+
+## CDN / Object Storage Evaluation (Issue #303)
+
+This section evaluates third-party hosting options for large LLM weights (e.g., Vicuna ~4GB shards + `model_lib.wasm`) to improve reliability over the current dual-VPS setup.
+
+### Comparison Table
+
+| Provider | Egress Cost ($/TB) | Range Support | CORS Support | Latency (TTFB)* | Recommendation |
+|----------|--------------------|---------------|--------------|-----------------|----------------|
+| **Current Dual-VPS** | Included | Yes | Yes | ~265ms | **Baseline** |
+| **Hugging Face** | Free | Yes | Yes | ~145ms | **Baseline** |
+| **Cloudflare R2** | [$0.00](https://developers.cloudflare.com/r2/pricing/) | [Yes](https://developers.cloudflare.com/r2/api/s3/api/) | [Yes](https://developers.cloudflare.com/r2/buckets/cors/) | Not measured | **Recommended** |
+| **BunnyCDN** | [$5.00 - $10.00](https://bunny.net/pricing/) | [Yes](https://support.bunny.net/hc/en-us/articles/115000574045-Does-BunnyCDN-support-byte-range-requests) | [Yes](https://support.bunny.net/hc/en-us/articles/115001309852-How-to-enable-CORS-headers-in-BunnyCDN) | Not measured | Good alternative |
+| **Backblaze B2** | [$10.00/TB](https://www.backblaze.com/b2/cloud-storage-pricing.html) | [Yes](https://www.backblaze.com/docs/cloud-storage-s3-get-object) | [Yes](https://www.backblaze.com/docs/cloud-storage-cross-origin-resource-sharing-rules-cors) | Not measured | Costly at high traffic |
+| **Fastly** | [Varies (High)](https://www.fastly.com/pricing/) | [Yes](https://docs.fastly.com/en/guides/serving-content#enabling-support-for-range-requests) | [Yes](https://docs.fastly.com/en/guides/enabling-cross-origin-resource-sharing-cors) | Not measured | Overkill / Expensive |
+
+*\* Note: Latency measured via `curl -o /dev/null -s -w "%{time_starttransfer}\n" -H "Range: bytes=0-1023" <URL>` against current public VPS and HuggingFace URLs. Third-party CDNs were not measured directly.*
+*(Data checked on October 20, 2026)*
+
+### Proof of Concept (PoC) URL
+* **pending: needs Noah's account**
+* **Setup steps for Noah:**
+  1. Create a Cloudflare R2 bucket.
+  2. Configure a custom domain (e.g., `models.thejokesters.com`) and enable public access.
+  3. Upload the Vicuna model weights and config (`mlc-chat-config.json`, `tokenizer.model`, shards).
+  4. Ensure CORS settings allow `GET, HEAD, OPTIONS` from `*` with `Range` headers allowed.
+
+### Go/No-Go Recommendation
+**Go with Cloudflare R2.**
+* **Reasons:** R2 offers zero-cost egress, which is crucial for delivering ~4GB of model weights to multiple users. It fully supports `Accept-Ranges` and CORS, matching the technical requirements of the Service Worker parallel chunking. It eliminates the maintenance burden of the current dual-VPS setup without incurring the unpredictable bandwidth costs of traditional object storage or CDNs.
+
 ## Directory Structure on VPS
 
 After upload, the VPS should look like this:
@@ -115,7 +146,9 @@ After upload, the VPS should look like this:
 ├── gguf/
 │   ├── Hermes-3-Llama-3.1-8B.Q4_K_M.gguf
 │   ├── vicuna-7b-v1.5.Q4_K_M.gguf
-│   └── Hermes-3-Llama-3.2-3B.Q4_K_M.gguf
+│   ├── Hermes-3-Llama-3.2-3B.Q4_K_M.gguf
+│   ├── Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf
+│   └── mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf
 ├── transformers/
 │   └── onnx-community/
 │       ├── Qwen2.5-0.5B-Instruct/
@@ -139,6 +172,40 @@ After upload, the VPS should look like this:
     ├── single-thread.wasm
     └── multi-thread.wasm
 ```
+
+## GGUF Models
+
+GGUF files live in `gguf/` and are registered in `src/config/models.ts` with `${VPS_STORAGE_URL}/gguf/<file>`.
+Any URL containing `.gguf` goes through the service worker's dual-domain Range striping, and the Cache API key stays
+the primary-host URL, so a new GGUF needs no extra wiring.
+
+### Kimi-VL (vision) smoke note
+
+`Kimi-VL-A3B-Thinking-2506-GGUF` pairs the model with a vision projector via `llamaCpp.mmprojUrl`:
+
+| File | Role |
+|------|------|
+| `Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf` | Language model (~10 GB) |
+| `mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf` | Vision projector, loaded together with the model |
+
+1. Confirm both files are served (200/206 with `Accept-Ranges: bytes`) from the **public** host, not just the Contabo origin
+   — run the VPS → `storage.1ink.us` sync first:
+   ```bash
+   for f in Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf; do
+     curl -sI -H "Range: bytes=0-0" "https://storage.1ink.us/models/gguf/$f" | head -1
+   done
+   ```
+2. `npm test -- kimiVlGguf` checks the registry entry, striping eligibility and primary-host cache keys for both files.
+3. Runtime (`@wllama/wllama` 3.8.1): the adapter loads `{ url, mmprojUrl }`, offloads all layers to WebGPU (`gpuLayers: 99`),
+   parses the chat template with Jinja, and sends `image_url` message parts as image buffers once
+   `supportInputModality('image')` is true after load. It needs wllama's JSPI + 64-bit-memory build (recent Chrome/Edge);
+   elsewhere wllama would swap in a 32-bit compat build from a CDN, so the adapter throws a clear error first (`requiresMem64`).
+   This path has unit coverage with a mocked wllama but has not been run against the real 10.5 GB model.
+4. The launch picker lists it as a `vision` tier preset in `src/config/blessedPresets.ts` ("high VRAM / multimodal", ~13 GB
+   peak estimate). It is never returned by `recommendModels`, and a failed load steps down to Hermes-3 3B q4f32.
+5. The Q4_K_M file is far larger than the other GGUFs. Expect memory limits on typical browsers; treat as experimental
+   and keep `Kimi-VL-A3B-Thinking-2506` (server API) as the working path.
+6. wllama 3.x has no tokenizer API, so GGUF models use the token estimator's calibrated ratio instead of exact counts.
 
 ## Nginx Configuration
 

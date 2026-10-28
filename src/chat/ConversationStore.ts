@@ -1,4 +1,5 @@
 import type { Agent, Message } from '../types/chat'
+import { newMessageId } from './messageId'
 import {
   applyMemoryHint,
   clampMemoryDepth,
@@ -6,11 +7,24 @@ import {
   saveMemoryDepthPreference,
   type MemoryHint,
 } from '../config/contextDepth'
+import type {
+  DynamicContextManager} from '../utils/contextBudget';
 import {
-  DynamicContextManager,
   type ChatMessage as ContextChatMessage,
   type ContextWindowInfo,
 } from '../utils/contextBudget'
+
+/** After a block trim, keep this fraction of the token budget so the next trim is many turns away. */
+export const BLOCK_TRIM_TARGET = 0.6
+
+export interface WritersRoomWindow {
+  messages: ContextChatMessage[]
+  info: ContextWindowInfo
+  /** True when this turn dropped a block of old turns (KV cache rebuilt once). */
+  trimmed: boolean
+  /** Older lines matching a `recall:` hint, for the speaker cue (history stays append-only). */
+  recallSnippets: string[]
+}
 
 export interface PreparedHistory {
   history: Message[]
@@ -29,6 +43,8 @@ export class ConversationStore {
   private pendingMemoryHint: MemoryHint | null = null
   private recallThemeForTurn: string | null = null
   private lastContextInfo: ContextWindowInfo | null = null
+  /** First history index in the engine window (writers' room layout, block-trimmed). */
+  private windowStart = 0
 
   constructor(private readonly agents: Agent[]) {}
 
@@ -45,21 +61,36 @@ export class ConversationStore {
   reset(): void {
     this.history = []
     this.agentIndex = 0
+    this.windowStart = 0
   }
 
-  appendUser(content: string): void {
-    this.history.push({ role: 'user', content })
+  appendUser(content: string, engineContent?: string): void {
+    this.history.push(
+      engineContent
+        ? { id: newMessageId(), role: 'user', content, engineContent }
+        : { id: newMessageId(), role: 'user', content },
+    )
   }
 
-  appendAssistant(content: string): void {
-    this.history.push({ role: 'assistant', content })
+  appendAssistant(content: string, engineContent?: string): void {
+    this.history.push(
+      engineContent && engineContent !== content
+        ? { id: newMessageId(), role: 'assistant', content, engineContent }
+        : { id: newMessageId(), role: 'assistant', content },
+    )
+  }
+
+  /** Record the exact (cued) prompt the engine saw for the newest user message. */
+  setLastUserEngineContent(engineContent: string): void {
+    const last = this.history[this.history.length - 1]
+    if (last?.role === 'user') last.engineContent = engineContent
   }
 
   /** Replace the most recent user prompt (used for empty-turn retry). */
   replaceLastUser(content: string): boolean {
     for (let i = this.history.length - 1; i >= 0; i--) {
       if (this.history[i].role === 'user') {
-        this.history[i] = { role: 'user', content }
+        this.history[i] = { id: newMessageId(), role: 'user', content }
         return true
       }
     }
@@ -76,10 +107,25 @@ export class ConversationStore {
     return false
   }
 
-  addTurn(userMessage: string, assistantResponse: string): void {
-    this.appendUser(userMessage)
-    this.appendAssistant(assistantResponse)
+  addTurn(
+    userMessage: string,
+    assistantResponse: string,
+    engine?: { user: string; assistant: string },
+  ): void {
+    this.appendUser(userMessage, engine?.user)
+    this.appendAssistant(assistantResponse, engine?.assistant)
     this.advanceAgent()
+  }
+
+  /** Independent copy (prerender runs ahead on a fork without touching live history). */
+  fork(): ConversationStore {
+    const copy = new ConversationStore(this.agents)
+    copy.history = this.history.map((m) => ({ ...m }))
+    copy.agentIndex = this.agentIndex
+    copy.windowStart = this.windowStart
+    copy.userMemoryDepth = this.userMemoryDepth
+    copy.sceneMemoryDepth = this.sceneMemoryDepth
+    return copy
   }
 
   snapshot(): { history: Message[]; agentIndex: number } {
@@ -89,6 +135,7 @@ export class ConversationStore {
   restore(snapshot: { history: Message[]; agentIndex: number }): void {
     this.history = [...snapshot.history]
     this.agentIndex = snapshot.agentIndex
+    this.windowStart = Math.min(this.windowStart, this.history.length)
   }
 
   /**
@@ -113,6 +160,7 @@ export class ConversationStore {
       )
       this.history = kept
     }
+    this.windowStart = 0
   }
 
   // --- Agent rotation ---
@@ -269,6 +317,102 @@ export class ConversationStore {
       memoryHintApplied: hintLabel,
     }
     return { messages, info }
+  }
+
+  /**
+   * Engine window for the writers' room layout (#400 B). The history must end with the pending
+   * user message; `cuedUser` replaces it. Unlike `truncateForTurn` this never slides one turn
+   * at a time: when the memory depth or token budget is exceeded it drops a whole block of the
+   * oldest turns (down to BLOCK_TRIM_TARGET) and folds a summary into the system prompt, so the
+   * prefix — and the engine's KV cache — stays identical for many turns between rebuilds.
+   */
+  prepareWritersRoomWindow(
+    contextManager: DynamicContextManager,
+    buildSystem: (summary: string | null) => string,
+    cuedUser: string,
+    reserveTokens: number,
+  ): WritersRoomWindow {
+    const { depth, hintLabel, recallTheme } = this.resolveTurnMemoryDepth()
+    this.recallThemeForTurn = null
+    const pendingIdx = this.history.length - 1
+    const tokens = (m: Message) => contextManager.estimateTokens(m.engineContent ?? m.content)
+    const alignToUser = () => {
+      while (this.windowStart < pendingIdx && this.history[this.windowStart]?.role !== 'user') this.windowStart++
+    }
+    this.windowStart = Math.min(Math.max(0, this.windowStart), Math.max(0, pendingIdx))
+    alignToUser()
+    const startBefore = this.windowStart
+
+    // Message-depth budget (pending prompt included), trimmed in blocks.
+    if (pendingIdx + 1 - this.windowStart > depth) {
+      const keep = Math.max(1, Math.floor(depth * BLOCK_TRIM_TARGET))
+      this.windowStart = Math.max(this.windowStart, pendingIdx + 1 - keep)
+      alignToUser()
+    }
+
+    const summaryFor = (start: number) =>
+      start > 0 ? contextManager.buildSummaryStub(this.history.slice(0, start) as ContextChatMessage[]) : null
+    const windowTokens = (start: number) => {
+      let sum = contextManager.estimateTokens(cuedUser)
+      for (let i = start; i < pendingIdx; i++) sum += tokens(this.history[i])
+      return sum
+    }
+    const maxTokens = contextManager.getMaxContextTokens()
+    const total = (start: number) =>
+      contextManager.estimateTokens(buildSystem(summaryFor(start))) + windowTokens(start) + reserveTokens
+
+    if (total(this.windowStart) > maxTokens) {
+      // Shrink the history part (not the fixed system / cue / reserve part) to the target share
+      // of what is left for it, so many turns fit before the next rebuild.
+      const cueTokens = contextManager.estimateTokens(cuedUser)
+      const historyTokens = (start: number) => windowTokens(start) - cueTokens
+      const historyBudget = (start: number) =>
+        maxTokens - reserveTokens - cueTokens - contextManager.estimateTokens(buildSystem(summaryFor(start)))
+      while (
+        this.windowStart < pendingIdx &&
+        historyTokens(this.windowStart) > Math.floor(historyBudget(this.windowStart) * BLOCK_TRIM_TARGET)
+      ) {
+        this.windowStart++
+        alignToUser()
+      }
+    }
+
+    const summary = summaryFor(this.windowStart)
+    const system = buildSystem(summary)
+    const messages: ContextChatMessage[] = [{ role: 'system', content: system }]
+    for (let i = this.windowStart; i < pendingIdx; i++) {
+      const m = this.history[i]
+      messages.push({ role: m.role, content: m.engineContent ?? m.content })
+    }
+    messages.push({ role: 'user', content: cuedUser })
+
+    let recallSnippets: string[] = []
+    if (recallTheme) {
+      const theme = recallTheme.toLowerCase()
+      recallSnippets = this.history
+        .slice(0, this.windowStart)
+        .filter((m) => m.role === 'assistant' && m.content.toLowerCase().includes(theme))
+        .slice(-2)
+        .map((m) => m.content.slice(0, 120))
+    }
+
+    const usedTokens = total(this.windowStart) - reserveTokens
+    const inWindow = pendingIdx + 1 - this.windowStart
+    const info: ContextWindowInfo = {
+      maxTokens,
+      usedTokens,
+      reserveTokens,
+      messageCount: messages.length,
+      droppedMessages: this.windowStart,
+      hasSummary: summary != null,
+      summaryStub: summary ?? undefined,
+      estimationSource: contextManager.getTokenEstimator().getSource(),
+      messageDepthLimit: depth,
+      messagesInWindow: inWindow,
+      memoryHintApplied: hintLabel,
+    }
+    this.lastContextInfo = info
+    return { messages, info, trimmed: this.windowStart !== startBefore, recallSnippets }
   }
 
   getLastContextInfo(): ContextWindowInfo | null {

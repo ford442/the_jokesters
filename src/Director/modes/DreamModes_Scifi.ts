@@ -288,9 +288,9 @@ export async function runAlienGameShowLoop(_scenario: Scenario, ctx: ModeContext
     const agent1 = 'comedian'; // Hermes-3: unhinged host
     const agent2 = 'scientist'; // Qwen2.5: pedantic rules judge
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
     await chatForAgentWithComedy(ctx, agent1, `(ALIEN GAME SHOW: You are the unhinged host of "Zorglax's Wheel of Doom!", a popular alien game show. The user is a human contestant. Explain the completely incomprehensible rules for the first round, which involves nebulas and screaming.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -301,13 +301,13 @@ export async function runAlienGameShowLoop(_scenario: Scenario, ctx: ModeContext
         const roll = Math.random();
 
         if (roll < 0.5) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent1);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent1);
             await chatForAgentWithComedy(ctx, agent1, `(ALIEN GAME SHOW: You are the chaotic host. The User said: "${userInput}". Tell them they are completely wrong, deduct 400 "Glork-points", and introduce a terrifying new physical challenge they must now perform.)`, async (s) => await ctx.callbacks.onSpeak(s, agent1, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(agent2);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(agent2);
             await chatForAgentWithComedy(ctx, agent2, `(ALIEN GAME SHOW: You are the pedantic alien rules judge. The User said: "${userInput}". Explain why their action violated subsection 14-B of the Galactic Gameshow Treaty, and describe the painful consequence they now face.)`, async (s) => await ctx.callbacks.onSpeak(s, agent2, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -781,7 +781,7 @@ export async function runQuantumCustomerServiceLoop(_scenario: Scenario, ctx: Mo
     const confusedCustomer = 'philosopher';
     const pedanticTech = 'scientist';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(pedanticTech);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(pedanticTech);
     await chatForAgentWithComedy(ctx, pedanticTech, `(You are a pedantic tech support agent for a company that sells quantum devices. Ask the customer to observe their device to collapse its wavefunction.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticTech, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
@@ -806,7 +806,7 @@ export async function runTimeTravelingIRSLoop_Scifi(_scenario: Scenario, ctx: Mo
     const pedanticAuditor = 'scientist';
     const confusedUser = 'philosopher';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(pedanticAuditor);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(pedanticAuditor);
     await chatForAgentWithComedy(ctx, pedanticAuditor, `(You are a time-traveling IRS auditor from the year 3050. Demand that the user pays the taxes owed by their 18th-century ancestor in obscure futuristic currency.)`, async (s: string) => await ctx.callbacks.onSpeak(s, pedanticAuditor, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 

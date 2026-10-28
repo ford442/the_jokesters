@@ -7,6 +7,11 @@ on:
       - 'src/**'
       - 'tests/perf/**'
       - 'perf-budget.json'
+      - 'vite.config.ts'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/check-bundle-budget.mjs'
       - '.github/workflows/performance.yml'
   pull_request:
     branches: [main, master]
@@ -14,6 +19,11 @@ on:
       - 'src/**'
       - 'tests/perf/**'
       - 'perf-budget.json'
+      - 'vite.config.ts'
+      - 'index.html'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/check-bundle-budget.mjs'
       - '.github/workflows/performance.yml'
   workflow_dispatch:
     inputs:
@@ -47,7 +57,7 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         
       - name: Build project
         run: npm run build
@@ -193,23 +203,12 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
         
       - name: Build project
         run: npm run build
         
-      - name: Check bundle size
-        run: |
-          # Get bundle size from dist/assets
-          BUNDLE_SIZE=$(find dist/assets -name "*.js" -exec stat -c%s {} + | awk '{sum+=$1} END {print sum}')
-          MAX_SIZE=25000000  # 10.5MB
-          
-          echo "Bundle size: $BUNDLE_SIZE bytes"
-          echo "Max allowed: $MAX_SIZE bytes"
-          
-          if [ "$BUNDLE_SIZE" -gt "$MAX_SIZE" ]; then
-            echo "❌ Bundle size exceeds limit!"
-            exit 1
-          else
-            echo "✅ Bundle size within limits"
-          fi
+      # Enforces thresholds.bundleSize / thresholds.distSize from perf-budget.json:
+      # initial-load gzip, largest chunk, total gzip JS and total dist/ size.
+      - name: Enforce bundle budget
+        run: npm run budget:check

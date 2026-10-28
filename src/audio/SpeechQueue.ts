@@ -1,11 +1,36 @@
 
-import type { SynthesisOptions, TtsEngine } from './AudioEngine';
+import type { SynthesisOptions, SynthesizedAudio, TtsEngine } from './AudioEngine';
+import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
+
+/** Who is speaking what, so playback can drive the stage (visemes), captions and music ducking. */
+export interface UtteranceMeta {
+    agentId: string;
+    text: string;
+    /** Phoneme timing from the TTS worker, when the engine has it. */
+    visemes?: Viseme[];
+}
+
+export interface UtteranceEvent {
+    agentId: string;
+    text: string;
+    /** AudioContext.currentTime at which this utterance's first sample plays. */
+    audioStartTime: number;
+    durationSec: number;
+    /** null → no usable timing; consumers fall back to loudness. */
+    visemes: Viseme[] | null;
+    /** Where `visemes` came from. */
+    timing: 'tts' | 'estimated' | 'none';
+}
 
 interface QueuedPcm {
     pcm: Float32Array;
     sampleRate: number;
+    meta?: UtteranceMeta;
 }
+
+/** Only `predictVisemes` is used (pure per call); one shared instance is fine. */
+const textVisemePredictor = new VisemePredictor();
 
 function cacheKey(text: string, agentId: string, options: SynthesisOptions): string {
     const steps = options.steps ?? 10;
@@ -24,11 +49,13 @@ export class SpeechQueue {
     private destinationNode: AudioNode;
     private audioEngine: TtsEngine;
     /** Keyed TTS cache so prerendered sentences are reused (no double synth). */
-    private audioCache = new Map<string, Promise<Float32Array>>();
+    private audioCache = new Map<string, Promise<SynthesizedAudio>>();
     /** Epoch bumped on clearPrerendered — stale promises are not re-cached. */
     private cacheEpoch = 0;
     /** One-shot diagnostic for TTS buffer tagging (issue #332). */
     private loggedBufferRate = false;
+    private utteranceStartListeners = new Set<(e: UtteranceEvent) => void>();
+    private utteranceEndListeners = new Set<(e: UtteranceEvent) => void>();
 
     constructor(audioEngine: TtsEngine) {
         this.audioEngine = audioEngine;
@@ -55,12 +82,24 @@ export class SpeechQueue {
         this.ttsGain.connect(this.destinationNode);
     }
 
-    public add(audioData: Float32Array) {
+    /** Fires when an utterance's audio actually starts playing. Returns an unsubscribe fn. */
+    public onUtteranceStart(listener: (e: UtteranceEvent) => void): () => void {
+        this.utteranceStartListeners.add(listener);
+        return () => this.utteranceStartListeners.delete(listener);
+    }
+
+    /** Fires when an utterance finishes (or is cut off by stop()). */
+    public onUtteranceEnd(listener: (e: UtteranceEvent) => void): () => void {
+        this.utteranceEndListeners.add(listener);
+        return () => this.utteranceEndListeners.delete(listener);
+    }
+
+    public add(audioData: Float32Array, optionalSampleRate?: number, meta?: UtteranceMeta) {
         // Capture the engine rate at enqueue — playNext is async (AudioContext resume)
         // and must not re-read a later synth's rate or the 24 kHz placeholder.
-        const sampleRate = this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
-        this.queue.push({ pcm: audioData, sampleRate });
-        this.playNext();
+        const sampleRate = optionalSampleRate || this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
+        this.queue.push({ pcm: audioData, sampleRate, meta });
+        void this.playNext();
     }
 
     private async playNext() {
@@ -71,7 +110,7 @@ export class SpeechQueue {
         }
 
         this.isPlaying = true;
-        const { pcm: audioData, sampleRate } = this.queue.shift()!;
+        const { pcm: audioData, sampleRate, meta } = this.queue.shift()!;
 
         // Stamp the rate captured at enqueue (tts.json / worker), never audioContext.sampleRate
         // and never a hardcoded 24000. Hosted Supertonic is 44100.
@@ -91,16 +130,64 @@ export class SpeechQueue {
         source.buffer = buffer;
         source.connect(this.ttsGain);
 
+        const event = meta ? this.buildUtteranceEvent(meta, audioData.length / sampleRate) : null;
+
         source.onended = () => {
+            if (event) this.emitUtterance(this.utteranceEndListeners, event);
+            this.activeEvent = null;
             this.isPlaying = false;
-            this.playNext();
+            void this.playNext();
         };
 
         this.currentSource = source;
         source.start();
+        if (event) {
+            this.activeEvent = event;
+            this.emitUtterance(this.utteranceStartListeners, event);
+        }
+    }
+
+    private activeEvent: UtteranceEvent | null = null;
+
+    private buildUtteranceEvent(meta: UtteranceMeta, durationSec: number): UtteranceEvent {
+        let visemes: Viseme[] | null = null;
+        let timing: UtteranceEvent['timing'] = 'none';
+        if (meta.visemes && meta.visemes.length > 0) {
+            visemes = meta.visemes;
+            timing = 'tts';
+        } else if (meta.text.trim() && durationSec > 0) {
+            // Legacy engine: no worker timing, so spread text-derived visemes over the exact audio length.
+            const seq = textVisemePredictor.predictVisemes(meta.text, durationSec);
+            if (seq.visemes.length > 0) {
+                visemes = seq.visemes;
+                timing = 'estimated';
+            }
+        }
+        return {
+            agentId: meta.agentId,
+            text: meta.text,
+            audioStartTime: this.audioContext.currentTime,
+            durationSec,
+            visemes,
+            timing,
+        };
+    }
+
+    private emitUtterance(listeners: Set<(e: UtteranceEvent) => void>, event: UtteranceEvent): void {
+        for (const listener of listeners) {
+            try {
+                listener(event);
+            } catch (err) {
+                console.warn('[SpeechQueue] utterance listener threw:', err);
+            }
+        }
     }
 
     public stop() {
+        if (this.activeEvent) {
+            this.emitUtterance(this.utteranceEndListeners, this.activeEvent);
+            this.activeEvent = null;
+        }
         if (this.currentSource) {
             try {
                 this.currentSource.stop();
@@ -133,7 +220,7 @@ export class SpeechQueue {
         text: string,
         agentId: string,
         options: SynthesisOptions = {},
-    ): Promise<Float32Array> {
+    ): Promise<SynthesizedAudio> {
         const key = cacheKey(text, agentId, options);
         const existing = this.audioCache.get(key);
         if (existing) return existing;
@@ -174,7 +261,7 @@ export class SpeechQueue {
         text: string,
         agentId: string,
         options: SynthesisOptions = {},
-    ): Promise<Float32Array> {
+    ): Promise<SynthesizedAudio> {
         return this.prerenderOne(text, agentId, options);
     }
 

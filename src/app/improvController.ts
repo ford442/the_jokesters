@@ -19,6 +19,8 @@ import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
 import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
+import { getSharedShowMusic } from '../audio/ShowMusic'
+import { getSharedClipRecorder } from './clipUi'
 import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
 
@@ -89,6 +91,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => stage.triggerAudienceReaction(reaction),
     playSfx: (name) => { void getSharedSfxManager()?.play(name) },
+    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
   })
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
@@ -149,20 +152,24 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       const clean = stripStageTokens(cued.cleanText)
       if (!clean.trim()) continue
 
-      const audioData = await coordinator.resolveSentenceAudio(
+      const resolvedAudio = await coordinator.resolveSentenceAudio(
         turn,
         i,
         sentence,
         turn.agentId,
         synthOpts,
       )
-      if (audioData) {
+      if (resolvedAudio) {
         if (firstAudio) {
           coordinator.recordTtfa(turnStart)
           firstAudio = false
         }
         stage.setActiveActor(turn.agentId)
-        speechQueue.add(audioData)
+        speechQueue.add(resolvedAudio!.audioData, resolvedAudio!.sampleRate, {
+          agentId: turn.agentId,
+          text: clean,
+          visemes: resolvedAudio!.visemes,
+        })
       } else {
         // Graceful live TTS fallback for this sentence
         await speakAndVisualize(sentence, turn.agentId, synthOpts)
@@ -179,7 +186,10 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
     }
 
     // History sync once per turn (prevents double-speak desync)
-    groupChatManager.addToHistory('(Continue)', turn.response, turn.agentId)
+    groupChatManager.addToHistory('(Continue)', turn.response, turn.agentId, {
+      user: turn.engineUser,
+      assistant: turn.engineResponse,
+    })
 
     await speechQueue.waitUntilFinished()
     // Re-scored here (not when this turn was originally prerendered/generated) so the
@@ -244,7 +254,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
         if (sentenceBuffer.length >= 2 && sentenceIndex < sentenceBuffer.length - 1) {
           const upcomingSentences = sentenceBuffer.slice(sentenceIndex + 1)
           const maxS = coordinator.getDepth().maxSentences
-          prerenderAhead(upcomingSentences.slice(0, maxS), agent.id, {
+          void prerenderAhead(upcomingSentences.slice(0, maxS), agent.id, {
             steps: pacing.ttsSteps,
             speed: CHARACTER_SPEEDS[agent.id] || 1.0,
             seed: turnSeed,
@@ -354,6 +364,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       return
     }
 
+    getSharedClipRecorder()?.setSceneTitle(title, true)
     sceneTitleInput.disabled = true
     sceneDescriptionInput.disabled = true
     startImprovBtn.style.display = 'none'

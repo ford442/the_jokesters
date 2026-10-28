@@ -65,6 +65,8 @@ export function scoreTextToAudienceFeedback(
 export interface AudienceFeedbackSinks {
   triggerReaction: (reaction: AudienceReactionBand) => void;
   playSfx: (name: AllowedSfxName) => void;
+  /** The joke bombed (the boo path): hook for the sad-trombone sting. Rate-limited with the rest. */
+  onBitDied?: () => void;
 }
 
 /**
@@ -90,6 +92,7 @@ export class AudienceFeedbackDriver {
 
     this.sinks.triggerReaction(event.reaction);
     if (event.sfx) this.sinks.playSfx(event.sfx);
+    if (event.sfx === 'boo') this.sinks.onBitDied?.();
     return true;
   }
 

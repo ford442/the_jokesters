@@ -51,3 +51,7 @@ public/models/
 !3rd_party/web-llm-dist/.gitkeep
 patches/web-llm/.applied/
 
+
+# Python bytecode
+__pycache__/
+*.pyc

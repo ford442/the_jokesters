@@ -16,10 +16,12 @@ import type {
     WorkerSynthesisSuccess 
 } from './worker/tts.worker';
 import { VisemePredictor, type Viseme } from './VisemePredictor';
-import { TTSLatencyProfiler, ttsProfiler } from './TTSLatencyProfiler';
+import type { TTSLatencyProfiler} from './TTSLatencyProfiler';
+import { ttsProfiler } from './TTSLatencyProfiler';
+import { getOrtWasmBaseUrl } from './ortWasmPath';
 import { VPS_STORAGE_URL } from '../config/models';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
-import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
+import { DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS, voiceFor } from './voiceMap';
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -94,7 +96,12 @@ export class OptimizedAudioEngine {
             };
 
             // Initialize worker
-            await this.sendToWorker({ type: 'init', modelPath });
+            await this.sendToWorker({
+                type: 'init',
+                modelPath,
+                wasmPath: getOrtWasmBaseUrl(),
+                executionProvider: ttsExecutionProviderFromQuery(),
+            });
 
             // Pre-load voice styles
             await this.loadVoiceStyles();
@@ -123,7 +130,7 @@ export class OptimizedAudioEngine {
         const startTime = performance.now();
 
         // Resolve voice
-        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
+        let realVoiceId: string = voiceFor(speakerId);
         if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {
             realVoiceId = DEFAULT_VOICE_STYLE;
         }
@@ -454,3 +461,17 @@ export class OptimizedAudioEngine {
 
 // Singleton instance
 export const optimizedAudioEngine = new OptimizedAudioEngine();
+
+/** `?ttsWebgpu` opts the Supertonic worker into ORT's WebGPU EP (falls back to wasm on failure). */
+export function ttsExecutionProviderFromQuery(search?: string): 'wasm' | 'webgpu' {
+    let query = search;
+    if (query === undefined) {
+        try {
+            query = typeof location !== 'undefined' ? location.search : '';
+        } catch {
+            query = '';
+        }
+    }
+    const value = new URLSearchParams(query).get('ttsWebgpu');
+    return value !== null && value !== '0' && value !== 'false' ? 'webgpu' : 'wasm';
+}

@@ -1,5 +1,6 @@
+import type {
+  CallbackEngine} from './callbackEngine';
 import {
-  CallbackEngine,
   getGlobalCallbackEngine,
   resetGlobalCallbackEngine,
   type CallbackMetrics,

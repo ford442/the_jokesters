@@ -1,4 +1,4 @@
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import type { LLMEngine } from '../llm/LLMEngine'
 import type { EngineType } from '../llm/EngineFactory'
 import { EngineFactory, getEngineFallbackOrder } from '../llm/EngineFactory'
@@ -10,9 +10,8 @@ import {
   type ConcreteEngine,
   type EngineCapabilities,
 } from '../llm/engineSelection'
-import { MlcEngineAdapter } from '../llm/MlcEngineAdapter'
+import { isMlcEngine } from '../llm/engineGuards'
 import { isWllamaRuntimeMismatch } from '../llm/wllamaRuntime'
-import { getMlcEngineContextWindow, loadModelWithDynamicContext } from '../llm/mlcEngineCreate'
 import { DynamicContextManager } from '../utils/contextBudget'
 import { type VRAMOptimizationConfig, DEFAULT_VRAM_CONFIG } from '../utils/vramOverrides'
 import {
@@ -53,7 +52,7 @@ export class ModelSession {
   }
 
   getContextWindowSize(): number {
-    return this.engine?.getContextWindowSize() ?? this.activeContextTokens
+    return this.engine?.getContextInfo()?.effective ?? this.activeContextTokens
   }
 
   getContextManager(): DynamicContextManager {
@@ -66,7 +65,7 @@ export class ModelSession {
 
   setVRAMConfig(config: Partial<VRAMOptimizationConfig>): void {
     this.vramConfig = { ...this.vramConfig, ...config }
-    if (this.engine instanceof MlcEngineAdapter) {
+    if (isMlcEngine(this.engine)) {
       this.engine.setVRAMConfig(this.vramConfig)
     }
   }
@@ -165,10 +164,10 @@ export class ModelSession {
       })
 
       try {
-        this.engine = EngineFactory.createEngine(plan.engine, {
+        this.engine = await EngineFactory.createEngine(plan.engine, {
           transformersDevice: plan.transformersDevice,
         })
-        if (this.engine instanceof MlcEngineAdapter) {
+        if (isMlcEngine(this.engine)) {
           this.engine.setVRAMConfig(this.vramConfig)
         }
         this.engineType = plan.engine
@@ -188,7 +187,7 @@ export class ModelSession {
         if (preferredContext && preferredContext !== 'auto') {
           contextSize = preferredContext
         } else {
-          contextSize = this.engine.getContextWindowSize()
+          contextSize = this.engine.getContextInfo().effective
         }
         this.applyContextSize(contextSize)
         await this.attachTokenEstimator()
@@ -263,6 +262,9 @@ export class ModelSession {
         const modelConfig = appConfig.model_list.find((m) => m.model_id === modelId)
         if (!modelConfig) throw new Error(`Model ${modelId} not found in config`)
 
+        const [{ MlcEngineAdapter }, { getMlcEngineContextWindow, loadModelWithDynamicContext }] =
+          await Promise.all([import('../llm/MlcEngineAdapter'), import('../llm/mlcEngineCreate')])
+
         const mlcEngine = await loadModelWithDynamicContext(
           modelConfig,
           preferredContext,
@@ -294,7 +296,7 @@ export class ModelSession {
         this.loadedModelId = modelId
         this.engineType = 'mlc'
 
-        const actualContext = adapter.getContextWindowSize()
+        const actualContext = adapter.getContextInfo().effective
         this.applyContextSize(actualContext)
         await this.attachTokenEstimator()
         return
@@ -343,7 +345,7 @@ export class ModelSession {
   /** Re-sync context budget after hot-swap (may differ from prior engine). */
   syncContextFromEngine(): void {
     if (!this.engine) return
-    this.applyContextSize(this.engine.getContextWindowSize())
+    this.applyContextSize(this.engine.getContextInfo().effective)
   }
 
   async interrupt(): Promise<void> {
@@ -369,7 +371,7 @@ export class ModelSession {
     this.loadedModelId = modelId
     this.engineType = engineType
     this.isInitialized = true
-    this.applyContextSize(engine.getContextWindowSize())
+    this.applyContextSize(engine.getContextInfo().effective)
   }
 }
 

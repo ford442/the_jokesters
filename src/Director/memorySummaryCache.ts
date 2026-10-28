@@ -1,7 +1,8 @@
-import { SemanticSearch, MemorySnippet } from '../utils/SemanticSearch';
-import { HFStorageManager } from './HFStorageManager';
+import type { MemorySnippet } from '../utils/SemanticSearch';
+import { SemanticSearch } from '../utils/SemanticSearch';
+import type { HFStorageManager } from './HFStorageManager';
 import type { EpisodeAnalytics, EpisodeSearchResult, StoredEpisode } from './memoryTypes';
-import { MemoryIdbStore } from './memoryIdbStore';
+import type { MemoryIdbStore } from './memoryIdbStore';
 import type { CloudCredentialsSource } from './memoryCredentials';
 
 /**

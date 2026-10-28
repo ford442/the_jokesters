@@ -1,14 +1,21 @@
 import { registerSW } from 'virtual:pwa-register'
-import * as webllm from '@mlc-ai/web-llm'
+import { reloadOnceForIsolation } from './isolationReload'
+import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
+import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier, setSharedAvatarTier } from '../visuals/avatarTier'
+import { bundledAvatarUrl } from '../visuals/avatarManifest'
+import { hasStoredCast } from '../cast/castKeys'
 import { AudioEngine } from '../audio/AudioEngine'
 import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
 import { SpeechQueue } from '../audio/SpeechQueue'
 import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
+import { ShowAudioBus, setSharedShowAudioBus } from '../audio/showAudioBus'
+import { MusicEngine } from '../audio/MusicEngine'
+import { ShowMusic, setSharedShowMusic } from '../audio/ShowMusic'
 import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
 import { VPS_STORAGE_URL } from '../config/models'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
@@ -23,8 +30,6 @@ import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
 import { saveSuccessfulLaunch } from './modelGuide'
 import { consumeWasmFallbackWarning } from '../config/loadFailover'
-
-console.log('Available prebuilt models:', webllm.prebuiltAppConfig.model_list.map((m: { model_id: string }) => m.model_id))
 
 type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
 
@@ -75,7 +80,7 @@ export async function initApp(): Promise<void> {
         .then((registrations) => {
           for (const registration of registrations) {
             if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
-              registration.unregister().then(() => {
+              void registration.unregister().then(() => {
                 console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
               })
             }
@@ -85,6 +90,7 @@ export async function initApp(): Promise<void> {
           console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
         })
 
+      reloadOnceForIsolation()
       registerSW({
         onNeedRefresh() {
           console.log('[ServiceWorker] New content available, please refresh.')
@@ -133,7 +139,6 @@ export async function initApp(): Promise<void> {
   }
 
   let currentInitState: AppInitState = 'BOOTING'
-  // @ts-ignore
   console.log(currentInitState)
 
   app.innerHTML = getAppTemplate()
@@ -144,7 +149,6 @@ export async function initApp(): Promise<void> {
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
   const progressBar = document.getElementById('progress') as HTMLDivElement
-  // @ts-ignore
   console.log(progressBar)
   const userInput = document.getElementById('user-input') as HTMLInputElement
 
@@ -168,7 +172,16 @@ export async function initApp(): Promise<void> {
   try {
     const memoryManager = new MemoryManager()
     setSharedMemoryManager(memoryManager)
-    memoryManager.fetchPreviousEpisodeSummaries();
+    void memoryManager.fetchPreviousEpisodeSummaries();
+
+    // Custom cast (names, personas, voices, optional agents) applies to the shared roster
+    // before the manager exists. Loaded lazily — no stored cast means no zod, no editor code.
+    const storedCast = hasStoredCast()
+      ? await import('../cast/castBoot').then((m) => m.applyStoredCastToRoster(agents)).catch((err) => {
+          console.warn('[Cast] could not apply stored cast:', err)
+          return null
+        })
+      : null
 
     const groupChatManager = new GroupChatManager(agents)
     groupChatManager.setVRAMConfig(vramConfig)
@@ -186,6 +199,7 @@ export async function initApp(): Promise<void> {
 
     const requestedRenderer = getRequestedRendererMode()
     let stage: Stage
+    let glRenderer: string | null = null
     if (requestedRenderer === 'webgpu' && isWebGPUAvailable()) {
       console.log('[Renderer] WebGPU scene rendering requested (opt-in). WebLLM shares the GPU — prefer high-VRAM devices.')
       stage = new Stage(canvas, { rendererMode: 'webgpu' })
@@ -197,22 +211,55 @@ export async function initApp(): Promise<void> {
       if (!gl) {
         throw new Error('WebGL 2 is not supported or is disabled in this environment.')
       }
+      glRenderer = readGlRendererString(gl as WebGL2RenderingContext)
       stage = new Stage(canvas, { context: gl as WebGLRenderingContext, rendererMode: 'webgl' })
     }
     const activeRenderer = await stage.initRenderer()
     console.log(`[Renderer] Active 3D renderer: ${activeRenderer.toUpperCase()} · LLM inference: WebGPU (independent)`)
 
     const lipSync = new LipSync(speechQueue.getAudioContext())
-    // TTS → ttsGain → analyser → speakers (gain enables SFX ducking)
+    // TTS → ttsGain → analyser → master bus → speakers (+ recording tap). SFX and music join
+    // the same master bus, so a recorded clip hears exactly what the audience hears.
+    const audioCtx = speechQueue.getAudioContext()
+    const audioBus = new ShowAudioBus(audioCtx)
+    setSharedShowAudioBus(audioBus)
     speechQueue.setDestination(lipSync.analyser)
-    lipSync.analyser.connect(speechQueue.getAudioContext().destination)
+    lipSync.analyser.connect(audioBus.master)
     stage.setLipSync(lipSync)
+    // Phoneme timing + audible clock → viseme-accurate mouths (loudness is the fallback).
+    stage.setAudioClock(() => speechQueue.getAudioContext().currentTime)
+    speechQueue.onUtteranceStart((e) => stage.beginUtterance(e))
+    speechQueue.onUtteranceEnd(() => stage.endUtterance())
     stage.render()
 
+    // VRM avatars on capable GPUs; low tiers keep the primitive capsule actors. Loads in the
+    // background — each agent swaps in as its model arrives, and a failure leaves the capsule.
+    const avatarTier = selectAvatarTier(readAvatarTierEnv(loadDeviceSnapshot(), glRenderer))
+    setSharedAvatarTier(avatarTier.tier)
+    console.log(`[Avatars] tier=${avatarTier.tier} (${avatarTier.reason})`)
+    if (storedCast) {
+      // The cast decides per slot: uploads/URLs load on any tier, defaults follow the tier.
+      void import('../cast/castBoot')
+        .then((m) => m.applyStoredCastAvatars(storedCast, stage, avatarTier.tier))
+        .then(({ loaded, failed }) => {
+          console.log(`[Avatars] cast avatars loaded: ${loaded.join(', ') || 'none'}${failed.length ? ` · failed: ${failed.map((f) => f.id).join(', ')}` : ''}`)
+        })
+        .catch((err) => console.warn('[Avatars] cast avatars failed:', err))
+    } else if (avatarTier.tier === 'vrm') {
+      void stage.useVrmActors((id) => bundledAvatarUrl(id)).then(({ loaded, failed }) => {
+        console.log(`[Avatars] VRM loaded: ${loaded.join(', ') || 'none'}${failed.length ? ` · kept primitive: ${failed.join(', ')}` : ''}`)
+      })
+    }
+
     const sfxManager = new SfxManager({ basePath: './sfx' })
-    await sfxManager.init(speechQueue.getAudioContext(), speechQueue.getTtsGainNode())
+    await sfxManager.init(audioCtx, speechQueue.getTtsGainNode(), audioBus.master)
     sfxManager.setInterruptHandler(() => speechQueue.stop())
     setSharedSfxManager(sfxManager)
+
+    // Show music: stingers per beat/act/tag, ducked under TTS (settings toggle, default on).
+    const showMusic = new ShowMusic(new MusicEngine({ ctx: audioCtx, output: audioBus.master }))
+    showMusic.attachSpeech(speechQueue, () => lipSync.getVolume())
+    setSharedShowMusic(showMusic)
 
     currentInitState = 'BOOTING'
     setProgress('Setting up graphics...', 10)

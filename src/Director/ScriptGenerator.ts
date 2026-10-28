@@ -1,6 +1,11 @@
-import { GroupChatManager, type Message } from '../GroupChatManager';
+import type { GroupChatManager } from '../GroupChatManager';
 import type { ScriptBeat } from './Director';
+import { BeatOutlineSchema } from '../llm/structured/schemas';
 
+/**
+ * Scripted-scene generator on top of schema-constrained output (#400 C): the beat outline is
+ * grammar-constrained on MLC / llama.cpp and validated (with one retry) everywhere else.
+ */
 export class ScriptGenerator {
     private manager: GroupChatManager;
 
@@ -9,58 +14,29 @@ export class ScriptGenerator {
     }
 
     public async generate(topic: string): Promise<ScriptBeat[]> {
-        const systemPrompt = `You are an expert scriptwriter for a comedy show involving three characters:
-1. The Comedian (Female, frantic, high energy)
-2. The Philosopher (Cynical, pretentious, slow)
-3. The Scientist (Literal, dry, unintentionally funny)
+        const agents = this.manager.getAgents();
+        const cast = agents.map((a) => `- "${a.id}": ${a.name}`).join('\n');
+        const systemPrompt =
+            `You are an expert scriptwriter for a comedy show. The cast (speaker ids):\n${cast}\n\n` +
+            `Write a short script (10-15 lines) about the topic. Each beat has "speaker" ` +
+            `(one of the ids above) and "line" (the dialogue).`;
 
-Your task is to write a short script (approx 10-15 lines) about the following topic: "${topic}".
-
-Format your response as a strict JSON array of objects, where each object has "speaker" (one of the IDs: "comedian", "philosopher", "scientist") and "line" (the dialogue).
-
-Example format:
-[
-  { "speaker": "comedian", "line": "Why did the chicken cross the road?" },
-  { "speaker": "scientist", "line": "To maximize its displacement vector." }
-]
-
-Do not include any markdown formatting or explanation. Just the JSON array.`;
-
-        const messages: Message[] = [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Write a script about: ${topic}` }
-        ];
-
-        try {
-            const response = await (this.manager.completion as any)(messages, {
-                maxTokens: 1024,
-                temperature: 0.8,
-                jsonMode: true
-            });
-
-            // Clean response (sometimes models add markdown backticks despite instructions)
-            let cleaned = response.trim();
-            if (cleaned.startsWith('```json')) {
-                cleaned = cleaned.replace(/^```json/, '').replace(/```$/, '');
-            } else if (cleaned.startsWith('```')) {
-                cleaned = cleaned.replace(/^```/, '').replace(/```$/, '');
-            }
-
-            const script = JSON.parse(cleaned) as ScriptBeat[];
-
-            // Validate script
-            if (!Array.isArray(script)) {
-                throw new Error("Generated script is not an array");
-            }
-
-            return script.map(beat => ({
-                speaker: beat.speaker.toLowerCase(),
-                line: beat.line
-            }));
-
-        } catch (error) {
-            console.error('Script generation failed:', error);
+        const result = await this.manager.completeStructured(
+            [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Write a script about: ${topic}` },
+            ],
+            BeatOutlineSchema,
+            { max_tokens: 1024, temperature: 0.8, stream: false },
+        );
+        if (!result.ok) {
+            console.error('Script generation failed:', result.error);
             throw new Error('Failed to generate script. Please try again.');
         }
+
+        const idByLower = new Map(agents.map((a) => [a.id.toLowerCase(), a.id]));
+        return result.data.beats
+            .map((beat) => ({ speaker: idByLower.get(beat.speaker.trim().toLowerCase()) ?? '', line: beat.line.trim() }))
+            .filter((beat) => beat.speaker && beat.line.length > 0);
     }
 }

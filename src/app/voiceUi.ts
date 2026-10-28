@@ -33,7 +33,7 @@ export function wireVoiceUi(speechQueue: SpeechQueue, agents: Agent[]): void {
       const speed = CHARACTER_SPEEDS[agent.id] ?? 1.0
       speechQueue
         .synthesizeOrTakeCached(text, agent.id, { speed })
-        .then((pcm) => speechQueue.add(pcm))
+        .then((res) => speechQueue.add(res.audioData, res.sampleRate, { agentId: agent.id, text, visemes: res.visemes }))
         .catch((e) => console.warn(`[voiceUi] Preview failed for ${agent.id}:`, e))
     })
     previewRow.appendChild(btn)

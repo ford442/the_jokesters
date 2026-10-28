@@ -92,38 +92,34 @@ See `scripts/README.md`. **Never commit keys or passwords; rotate anything that 
 
 ## Server Headers (COOP/COEP)
 
-### Current Configuration
-The application uses `base: './'` in `vite.config.ts` for flexible deployment. COOP/COEP headers are currently **commented out** but may be needed for certain WebGPU scenarios.
+Cross-origin isolation is **on** (#400): `Cross-Origin-Opener-Policy: same-origin` +
+`Cross-Origin-Embedder-Policy: credentialless` make `crossOriginIsolated === true`, which enables
+SharedArrayBuffer → multithreaded llama.cpp (wllama) and ONNX Runtime (Supertonic TTS). The guided
+launch shows an **Isolated (N threads)** / **Not isolated** badge next to the WebGPU status.
 
-### Optional Headers (Enable if needed)
-If you encounter WebGPU cross-origin issues, add these headers:
+Where the headers come from (keep in sync with `src/utils/crossOriginIsolation.ts`):
+
+| Context | Source |
+|---------|--------|
+| `npm run dev` / `npm run preview` | `server.headers` / `preview.headers` in `vite.config.ts` |
+| Apache hosts (DreamHost, `test.1ink.us` / `go.1ink.us`) | `public/.htaccess` → `dist/.htaccess` (needs `mod_headers`) |
+| Hosts that cannot set headers | `src/service-worker.ts` adds them to documents / worker scripts; the page reloads once when the SW first takes control (`src/app/isolationReload.ts`, opt out with `?noCoiReload`) |
+
+nginx equivalent:
 
 ```nginx
-# Nginx
 add_header Cross-Origin-Opener-Policy "same-origin" always;
 add_header Cross-Origin-Embedder-Policy "credentialless" always;
 ```
 
-```apache
-# Apache
-Header always set Cross-Origin-Opener-Policy "same-origin"
-Header always set Cross-Origin-Embedder-Policy "credentialless"
-```
+`credentialless` (not `require-corp`) keeps cross-origin no-cors loads working without CORP
+headers. All model / TTS fetches are CORS requests; verified hosts sending
+`Access-Control-Allow-Origin`: `storage.1ink.us`, `storage.noahcohn.com`, `huggingface.co`,
+`raw.githubusercontent.com`. Browsers without `credentialless` (Safari) ignore it: no isolation,
+single-threaded WASM, nothing breaks.
 
-```javascript
-// Vite dev server (vite.config.ts)
-server: {
-  headers: {
-    'Cross-Origin-Opener-Policy': 'same-origin',
-    'Cross-Origin-Embedder-Policy': 'credentialless',
-  },
-}
-```
-
-### When to Enable COOP/COEP
-- Enable if using SharedArrayBuffer features
-- Enable if models fail to load due to CORS issues
-- Not required for standard WebGPU operation
+Related flags: `?ttsWebgpu` tries ORT's WebGPU execution provider for TTS (falls back to wasm);
+`?legacyPrompt` restores per-speaker system prompts (disables the shared-prefix KV reuse).
 
 ---
 

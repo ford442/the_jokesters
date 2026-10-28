@@ -6,12 +6,17 @@
  */
 
 import { pipeline, TextStreamer, env } from '@huggingface/transformers'
-import type { 
+import type {
+
   LLMEngine, 
   ChatMessage, 
   GenerationOptions, 
   InitProgressReport, 
   UnifiedModelConfig 
+} from './LLMEngine';
+import {
+  type EngineContextInfo,
+  DEFAULT_CONTEXT_WINDOW_SIZE
 } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
 import { VPS_STORAGE_ORIGIN } from '../config/models'
@@ -178,8 +183,13 @@ export class TransformersEngineAdapter implements LLMEngine {
   isInitialized(): boolean { return this.generator !== null }
   getLoadedModelId(): string | null { return this.config?.id || null }
 
-  getContextWindowSize(): number {
-    return this.config?.context_window_size ?? 4096
+  getContextInfo(): EngineContextInfo {
+    const requested = this.config?.context_window_size ?? DEFAULT_CONTEXT_WINDOW_SIZE
+    return {
+      requested,
+      effective: requested,
+      source: this.config?.context_window_size ? 'config' : 'adapter_default'
+    }
   }
 
   countTokens(text: string): number | null {

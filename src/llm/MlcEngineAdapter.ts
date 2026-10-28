@@ -9,7 +9,7 @@
  * in-process `CreateMLCEngine` (also used automatically where `Worker` is unavailable).
  */
 
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import {
   type ChatMessage,
   type GenerationOptions,
@@ -24,6 +24,7 @@ import {
   type MlcEngineHandle,
 } from './mlcEngineCreate'
 import { isWorkerMlcEngine, type MlcRuntime } from './worker/mlcWorkerEngine'
+import { type EngineContextInfo, DEFAULT_CONTEXT_WINDOW_SIZE } from './LLMEngine'
 import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 
 export interface MlcModelConfig extends UnifiedModelConfig {
@@ -33,8 +34,30 @@ export interface MlcModelConfig extends UnifiedModelConfig {
   }
 }
 
-import type { LLMEngine } from './LLMEngine'
+import type { GenerationUsage, LLMEngine, StructuredResponseFormat } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
+
+/** Map the engine-neutral format to web-llm's xgrammar `response_format` (#400 C). */
+export function toMlcResponseFormat(
+  format: StructuredResponseFormat | undefined,
+): { response_format?: webllm.ResponseFormat } {
+  if (!format) return {}
+  if (format.type === 'json_schema') {
+    return { response_format: { type: 'json_object', schema: JSON.stringify(format.schema) } }
+  }
+  return { response_format: { type: 'grammar', grammar: format.grammar } }
+}
+
+/** web-llm counts only the newly prefilled suffix in `prompt_tokens` when it reuses the KV cache. */
+export function toGenerationUsage(usage: webllm.CompletionUsage): GenerationUsage {
+  return {
+    prefillTokens: usage.prompt_tokens,
+    completionTokens: usage.completion_tokens,
+    ttftMs: usage.extra?.time_to_first_token_s != null ? usage.extra.time_to_first_token_s * 1000 : undefined,
+    decodeTokPerSec: usage.extra?.decode_tokens_per_s,
+    prefillTokPerSec: usage.extra?.prefill_tokens_per_s,
+  }
+}
 
 export class MlcEngineAdapter implements LLMEngine {
   readonly id = 'mlc'
@@ -122,10 +145,11 @@ export class MlcEngineAdapter implements LLMEngine {
       max_tokens: normalizedOpts.max_tokens,
       stream: true,
       stop: normalizedOpts.stop,
-      // @ts-ignore - WebLLM-specific options
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,
+      ...toMlcResponseFormat(options.response_format),
+      stream_options: { include_usage: true },
     })
 
     const iterator = (completion as AsyncIterable<any>)[Symbol.asyncIterator]()
@@ -137,6 +161,7 @@ export class MlcEngineAdapter implements LLMEngine {
           exhausted = true
           break
         }
+        if (chunk?.usage) options.onUsage?.(toGenerationUsage(chunk.usage))
         const delta = chunk?.choices?.[0]?.delta
         const content = delta?.content || ''
         if (!content) continue
@@ -199,12 +224,13 @@ export class MlcEngineAdapter implements LLMEngine {
       max_tokens: normalizedOpts.max_tokens,
       stream: false,
       stop: normalizedOpts.stop,
-      // @ts-ignore - WebLLM-specific options
       seed: normalizedOpts.seed,
       repetition_penalty: normalizedOpts.repetition_penalty,
       presence_penalty: normalizedOpts.presence_penalty,
+      ...toMlcResponseFormat(options.response_format),
     })
 
+    if (completion.usage) options.onUsage?.(toGenerationUsage(completion.usage))
     return completion.choices[0]?.message?.content || ''
   }
 
@@ -238,18 +264,23 @@ export class MlcEngineAdapter implements LLMEngine {
     return this.config?.id || null
   }
 
-  getContextWindowSize(): number {
-    if (this.config?.context_window_size) {
-      return this.config.context_window_size
+  getContextInfo(): EngineContextInfo {
+    const fromEngine = getMlcEngineContextWindow(this.engine) ?? (this.engine as { chatConfig?: { context_window_size?: number } })?.chatConfig?.context_window_size as number | undefined
+    const fromConfig = this.config?.context_window_size
+    const fromOverrides = this.config?.mlc?.overrides?.context_window_size as number | undefined
+
+    const effective = fromEngine ?? fromConfig ?? fromOverrides ?? DEFAULT_CONTEXT_WINDOW_SIZE
+    const requested = fromConfig ?? fromOverrides ?? DEFAULT_CONTEXT_WINDOW_SIZE
+
+    let source: EngineContextInfo['source'] = 'adapter_default'
+    if (fromEngine !== undefined) source = 'model_lib'
+    else if (fromConfig !== undefined || fromOverrides !== undefined) source = 'config'
+
+    return {
+      requested,
+      effective,
+      source
     }
-    const engine = this.engine as {
-      chatConfig?: { context_window_size?: number }
-    } | null
-    return (
-      getMlcEngineContextWindow(engine) ??
-      engine?.chatConfig?.context_window_size ??
-      4096
-    )
   }
 
   /** Where the loaded engine runs, or null when nothing is loaded. */

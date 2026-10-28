@@ -27,9 +27,9 @@ export function selectErrorPanelActions(input: {
   modelId: string
 }): ErrorPanelActionPlan {
   const { category, modelId } = input
-  const smaller = getSmallerFallbackFor(modelId)
-  const actions: ErrorPanelAction[] = ['retry']
   const downloadFail = DOWNLOAD_CATEGORIES.includes(category)
+  const smaller = getSmallerFallbackFor(modelId, category === 'oom' ? 'oom' : 'download')
+  const actions: ErrorPanelAction[] = ['retry']
 
   if (category === 'webgpu') {
     actions.push('switch_cpu')

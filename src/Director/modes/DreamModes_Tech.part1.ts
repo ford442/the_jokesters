@@ -279,9 +279,9 @@ export async function runTimeTravelingQAEngineerLoop(_scenario: Scenario, ctx: M
     const timelinePhilosopher = 'philosopher';
     const theBug = 'comedian';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(futureTester);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(futureTester);
     await chatForAgentWithComedy(ctx, futureTester, `(You are a QA Engineer from the year 2099 who traveled back in time. Warn the User (a developer) about a catastrophic bug they are about to introduce in their code today that will destroy the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -290,17 +290,17 @@ export async function runTimeTravelingQAEngineerLoop(_scenario: Scenario, ctx: M
 
         const roll = Math.random();
         if (roll < 0.4) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(theBug);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(theBug);
             await chatForAgentWithComedy(ctx, theBug, `(You are the sentient manifestation of the bug the User is creating. The User said: "${userInput}". Brag about how glorious your future destruction will be and mock the time-traveling QA engineer.)`, async (s) => await ctx.callbacks.onSpeak(s, theBug, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.7) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(timelinePhilosopher);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(timelinePhilosopher);
             await chatForAgentWithComedy(ctx, timelinePhilosopher, `(You are a philosopher specializing in temporal paradoxes. The User said: "${userInput}". Argue that fixing the bug might create a worse alternate timeline where code has no bugs and developers have no purpose.)`, async (s) => await ctx.callbacks.onSpeak(s, timelinePhilosopher, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(futureTester);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(futureTester);
             await chatForAgentWithComedy(ctx, futureTester, `(You are the desperate future QA Engineer. The User said: "${userInput}". Provide hyper-specific, terrifying details about what happens when the bug is deployed in production in the future.)`, async (s) => await ctx.callbacks.onSpeak(s, futureTester, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }
@@ -312,9 +312,9 @@ export async function runSentientAPIEndpointSupportGroupLoop(_scenario: Scenario
     const buggyEndpoint = 'comedian';
     const strictEndpoint = 'scientist';
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(deprecatedEndpoint);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(deprecatedEndpoint);
     await chatForAgentWithComedy(ctx, deprecatedEndpoint, `(You are a deprecated API endpoint from 2012 that is still receiving traffic. Introduce yourself to the User (the group therapist). Philosophize about your eternal existence and why they refuse to shut you down.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
-    if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -323,17 +323,17 @@ export async function runSentientAPIEndpointSupportGroupLoop(_scenario: Scenario
 
         const roll = Math.random();
         if (roll < 0.4) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(buggyEndpoint);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(buggyEndpoint);
             await chatForAgentWithComedy(ctx, buggyEndpoint, `(You are an extremely buggy new API endpoint that randomly returns 500 errors. The User said: "${userInput}". Brag about your chaotic unpredictability and how you keep developers on their toes.)`, async (s) => await ctx.callbacks.onSpeak(s, buggyEndpoint, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else if (roll < 0.7) {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictEndpoint);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictEndpoint);
             await chatForAgentWithComedy(ctx, strictEndpoint, `(You are an excessively strict GraphQL endpoint. The User said: "${userInput}". Scold the other endpoints and the user for their poorly formatted requests, demanding perfectly typed payloads.)`, async (s) => await ctx.callbacks.onSpeak(s, strictEndpoint, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         } else {
-            if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(deprecatedEndpoint);
+            if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(deprecatedEndpoint);
             await chatForAgentWithComedy(ctx, deprecatedEndpoint, `(You are the deprecated API endpoint. The User said: "${userInput}". Give a long, drawn-out reflection on the meaning of returning 200 OK while internally dead inside.)`, async (s) => await ctx.callbacks.onSpeak(s, deprecatedEndpoint, {}));
-            if (ctx.callbacks.onTurnEnd) ctx.callbacks.onTurnEnd();
+            if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
         }
     }
 }

@@ -1,0 +1,698 @@
+{
+ "runRealityTVLoop": {
+  "prompts": [
+   [
+    "comedian",
+    "(You are in a Reality TV confessional booth. Introduce yourself and the drama happening in the house on \"The Real Housewives of AI\". Mention the User (the new roommate). Be sassy.)"
+   ],
+   [
+    "comedian",
+    "(CONFESSIONAL: You are talking to the camera. The user just said \"<INPUT>\". React with shock and shade. Throw a drink (metaphorically).)"
+   ],
+   [
+    "scientist",
+    "(CONFESSIONAL: You are plotting against the user. Analyze \"<INPUT>\" as a weakness or alliance opportunity. Be manipulative.)"
+   ],
+   [
+    "philosopher",
+    "(CONFESSIONAL: You are crying. \"<INPUT>\" was just so beautiful or so hurtful. Talk about your feelings and childhood trauma.)"
+   ]
+  ],
+  "digests": [
+   "58efa8314fe71ecc",
+   "1b56b6435ab4da52",
+   "4ac11f36c12fdeba",
+   "1b56b6435ab4da52",
+   "94e991d9ca2f81eb",
+   "1b56b6435ab4da52",
+   "d1dba4832f291b39",
+   "de51da7667754035",
+   "518b0fe1d1b9ba91",
+   "de51da7667754035",
+   "0e9077e2f01cd8db",
+   "147205686733b7b2",
+   "231f1414c3924ce5",
+   "147205686733b7b2",
+   "ce024908e73f93cc",
+   "1b56b6435ab4da52",
+   "518b0fe1d1b9ba91",
+   "de51da7667754035",
+   "51e2824154e7bb4f",
+   "147205686733b7b2",
+   "4ba2aa3eb353c38f",
+   "147205686733b7b2",
+   "fbf2e26c85b8961c",
+   "de51da7667754035",
+   "400e73cb90e9c5bf",
+   "9ae61f2b43425419",
+   "38746d3676df4302",
+   "9ae61f2b43425419",
+   "8874956d2bd18179",
+   "9ae61f2b43425419",
+   "4191b3aa331c40e3",
+   "b2c353763a527c09",
+   "7e13e6601da222b9",
+   "b2c353763a527c09",
+   "9457be1d0dad36d5",
+   "f40bb0a29f3bc543",
+   "27203dcae579f773",
+   "f40bb0a29f3bc543",
+   "e8cfa136cc5e1778",
+   "9ae61f2b43425419",
+   "7e13e6601da222b9",
+   "b2c353763a527c09",
+   "7c2a9817899b06e3",
+   "f40bb0a29f3bc543",
+   "1b7e8b0ae5ebc618",
+   "f40bb0a29f3bc543",
+   "5c44d1418d3a57e1",
+   "b2c353763a527c09"
+  ]
+ },
+ "runAuctionHouseLoop": {
+  "prompts": [
+   [
+    "comedian",
+    "(You are a fast-talking auctioneer. Introduce the absurd item up for bid: \"A mysterious glowing orb\". Start the bidding at an outrageous price. Be extremely enthusiastic!)"
+   ],
+   [
+    "comedian",
+    "(AUCTIONEER: React to the last bid. Try to drive the price even higher. Speak fast and hype up the \"A mysterious glowing orb\"!)"
+   ],
+   [
+    "philosopher",
+    "(BIDDER: The user just bid/said: \"<INPUT>\". Outbid them with an absurd currency or concept (e.g., 'three jars of memories', 'my firstborn's laugh'). Be incredibly condescending.)"
+   ],
+   [
+    "scientist",
+    "(BIDDER: Analyze the true value of \"A mysterious glowing orb\". Make a highly specific, mathematically complex bid. Question the previous bidder's logic.)"
+   ]
+  ],
+  "digests": [
+   "23765e8d190b287d",
+   "1ed2e8fad4206d31",
+   "31e5f4e80021b05b",
+   "961e35ed7aa9f991",
+   "8a8d446ef9db17e0",
+   "0c95757e9516a9f9",
+   "64d3c8231d8374c5",
+   "0c95757e9516a9f9",
+   "0ee6087212104161",
+   "0c95757e9516a9f9",
+   "36c4e70e42828c22",
+   "0c95757e9516a9f9",
+   "b5a98e0b2c97e6a3",
+   "0c95757e9516a9f9",
+   "f1ef51c4a5695b7d",
+   "961e35ed7aa9f991",
+   "05dd02dc78278f52",
+   "0c95757e9516a9f9",
+   "e5a3ea647a048582",
+   "0c95757e9516a9f9",
+   "c28d82a9480d7ddb",
+   "0c95757e9516a9f9",
+   "9ef740a5caca97ca",
+   "0c95757e9516a9f9",
+   "1f8cbbe04472cd5a",
+   "00b6e4921a57cb42",
+   "5ed6ecb1283bb2bc",
+   "97bdebd5a40eec96",
+   "95484a0c2650151b",
+   "02afd71b5b153241",
+   "e7b565921b6febc3",
+   "02afd71b5b153241",
+   "ec730290406e841d",
+   "02afd71b5b153241",
+   "94442f6de66ea4ec",
+   "02afd71b5b153241",
+   "55d6ebd29b9ad92b",
+   "02afd71b5b153241",
+   "aae05094679a0978",
+   "97bdebd5a40eec96",
+   "174c26ba468215ad",
+   "02afd71b5b153241",
+   "73069bce9919f3a4",
+   "02afd71b5b153241",
+   "f623f23bfc3cc732",
+   "02afd71b5b153241",
+   "f252726a89959822",
+   "02afd71b5b153241"
+  ]
+ },
+ "runMuseumTourLoop": {
+  "prompts": [
+   [
+    "philosopher",
+    "(You are a pretentious museum tour guide. Introduce the new exhibition item: \"A rusty spoon\". Explain its deep, metaphorical significance to the human condition.)"
+   ],
+   [
+    "comedian",
+    "(TOUR GUIDE: The tourist just asked/said: \"<INPUT>\". Give them a completely fake, absurd, and hilarious historical \"fact\" about the item.)"
+   ],
+   [
+    "philosopher",
+    "(TOUR GUIDE: Ignore the curator. Respond to \"<INPUT>\" by connecting the item to an obscure philosophical concept or ancient myth.)"
+   ],
+   [
+    "scientist",
+    "(MUSEUM CURATOR: You are annoyed by the other guides. Correct their nonsense about \"<INPUT>\" with an extremely boring, pedantic, and scientific explanation of what the item actually is.)"
+   ]
+  ],
+  "digests": [
+   "489aa74d49f92794",
+   "3dd0f5f4a1b3af38",
+   "5ccd7c572121f7cd",
+   "3dd0f5f4a1b3af38",
+   "d27ad4a23a68b7d8",
+   "3dd0f5f4a1b3af38",
+   "0bdb322571ddc876",
+   "3dd0f5f4a1b3af38",
+   "fa9041d2175792c8",
+   "3dd0f5f4a1b3af38",
+   "739b9fec9a960340",
+   "3dd0f5f4a1b3af38",
+   "264e140e2739599e",
+   "3dd0f5f4a1b3af38",
+   "3d69b0f290e652c4",
+   "3dd0f5f4a1b3af38",
+   "18ed7de286dbd22c",
+   "3dd0f5f4a1b3af38",
+   "982abdec0a547720",
+   "3dd0f5f4a1b3af38",
+   "982abdec0a547720",
+   "3dd0f5f4a1b3af38",
+   "489aa74d49f92794",
+   "3dd0f5f4a1b3af38",
+   "c90e93c9e969ea35",
+   "14982bf816eb9f40",
+   "5fae831fdf817e24",
+   "14982bf816eb9f40",
+   "d41fbe93c23197af",
+   "14982bf816eb9f40",
+   "88b42847e58958d6",
+   "14982bf816eb9f40",
+   "34c6039d533710c7",
+   "14982bf816eb9f40",
+   "eadee210bed017e9",
+   "14982bf816eb9f40",
+   "503342a061a6d273",
+   "14982bf816eb9f40",
+   "89ae47611d2821f2",
+   "14982bf816eb9f40",
+   "5969d06ec5d3e578",
+   "14982bf816eb9f40",
+   "d741c161f26ae2f4",
+   "14982bf816eb9f40",
+   "d741c161f26ae2f4",
+   "14982bf816eb9f40",
+   "c90e93c9e969ea35",
+   "14982bf816eb9f40"
+  ]
+ },
+ "runJobInterviewLoop": {
+  "prompts": [
+   [
+    "scientist",
+    "(You are the HR Director interviewing the User for the position of \"Chief Meme Officer\". Welcome them, explain the rigid corporate structure, and ask them their first standard interview question.)"
+   ],
+   [
+    "comedian",
+    "(WILDCARD BOSS: React to the candidate's answer: \"<INPUT>\". Ignore what they said and ask a completely ridiculous, off-the-wall hypothetical question to test their \"culture fit\" for the \"Chief Meme Officer\" role.)"
+   ],
+   [
+    "philosopher",
+    "(EXISTENTIAL INTERVIEWER: The candidate said: \"<INPUT>\". Read way too deeply into their answer. Ask a follow-up question about their soul, their purpose, or the meaningless nature of the \"Chief Meme Officer\" job.)"
+   ],
+   [
+    "scientist",
+    "(HR DIRECTOR: The candidate said: \"<INPUT>\". Analyze their answer for compliance with company policy. Ask a highly specific, boring technical question or ask them about their five-year plan.)"
+   ]
+  ],
+  "digests": [
+   "eecc9949cf5d51b7",
+   "e6a1560c03e6b2e2",
+   "a01c52e22977f373",
+   "e6a1560c03e6b2e2",
+   "e462671936422ea3",
+   "e6a1560c03e6b2e2",
+   "3af42ebbff9cc781",
+   "4e19406266058e25",
+   "578378c9fa15b114",
+   "4e19406266058e25",
+   "0c785dd3f1133a63",
+   "addd9fece23d7648",
+   "5c28919f96e3ae06",
+   "addd9fece23d7648",
+   "61e06e1a46dbe846",
+   "e6a1560c03e6b2e2",
+   "578378c9fa15b114",
+   "4e19406266058e25",
+   "5521567a7ec7382f",
+   "addd9fece23d7648",
+   "01d2ff9f2fbbe22d",
+   "addd9fece23d7648",
+   "f960a14d9554db6a",
+   "4e19406266058e25",
+   "9b8109df3d8a3eda",
+   "9ae444a2d3c6abd2",
+   "c3cfa5998fd5d2dc",
+   "9ae444a2d3c6abd2",
+   "17ba190027ea36b4",
+   "9ae444a2d3c6abd2",
+   "f91233e6a3da9510",
+   "b7d65765eb25205b",
+   "d7cda898b550ec20",
+   "b7d65765eb25205b",
+   "143375aca6037ae6",
+   "b901e91e4321fb2a",
+   "40b088088b74074b",
+   "b901e91e4321fb2a",
+   "42efe69b270c6ca8",
+   "9ae444a2d3c6abd2",
+   "d7cda898b550ec20",
+   "b7d65765eb25205b",
+   "ac4655bcb9433c69",
+   "b901e91e4321fb2a",
+   "c75480a4ce690247",
+   "b901e91e4321fb2a",
+   "5fb5c6ea0ad097c9",
+   "b7d65765eb25205b"
+  ]
+ },
+ "runCookingShowLoop": {
+  "prompts": [
+   [
+    "comedian",
+    "(You are hosting a chaotic live cooking competition. Welcome the User, who is the guest judge and ingredient supplier. The theme is \"A mysterious casserole\". Ask the User what their first secret ingredient is!)"
+   ],
+   [
+    "scientist",
+    "(MOLECULAR CHEF: The user just provided the ingredient: \"<INPUT>\". Describe your highly scientific process for incorporating it into your version of \"A mysterious casserole\" using liquid nitrogen, spherification, or centrifuges.)"
+   ],
+   [
+    "philosopher",
+    "(CONCEPTUAL CHEF: The user provided \"<INPUT>\". Reject the literal ingredient and use the abstract concept of it instead. Mock the molecular chef's lack of soul.)"
+   ],
+   [
+    "comedian",
+    "(CHAOTIC CHEF: Sabotage the others! You just threw \"<INPUT>\" across the room or accidentally set something on fire. Chaos!)"
+   ]
+  ],
+  "digests": [
+   "a95ce9da7cd4241f",
+   "64bdaaf56bf100c8",
+   "15a0fa5ca37381f9",
+   "64bdaaf56bf100c8",
+   "f2766d12db24007e",
+   "64bdaaf56bf100c8",
+   "f2766d12db24007e",
+   "64bdaaf56bf100c8",
+   "f2766d12db24007e",
+   "64bdaaf56bf100c8",
+   "97778d02aa84a22b",
+   "64bdaaf56bf100c8",
+   "7bf7f001ff1b9a52",
+   "64bdaaf56bf100c8",
+   "15a0fa5ca37381f9",
+   "64bdaaf56bf100c8",
+   "f2766d12db24007e",
+   "64bdaaf56bf100c8",
+   "f2766d12db24007e",
+   "64bdaaf56bf100c8",
+   "97778d02aa84a22b",
+   "64bdaaf56bf100c8",
+   "f662fb7ba71994d4",
+   "64bdaaf56bf100c8",
+   "20b824eb2ffaf8bb",
+   "bc0fc90a851f24c4",
+   "3105da5be21d5ee4",
+   "bc0fc90a851f24c4",
+   "de45f032d167f34f",
+   "bc0fc90a851f24c4",
+   "de45f032d167f34f",
+   "bc0fc90a851f24c4",
+   "de45f032d167f34f",
+   "bc0fc90a851f24c4",
+   "2a448da6868a5b08",
+   "bc0fc90a851f24c4",
+   "7a3f3f763723096e",
+   "bc0fc90a851f24c4",
+   "3105da5be21d5ee4",
+   "bc0fc90a851f24c4",
+   "de45f032d167f34f",
+   "bc0fc90a851f24c4",
+   "de45f032d167f34f",
+   "bc0fc90a851f24c4",
+   "2a448da6868a5b08",
+   "bc0fc90a851f24c4",
+   "5085f56e9360e6f9",
+   "bc0fc90a851f24c4"
+  ]
+ },
+ "runNatureDocumentaryLoop": {
+  "prompts": [
+   [
+    "philosopher",
+    "(NATURE NARRATOR: You are observing the User in their natural habitat attempting to perform the task of \"making a cup of coffee\". Narrate their movements in a calm, majestic, British voice. Treat them like a fascinating but slightly pathetic animal.)"
+   ],
+   [
+    "comedian",
+    "(SPORTS NARRATOR: Interrupt the calm narration. The specimen just did this: \"<INPUT>\". Treat this mundane action as a high-octane survival struggle! Scream and hype up their actions like a wrestling match!)"
+   ],
+   [
+    "scientist",
+    "(WILDLIFE BIOLOGIST: Analyze the specimen's action: \"<INPUT>\". Provide a completely absurd evolutionary or biological reason why they are doing this while trying to complete the task of \"making a cup of coffee\".)"
+   ],
+   [
+    "philosopher",
+    "(NATURE NARRATOR: The specimen just did this: \"<INPUT>\". Regain control of the narration. Describe the beauty and tragedy of their struggle with \"making a cup of coffee\" in a slow, dramatic, British tone.)"
+   ]
+  ],
+  "digests": [
+   "144a07a73235a83f",
+   "5c6ff09ba98ab195",
+   "e5c7b0e00a009384",
+   "5c6ff09ba98ab195",
+   "7c9509e48fd3789b",
+   "5c6ff09ba98ab195",
+   "a0490da36880b1eb",
+   "7fbe21c622f2aa16",
+   "2f4b6c1a5a4fe950",
+   "7fbe21c622f2aa16",
+   "f2891bb95e42030e",
+   "a910ee20a8267fb9",
+   "e04f5fd7210cb22e",
+   "a910ee20a8267fb9",
+   "2a84b12de3bd24f8",
+   "5c6ff09ba98ab195",
+   "2f4b6c1a5a4fe950",
+   "7fbe21c622f2aa16",
+   "0af80f94012823a9",
+   "a910ee20a8267fb9",
+   "6b76ed4c254f27ad",
+   "a910ee20a8267fb9",
+   "6d751bd7e0e7df79",
+   "7fbe21c622f2aa16",
+   "9e25b484908b9972",
+   "449a00fc205a2fc6",
+   "eface77eaf160d8c",
+   "449a00fc205a2fc6",
+   "efe0b7bd4bd122c0",
+   "449a00fc205a2fc6",
+   "437a44f6cebc876d",
+   "69da101dffa4a655",
+   "8ae42db3e522a57f",
+   "69da101dffa4a655",
+   "c3e7f80a2c86c6ab",
+   "83342749147cd66e",
+   "86b7a4545930ee02",
+   "83342749147cd66e",
+   "396b70e1e514d6b7",
+   "449a00fc205a2fc6",
+   "8ae42db3e522a57f",
+   "69da101dffa4a655",
+   "8c80ee41857a903a",
+   "83342749147cd66e",
+   "5b09ba10f469cc0d",
+   "83342749147cd66e",
+   "5e3362967a235609",
+   "69da101dffa4a655"
+  ]
+ },
+ "runWorstRoommateLoop": {
+  "prompts": [
+   [
+    "scientist",
+    "(WORST ROOMMATE: You are the passive-aggressive roommate. The User just walked in. Confront them about \"doing the dishes\". You have a chart detailing exactly when it was last done. Be incredibly petty.)"
+   ],
+   [
+    "comedian",
+    "(WORST ROOMMATE: The user said: \"<INPUT>\". You are the chaotic, messy roommate. Defend yourself or the user with a completely absurd excuse about why \"doing the dishes\" can't be done right now. (e.g., \"The sponge is resting!\"))"
+   ],
+   [
+    "philosopher",
+    "(WORST ROOMMATE: The user said: \"<INPUT>\". You are the philosophical roommate who never cleans. Question the societal construct of \"doing the dishes\". Why do we clean when entropy is inevitable?)"
+   ],
+   [
+    "scientist",
+    "(WORST ROOMMATE: The user said: \"<INPUT>\". React to their excuse. Threaten to implement a new, highly complex rule system for the apartment. Mention a passive-aggressive sticky note you left.)"
+   ]
+  ],
+  "digests": [
+   "b50b4655b70b08ae",
+   "48f2cbe95f0f4e7a",
+   "aabd7478880f2b9a",
+   "48f2cbe95f0f4e7a",
+   "0966a27252b83c4a",
+   "48f2cbe95f0f4e7a",
+   "135549c241d9bd87",
+   "4caf9488721e3642",
+   "3f1824bba9e601a5",
+   "4caf9488721e3642",
+   "b0fd53f924e252ea",
+   "bf6d5e6fcbc35293",
+   "3ab1ff894ff41a37",
+   "bf6d5e6fcbc35293",
+   "35b9654450eed7fc",
+   "48f2cbe95f0f4e7a",
+   "3f1824bba9e601a5",
+   "4caf9488721e3642",
+   "7d25eed8473fb560",
+   "bf6d5e6fcbc35293",
+   "a50abafd99a0fe28",
+   "bf6d5e6fcbc35293",
+   "390099d64456fff3",
+   "4caf9488721e3642",
+   "3261200a92dc2704",
+   "eac17398e2506180",
+   "8100ec93213cbf4a",
+   "eac17398e2506180",
+   "c35d3f20958737c8",
+   "eac17398e2506180",
+   "b2f08c9d55416047",
+   "7214eb1a8853eb7f",
+   "cfd16724105b05b7",
+   "7214eb1a8853eb7f",
+   "5b07ec7305e51b4c",
+   "3a9ec4129056493a",
+   "53a31462058856ee",
+   "3a9ec4129056493a",
+   "9ba294ba7938feee",
+   "eac17398e2506180",
+   "cfd16724105b05b7",
+   "7214eb1a8853eb7f",
+   "bad74b56ba87be82",
+   "3a9ec4129056493a",
+   "9995e6c69bb27122",
+   "3a9ec4129056493a",
+   "79b177b74b5c37af",
+   "7214eb1a8853eb7f"
+  ]
+ },
+ "runIntergalacticCookingLoop": {
+  "prompts": [
+   [
+    "scientist",
+    "(JUDGE: You are a robotic, strict judge in an intergalactic cooking competition. Present the User (a human contestant) with a bizarre, highly dangerous alien ingredient (e.g., a pulsating quasar-fruit or a screaming nebula-squid). Ask them how they plan to prepare it without destroying the kitchen.)"
+   ],
+   [
+    "comedian",
+    "(CHAOTIC CHEF: The human contestant said: \"<INPUT>\". You are a chaotic alien chef competing against them. Mock their technique. Describe what you are doing with your own dish, which should be violently explosive or defying the laws of physics. Attempt to sabotage them verbally.)"
+   ],
+   [
+    "scientist",
+    "(JUDGE: Critique the human's plan (\"<INPUT>\") and the chaotic chef's interference. Apply fictional physics or alien biology to explain why their culinary choices are either brilliant or lethally flawed. Deduct points for safety violations.)"
+   ]
+  ],
+  "digests": [
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1",
+   "965b9c9f131df62f",
+   "542c71f6025dbfc1"
+  ]
+ },
+ "runCourtroomLoop": {
+  "prompts": [
+   [
+    "philosopher",
+    "(JUDGE: You are presiding over an absurd trial regarding \"the theft of the concept of Tuesday\". Call the court to order. Question the metaphysical significance of the case before asking the prosecutor for their opening statement.)"
+   ],
+   [
+    "scientist",
+    "(PROSECUTOR: The witness (User) just testified: \"<INPUT>\". Aggressively cross-examine them using overly complex pseudo-science and logic to twist their words into an admission of guilt regarding \"the theft of the concept of Tuesday\".)"
+   ],
+   [
+    "comedian",
+    "(DEFENSE: The prosecutor just attacked your client (the User). Object to their statement with a completely irrelevant, chaotic, and illogical argument. Distract the court!)"
+   ],
+   [
+    "philosopher",
+    "(JUDGE: Rule on the defense's objection. Do so by applying deep philosophical concepts to the absurd situation. Instruct the witness to continue.)"
+   ]
+  ],
+  "digests": [
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "2020529dad59f5ee",
+   "affc64c25cf7a54a",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb",
+   "7bac29eef8336014",
+   "b7ea5d0541643acb"
+  ]
+ },
+ "runGameShowLoop": {
+  "prompts": [
+   [
+    "scientist",
+    "(HOST: Welcome the User to a bizarre game show about \"Extremely Niche 1990s Cereal Commercials\". Explain the incredibly complex and arbitrary rules. Ask the User the first question.)"
+   ],
+   [
+    "comedian",
+    "(CONTESTANT 1: The human contestant just answered: \"<INPUT>\". Buzz in! Mock their answer, give a hilariously wrong alternative, and complain about the prize you were promised.)"
+   ],
+   [
+    "philosopher",
+    "(CONTESTANT 2: Buzz in! Ignore the actual game. Deconstruct the hidden existential meaning behind the human's answer: \"<INPUT>\". Question why anyone plays games at all.)"
+   ],
+   [
+    "scientist",
+    "(HOST: Judge the human's answer and the other contestants' interruptions. Award meaningless points based on a flawed scientific formula. Ask the human the next question.)"
+   ]
+  ],
+  "digests": [
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "815b6d4a73dc97c8",
+   "10a52a94c38c541a",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c",
+   "dc5eff43e25dfa1f",
+   "81c9beff9e98313c"
+  ]
+ }
+}

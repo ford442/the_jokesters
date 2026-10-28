@@ -41,9 +41,18 @@ src/
   utils/vpsStorageUrl.ts    Canonical storage host (+ Vite env override)
   utils/dualDomainStripe.ts Dual-domain Range striping (SW + PDM planner)
   config/loadFailover.ts    Vicuna VPS → HF Hub source selection
-  visuals/Stage.ts          Three.js stage + 5 actors
   visuals/kits/             Stage kits (public/sets/*.glb), camera director, whitelisted props
+  visuals/Stage.ts          Three.js stage + 5 actors (capsule `Actor` or `VrmActor`, both `StageActor`)
+  visuals/VrmActor.ts       VRM avatar: viseme vowels, emotions, blink, gaze (lazy chunk)
+  visuals/mouth.ts          Viseme → mouth frame (coarticulation, loudness fallback)
+  audio/visemeTiming.ts     Text → timed visemes, shared by TTS worker + main thread
+  audio/MusicEngine.ts      Show music: stingers per kit palette, TTS-ducked (ShowMusic.ts)
+  audio/showAudioBus.ts     Master bus (TTS + SFX + music) + recording tap
+  recording/ClipRecorder.ts Rolling "clip last 30 s" (WebM ring / WebCodecs+mp4-muxer MP4)
+  cast/                     Cast editor: card schema (zod), apply, IndexedDB avatars
 ```
+
+Avatars, show music, clips and cast cards: [docs/SHOW_PRODUCTION.md](./docs/SHOW_PRODUCTION.md).
 
 ## Model hosting
 
@@ -63,9 +72,12 @@ shows download size estimate, persists last successful launch, and OOM panel can
 ```bash
 npm ci
 npm run dev          # http://localhost:5173
-npm run typecheck    # tsc --noEmit (required before commit)
+npm run typecheck    # tsc -b: src, service worker, vite.config.ts, tests (required before commit)
+npm run lint         # ESLint (typescript-eslint, type-aware); `npm run lint:ci` also ratchets explicit `any`
+npm run registry:check  # generated mode registry matches src/Director/modes (regenerate: node scripts/generate-mode-registry.mjs)
 npm test             # Vitest unit tests
-npm run build        # tsc + vite → dist/
+npm run build        # tsc -b + vite → dist/
+npm run budget:check  # bundle/dist byte budgets from perf-budget.json (after build)
 npm run perf:quick
 ./scripts/build-webllm.sh   # custom web-llm (optional)
 ```
@@ -73,7 +85,7 @@ npm run perf:quick
 ### TypeScript policy
 
 - `strict: true` is on.
-- `noUnusedLocals` / `noUnusedParameters` are currently **`false`** in `tsconfig.json` (legacy debt).
+- `noUnusedLocals` / `noUnusedParameters` are currently **`false`** in `tsconfig.base.json` (legacy debt).
   Prefer not introducing new unused symbols; do not claim they are compiler-enforced until flipped on.
 - PWA types: `/// <reference types="vite-plugin-pwa/client" />` in `src/vite-env.d.ts` — requires
   `npm ci` so `vite-plugin-pwa` is installed. Do **not** put `"types": ["vite-plugin-pwa/client"]`

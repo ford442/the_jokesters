@@ -37,8 +37,8 @@ describe('OptimizedAudioEngineAdapter', () => {
 
     const audio = await adapter.synthesize('Hello there.', 'comedian', { speed: 1.2 })
     expect(mutableEngine.synthesize).toHaveBeenCalledWith('Hello there.', 'comedian', { speed: 1.2 })
-    expect(audio).toBeInstanceOf(Float32Array)
-    expect(audio.length).toBe(3)
+    expect(audio.audioData).toBeInstanceOf(Float32Array)
+    expect(audio.audioData.length).toBe(3)
     // Live getter must reflect the worker rate after synthesize resolves
     expect(adapter.sampleRate).toBe(48000)
   })
@@ -56,6 +56,6 @@ describe('OptimizedAudioEngineAdapter', () => {
 
     // The adapter must return exactly the audioData buffer, dropping visemes/latency/duration —
     // that's the whole point: SpeechQueue only ever wants Promise<Float32Array>.
-    expect(audio).toBe(result.audioData)
+    expect(audio.audioData).toBe(result.audioData)
   })
 })

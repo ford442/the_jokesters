@@ -1,8 +1,9 @@
-import type { GroupChatManager } from '../GroupChatManager'
-import type { SynthesisOptions, TtsEngine } from '../audio/AudioEngine'
+import type { GroupChatManager, PrerenderedTurnText } from '../GroupChatManager'
+import type { SynthesisOptions, SynthesizedAudio, TtsEngine } from '../audio/AudioEngine'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import { estimateAvailableVRAM } from '../utils/vramOverrides'
 import { stripStageTokens } from '../visuals/propTokens'
+import { stripForSpeakability } from '../chat/speakableText'
 import { computePrerenderDepth, median, type PrerenderDepthBudget } from './adaptiveDepth'
 
 export interface PrerenderedTurn {
@@ -12,8 +13,11 @@ export interface PrerenderedTurn {
   sentences: string[]
   /** Epoch when this turn was generated — discard if generation invalidated */
   generation: number
+  /** Writers' room: exact engine prompt / raw output to commit with addToHistory. */
+  engineUser?: string
+  engineResponse?: string
   /** TTS promises keyed by sentence index (filled eagerly after LLM) */
-  audioPromises: Promise<Float32Array | null>[]
+  audioPromises: Promise<SynthesizedAudio | null>[]
 }
 
 export interface PrerenderMetricsSnapshot {
@@ -266,8 +270,8 @@ export class PrerenderCoordinator {
     text: string,
     agentId: string,
     options: SynthesisOptions,
-  ): Promise<Float32Array | null> {
-    const clean = stripStageTokens(text).trim()
+  ): Promise<SynthesizedAudio | null> {
+    const clean = stripForSpeakability(text).trim()
     if (!clean) return null
 
     if (turn && turn.generation === this.generation && sentenceIndex < turn.audioPromises.length) {
@@ -283,7 +287,7 @@ export class PrerenderCoordinator {
   }
 
   private attachAudio(
-    t: { agentId: string; agentName: string; response: string; sentences: string[] },
+    t: PrerenderedTurnText,
     gen: number,
     options: TurnOptions,
   ): PrerenderedTurn {
@@ -299,7 +303,7 @@ export class PrerenderCoordinator {
       if (i >= limited.length) {
         return Promise.resolve(null) // synthesize at play time
       }
-      const clean = stripStageTokens(s).trim()
+      const clean = stripForSpeakability(s).trim()
       if (!clean) return Promise.resolve(null)
       return this.speechQueue.prerenderOne(clean, t.agentId, synthOpts)
     })
@@ -308,6 +312,8 @@ export class PrerenderCoordinator {
       agentId: t.agentId,
       agentName: t.agentName,
       response: t.response,
+      engineUser: t.engineUser,
+      engineResponse: t.engineResponse,
       sentences,
       generation: gen,
       audioPromises,

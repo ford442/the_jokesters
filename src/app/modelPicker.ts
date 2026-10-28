@@ -1,3 +1,4 @@
+import { probeIsolation, type IsolationProbe } from '../utils/crossOriginIsolation'
 import {
   EngineFactory,
   formatWebGPUCapabilityLabel,
@@ -27,6 +28,7 @@ import {
   recommendModels,
   consumeOomFallback,
   avoidVicunaFromLastOom,
+  loadLastOomModelId,
   type ModelRecommendation,
 } from './modelGuide'
 
@@ -46,11 +48,20 @@ function updateEngineInfo(engineType: string): void {
   }
 }
 
+/** Cross-origin isolation badge (#400 A): isolated → multithreaded llama.cpp / TTS WASM. */
+export function formatIsolationBadge(probe: IsolationProbe): string {
+  if (probe.status === 'isolated') {
+    return `<span title="crossOriginIsolated: SharedArrayBuffer on, ${probe.wasmThreads} WASM threads">✅ Isolated (${probe.wasmThreads} threads)</span>`
+  }
+  return `<span title="COOP/COEP not active: llama.cpp and TTS run single-threaded">⚠️ Not isolated (1 thread)</span>`
+}
+
 function updateCapabilityDisplay(caps: EngineCapabilities, extra?: string): void {
   const el = document.getElementById('engine-capabilities')
   if (el) {
     el.innerHTML = `
       ${formatWebGPUCapabilityLabel(caps.webgpuStatus)}
+      ${formatIsolationBadge(probeIsolation())}
       ${caps.wasm ? '✅' : '❌'} WASM
       ${caps.simd ? '✅' : '❌'} SIMD
       ${caps.threads ? '✅' : '❌'} Threads
@@ -331,7 +342,10 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       const oom = consumeOomFallback()
       const last = loadLastSuccessfulLaunch()
       const device = await probeDeviceCapabilities()
-      const rec = recommendModels(device, { avoidVicuna: avoidVicunaFromLastOom() })
+      const rec = recommendModels(device, {
+        avoidVicuna: avoidVicunaFromLastOom(),
+        lastOomModelId: loadLastOomModelId(),
+      })
 
       updateCapabilityDisplay(
         {

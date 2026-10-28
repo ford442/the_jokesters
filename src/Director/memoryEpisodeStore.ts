@@ -1,5 +1,6 @@
-import { HFStorageManager } from './HFStorageManager';
+import type { HFStorageManager } from './HFStorageManager';
 import type { Message } from '../types/chat';
+import { stampLegacyMessageIds } from '../chat/messageId';
 import type { ScriptBeat } from './Director';
 import { resolveEpisodeConflict, applyManualResolution } from './memoryConflict';
 import type {
@@ -9,8 +10,8 @@ import type {
     HFHistoryEntry,
     PendingDelta,
 } from './memoryTypes';
-import { MemoryIdbStore } from './memoryIdbStore';
-import { MemorySyncQueue } from './memorySyncQueue';
+import type { MemoryIdbStore } from './memoryIdbStore';
+import type { MemorySyncQueue } from './memorySyncQueue';
 import type { CloudCredentialsSource } from './memoryCredentials';
 
 /**
@@ -53,6 +54,7 @@ export class MemoryEpisodeStore {
         const vectorClock = data.vectorClock ?? {};
         vectorClock[this.clientId] = (vectorClock[this.clientId] || 0) + 1;
         data.vectorClock = vectorClock;
+        if (Array.isArray(data.history)) data.history = stampLegacyMessageIds(data.history);
         data.updatedAt = Date.now();
         data.timestamp = Date.now();
         this.localSave(`episode-${episodeId}`, data);
@@ -245,20 +247,20 @@ export class MemoryEpisodeStore {
                                 await this.idb.set(`episode-${episodeId}`, cloudData).catch(e => console.error(e));
                             }
                         } else {
-                            // Conflict resolution: CRDT via Yjs and Vector Clocks
+                            // Conflict resolution: vector clocks decide; concurrent histories merge by message id
                             const cloudData = await this.loadEpisodeFromCloud(episodeId);
                             if (cloudData && cloudData.history && localData.history) {
                                 const { strategy, resolved } = resolveEpisodeConflict(cloudData, localData, this.clientId);
 
                                 if (strategy === 'cloud') {
-                                    console.log(`Conflict resolved (CRDT / Yjs): Cloud version of ${filename} is newer. Updating local data...`);
+                                    console.log(`Conflict resolved (vector clock): Cloud version of ${filename} is newer. Updating local data...`);
                                     this.localSave(`episode-${episodeId}`, resolved);
                                     await this.idb.set(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'local') {
-                                    console.log(`Conflict resolved (CRDT / Yjs): Local version of ${filename} is newer. Queuing cloud update...`);
+                                    console.log(`Conflict resolved (vector clock): Local version of ${filename} is newer. Queuing cloud update...`);
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));
                                 } else if (strategy === 'concurrent') {
-                                    console.log(`Conflict resolved (CRDT / Yjs): Concurrent changes detected for ${filename}. Merging...`);
+                                    console.log(`Conflict resolved (vector clock): Concurrent changes detected for ${filename}. Merging...`);
                                     this.localSave(`episode-${episodeId}`, resolved);
                                     await this.idb.set(`episode-${episodeId}`, resolved).catch(e => console.error(e));
                                     this.saveEpisodeToCloud(episodeId, resolved).catch(e => console.error(e));

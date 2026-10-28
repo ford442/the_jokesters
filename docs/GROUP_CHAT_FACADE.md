@@ -14,7 +14,7 @@
 | `src/chat/ModelSession.ts` | Engine init/terminate, loaded model id, context budget, interrupt |
 | `src/chat/PersonalityStore.ts` | Structured evolution adjustments (bounded list, not unbounded string append) |
 | `src/chat/chatErrors.ts` | `categorizeChatError()` — GPU/network/OOM classification |
-| `src/llm/LLMEngine.ts` | Contract: `interrupt()`, `getContextWindowSize()`, `getLoadedModelId()` |
+| `src/llm/LLMEngine.ts` | Contract: `interrupt()`, `getContextInfo()`, `getLoadedModelId()` |
 
 ---
 
@@ -44,7 +44,7 @@ These methods are safe for `Director`, `ModeContext`, and UI controllers:
 
 1. `terminate()` clears the session.
 2. `initialize(...)` loads the new model.
-3. `ConversationStore.reconcileHistoryAfterContextChange()` trims stored messages to fit the **new** `getContextWindowSize()`.
+3. `ConversationStore.reconcileHistoryAfterContextChange()` trims stored messages to fit the **new** `getContextInfo()`.
 
 This keeps message-depth and token budget aligned after swap.
 
@@ -55,7 +55,7 @@ This keeps message-depth and token budget aligned after swap.
 All adapters implement:
 
 - **`interrupt()`** — idempotent, must not throw; in-flight `chat()` streams end cleanly.
-- **`getContextWindowSize()`** — tokens available after load (user override applied in `ModelSession`).
+- **`getContextInfo()`** — tokens available after load (user override applied in `ModelSession`).
 
 Tests: `tests/unit/groupChatFacade.test.ts`, `tests/unit/errorCategory.test.ts`.
 

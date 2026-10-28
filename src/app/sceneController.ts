@@ -11,9 +11,13 @@ import { loadMemoryDepthPreference } from '../config/contextDepth'
 import { getDOM } from '../ui/uiHelpers'
 import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
+import { wireMusicUi } from './musicUi'
+import { wireClipUi } from './clipUi'
+import { getSharedAvatarTier } from '../visuals/avatarTier'
 import { wireVoiceUi } from './voiceUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
+import { getSharedShowMusic } from '../audio/ShowMusic'
 import type { MemoryManager } from '../Director/MemoryManager'
 
 export interface SceneControllerDeps {
@@ -96,6 +100,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     ttsStepsSlider: dom.ttsStepsSlider,
     speakAndVisualize,
     onSceneStop: () => {
+      getSharedShowMusic()?.stopBeat()
       updateNextAgentUI(groupChatManager)
       updateVRAMInfoBar(groupChatManager)
     },
@@ -161,6 +166,23 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   })
 
   wireSfxUi()
+  wireMusicUi()
+  wireClipUi({ agents, speechQueue, stage, chatLog })
+
+  // Cast editor is a lazy chunk (zod schema + editor UI) — nothing loads until it is opened.
+  document.getElementById('cast-editor-btn')?.addEventListener('click', () => {
+    void import('../cast/castEditor').then((m) =>
+      m.openCastEditor({
+        roster: agents,
+        groupChatManager,
+        speechQueue,
+        stage,
+        chatLog,
+        getDirector,
+        tier: getSharedAvatarTier(),
+      }),
+    )
+  })
   wireVoiceUi(speechQueue, agents)
 
   dom.userInput.focus()

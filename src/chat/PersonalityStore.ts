@@ -9,8 +9,15 @@ const POSITIVE_ADJUSTMENT =
 const NEGATIVE_ADJUSTMENT =
   ' (You received negative feedback: dial back your extreme traits and try to be more agreeable.)'
 
+/** Cast-editor personas replace the shipped base prompt that feedback adjustments are layered on. */
+let personaBaseOverrides: Readonly<Record<string, string>> = {}
+
+export function setPersonaBaseOverrides(overrides: Readonly<Record<string, string>>): void {
+  personaBaseOverrides = overrides
+}
+
 function basePromptFor(agentId: string, fallback: string): string {
-  return defaultAgents.find((a) => a.id === agentId)?.systemPrompt ?? fallback
+  return personaBaseOverrides[agentId] ?? defaultAgents.find((a) => a.id === agentId)?.systemPrompt ?? fallback
 }
 
 function loadAdjustments(agentId: string): string[] {

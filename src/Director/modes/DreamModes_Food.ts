@@ -198,15 +198,21 @@ export async function runOverDramaticBaristaLoop(_scenario: Scenario, ctx: ModeC
     const barista = 'comedian'; // Over-dramatic (Hermes-3)
     const customer = 'scientist'; // Impatient (Qwen2.5)
 
-    await chatForAgentWithComedy(ctx, barista, `(You are an over-dramatic barista. Treat making a vanilla latte like you are defusing a highly unstable nuclear bomb. Demand extreme precision from the customer.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(barista);
+    await chatForAgentWithComedy(ctx, barista, `(You are an extremely over-dramatic barista. Treat pulling an espresso shot like defusing a thermonuclear weapon. Demand the customer hold their breath to avoid disrupting the atmospheric pressure.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, customer, `(You are an impatient customer late for work. Demand your coffee and dismiss the barista's ridiculous safety concerns.)`, async (s) => await ctx.callbacks.onSpeak(s, customer, {}));
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(customer);
+    await chatForAgentWithComedy(ctx, customer, `(You are a stressed, impatient customer running late for a very boring corporate job. Demand your black drip coffee immediately and ruthlessly mock the barista's ridiculous theatrical safety concerns.)`, async (s) => await ctx.callbacks.onSpeak(s, customer, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     if (!ctx.isRunning()) return;
 
-    await chatForAgentWithComedy(ctx, barista, `(Panic! The milk is frothing incorrectly. Describe the impending catastrophic chain reaction if the foam isn't stabilized immediately!)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(barista);
+    await chatForAgentWithComedy(ctx, barista, `(Absolute panic! The milk frother is making the wrong pitch. Describe the impending catastrophic chain reaction that will destroy the entire cafe if the foam isn't stabilized immediately. Blame the customer's negative energy.)`, async (s) => await ctx.callbacks.onSpeak(s, barista, {}));
+    if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 }
 
 
@@ -216,18 +222,18 @@ export async function runCookingShowInterdimensionalIngredientsLoop(scenario: Sc
     const strictChef = 'scientist'; // Qwen2.5 interdimensional chef
     const panickedContestant = 'comedian'; // Hermes-3 panicked contestant
 
-    if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictChef);
+    if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictChef);
     await chatForAgentWithComedy(ctx, strictChef, `(You are a strict interdimensional chef hosting a cooking show. Introduce the secret ingredient: unstable radioactive materials from a parallel dimension. Demand perfection from the contestant.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictChef, {}));
     if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
     while (ctx.isRunning()) {
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(panickedContestant);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(panickedContestant);
         await chatForAgentWithComedy(ctx, panickedContestant, `(The strict chef just introduced the radioactive secret ingredient. You are the panicked contestant. Complain about the extreme danger and how the ingredient is literally glowing and phasing through the counter.)`, async (s: string) => await ctx.callbacks.onSpeak(s, panickedContestant, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
 
         if (!ctx.isRunning()) break;
 
-        if (ctx.callbacks.onTurnStart) ctx.callbacks.onTurnStart(strictChef);
+        if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(strictChef);
         await chatForAgentWithComedy(ctx, strictChef, `(The contestant just complained. Dismiss their fears entirely. Give them highly specific, bizarre instructions on how to prepare the radioactive material without collapsing the local spacetime continuum.)`, async (s: string) => await ctx.callbacks.onSpeak(s, strictChef, {}));
         if (ctx.callbacks.onTurnEnd) await ctx.callbacks.onTurnEnd();
     }

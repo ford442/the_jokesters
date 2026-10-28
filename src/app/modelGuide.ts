@@ -8,7 +8,7 @@ import {
   type EngineType,
   type WebGPUStatus,
 } from '../llm/EngineFactory'
-import { estimateAvailableVRAM } from '../utils/vramOverrides'
+import { estimateAvailableVRAM, nextOomLadderModelId } from '../utils/vramOverrides'
 import type { VRAMOptimizationConfig } from '../utils/vramOverrides'
 import {
   BLESSED_PRESETS,
@@ -23,6 +23,7 @@ import {
   shouldAvoidVicunaRecommendation,
 } from '../config/loadFailover'
 import type { LaunchConfig } from './types'
+import { persistDeviceSnapshot } from '../visuals/avatarTier'
 
 export const LAST_SUCCESS_KEY = 'jokesters-last-success-launch'
 export const OOM_FALLBACK_KEY = 'jokesters-oom-fallback-model'
@@ -97,6 +98,9 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
     }
   }
 
+  // Stage reads this to pick VRM vs primitive actors without re-probing the GPU.
+  persistDeviceSnapshot({ webgpu: caps.webgpu, availableVramMB })
+
   return {
     webgpu: caps.webgpu,
     webgpuStatus: caps.webgpuStatus,
@@ -116,7 +120,7 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
  */
 export function recommendModels(
   device: DeviceCapabilitySnapshot,
-  opts?: { avoidVicuna?: boolean },
+  opts?: { avoidVicuna?: boolean; lastOomModelId?: string | null },
 ): ModelRecommendation {
   const byId = (id: string) => BLESSED_PRESETS.find((p) => p.id === id)!
 
@@ -184,10 +188,15 @@ export function recommendModels(
 
   // Comfortable VRAM for 7B — skip Vicuna if a prior session OOMed on it
   if (vram >= 3800 && !opts?.avoidVicuna) {
+    // A prior OOM on a larger Vicuna plan → start on the next compiled lib instead.
+    const nextId = opts?.lastOomModelId ? nextOomLadderModelId(opts.lastOomModelId) : null
+    const smallerVicuna = nextId?.startsWith('vicuna-') ? byId(nextId) : undefined
     return {
-      primary: vicuna7,
+      primary: smallerVicuna ?? vicuna7,
       safeFallback: device.supportsF16 ? hermesF16 : hermesF32,
-      primaryReason: `~${Math.round(vram)} MB free looks enough for Vicuna 7B — richer multi-agent comedy.`,
+      primaryReason: smallerVicuna
+        ? `A previous Vicuna launch ran out of GPU memory — ${smallerVicuna.shortName} uses a smaller compiled plan with the same weights.`
+        : `~${Math.round(vram)} MB free looks enough for Vicuna 7B — richer multi-agent comedy.`,
       fallbackReason: device.supportsF16
         ? 'Hermes-3 3B (f16) is a faster, lighter fallback if 7B OOMs mid-load.'
         : 'Hermes-3 3B (q4f32) is a reliable lighter fallback without needing f16.',
@@ -298,12 +307,22 @@ export function consumeOomFallback(): { modelId: string; engine?: EngineType } |
   }
 }
 
-/** Smaller model for OOM recovery given what failed. */
-export function getSmallerFallbackFor(failedModelId: string): BlessedPreset {
+/**
+ * Smaller model for recovery given what failed. Only an OOM walks the compiled
+ * ctx1024 → ctx512 Vicuna libs; download failures need different weights, not a smaller plan.
+ */
+export function getSmallerFallbackFor(
+  failedModelId: string,
+  reason: 'oom' | 'download' = 'oom',
+): BlessedPreset {
   const failed = getBlessedPreset(failedModelId)
   if (!failed) {
     return BLESSED_PRESETS.find((p) => p.tier === 'safe')!
   }
+  // Vicuna rungs step through the compiled ctx1024 → ctx512 libs before Hermes.
+  const nextOnLadder = nextOomLadderModelId(failedModelId)
+  const ladderPreset = nextOnLadder ? getBlessedPreset(nextOnLadder) : undefined
+  if (reason === 'oom' && ladderPreset && failed.tier === 'quality') return ladderPreset
   if (failed.tier === 'quality' || failed.vramMB >= 3500) {
     return BLESSED_PRESETS.find((p) => p.id === 'Hermes-3-Llama-3.2-3B-q4f32_1-MLC')!
   }

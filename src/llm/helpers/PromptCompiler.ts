@@ -1,5 +1,6 @@
 import type { Agent, ProfanityLevel } from '../../types/chat'
 import { PROFANITY_INSTRUCTIONS } from '../../config/chatConfig'
+import { personaFor } from '../../cast/profanity'
 
 export function buildSystemMessage(
   agent: Agent,
@@ -8,7 +9,7 @@ export function buildSystemMessage(
   hiddenInstruction?: string,
   extraContext?: string
 ): string {
-  let prompt = agent.systemPrompt + `\n\n[STYLE: ${PROFANITY_INSTRUCTIONS[profanityLevel]}]`
+  let prompt = personaFor(agent, profanityLevel) + `\n\n[STYLE: ${PROFANITY_INSTRUCTIONS[profanityLevel]}]`
 
   if (sceneConfig) {
     if (sceneConfig.title) {

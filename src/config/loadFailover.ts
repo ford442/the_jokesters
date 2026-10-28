@@ -40,11 +40,24 @@ export const HF_VICUNA_MODEL_URL = `https://huggingface.co/${HF_VICUNA_REPO}`
 /** Pin when a known-good commit is verified; `main` until then. */
 export const HF_VICUNA_REVISION = 'main'
 
-export const MLC_GITHUB_WASM_PREFIX =
-  'https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_80'
+/** model_lib ABI folder in mlc-ai/binary-mlc-llm-libs; must match the pinned @mlc-ai/web-llm version. */
+export const MLC_WEB_LLM_LIB_VERSION = 'v0_2_84'
 
-export const MLC_LLAMA2_7B_CTX4K_WASM =
-  `${MLC_GITHUB_WASM_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`
+export const MLC_GITHUB_WASM_PREFIX =
+  `https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/${MLC_WEB_LLM_LIB_VERSION}/base`
+
+/**
+ * Upstream twin of one of our `wasm-libs/` file names. Our VPS keeps the historical
+ * `<model>-q4f32_1-ctx4k_cs1k-webgpu.wasm` names; since v0_2_8x upstream publishes the
+ * context-agnostic builds as `base/<model>-q4f32_1_cs1k-webgpu.wasm` (no `ctxNk` tag).
+ */
+export function mlcGithubWasmUrl(fileName: string): string {
+  return `${MLC_GITHUB_WASM_PREFIX}/${fileName.replace(/-ctx\d+k_cs/, '_cs')}`
+}
+
+export const MLC_LLAMA2_7B_CTX4K_WASM = mlcGithubWasmUrl(
+  'Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm',
+)
 
 export const VPS_LLAMA2_7B_CTX4K_WASM =
   `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`
@@ -133,7 +146,7 @@ export function wasmLibFallbackChain(modelLib: string): string[] {
 
   const fileName = modelLib.split('/').pop() ?? ''
   if (fileName.endsWith('.wasm') && modelLib.includes('/wasm-libs/')) {
-    push(`${MLC_GITHUB_WASM_PREFIX}/${fileName}`)
+    push(mlcGithubWasmUrl(fileName))
   }
   return chain
 }
@@ -149,13 +162,23 @@ export interface HfFailoverConfig {
   overrides?: Record<string, unknown>
 }
 
+/**
+ * HF Hub hosts weights only. Keep the caller's compiled context class: a custom
+ * ctx512/ctx1024 lib stays put (same weights, smaller plan); only generic/unknown
+ * libs move to the upstream Llama-2 4K build.
+ */
+export function hfFailoverModelLib(modelLib: string): string {
+  const compiled = parseCompiledMaxContextFromModelLib(modelLib)
+  return compiled != null && compiled <= 1024 ? modelLib : MLC_LLAMA2_7B_CTX4K_WASM
+}
+
 export function applyHfWeightFailover<T extends HfFailoverConfig>(config: T): T {
   return {
     ...config,
     requestedModelId: config.requestedModelId ?? config.model_id,
     model_id: HF_VICUNA_MODEL_ID,
     model: HF_VICUNA_MODEL_URL,
-    model_lib: MLC_LLAMA2_7B_CTX4K_WASM,
+    model_lib: hfFailoverModelLib(config.model_lib),
     hf_fallback_url: undefined,
     loadSource: 'hf',
     skipSourceFailover: true,
@@ -222,9 +245,13 @@ export function parseLastLoadSource(raw: string | null): LastLoadSource | null {
   }
 }
 
+/**
+ * Only the smallest compiled Vicuna plan (ctx512) blacklists Vicuna outright; a
+ * ctx4k/ctx1024 OOM should step to the next lib, not skip the family.
+ */
 export function shouldAvoidVicunaRecommendation(lastOomModelId: string | null): boolean {
   if (!lastOomModelId) return false
-  return isVicunaFamilyModelId(lastOomModelId) || lastOomModelId.toLowerCase().includes('vicuna')
+  return lastOomModelId === 'vicuna-7b-q4f32-webllm-ctx512'
 }
 
 export function formatLoadTelemetry(event: LoadTelemetry): string {

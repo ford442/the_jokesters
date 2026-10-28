@@ -18,12 +18,15 @@
 #   itself, reducing peak allocation before any chat begins.
 #
 # Prerequisites (heavy — see below for setup options):
-#   - Python 3.10+ with mlc-llm-nightly (cu128 or cpu wheel)
-#   - Emscripten SDK (emsdk) activated, tot or >=3.1.56
+#   - Python 3.10+ with the pinned mlc-llm-nightly / mlc-ai-nightly wheels
+#   - Emscripten SDK (emsdk) at the pinned version, activated
 #   - Rust + wasm32-unknown-emscripten target
 #   - git-lfs, cmake, ninja/make
-#   - MLC-LLM source checkout (recursive, with TVM submodule)
+#   - MLC-LLM source checkout (recursive, with TVM submodule) at the pinned commit
 #   - HuggingFace token with write access (for upload fallback)
+#
+#   All versions are pinned in scripts/wasm-toolchain.env; context/prefill parameter sets
+#   live in scripts/wasm-presets.json.
 #
 # Usage:
 #   # Option A: Run inside a pre-built Docker image (recommended)
@@ -39,7 +42,7 @@
 #   CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
 #
 # Output:
-#   .vps-staging/wasm-libs/vicuna-7b-q4f32_1-ctx{512,1024}_cs1k-webgpu.wasm
+#   .vps-staging/wasm-libs/vicuna-7b-q4f32_1-ctx{512_cs512,1024_cs1024}-webgpu.wasm
 #   These are ready for upload to the VPS wasm-libs/ directory.
 #
 # Environment Variables:
@@ -47,7 +50,7 @@
 #   QUANTIZATION        MLC quant scheme (default: q4f32_1)
 #   MODEL_ID            HF model ID (default: lmsys/vicuna-7b-v1.5)
 #   OUTPUT_DIR          Where to stage outputs (default: .vps-staging/wasm-libs)
-#   MLC_LLM_SRC         Path to mlc-llm source (default: auto-clone to /tmp)
+#   MLC_LLM_SRC         Path to mlc-llm source (default: auto-clone to /tmp at MLC_LLM_COMMIT)
 #   EMSDK_ROOT          Path to emsdk (default: $EMSDK or /content/emsdk)
 #   SKIP_WEIGHT_CONV    Set to 1 if weights are already converted (default: 0)
 #   WEIGHT_DIR          Path to pre-converted MLC weights (used if SKIP_WEIGHT_CONV=1)
@@ -59,6 +62,7 @@
 #   - Fast-failing: set -euo pipefail
 #   - Idempotent: safe to re-run with different CONTEXT_SIZE
 #   - Never mutates source working tree except OUTPUT_DIR
+#   - Context/prefill sizes are passed to `mlc_llm compile --overrides`, never by editing JSON
 #
 
 set -euo pipefail
@@ -79,6 +83,11 @@ HF_TOKEN="${HF_TOKEN:-}"
 HF_REPO_ID="${HF_REPO_ID:-ford442/vicuna-7b-q4f32-webllm}"
 
 SCRIPT_NAME="$(basename "$0")"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Pinned toolchain (EMSDK_VERSION, MLC_LLM_COMMIT, wheel versions, ...).
+# shellcheck source=scripts/wasm-toolchain.env
+source "$REPO_ROOT/scripts/wasm-toolchain.env"
 
 # Colors
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
@@ -101,10 +110,23 @@ log "  CONTEXT_SIZE: ${CONTEXT_SIZE}"
 log "  QUANTIZATION: ${QUANTIZATION}"
 log "  MODEL_ID:     ${MODEL_ID}"
 
-# Validate context size
-if [[ "$CONTEXT_SIZE" != "512" && "$CONTEXT_SIZE" != "1024" ]]; then
-  die "CONTEXT_SIZE must be 512 or 1024 (got: $CONTEXT_SIZE)"
+# Resolve the parameter set for this context size (single source: scripts/wasm-presets.json)
+PRESET_JSON="$REPO_ROOT/scripts/wasm-presets.json"
+if ! PRESET_ENV="$(python3 - "$PRESET_JSON" "$CONTEXT_SIZE" <<'PYEOF'
+import json, sys
+path, ctx = sys.argv[1], sys.argv[2]
+cfg = json.load(open(path))
+preset = cfg["presets"].get(ctx)
+if preset is None:
+    sys.exit("CONTEXT_SIZE must be one of: " + ", ".join(cfg["presets"]) + f" (got: {ctx})")
+print(f"PREFILL_CHUNK_SIZE={preset['prefill_chunk_size']}")
+print(f"MODEL_PREFIX={cfg['model_prefix']}")
+PYEOF
+)"; then
+  die "Invalid CONTEXT_SIZE '$CONTEXT_SIZE' (see scripts/wasm-presets.json)"
 fi
+eval "$PRESET_ENV"
+log "  PREFILL_CHUNK_SIZE: ${PREFILL_CHUNK_SIZE}"
 
 # Python + mlc_llm
 if ! command -v python3 >/dev/null 2>&1; then
@@ -113,9 +135,19 @@ fi
 
 if ! python3 -c "import mlc_llm" 2>/dev/null; then
   warn "mlc_llm Python package not found."
-  warn "  Install with: python3 -m pip install --pre -U -f https://mlc.ai/wheels mlc-llm-nightly-cu128 mlc-ai-nightly-cu128"
+  warn "  Install with: python3 -m pip install --pre -f https://mlc.ai/wheels \\"
+  warn "    mlc-llm-nightly-${MLC_WHEEL_FLAVOR}==${MLC_LLM_NIGHTLY_VERSION} mlc-ai-nightly-${MLC_WHEEL_FLAVOR}==${MLC_AI_NIGHTLY_VERSION}"
   die "Cannot proceed without mlc_llm."
 fi
+
+# The installed wheels must be the pinned ones, otherwise the runtime and compiler can disagree.
+INSTALLED_WHEELS="$(python3 -m pip list --format=freeze 2>/dev/null | grep -i -E '^mlc[-_](llm|ai)-nightly' || true)"
+for want in "mlc-llm-nightly-${MLC_WHEEL_FLAVOR}==${MLC_LLM_NIGHTLY_VERSION}" "mlc-ai-nightly-${MLC_WHEEL_FLAVOR}==${MLC_AI_NIGHTLY_VERSION}"; do
+  norm="$(echo "$want" | tr '_' '-' | tr '[:upper:]' '[:lower:]')"
+  if ! echo "$INSTALLED_WHEELS" | tr '_' '-' | tr '[:upper:]' '[:lower:]' | grep -q -x -F "$norm"; then
+    die "Expected pinned wheel $want (see scripts/wasm-toolchain.env). Installed: ${INSTALLED_WHEELS:-none}"
+  fi
+done
 
 # Emscripten
 if [[ -z "$EMSDK_ROOT" ]]; then
@@ -152,14 +184,21 @@ fi
 if [[ -z "$MLC_LLM_SRC" ]]; then
   MLC_LLM_SRC="/tmp/mlc-llm-vicuna-build"
   if [[ ! -d "$MLC_LLM_SRC/.git" ]]; then
-    log "Cloning mlc-llm source (recursive) to $MLC_LLM_SRC ..."
-    git clone --recursive https://github.com/mlc-ai/mlc-llm.git "$MLC_LLM_SRC"
+    log "Cloning mlc-llm source to $MLC_LLM_SRC ..."
+    git clone https://github.com/mlc-ai/mlc-llm.git "$MLC_LLM_SRC"
   else
     log "Using existing mlc-llm source at $MLC_LLM_SRC"
   fi
+  git -C "$MLC_LLM_SRC" checkout --quiet "$MLC_LLM_COMMIT"
+  git -C "$MLC_LLM_SRC" submodule update --init --recursive
 else
   log "Using provided MLC_LLM_SRC: $MLC_LLM_SRC"
+  if [[ "$(git -C "$MLC_LLM_SRC" rev-parse HEAD 2>/dev/null || true)" != "$MLC_LLM_COMMIT" ]]; then
+    die "MLC_LLM_SRC is not at the pinned commit $MLC_LLM_COMMIT (scripts/wasm-toolchain.env)"
+  fi
 fi
+# mlc_llm locates its source tree (and the wasm runtime built from it) through this variable.
+export MLC_LLM_SOURCE_DIR="$MLC_LLM_SRC"
 
 if [[ ! -f "$MLC_LLM_SRC/web/prep_emcc_deps.sh" ]]; then
   die "MLC-LLM source at $MLC_LLM_SRC is missing web/prep_emcc_deps.sh (wrong checkout?)"
@@ -172,18 +211,23 @@ log "Activating Emscripten environment..."
 # shellcheck source=/dev/null
 source "$EMSDK_ROOT/emsdk_env.sh"
 
+if ! emcc --version 2>/dev/null | head -n1 | grep -q -F "$EMSDK_VERSION"; then
+  die "emcc $(emcc --version 2>/dev/null | head -n1) is not the pinned Emscripten ${EMSDK_VERSION} (scripts/wasm-toolchain.env)"
+fi
+
 export TVM_HOME="${MLC_LLM_SRC}/3rdparty/tvm"
 export TVM_LIBRARY_PATH="${MLC_LLM_SRC}/web/dist/wasm"
 
 log "Building MLC Web Runtime (one-time per source checkout)..."
 pushd "$MLC_LLM_SRC" >/dev/null
 
-# Symlink required by some MLC versions
+./web/prep_emcc_deps.sh || warn "prep_emcc_deps.sh had issues (may be harmless if deps already present)"
+
+# Symlink required by some MLC versions. Must run AFTER prep_emcc_deps.sh, which is what
+# produces web/dist/wasm/mlc_wasm_runtime.bc.
 if [[ -f "web/dist/wasm/mlc_wasm_runtime.bc" && ! -f "web/dist/wasm/wasm_runtime.bc" ]]; then
   ln -sf mlc_wasm_runtime.bc web/dist/wasm/wasm_runtime.bc
 fi
-
-./web/prep_emcc_deps.sh || warn "prep_emcc_deps.sh had issues (may be harmless if deps already present)"
 
 mkdir -p build/wasm
 cd build/wasm
@@ -237,65 +281,17 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Patch config for target context size
+# Locate config
 # ---------------------------------------------------------------------------
 CONFIG_PATH="$CONV_OUTPUT/mlc-chat-config.json"
 if [[ ! -f "$CONFIG_PATH" ]]; then
   die "mlc-chat-config.json not found at $CONFIG_PATH"
 fi
 
-log "Patching config for context_window_size=$CONTEXT_SIZE..."
-
-# Create a Python snippet to safely patch the JSON
-python3 <<PYEOF
-import json
-import sys
-
-config_path = "${CONFIG_PATH}"
-ctx = ${CONTEXT_SIZE}
-
-with open(config_path, "r") as f:
-    cfg = json.load(f)
-
-# Patch both top-level and model_config nested keys
-for key in ["context_window_size", "prefill_chunk_size"]:
-    if key in cfg:
-        old = cfg[key]
-        cfg[key] = ctx
-        print(f"  {key}: {old} -> {ctx}")
-    if "model_config" in cfg and key in cfg["model_config"]:
-        old = cfg["model_config"][key]
-        cfg["model_config"][key] = ctx
-        print(f"  model_config.{key}: {old} -> {ctx}")
-
-# Ensure conv_template is present (Vicuna needs this)
-if "conv_template" not in cfg:
-    cfg["conv_template"] = {
-        "name": "vicuna_v1.1",
-        "system_template": "{system_message}",
-        "system_message": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
-        "roles": {"user": "USER", "assistant": "ASSISTANT"},
-        "role_msg_sep": " ",
-        "role_empty_sep": " ",
-        "seps": [" ", "</s>"],
-        "stop_str": ["</s>"],
-        "stop_token_ids": [2],
-        "add_bos": True
-    }
-    print("  Added vicuna_v1.1 conv_template")
-
-with open(config_path, "w") as f:
-    json.dump(cfg, f, indent=2)
-
-print(f"Updated config written to {config_path}")
-PYEOF
-
-ok "Config patched for ${CONTEXT_SIZE}-token context"
-
 # ---------------------------------------------------------------------------
 # Compile to WASM
 # ---------------------------------------------------------------------------
-OUTPUT_WASM_NAME="vicuna-7b-q4f32_1-ctx${CONTEXT_SIZE}_cs1k-webgpu.wasm"
+OUTPUT_WASM_NAME="${MODEL_PREFIX}-${QUANTIZATION}-ctx${CONTEXT_SIZE}_cs${PREFILL_CHUNK_SIZE}-webgpu.wasm"
 OUTPUT_WASM_PATH="$BUILD_ROOT/$OUTPUT_WASM_NAME"
 
 log "Compiling model_lib to WASM (this is the slow step)..."
@@ -304,6 +300,7 @@ log "  Output: $OUTPUT_WASM_PATH"
 
 python3 -m mlc_llm compile "$CONFIG_PATH" \
   --device webgpu \
+  --overrides "context_window_size=${CONTEXT_SIZE};prefill_chunk_size=${PREFILL_CHUNK_SIZE}" \
   -o "$OUTPUT_WASM_PATH" || die "WASM compilation failed"
 
 if [[ ! -f "$OUTPUT_WASM_PATH" ]]; then
@@ -325,9 +322,13 @@ PROV_PATH="$OUTPUT_DIR/${OUTPUT_WASM_NAME}.BUILD_INFO.txt"
   echo "vicuna-7b custom WASM build for the_jokesters"
   echo "Build time:     $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
   echo "Context size:   ${CONTEXT_SIZE}"
+  echo "Prefill chunk:  ${PREFILL_CHUNK_SIZE}"
+  echo "web-llm target: ${WEB_LLM_VERSION} (${MLC_LIB_ABI})"
+  echo "Emscripten:     ${EMSDK_VERSION}"
+  echo "mlc-llm wheels: ${MLC_LLM_NIGHTLY_VERSION} / mlc-ai ${MLC_AI_NIGHTLY_VERSION} (${MLC_WHEEL_FLAVOR})"
   echo "Quantization:   ${QUANTIZATION}"
   echo "Model ID:       ${MODEL_ID}"
-  echo "mlc-llm commit: $(cd "$MLC_LLM_SRC" && git rev-parse HEAD 2>/dev/null || echo 'unknown')"
+  echo "mlc-llm commit: $(git -C "$MLC_LLM_SRC" rev-parse HEAD 2>/dev/null || echo 'unknown')"
   echo "Builder:        ${SCRIPT_NAME}"
   echo "WASM size:      $(stat -c%s "$FINAL_WASM_PATH" 2>/dev/null || stat -f%z "$FINAL_WASM_PATH" 2>/dev/null || echo 'unknown') bytes"
 } > "$PROV_PATH"

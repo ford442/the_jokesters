@@ -2,7 +2,10 @@
 import * as THREE from 'three';
 import { Actor } from './Actor';
 import { TechBroActor } from './TechBroActor';
-import { LipSync } from './LipSync';
+import type { StageActor } from './stageActor';
+import { MouthDriver, type MouthFrame } from './mouth';
+import type { Viseme } from '../audio/VisemePredictor';
+import type { LipSync } from './LipSync';
 import type { RendererMode } from './rendererMode';
 import type { ReactionClip } from './actorAnimations';
 import {
@@ -43,6 +46,30 @@ export interface StageOptions {
     rendererMode?: RendererMode;
 }
 
+/** Stage positions for the five performers, left to right. */
+const ACTOR_LAYOUT: ReadonlyArray<{ id: string; color: string; x: number }> = [
+    { id: 'comedian', color: '#ff6b6b', x: -3.2 },
+    { id: 'philosopher', color: '#4ecdc4', x: -1.6 },
+    { id: 'scientist', color: '#45b7d1', x: 0 },
+    { id: 'techBro', color: '#FF6B35', x: 1.6 },
+    { id: 'robot', color: '#C0C0C0', x: 3.2 },
+];
+
+/** Eye height used when everyone turns to look at whoever is speaking. */
+const HEAD_HEIGHT = 1.5;
+
+/** One utterance's timing, anchored to the audio clock (see SpeechQueue.onUtteranceStart). */
+export interface StageUtterance {
+    agentId: string;
+    audioStartTime: number;
+    visemes: Viseme[] | null;
+}
+
+export interface VrmSwapResult {
+    loaded: string[];
+    failed: string[];
+}
+
 export class Stage {
     private scene: THREE.Scene;
     private camera: THREE.PerspectiveCamera;
@@ -53,7 +80,16 @@ export class Stage {
     private activeMode: RendererMode = 'webgl';
     private renderer: SceneRenderer | null = null;
     private renderingAsync = false; // guards against overlapping WebGPU frames
-    private actors: Map<string, Actor> = new Map();
+    private actors: Map<string, StageActor> = new Map();
+    private actorKinds: Map<string, 'primitive' | 'vrm'> = new Map();
+    /** One mixer ticked once per frame for every VRM actor (authored clips); procedural pose layers on top. */
+    private sharedMixer: THREE.AnimationMixer | null = null;
+    private readonly mouthDriver = new MouthDriver();
+    private speakingActorId: string | null = null;
+    private audioClock: (() => number) | null = null;
+    private readonly gazePoint = new THREE.Vector3();
+    private afterRenderHooks = new Set<(canvas: HTMLCanvasElement) => void>();
+    private avatarEpoch = new Map<string, number>();
     private activeActorId: string | null = null;
     private lipSync: LipSync | null = null;
     private crowd: THREE.Group | null = null;
@@ -236,11 +272,9 @@ export class Stage {
     private initActors() {
         // Five agents across the stage — each gets a distinct idle + reaction profile
         // via actorAnimations.ts (comedian bounce, philosopher slow nod, etc.).
-        this.addActor('comedian', new Actor('comedian', '#ff6b6b', -3.2));
-        this.addActor('philosopher', new Actor('philosopher', '#4ecdc4', -1.6));
-        this.addActor('scientist', new Actor('scientist', '#45b7d1', 0));
-        this.addActor('techBro', new TechBroActor('techBro', 1.6));
-        this.addActor('robot', new Actor('robot', '#C0C0C0', 3.2));
+        for (const { id, color, x } of ACTOR_LAYOUT) {
+            this.addActor(id, id === 'techBro' ? new TechBroActor(id, x) : new Actor(id, color, x));
+        }
     }
 
 
@@ -305,13 +339,111 @@ export class Stage {
         }
     }
 
-    private addActor(id: string, actor: Actor) {
+    private addActor(id: string, actor: StageActor, kind: 'primitive' | 'vrm' = 'primitive') {
         this.actors.set(id, actor);
+        this.actorKinds.set(id, kind);
         this.scene.add(actor.group);
     }
 
     public setLipSync(lipSync: LipSync) {
         this.lipSync = lipSync;
+    }
+
+    /** AudioContext clock used to line viseme timelines up with what is actually audible. */
+    public setAudioClock(clock: () => number): void {
+        this.audioClock = clock;
+    }
+
+    /**
+     * An utterance just started playing: hand its phoneme timeline to the mouth driver.
+     * With no timeline the speaker's mouth follows the lip-sync loudness meter instead.
+     */
+    public beginUtterance(utterance: StageUtterance): void {
+        this.speakingActorId = utterance.agentId;
+        this.mouthDriver.startUtterance(utterance.visemes, utterance.audioStartTime);
+    }
+
+    public endUtterance(): void {
+        this.mouthDriver.stop();
+        this.speakingActorId = null;
+    }
+
+    /** Kind of avatar currently on stage for an agent (for UI/diagnostics). */
+    public getActorKind(id: string): 'primitive' | 'vrm' | null {
+        return this.actorKinds.get(id) ?? null;
+    }
+
+    /** Run `cb` right after each frame is rendered, in the same task (safe to drawImage the canvas). */
+    public onAfterRender(cb: (canvas: HTMLCanvasElement) => void): () => void {
+        this.afterRenderHooks.add(cb);
+        return () => this.afterRenderHooks.delete(cb);
+    }
+
+    public getCanvas(): HTMLCanvasElement {
+        return this.canvas;
+    }
+
+    /**
+     * Replace primitive actors with VRM avatars. Each agent loads independently — one bad
+     * file leaves that agent as a capsule rather than failing the cast. Safe to call again
+     * (e.g. when a custom cast supplies a different model).
+     */
+    public async useVrmActors(urlFor: (agentId: string) => string | null | Promise<string | null>): Promise<VrmSwapResult> {
+        const result: VrmSwapResult = { loaded: [], failed: [] };
+        await Promise.all(ACTOR_LAYOUT.map(async ({ id }) => {
+            try {
+                const url = await urlFor(id);
+                if (!url) { result.failed.push(id); return; }
+                const ok = await this.swapActorToVrm(id, url);
+                (ok ? result.loaded : result.failed).push(id);
+            } catch (err) {
+                console.warn(`[Stage] VRM for ${id} failed — keeping primitive actor:`, (err as Error)?.message ?? err);
+                result.failed.push(id);
+            }
+        }));
+        return result;
+    }
+
+    /** Swap one agent to a VRM loaded from `url` (hosted URL or object URL). */
+    public async swapActorToVrm(id: string, url: string): Promise<boolean> {
+        const layout = ACTOR_LAYOUT.find((a) => a.id === id);
+        if (!layout) return false;
+        const epoch = (this.avatarEpoch.get(id) ?? 0) + 1;
+        this.avatarEpoch.set(id, epoch);
+
+        const [{ loadVrm }, { VrmActor }] = await Promise.all([import('./vrmLoader'), import('./VrmActor')]);
+        const vrm = await loadVrm(url, { renderer: this.renderer });
+        if (this.avatarEpoch.get(id) !== epoch) {
+            const { VRMUtils } = await import('@pixiv/three-vrm');
+            VRMUtils.deepDispose(vrm.scene);
+            return false; // superseded by a newer swap/reset
+        }
+        if (!this.sharedMixer) this.sharedMixer = new THREE.AnimationMixer(this.scene);
+        const actor = new VrmActor(id, vrm, { baseX: layout.x, mixer: this.sharedMixer });
+        this.replaceActor(id, actor, 'vrm');
+        console.log(`[Stage] ${id}: VRM avatar active`);
+        return true;
+    }
+
+    /** Put the capsule actor back for an agent (custom avatar removed, or low-tier fallback). */
+    public resetActorToPrimitive(id: string): void {
+        const layout = ACTOR_LAYOUT.find((a) => a.id === id);
+        if (!layout || this.actorKinds.get(id) === 'primitive') return;
+        this.avatarEpoch.set(id, (this.avatarEpoch.get(id) ?? 0) + 1);
+        const actor = id === 'techBro' ? new TechBroActor(id, layout.x) : new Actor(id, layout.color, layout.x);
+        this.replaceActor(id, actor, 'primitive');
+    }
+
+    private replaceActor(id: string, next: StageActor, kind: 'primitive' | 'vrm'): void {
+        const prev = this.actors.get(id);
+        if (prev) {
+            const wasThinking = prev.isThinking();
+            this.scene.remove(prev.group);
+            prev.dispose();
+            if (wasThinking) next.setThinking(true);
+        }
+        this.addActor(id, next, kind);
+        if (this.activeActorId === id) next.setTalking(true);
     }
 
     public setActiveActor(id: string) {
@@ -502,9 +634,26 @@ export class Stage {
         // Only the active speaker gets audio volume for lip-sync squash.
         // Camera stepping below writes the camera only — never actor scale.
         const timeSec = nowMs * 0.001;
+        this.sharedMixer?.update(dt);
+
+        // Phoneme-timed mouth for whoever is speaking; null → actors use the loudness meter.
+        let speakerFrame: MouthFrame | null = null;
+        if (this.speakingActorId && this.audioClock && this.mouthDriver.hasTimeline()) {
+            speakerFrame = this.mouthDriver.update(this.audioClock(), volume, dt, timeSec);
+        }
+        // Everyone looks at the speaker; the speaker looks at the audience (camera).
+        const speaker = this.activeActorId ? this.actors.get(this.activeActorId) : undefined;
+
         this.actors.forEach((actor, actorId) => {
-            const v = actorId === this.activeActorId ? volume : 0;
-            actor.update(v, timeSec);
+            const isActive = actorId === this.activeActorId;
+            actor.setMouth(isActive && actorId === this.speakingActorId ? speakerFrame : null);
+            if (!speaker) actor.setGazeTarget(null);
+            else if (isActive) actor.setGazeTarget(this.camera.position);
+            else {
+                this.gazePoint.set(speaker.group.position.x, HEAD_HEIGHT, speaker.group.position.z);
+                actor.setGazeTarget(this.gazePoint);
+            }
+            actor.update(isActive ? volume : 0, timeSec);
         });
 
         this.stepCamera(dt);
@@ -536,7 +685,10 @@ export class Stage {
                 });
             }
         } else {
-            this.renderer.render(this.scene, this.camera);
+            void this.renderer.render(this.scene, this.camera);
+        }
+        if (this.afterRenderHooks.size > 0) {
+            for (const hook of this.afterRenderHooks) hook(this.canvas);
         }
     }
 

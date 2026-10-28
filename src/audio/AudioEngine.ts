@@ -1,6 +1,16 @@
-import { SupertonicPipeline, Style } from './SupertonicPipeline';
+import type { Style } from './SupertonicPipeline';
+import { SupertonicPipeline } from './SupertonicPipeline';
 import { VPS_STORAGE_URL } from '../config/models';
-import { AGENT_VOICE_MAP, DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS } from './voiceMap';
+import { DEFAULT_VOICE_STYLE, SUPERTONIC_STYLE_IDS, voiceFor } from './voiceMap';
+
+import type { Viseme } from './VisemePredictor';
+
+/** What a TTS engine hands back; `visemes` is present when the engine has real phoneme timing. */
+export interface SynthesizedAudio {
+    audioData: Float32Array;
+    sampleRate?: number;
+    visemes?: Viseme[];
+}
 
 export interface SynthesisOptions {
     speed?: number;  // Speech rate multiplier (default: 1.3)
@@ -15,7 +25,7 @@ export interface SynthesisOptions {
  */
 export interface TtsEngine {
     init(modelPath?: string): Promise<void>;
-    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<Float32Array>;
+    synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<SynthesizedAudio>;
     /** Native sample rate of synthesized audio. Unset engines fall back to SpeechQueue's legacy default. */
     readonly sampleRate?: number;
 }
@@ -94,13 +104,13 @@ export class AudioEngine implements TtsEngine {
         text: string,
         speakerId: string = 'comedian',  // Agent ID
         options: SynthesisOptions = {}
-    ): Promise<Float32Array> {
+    ): Promise<{ audioData: Float32Array; sampleRate?: number }> {
         if (!this.isReady) {
             throw new Error('AudioEngine not ready');
         }
 
         // 1. Map agent ID to actual voice file ID
-        let realVoiceId: string = AGENT_VOICE_MAP[speakerId as keyof typeof AGENT_VOICE_MAP] || speakerId;
+        let realVoiceId: string = voiceFor(speakerId);
 
         // Validate it's an actual voice file, not an unmapped agent ID
         if (!SUPERTONIC_STYLE_IDS.includes(realVoiceId as (typeof SUPERTONIC_STYLE_IDS)[number])) {
@@ -127,6 +137,6 @@ export class AudioEngine implements TtsEngine {
             seed
         );
 
-        return wav;
+        return { audioData: wav, sampleRate: this.sampleRate };
     }
 }

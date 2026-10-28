@@ -8,10 +8,6 @@
  */
 
 import type { LLMEngine, UnifiedModelConfig } from './LLMEngine'
-import { MlcEngineAdapter } from './MlcEngineAdapter'
-import { LlamaCppEngineAdapter } from './LlamaCppEngineAdapter'
-import { TransformersEngineAdapter } from './TransformersEngineAdapter'
-import { ApiEngineAdapter } from './ApiEngineAdapter'
 import {
   getModelEngineSupport,
   planEngineSelection,
@@ -248,19 +244,31 @@ export async function selectEngine(
   return instantiateEngine(plan.engine, { transformersDevice: plan.transformersDevice })
 }
 
-function instantiateEngine(
+/**
+ * Adapters are imported on demand: each one statically pulls in its engine runtime
+ * (web-llm, wllama, transformers.js — several MB each), and only the selected one is needed.
+ */
+async function instantiateEngine(
   type: 'mlc' | 'llamacpp' | 'transformers' | 'api',
   options: CreateEngineOptions = {},
-): LLMEngine {
+): Promise<LLMEngine> {
   switch (type) {
-    case 'mlc':
+    case 'mlc': {
+      const { MlcEngineAdapter } = await import('./MlcEngineAdapter')
       return new MlcEngineAdapter()
-    case 'llamacpp':
+    }
+    case 'llamacpp': {
+      const { LlamaCppEngineAdapter } = await import('./LlamaCppEngineAdapter')
       return new LlamaCppEngineAdapter()
-    case 'transformers':
+    }
+    case 'transformers': {
+      const { TransformersEngineAdapter } = await import('./TransformersEngineAdapter')
       return new TransformersEngineAdapter({ device: options.transformersDevice })
-    case 'api':
+    }
+    case 'api': {
+      const { ApiEngineAdapter } = await import('./ApiEngineAdapter')
       return new ApiEngineAdapter()
+    }
     default:
       throw new Error(`Unknown engine type: ${type}`)
   }
@@ -354,7 +362,7 @@ export class EngineFactory {
   static createEngine(
     type: 'mlc' | 'llamacpp' | 'transformers' | 'api',
     options?: CreateEngineOptions,
-  ): LLMEngine {
+  ): Promise<LLMEngine> {
     return instantiateEngine(type, options)
   }
 }

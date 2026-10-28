@@ -1,9 +1,9 @@
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL } from '../utils/vpsStorageUrl'
 import {
   HF_VICUNA_MODEL_ID,
   HF_VICUNA_MODEL_URL,
-  MLC_GITHUB_WASM_PREFIX,
+  mlcGithubWasmUrl,
   MLC_LLAMA2_7B_CTX4K_WASM,
 } from './loadFailover'
 
@@ -29,14 +29,14 @@ export { VPS_STORAGE_ORIGIN, VPS_STORAGE_URL }
 // WebLLM's cleanModelUrl() appends /resolve/main/ (HuggingFace layout). Our VPS serves
 // flat paths (no /resolve/main/). src/utils/vpsStorageUrl.ts rewrites those URLs at fetch time.
 
-/** Shared WASM model_lib URLs — naming: `{arch}-q{quant}_ctx{N}_cs1k-webgpu.wasm` */
+/** Shared WASM model_lib URLs — naming: `{arch}-q{quant}_ctx{N}_cs{prefill}-webgpu.wasm` (custom builds: prefill == ctx, see scripts/wasm-presets.json) */
 export const WASM_LIBS = {
   /** Generic Llama-2 7B 4K plan — used for Vicuna weights until custom .wasm is hosted */
   LLAMA2_7B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
   /** Custom Vicuna 7B with 512-token TVM memory plan (scripts/build-vicuna-wasm.sh) */
-  VICUNA_7B_CTX512: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm`,
+  VICUNA_7B_CTX512: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx512_cs512-webgpu.wasm`,
   /** Custom Vicuna 7B with 1024-token TVM memory plan */
-  VICUNA_7B_CTX1024: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm`,
+  VICUNA_7B_CTX1024: `${VPS_STORAGE_URL}/wasm-libs/vicuna-7b-q4f32_1-ctx1024_cs1024-webgpu.wasm`,
   LLAMA3_2_3B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
   LLAMA3_1_8B_CTX4K: `${VPS_STORAGE_URL}/wasm-libs/Llama-3_1-8B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm`,
 } as const;
@@ -44,8 +44,8 @@ export const WASM_LIBS = {
 /**
  * VPS-Hosted FP32 Models (Primary - Recommended)
  * Guided launch order lives in `recommendModels` (Hermes-first mid-band;
- * Vicuna 7B only when VRAM looks healthy). Auto-fallback after a Vicuna
- * failure jumps to Hermes 3B — ctx512/ctx1024 stay explicit picker entries.
+ * Vicuna 7B only when VRAM looks healthy). An OOM inside CreateMLCEngine steps
+ * the compiled lib ctx4k → ctx1024 → ctx512 → Hermes 3B (`OOM_MODEL_LADDER`).
  *
  * WASM ↔ override coupling:
  * - `model_lib` sets the compiled TVM memory plan (peak allocation at CreateMLCEngine).
@@ -109,7 +109,7 @@ export const VPS_FP32_MODELS = {
 
   /**
    * Vicuna-7B with custom 512-context model_lib
-   * - model_lib: vicuna-7b-q4f32_1-ctx512_cs1k-webgpu.wasm (TVM plan baked for 512)
+   * - model_lib: vicuna-7b-q4f32_1-ctx512_cs512-webgpu.wasm (TVM plan baked for 512)
    * - overrides.context_window_size: 512 (must match compiled max)
    * - VRAM: ~3.2 GB peak (vs ~3.5 GB with JS-only overrides on generic .wasm)
    * - Build: CONTEXT_SIZE=512 ./scripts/build-vicuna-wasm.sh
@@ -133,7 +133,7 @@ export const VPS_FP32_MODELS = {
 
   /**
    * Vicuna-7B with custom 1024-context model_lib
-   * - model_lib: vicuna-7b-q4f32_1-ctx1024_cs1k-webgpu.wasm
+   * - model_lib: vicuna-7b-q4f32_1-ctx1024_cs1024-webgpu.wasm
    * - overrides.context_window_size: 1024 (must match compiled max)
    * - VRAM: ~3.6 GB peak
    * - Build: CONTEXT_SIZE=1024 ./scripts/build-vicuna-wasm.sh
@@ -324,7 +324,6 @@ export const FP16_MODELS = {
  * URLs match the official mlc-ai prebuilt config so WebLLM's cleanModelUrl()
  * appends /resolve/main/ correctly.
  */
-const MLC_MODEL_LIB_PREFIX = MLC_GITHUB_WASM_PREFIX;
 
 export const HF_FP32_MODELS = {
   /**
@@ -335,7 +334,7 @@ export const HF_FP32_MODELS = {
   HF_LLAMA_2_7B_Q4F32: {
     model_id: "Llama-2-7b-chat-hf-q4f32_1-MLC",
     model: `https://huggingface.co/mlc-ai/Llama-2-7b-chat-hf-q4f32_1-MLC`,
-    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: mlcGithubWasmUrl('Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm'),
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -352,7 +351,7 @@ export const HF_FP32_MODELS = {
   HF_HERMES_3_3B_Q4F32: {
     model_id: "Hermes-3-Llama-3.2-3B-q4f32_1-MLC",
     model: `https://huggingface.co/mlc-ai/Hermes-3-Llama-3.2-3B-q4f32_1-MLC`,
-    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: mlcGithubWasmUrl('Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm'),
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -369,7 +368,7 @@ export const HF_FP32_MODELS = {
   HF_LLAMA_3_2_3B_Q4F32: {
     model_id: "Llama-3.2-3B-Instruct-q4f32_1-MLC",
     model: `https://huggingface.co/mlc-ai/Llama-3.2-3B-Instruct-q4f32_1-MLC`,
-    model_lib: `${MLC_MODEL_LIB_PREFIX}/Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm`,
+    model_lib: mlcGithubWasmUrl('Llama-3.2-3B-Instruct-q4f32_1-ctx4k_cs1k-webgpu.wasm'),
     overrides: {
       context_window_size: 4096,
       prefill_chunk_size: 1024,
@@ -548,8 +547,8 @@ export function getModelInfo(modelId: string): any {
 
 /**
  * Auto-fallback after the preferred model fails.
- * Vicuna 7B ctx variants are picker-only — a failed Vicuna load steps to
- * Hermes-3 3B, then ultra-low / CPU, not another 7B.
+ * OOM step-down through the compiled Vicuna ctx1024/ctx512 libs already happens
+ * inside `loadModelWithDynamicContext`; this chain covers what is left after that.
  */
 const SMALLER_FALLBACK_ORDER: string[] = [
   VPS_FP32_MODELS.VPS_HERMES_3_3B_Q4F32.model_id,
@@ -706,6 +705,29 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
       gguf_url: `${VPS_STORAGE_URL}/gguf/vicuna-7b-v1.5.Q4_K_M.gguf`,
       hf_repo: '',
       hf_file: `${VPS_STORAGE_URL}/gguf/vicuna-7b-v1.5.Q4_K_M.gguf`,
+      context_size: 4096,
+    },
+  },
+  /**
+   * Kimi-VL A3B Thinking (2506) — MoE vision-language model.
+   * mmproj is the vision projector, loaded with the model (wllama 3.x); image parts are only sent when it is present.
+   * Offloads all layers to WebGPU (a 10.5 GB model does not fit CPU-only) and needs wllama's JSPI + memory64 build.
+   * vram_required_MB is an estimate (~12–14 GB peak with vision: ~10.5 GB weights + 0.9 GB mmproj + KV/compute), not a measurement.
+   * High VRAM / multimodal: offered in the launch picker but never auto-recommended.
+   */
+  {
+    id: 'Kimi-VL-A3B-Thinking-2506-GGUF',
+    name: 'Kimi-VL A3B Thinking Q4_K_M (GGUF, high VRAM / multimodal)',
+    vram_required_MB: 13000,
+    context_window_size: 4096,
+    llamaCpp: {
+      gguf_url: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
+      hf_repo: '',
+      hf_file: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
+      mmprojUrl: `${VPS_STORAGE_URL}/gguf/mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf`,
+      gpuLayers: 99,
+      jinja: true,
+      requiresMem64: true,
       context_size: 4096,
     },
   },

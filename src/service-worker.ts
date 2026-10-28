@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 // Inject manifest from vite-plugin-pwa
-import { precacheAndRoute } from 'workbox-precaching';
+import { addPlugins, getCacheKeyForURL, precacheAndRoute } from 'workbox-precaching';
+import { withIsolationHeaders } from './utils/crossOriginIsolation';
 import {
   isVpsStorageUrl,
   rewriteVpsModelUrl,
@@ -23,12 +24,40 @@ import {
   type StripeConfig,
 } from './utils/dualDomainStripe';
 
-// @ts-ignore
+// The sw project compiles with lib "WebWorker" (tsconfig.sw.json), so `self` is a WorkerGlobalScope;
+// narrow it to the service-worker scope plus the manifest vite-plugin-pwa injects.
+declare const self: ServiceWorkerGlobalScope & {
+  __WB_MANIFEST?: Array<string | { url: string; revision?: string | null }>;
+};
+
+interface ClientMessage {
+  type?: string;
+  enabled?: boolean;
+  raceFirstByte?: boolean;
+  invertOrigins?: boolean;
+}
+
+/**
+ * Cross-origin isolation fallback (#400 A, coi-serviceworker approach): add COOP/COEP to the
+ * documents and worker scripts we serve when the host did not send them. Precached responses
+ * get them via a workbox plugin; non-precached same-origin documents / workers via the listener
+ * below (registered before precacheAndRoute so it never competes for the same request).
+ */
+addPlugins([{ handlerWillRespond: async ({ response }) => withIsolationHeaders(response) }]);
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.mode !== 'navigate' && request.destination !== 'worker' && request.destination !== 'sharedworker') return;
+  if (new URL(request.url).origin !== self.location.origin) return;
+  if (getCacheKeyForURL(request.url)) return; // precache route answers (plugin adds headers)
+  event.respondWith(fetch(request).then(withIsolationHeaders));
+});
+
 precacheAndRoute(self.__WB_MANIFEST || []);
 
 // Take control immediately so VPS URL rewrites apply on first load (not only after reload).
 self.addEventListener('install', () => {
-  self.skipWaiting();
+  void self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -58,9 +87,6 @@ self.addEventListener('activate', (event) => {
  * negative-caches missing `.gz` HEADs for 1 hour.
  */
 
-// Service worker context (use any to avoid type conflicts with DOM types)
-// @ts-ignore
-declare const self: ServiceWorkerGlobalScope;
 
 const CHUNK_SIZE = STRIPE_CHUNK_SIZE;
 const MODEL_HOSTS = [
@@ -241,7 +267,7 @@ function isModelFile(url: string): boolean {
   const isModelHost = MODEL_HOSTS.some(host => url.includes(host));
   if (!isModelHost) return false;
   // Weight / runtime binaries
-  if (url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm')) {
+  if (url.includes('.safetensors') || url.includes('.bin') || url.includes('.gguf') || url.includes('.wasm') || url.includes('.vrm')) {
     return true;
   }
   // Config + tokenizer JSON (WebLLM fetches these before shards)
@@ -320,7 +346,7 @@ async function tryFetchGzCompressed(url: string): Promise<Response | null> {
     const writer = ds.writable.getWriter();
     const reader = ds.readable.getReader();
 
-    (async () => {
+    void (async () => {
       try {
         await writer.write(compressedBytes as any);
         await writer.close();
@@ -491,8 +517,7 @@ async function downloadParallel(
 /**
  * Fetch event listener - intercept model file downloads
  */
-// @ts-ignore - FetchEvent is service worker specific
-self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondWith(r: Promise<Response> | Response): void }) => {
+self.addEventListener('fetch', (event) => {
   const requestUrl = event.request.url;
 
   if (!isModelFile(requestUrl)) {
@@ -524,7 +549,7 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
         // Small JSON/config files — fetch directly (no parallel chunking or compression)
         const isSmallConfig =
           fetchUrl.includes('.json') ||
-          (!fetchUrl.includes('.bin') && !fetchUrl.includes('.wasm') && !fetchUrl.includes('.gguf') && !fetchUrl.includes('.safetensors'));
+          (!fetchUrl.includes('.bin') && !fetchUrl.includes('.wasm') && !fetchUrl.includes('.gguf') && !fetchUrl.includes('.safetensors') && !fetchUrl.includes('.vrm'));
 
         if (isSmallConfig) {
           return fetchWithRetry(fetchUrl, fetchInit, MAX_RETRIES);
@@ -567,12 +592,9 @@ self.addEventListener('fetch', (event: FetchEvent & { request: Request; respondW
 /**
  * Handle messages from the client
  */
-// @ts-ignore - ExtendableMessageEvent is service worker specific
-self.addEventListener('message', (event: ExtendableMessageEvent & {
-  data: { type?: string; enabled?: boolean; raceFirstByte?: boolean; invertOrigins?: boolean }
-}) => {
+self.addEventListener('message', (event: ExtendableMessageEvent & { data: ClientMessage }) => {
   if (event.data?.type === 'SKIP_WAITING') {
-    (self as any).skipWaiting();
+    void self.skipWaiting();
   } else if (event.data?.type === 'CLEAR_CACHE') {
     gzMissCache.clear();
     console.log('[ServiceWorker] Memory cache cleared');

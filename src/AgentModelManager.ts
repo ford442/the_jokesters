@@ -1,5 +1,5 @@
 import type { GroupChatManager } from './GroupChatManager'
-import * as webllm from '@mlc-ai/web-llm'
+import type * as webllm from '@mlc-ai/web-llm'
 import type { EngineType } from './llm/EngineFactory'
 import { getUnifiedModelById } from './config/models'
 

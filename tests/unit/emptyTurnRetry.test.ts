@@ -18,6 +18,36 @@ async function makeManager(engineId = 'mock') {
 }
 
 describe('empty-turn retry / skip', () => {
+
+  it('name-prefixed emoji-only replies never reach onSentence', async () => {
+    let emitted = false
+    const { manager, engine } = await makeManager()
+    engine.queueResponses('😂', '😂', '😂', '😂', '😂', '😂')
+
+    await manager.chat('Test', (sentence) => {
+      emitted = true
+    })
+
+    expect(emitted).toBe(false)
+  })
+
+  it('still emits the sfx cue if there is an emoji', async () => {
+    let emitted = false
+    const { manager, engine } = await makeManager()
+    engine.queueResponses('Great one. [sfx:rimshot] 😂')
+
+    await manager.chat('Test', (sentence) => {
+      if (sentence.includes('[sfx:rimshot]')) emitted = true
+    })
+
+    expect(emitted).toBe(true)
+  })
+
+  it('isSpeakableText is true for short lines like Oh no!', async () => {
+    const { isSpeakableText } = await import('../../src/chat/speakableText')
+    expect(isSpeakableText('Oh no!')).toBe(true)
+  })
+
   it('retries once with English suffix and max_tokens >= 96, then speaks the retry', async () => {
     const { manager, engine } = await makeManager()
     engine.queueResponses('😂', 'The banana is a contract.')
@@ -47,9 +77,39 @@ describe('empty-turn retry / skip', () => {
 
     expect(result.response).toBe('Mock response.')
     expect(spoken).toEqual(['Mock response.'])
-    expect(manager.getHistory()).toEqual([{ role: 'user', content: '(Reply naturally to the last thing said)' }, { role: 'assistant', content: 'Mock response.' }])
+    expect(manager.getHistory().map(({ role, content }) => ({ role, content }))).toEqual([{ role: 'user', content: '(Reply naturally to the last thing said)' }, { role: 'assistant', content: 'Mock response.' }])
     expect(manager.getCurrentAgent().id).not.toBe(firstAgent)
     expect(engine.chatCalls.length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('preserves retry suffix for follow-up agent, but resets it for the next user turn without poisoning ConversationStore', async () => {
+    const { manager, engine } = await makeManager()
+    engine.queueResponses('😂', '🤣', 'Mock response.')
+    const spoken: string[] = []
+
+    // First turn: Agent A fails, Agent A retries (fails), Agent B receives suffixed prompt and succeeds.
+    await manager.chat('Initial prompt', (s) => spoken.push(s))
+
+    // Assert Agent B got the suffixed prompt
+    const agentBCall = engine.chatCalls[2]
+    const agentBPrompt = agentBCall.messages.filter(m => m.role === 'user').at(-1)
+    expect(String(agentBPrompt?.content)).toContain('Initial prompt')
+
+    // Assert the history was NOT poisoned (no suffix in history)
+    const history = manager.getHistory()
+    const firstTurnHistory = history.filter(m => m.role === 'user')[0]
+    expect(firstTurnHistory.content).toBe('Initial prompt')
+    expect(firstTurnHistory.content).not.toContain(EMPTY_TURN_RETRY_SUFFIX.trim())
+
+    // Second turn: User starts a new turn. It should be clean.
+    engine.queueResponses('Clean response.')
+    await manager.chat('Second prompt', (s) => spoken.push(s))
+
+    const newAgentCall = engine.chatCalls[3]
+    const newAgentPrompt = newAgentCall.messages.filter(m => m.role === 'user').at(-1)
+    // Writers' room appends the speaker cue to the prompt; the retry suffix must not carry over.
+    expect(String(newAgentPrompt?.content).startsWith('Second prompt')).toBe(true)
+    expect(String(newAgentPrompt?.content)).not.toContain(EMPTY_TURN_RETRY_SUFFIX.trim())
   })
 
   it('does not retry when the first reply is speakable', async () => {

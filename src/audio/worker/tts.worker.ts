@@ -4,6 +4,8 @@
  * Includes: phoneme caching, viseme prediction, and latency profiling
  */
 
+import { wasmThreadCount } from '../../utils/crossOriginIsolation';
+import { predictTimedVisemes } from '../visemeTiming';
 import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import {
     resolveTtsNativeSampleRate,
@@ -15,6 +17,10 @@ import {
 export interface WorkerInitMessage {
     type: 'init';
     modelPath: string;
+    /** Absolute URL of the directory serving the ORT wasm runtime (see ortWasmPath.ts). */
+    wasmPath?: string;
+    /** `webgpu` tries ORT's WebGPU EP first and falls back to wasm (opt-in: `?ttsWebgpu`). */
+    executionProvider?: 'wasm' | 'webgpu';
 }
 
 export interface WorkerSynthesizeMessage {
@@ -53,6 +59,10 @@ export interface WorkerInitSuccess {
     type: 'init-success';
     /** From tts.json ae.sample_rate — available before the first synth. */
     sampleRate: number;
+    /** Execution provider the sessions were created with. */
+    executionProvider?: 'wasm' | 'webgpu';
+    /** ORT wasm threads (> 1 only when cross-origin isolated). */
+    numThreads?: number;
 }
 
 export interface WorkerInitError {
@@ -201,92 +211,8 @@ class WorkerPhonemeCache {
     }
 }
 
-// --- Viseme Predictor (in-worker) ---
-const PHONEME_TO_VISEME: Record<string, string> = {
-    'AA': 'AA_AH', 'AE': 'AE_AW', 'AH': 'AA_AH', 'AO': 'AO_OH',
-    'AW': 'AE_AW', 'AY': 'AE_AW', 'EH': 'IH_IY_EH', 'ER': 'ER',
-    'EY': 'IH_IY_EH', 'IH': 'IH_IY_EH', 'IY': 'IH_IY_EH', 'OW': 'UW_OW',
-    'OY': 'UW_OW', 'UH': 'UH', 'UW': 'UW_OW',
-    'B': 'M_B_P', 'CH': 'SH_CH_J', 'D': 'L_N_D_T', 'DH': 'TH_DH',
-    'F': 'F_V', 'G': 'K_G_NG', 'HH': 'REST', 'JH': 'SH_CH_J',
-    'K': 'K_G_NG', 'L': 'L_N_D_T', 'M': 'M_B_P', 'N': 'L_N_D_T',
-    'NG': 'K_G_NG', 'P': 'M_B_P', 'R': 'R', 'S': 'S_Z',
-    'SH': 'SH_CH_J', 'T': 'L_N_D_T', 'TH': 'TH_DH', 'V': 'F_V',
-    'W': 'W', 'Y': 'IH_IY_EH', 'Z': 'S_Z', 'ZH': 'SH_CH_J'
-};
-
-function approximatePhonemes(text: string): string[] {
-    const phonemes: string[] = [];
-    const normalized = text.toLowerCase().replace(/[^a-z\s]/g, '');
-    
-    for (const word of normalized.split(/\s+/)) {
-        if (!word) continue;
-        
-        for (let i = 0; i < word.length; i++) {
-            const char = word[i];
-            const nextChar = word[i + 1];
-            
-            if ('aeiou'.includes(char)) {
-                if (char === 'a') {
-                    if (nextChar === 'i' || nextChar === 'y') { phonemes.push('EY'); i++; }
-                    else if (nextChar === 'u' || nextChar === 'w') { phonemes.push('AW'); i++; }
-                    else { phonemes.push('AE'); }
-                } else if (char === 'e') {
-                    phonemes.push('EH');
-                } else if (char === 'i') {
-                    phonemes.push('IH');
-                } else if (char === 'o') {
-                    if (nextChar === 'o') { phonemes.push('UW'); i++; }
-                    else { phonemes.push('AO'); }
-                } else if (char === 'u') {
-                    phonemes.push('AH');
-                }
-            } else if (char === 't' && nextChar === 'h') {
-                phonemes.push('TH'); i++;
-            } else if (char === 's' && nextChar === 'h') {
-                phonemes.push('SH'); i++;
-            } else if ('bdfghjklmnpqrstvwxyz'.includes(char)) {
-                const mapping: Record<string, string> = {
-                    'b': 'B', 'c': 'K', 'd': 'D', 'f': 'F', 'g': 'G',
-                    'h': 'HH', 'j': 'JH', 'k': 'K', 'l': 'L', 'm': 'M',
-                    'n': 'N', 'p': 'P', 'q': 'K', 'r': 'R', 's': 'S',
-                    't': 'T', 'v': 'V', 'w': 'W', 'x': 'K', 'y': 'Y', 'z': 'Z'
-                };
-                phonemes.push(mapping[char] || 'REST');
-            }
-        }
-        phonemes.push('REST');
-    }
-    
-    return phonemes.filter(p => p !== 'REST');
-}
-
-function predictVisemes(text: string, totalDurationSec: number) {
-    const phonemes = approximatePhonemes(text);
-    const visemes = [];
-    const baseDuration = totalDurationSec / Math.max(phonemes.length, 1);
-    
-    let currentTime = 0;
-    for (let i = 0; i < phonemes.length; i++) {
-        const phoneme = phonemes[i];
-        const isVowel = phoneme.length <= 2;
-        let durationMultiplier = isVowel ? 1.3 : 1.0;
-        
-        const duration = baseDuration * durationMultiplier;
-        
-        visemes.push({
-            phoneme,
-            startTime: currentTime,
-            duration,
-            intensity: isVowel ? 0.9 : 0.7,
-            mouthShape: PHONEME_TO_VISEME[phoneme] || 'REST'
-        });
-        
-        currentTime += duration;
-    }
-    
-    return visemes;
-}
+// Viseme timing lives in ../visemeTiming.ts so the main-thread fallback produces the same timeline.
+const predictVisemes = predictTimedVisemes;
 
 // --- RNG for seeded generation ---
 class RNG {
@@ -348,8 +274,13 @@ async function handleInit(msg: WorkerInitMessage) {
         // Dynamic import of ONNX Runtime
         ort = await import('onnxruntime-web');
         
-        ort.env.wasm.numThreads = 1;
+        // Multithreaded wasm needs SharedArrayBuffer (COOP/COEP, #400 A). Capped at 4: the LLM
+        // (wllama) and the render loop compete for the same cores.
+        const numThreads = wasmThreadCount(self.crossOriginIsolated === true, navigator.hardwareConcurrency ?? 1, 4);
+        ort.env.wasm.numThreads = numThreads;
         ort.env.wasm.proxy = false;
+        // Without this ORT falls back to a bundler-emitted copy of the wasm next to the worker chunk.
+        if (msg.wasmPath) ort.env.wasm.wasmPaths = msg.wasmPath;
         
         const modelPath = msg.modelPath;
 
@@ -364,20 +295,35 @@ async function handleInit(msg: WorkerInitMessage) {
         textProcessor = new UnicodeProcessor(indexer);
 
         // Load ONNX models
-        const sessionOpts: InferenceSession.SessionOptions = {
-            executionProviders: ['wasm'],
-            graphOptimizationLevel: 'all'
+        const createSessions = (providers: InferenceSession.SessionOptions['executionProviders']) => {
+            const sessionOpts: InferenceSession.SessionOptions = {
+                executionProviders: providers,
+                graphOptimizationLevel: 'all'
+            };
+            return Promise.all([
+                ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
+                ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
+            ]);
         };
 
-        [dpSession, textEncSession, vectorEstSession, vocoderSession] = await Promise.all([
-            ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
-            ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
-        ]);
+        let executionProvider: 'wasm' | 'webgpu' = 'wasm';
+        let sessions: InferenceSession[] | null = null;
+        if (msg.executionProvider === 'webgpu' && 'gpu' in navigator) {
+            try {
+                sessions = await createSessions(['webgpu', 'wasm']);
+                executionProvider = 'webgpu';
+            } catch (gpuErr) {
+                console.warn('[TTS Worker] WebGPU execution provider failed, falling back to wasm:', gpuErr);
+            }
+        }
+        sessions ??= await createSessions(['wasm']);
+        [dpSession, textEncSession, vectorEstSession, vocoderSession] = sessions;
+        console.log(`[TTS Worker] ORT ready: ep=${executionProvider} threads=${numThreads}`);
 
         const initHz = config.ae.sample_rate || SUPERTONIC_NATIVE_SAMPLE_RATE;
-        self.postMessage({ type: 'init-success', sampleRate: initHz } as WorkerInitSuccess);
+        self.postMessage({ type: 'init-success', sampleRate: initHz, executionProvider, numThreads } as WorkerInitSuccess);
     } catch (err: any) {
         self.postMessage({ type: 'init-error', error: err.message } as WorkerInitError);
     }
