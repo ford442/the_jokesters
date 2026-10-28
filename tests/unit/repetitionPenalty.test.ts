@@ -15,15 +15,15 @@ describe('Repetition Penalty Bug #398', () => {
 
         // Mock the internal wllama instance to avoid throwing
         adapter.wllama = {
-            createChatCompletion: vi.fn().mockResolvedValue('test')
+            createChatCompletion: vi.fn().mockResolvedValue({ choices: [{ message: { content: 'test' } }] })
         }
         adapter.initialized = true
 
         await adapter.chatComplete([{ role: 'user', content: 'hello' }], { max_tokens: 10 })
 
         expect(adapter.wllama.createChatCompletion).toHaveBeenCalled()
-        const callArgs = adapter.wllama.createChatCompletion.mock.calls[0][1]
+        const callArgs = adapter.wllama.createChatCompletion.mock.calls[0][0]
 
-        expect(callArgs.sampling.penalty_repeat).toBeGreaterThan(1.0)
+        expect(callArgs.penalty_repeat).toBeGreaterThan(1.0)
     })
 })

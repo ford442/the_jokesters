@@ -710,19 +710,24 @@ export const UNIFIED_MODELS: UnifiedModelConfig[] = [
   },
   /**
    * Kimi-VL A3B Thinking (2506) — MoE vision-language model.
-   * mmproj is the vision projector; it is only fetched when the installed wllama supports image input.
-   * vram_required_MB is an estimate from the ~10 GB Q4_K_M file, not a measurement.
+   * mmproj is the vision projector, loaded with the model (wllama 3.x); image parts are only sent when it is present.
+   * Offloads all layers to WebGPU (a 10.5 GB model does not fit CPU-only) and needs wllama's JSPI + memory64 build.
+   * vram_required_MB is an estimate (~12–14 GB peak with vision: ~10.5 GB weights + 0.9 GB mmproj + KV/compute), not a measurement.
+   * High VRAM / multimodal: offered in the launch picker but never auto-recommended.
    */
   {
     id: 'Kimi-VL-A3B-Thinking-2506-GGUF',
-    name: 'Kimi-VL A3B Thinking (GGUF)',
-    vram_required_MB: 11000,
+    name: 'Kimi-VL A3B Thinking Q4_K_M (GGUF, high VRAM / multimodal)',
+    vram_required_MB: 13000,
     context_window_size: 4096,
     llamaCpp: {
       gguf_url: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
       hf_repo: '',
       hf_file: `${VPS_STORAGE_URL}/gguf/Kimi-VL-A3B-Thinking-2506-Q4_K_M.gguf`,
       mmprojUrl: `${VPS_STORAGE_URL}/gguf/mmproj-Kimi-VL-A3B-Thinking-2506-f16.gguf`,
+      gpuLayers: 99,
+      jinja: true,
+      requiresMem64: true,
       context_size: 4096,
     },
   },

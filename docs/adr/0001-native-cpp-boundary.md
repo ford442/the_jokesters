@@ -48,7 +48,7 @@ Pursue custom C++/compile work **only if** one of these is **measured** (logs, O
 | Need ops not in stock **model_lib** WASM | Fork mlc-llm / TVM schedules (**high cost** — requires explicit green-light metrics below) | Out of tree; not committed here |
 | CPU fallback quality/speed insufficient | (1) Fix **wllama version pin** + `npm run verify:wllama`; (2) only then optional custom llama.cpp build | **#119**, `scripts/verify_wllama_wasm.sh`, `scripts/wllama-wasm.manifest.json` |
 | Probe ggml-org llama.cpp **WASM + WebGPU** (Emscripten / Dawn `emdawnwebgpu`) | Optional out-of-tree compile only; **do not** feed artifacts to `LlamaCppEngineAdapter` | [`scripts/build-llama-wasm-webgpu.sh`](../../scripts/build-llama-wasm-webgpu.sh), [`.github/workflows/build-llama-wasm-webgpu.yml`](../../.github/workflows/build-llama-wasm-webgpu.yml) (`workflow_dispatch`). A **runtime** engine still needs track **B** metrics. |
-| Multimodal Kimi-VL / audio | Separate research track; **must not** block comedy core | Optional API / experimental engines only — **not** the WASM+WebGPU llama.cpp path (mtmd is native-oriented) |
+| Multimodal Kimi-VL / audio | Separate research track; **must not** block comedy core | Experimental opt-in `Kimi-VL-A3B-Thinking-2506-GGUF` via wllama 3.x (prebuilt mtmd + WebGPU, no custom compile); server API stays the working path. Still **not** the out-of-tree llama.cpp WASM+WebGPU build |
 
 ### Official “native artifact” path (Vicuna small-context WASM)
 

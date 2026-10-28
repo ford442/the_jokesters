@@ -49,6 +49,7 @@ describe('cross-origin isolation', () => {
       n_ctx: 1024,
       n_threads: 5,
       n_batch: 512,
+      n_gpu_layers: 0,
       cache_type_k: 'q8_0',
       flash_attn: true,
     })
