@@ -17,4 +17,9 @@ export default defineConfig({
       reporter: ['text', 'text-summary'],
     },
   },
+  build: {
+  esbuild: {
+    keepNames: true, // preserves constructor.name
+  },
+}
 });
