@@ -2,7 +2,7 @@ import type { InferenceSession, Tensor } from 'onnxruntime-web';
 import { RNG } from '../utils/RNG';
 import { VPS_STORAGE_URL } from '../utils/vpsStorageUrl';
 import { getOrtWasmBaseUrl } from './ortWasmPath';
-import { SUPERTONIC_NATIVE_SAMPLE_RATE, trimVocoderPcm } from './ttsNativeSampleRate';
+import { SUPERTONIC_NATIVE_SAMPLE_RATE, trimVocoderPcm, resolveTtsNativeSampleRate } from './ttsNativeSampleRate';
 
 // Note: We do NOT import 'onnxruntime-web' at the top level. 
 // This prevents Vite from pre-bundling the worker logic that looks for .mjs files.
@@ -207,7 +207,7 @@ export class SupertonicPipeline {
         return new Style(ttlTensor, dpTensor);
     }
 
-    async generate(text: string, style: Style, totalStep: number = 10, speed: number = 1.0, seed?: number): Promise<{ wav: Float32Array, duration: number }> {
+    async generate(text: string, style: Style, totalStep: number = 10, speed: number = 1.0, seed?: number): Promise<{ wav: Float32Array, duration: number, sampleRate: number }> {
         if (!this.isReady) throw new Error("Pipeline not initialized");
 
         const bsz = 1;
@@ -266,9 +266,18 @@ export class SupertonicPipeline {
         // Vocoder — trim ceil-to-chunk padding so playback length matches DP seconds
         const vocoderOut = await this.vocoderOrt.run({ latent: currentXt });
         const rawWav = vocoderOut.wav_tts.data as Float32Array;
-        const wav = trimVocoderPcm(rawWav, duration[0], this.sampleRate);
 
-        return { wav, duration: duration[0] };
+        // tts.json ae.sample_rate is 44100 for hosted Supertonic. Trim ceil-to-chunk
+        // padding (official Python does this) before measuring empirical Hz — untrimmed
+        // wav.length/duration snaps 44.1 kHz → 48 kHz on short comedy lines.
+        const { sampleRate: playbackHz } = resolveTtsNativeSampleRate(
+            this.sampleRate,
+            rawWav.length,
+            duration[0]
+        );
+        const wav = trimVocoderPcm(rawWav, duration[0], playbackHz);
+
+        return { wav, duration: duration[0], sampleRate: playbackHz };
     }
 
     private sampleNoisyLatent(duration: number, rng?: RNG) {

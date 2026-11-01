@@ -129,7 +129,7 @@ export class AudioEngine implements TtsEngine {
         const style = await this.getStyle(realVoiceId);
 
         // 4. Run Inference
-        const { wav } = await this.pipeline.generate(
+        const { wav, sampleRate } = await this.pipeline.generate(
             text,
             style,
             safeSteps,
@@ -137,6 +137,6 @@ export class AudioEngine implements TtsEngine {
             seed
         );
 
-        return { audioData: wav, sampleRate: this.sampleRate };
+        return { audioData: wav, sampleRate };
     }
 }
