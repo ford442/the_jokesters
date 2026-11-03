@@ -229,6 +229,13 @@ export class SpeechQueue {
         const promise = this.audioEngine
             .synthesize(text, agentId, options)
             .then((data) => {
+                // Stamp the exact engine sample rate at synthesis time.
+                // Relying on the engine's live sample rate at playback time is incorrect,
+                // as the engine's rate may mutate between synthesis and playback.
+                if (!data.sampleRate) {
+                    data.sampleRate = this.audioEngine.sampleRate || SUPERTONIC_NATIVE_SAMPLE_RATE;
+                }
+
                 if (epoch !== this.cacheEpoch) {
                     // Stale — still return data to caller of this promise, but don't keep
                 }
