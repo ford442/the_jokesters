@@ -223,14 +223,13 @@ export class GroupChatManager {
     }
 
     const originalContent = userMessage
-    let historyContent =
+    const historyContent =
       typeof userMessage === 'string'
         ? userMessage
         : userMessage
             .filter((p) => p.type === 'text')
             .map((p) => p.text)
             .join('\n')
-    historyContent = historyContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
 
     this.conversation.appendUser(historyContent)
     this.turnsSinceCritique++
@@ -321,7 +320,6 @@ export class GroupChatManager {
             ))
             logTurnText(raw, cleaned)
             activeUserContent = historyContent
-            activeUserContent = activeUserContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
           }
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
@@ -329,7 +327,6 @@ export class GroupChatManager {
             this.conversation.advanceAgent()
             // Reset activeUserContent so we don't poison follow-up turns
             activeUserContent = historyContent
-            activeUserContent = activeUserContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
             continue
           }
 

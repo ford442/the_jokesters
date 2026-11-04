@@ -67,22 +67,28 @@ describe('loadModelWithDynamicContext OOM', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ status: 200 })))
   })
 
-  it('steps an OOM to the next preset without applying a kv_cache_quantization override', async () => {
+  it('steps a ctx4k OOM (context == compiled floor) to the ctx1024 lib instead of throwing', async () => {
     await loadModelWithDynamicContext(
       { ...cfg('vicuna-7b-q4f32-webllm-vps'), skipSourceFailover: true },
       'auto',
     )
+    expect(createCalls).toHaveLength(2)
+    expect(createCalls[0].ctx).toBe(2048)
+    expect(createCalls[1].modelId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    expect(parseCompiledMaxContextFromModelLib(createCalls[1].lib)).toBe(1024)
+    expect(createCalls[1].ctx).toBe(1024)
+  })
 
-    // First call uses the requested model, second call steps down the OOM ladder
+  it('steps an OOM to the next preset and does not apply kv_cache_quantization override', async () => {
+    await loadModelWithDynamicContext(
+      { ...cfg('vicuna-7b-q4f32-webllm-vps'), skipSourceFailover: true },
+      'auto',
+    )
     expect(createCalls).toHaveLength(2)
     expect(createCalls[0].modelId).toBe('vicuna-7b-q4f32-webllm-vps')
     expect(createCalls[1].modelId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
-
-    // Assert the kv_cache_quantization override does not appear in the config payload
-    // (mock intercept does not inject or observe any kv_cache_quantization flag in chatOpts,
-    // confirming the removed logic no longer passes it).
-    expect(parseCompiledMaxContextFromModelLib(createCalls[1].lib)).toBe(1024)
-    expect(createCalls[1].ctx).toBe(1024)
+    // A retry on the same model with a quantization override would have resulted in createCalls[1].modelId === 'vicuna-7b-q4f32-webllm-vps'.
+    // By stepping down directly, we prove the dead kv_cache_quantization branch is gone.
   })
 })
 
