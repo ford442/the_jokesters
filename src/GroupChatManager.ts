@@ -223,13 +223,14 @@ export class GroupChatManager {
     }
 
     const originalContent = userMessage
-    const historyContent =
+    let historyContent =
       typeof userMessage === 'string'
         ? userMessage
         : userMessage
             .filter((p) => p.type === 'text')
             .map((p) => p.text)
             .join('\n')
+    historyContent = historyContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
 
     this.conversation.appendUser(historyContent)
     this.turnsSinceCritique++
@@ -320,15 +321,15 @@ export class GroupChatManager {
             ))
             logTurnText(raw, cleaned)
             activeUserContent = historyContent
+            activeUserContent = activeUserContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
           }
 
           if (!isSpeakableText(cleaned) && !hasStageTokens(cleaned)) {
             console.warn(`[EmptyTurn] Skipping turn for ${currentAgent.id} after retry`)
-            this.conversation.popLastIfUser()
-            this.conversation.appendUser(historyContent)
             this.conversation.advanceAgent()
             // Reset activeUserContent so we don't poison follow-up turns
             activeUserContent = historyContent
+            activeUserContent = activeUserContent.replace(EMPTY_TURN_RETRY_SUFFIX, '')
             continue
           }
 
@@ -833,7 +834,6 @@ export class GroupChatManager {
         // Do not append "…"; keep the prompt so the next agent can answer it.
         // Also strip any retry suffix that might have been applied to currentPrompt
         currentPrompt = currentPrompt.replace(EMPTY_TURN_RETRY_SUFFIX, '')
-        store.appendUser(currentPrompt)
         store.advanceAgent()
         continue
       }

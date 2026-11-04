@@ -135,6 +135,36 @@ describe('empty-turn retry / skip', () => {
     expect(turns.some((t) => /😂|🤣/.test(t.response))).toBe(false)
   })
 
+
+  it('prerenderTurns leaves alternating roles when an agent skips due to unspeakable reply', async () => {
+    const { manager, engine } = await makeManager()
+    // Agent 0: Unspeakable, skips
+    // Agent 1: Speaks
+    engine.queueResponses('😂', '🤣', 'The scientist measures the bit.')
+
+    // Track conversation history directly
+    const getHistory = () => manager.getHistory()
+    const preHistory = getHistory().length
+
+    const turns = await manager.prerenderTurns('Start the scene', 1)
+
+    const history = getHistory()
+    // Find the turns appended after preHistory.
+    const newTurns = history.slice(preHistory)
+
+    // We expect the roles to alternate user, assistant, user, assistant
+    let prevRole = ''
+    let alternating = true
+    for (const msg of newTurns) {
+      if (msg.role === prevRole) {
+        alternating = false
+      }
+      prevRole = msg.role
+    }
+
+    expect(alternating).toBe(true)
+  })
+
   it('cleans up hanging user prompt when chat throws an error', async () => {
     const { manager, engine } = await makeManager()
 
