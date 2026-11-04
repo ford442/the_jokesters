@@ -71,31 +71,31 @@ describe('buildVRAMOverrides', () => {
     const overrides = buildVRAMOverrides(
       {},
       4096,
-      { ...DEFAULT_VRAM_CONFIG } as any, // Type cast to bypass typecheck for testing absence
+      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
       'Llama-2-7b-chat-MLC',
       null,
     );
 
-    expect((overrides as any).kv_cache_quantization).toBeUndefined();
+    expect((overrides as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
   });
 
   it('respects that KV cache mode is removed', () => {
     const small = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG } as any,
+      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect((small as any).kv_cache_quantization).toBeUndefined();
+    expect((small as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
 
     const fp8 = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG } as any,
+      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect((fp8 as any).kv_cache_quantization).toBeUndefined();
+    expect((fp8 as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
   });
 });
