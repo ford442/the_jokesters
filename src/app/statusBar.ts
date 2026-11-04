@@ -7,7 +7,6 @@ import type { MemoryManager } from '../Director/MemoryManager'
 export function updateVRAMInfoBar(groupChatManager: GroupChatManager): void {
   const ctxInfoText = document.getElementById('ctx-info-text')
   const tokenBudgetText = document.getElementById('token-budget-text')
-  const kvText = document.getElementById('vram-kv-text')
   const memoryDepthText = document.getElementById('memory-depth-text')
 
   const depthLimit = groupChatManager.getEffectiveMemoryDepth()
@@ -43,14 +42,6 @@ export function updateVRAMInfoBar(groupChatManager: GroupChatManager): void {
   }
   if (tokenBudgetText) {
     tokenBudgetText.textContent = `Max tokens: ${groupChatManager.getMaxTokensPerTurn()}`
-  }
-  if (kvText) {
-    const cfg = groupChatManager.getVRAMConfig()
-    if (cfg.kv_cache_quantization !== 'none') {
-      kvText.textContent = `KV: ${cfg.kv_cache_quantization === 'auto' ? 'auto' : cfg.kv_cache_quantization}`
-    } else {
-      kvText.textContent = ''
-    }
   }
 }
 

@@ -1895,7 +1895,6 @@ Streams API as of 2026 (it's server-only via `Content-Encoding: br`).
 - **Old floor**: 7B models wouldn't retry below 512 ctx tokens.
 - **New floor**: 256 ctx tokens for 7B, 128 for 3B.
   Each OOM halves the context window until the floor, then forces
-  `kv_cache_quantization: 'int8'` as a final fallback.
 - Warning logged when floor is hit: user is advised to switch to a 3B model.
 
 ### 7.3 VRAM estimator improvement

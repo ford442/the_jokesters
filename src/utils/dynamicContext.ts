@@ -26,7 +26,6 @@ export {
   alignPrefillChunkSize,
   buildVRAMOverrides,
   clampContextToCompiledMax,
-  detectKVCacheSupport,
   estimateAvailableVRAM,
   getContextConfigForVRAM,
   getModelSize,

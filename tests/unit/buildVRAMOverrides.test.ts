@@ -67,36 +67,35 @@ describe('buildVRAMOverrides', () => {
 
     expect(overrides.sliding_window_size).toBeUndefined();
   });
-
-  it('applies KV cache quantization for 7B models when mode is auto', () => {
+  it('does not apply KV cache quantization when mode is auto', () => {
     const overrides = buildVRAMOverrides(
       {},
       4096,
-      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'auto' },
+      { ...DEFAULT_VRAM_CONFIG } as any, // Type cast to bypass typecheck for testing absence
       'Llama-2-7b-chat-MLC',
       null,
     );
 
-    expect(overrides.kv_cache_quantization).toBe('int8');
+    expect((overrides as any).kv_cache_quantization).toBeUndefined();
   });
 
-  it('respects explicit KV cache mode and skips for 3B when auto', () => {
+  it('respects that KV cache mode is removed', () => {
     const small = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'auto' },
+      { ...DEFAULT_VRAM_CONFIG } as any,
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect(small.kv_cache_quantization).toBeUndefined();
+    expect((small as any).kv_cache_quantization).toBeUndefined();
 
     const fp8 = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'fp8' },
+      { ...DEFAULT_VRAM_CONFIG } as any,
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect(fp8.kv_cache_quantization).toBe('fp8');
+    expect((fp8 as any).kv_cache_quantization).toBeUndefined();
   });
 });

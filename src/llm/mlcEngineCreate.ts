@@ -430,18 +430,6 @@ export async function loadModelWithDynamicContext(
           retryOptions,
         );
       }
-
-      // Off-ladder or bottom MLC rung — one int8 KV retry before surfacing the OOM panel.
-      if (vramConfig.kv_cache_quantization === 'none' || vramConfig.kv_cache_quantization === 'auto') {
-        console.warn('[DynamicContext] OOM with no smaller MLC lib — forcing int8 KV cache quantization and retrying');
-        return loadModelWithDynamicContext(
-          { ...modelConfig, skipSourceFailover: true },
-          contextSize,
-          onProgress,
-          { ...vramConfig, kv_cache_quantization: 'int8' },
-          retryOptions,
-        );
-      }
     }
 
     throw error;
