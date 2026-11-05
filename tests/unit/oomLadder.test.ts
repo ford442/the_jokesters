@@ -78,6 +78,18 @@ describe('loadModelWithDynamicContext OOM', () => {
     expect(parseCompiledMaxContextFromModelLib(createCalls[1].lib)).toBe(1024)
     expect(createCalls[1].ctx).toBe(1024)
   })
+
+  it('steps an OOM to the next preset and does not apply kv_cache_quantization override', async () => {
+    await loadModelWithDynamicContext(
+      { ...cfg('vicuna-7b-q4f32-webllm-vps'), skipSourceFailover: true },
+      'auto',
+    )
+    expect(createCalls).toHaveLength(2)
+    expect(createCalls[0].modelId).toBe('vicuna-7b-q4f32-webllm-vps')
+    expect(createCalls[1].modelId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    // A retry on the same model with a quantization override would have resulted in createCalls[1].modelId === 'vicuna-7b-q4f32-webllm-vps'.
+    // By stepping down directly, we prove the dead kv_cache_quantization branch is gone.
+  })
 })
 
 describe('applyHfWeightFailover compiled class', () => {
