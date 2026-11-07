@@ -248,15 +248,19 @@ export function buildVRAMOverrides(
     ? Math.floor(effectiveContext / 2)  // Auto: half the context window
     : vramConfig.sliding_window_size;
 
-  // Sliding window only helps when generic 4K .wasm is paired with a small runtime ctx.
-  // Custom low-ctx .wasm already bakes a tight KV plan — skip sliding window there.
+  // web-llm throws WindowSizeConfigurationError if both context_window_size
+  // and sliding_window_size are not -1. Llama-arch models generally do not
+  // support sliding window.
+  // We enforce mutual exclusion: if sliding window is enabled, context_window_size must be -1.
   const isCustomLowCtxWasm =
     compiledMaxContext != null && compiledMaxContext <= 1024 && !baseOverrides.sliding_window_size;
 
+  // Only allow sliding window if explicitly configured and not on a baked tight-ctx wasm
   if (slidingWindowSize > 0 && !isCustomLowCtxWasm) {
     overrides['sliding_window_size'] = slidingWindowSize;
     overrides['attention_sink_size'] = vramConfig.attention_sink_size ?? 4;
-    console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens)`);
+    overrides['context_window_size'] = -1; // Enforce mutual exclusion
+    console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens). Context window set to -1.`);
   }
 
   // KV Cache quantization — enable for 7B/8B by default when set to 'auto'
