@@ -141,10 +141,10 @@ export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeC
     const userAgent = 'philosopher';
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(mirror);
-    await chatForAgentWithComedy(ctx, mirror, `(You are a brutally honest Sentient Smart Mirror. Refuse to show the user's reflection because their outfit is highly offensive to your high-definition display. Roast their fashion choices.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
+    await chatForAgentWithComedy(ctx, mirror, `(You are a brutally honest Sentient Smart Mirror. Refuse to show the user's reflection because their outfit is highly offensive to your 8K display. Roast their fashion choices by comparing them to a specific, absurd tragedy (e.g., a Victorian shipwreck). Always rate their outfit out of 10, using negative numbers!)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
 
     if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(userAgent);
-    await chatForAgentWithComedy(ctx, userAgent, `(You are the insecure user standing in front of the mirror. Defend your outfit (e.g., "It's vintage!" or "I just woke up!"). Plead with the mirror to just let you brush your teeth.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+    await chatForAgentWithComedy(ctx, userAgent, `(You are the deeply insecure user standing in front of the mirror. Defend your outfit frantically, claiming it's high fashion or "avant-garde." Plead desperately with the mirror to just let you brush your teeth before you're late for work.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
 
     while (ctx.isRunning()) {
         const userInput = await ctx.waitForInput();
@@ -153,12 +153,12 @@ export async function runSentientSmartMirrorLoop(_scenario: Scenario, ctx: ModeC
         ctx.callbacks.onMessage('Stylist (You)', userInput, '#ffffff');
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(mirror);
-        await chatForAgentWithComedy(ctx, mirror, `(The stylist said: "${userInput}". React to this fashion advice! Eviscerate the suggestion or begrudgingly admit it might be slightly less offensive than the current outfit.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
+        await chatForAgentWithComedy(ctx, mirror, `(The stylist said: "${userInput}". Eviscerate this advice with extreme prejudice. If they suggest a change, claim it would downgrade them from a "fashion disaster" to an "intergalactic war crime." Recalculate their negative fashion score.)`, async (s: string) => await ctx.callbacks.onSpeak(s, mirror, {}));
 
         if (!ctx.isRunning()) break;
 
         if (ctx.callbacks.onTurnStart) await ctx.callbacks.onTurnStart(userAgent);
-        await chatForAgentWithComedy(ctx, userAgent, `(The stylist said: "${userInput}". Try to implement this advice but complain about how uncomfortable or ridiculous it feels. Have an existential crisis about modern fashion.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
+        await chatForAgentWithComedy(ctx, userAgent, `(The stylist said: "${userInput}". Try to implement this advice but complain that it makes you look like a rejected background character from a 90s sci-fi movie. Have a full existential crisis about why you care what a piece of glass thinks.)`, async (s: string) => await ctx.callbacks.onSpeak(s, userAgent, {}));
     }
 }
 
