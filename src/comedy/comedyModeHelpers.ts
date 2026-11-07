@@ -143,24 +143,38 @@ export async function chatForAgentWithComedy(
   const hiddenInstruction = mergeHiddenInstructions(ctx.getProductionInstruction?.(agentId), planned?.hiddenInstruction);
   const chatOptions = hiddenInstruction ? { ...planned, hiddenInstruction } : planned;
 
-  let responseText = '';
   await ctx.callbacks.onTurnStart(agentId);
-  await ctx.manager.chatForAgent(agentId, enrichedPrompt, async (sentence) => {
-    responseText += `${sentence} `;
-    await onSpeak(sentence);
-  }, chatOptions);
 
-  let trimmed = responseText.trim();
+  // One generation pass with the think pose up until the first sentence arrives (or the pass
+  // ends/throws). The `finally` matters: a throw mid-generation must not leave the actor stuck
+  // thinking. Mirrors Director.processTurn, which the rotation path already does.
+  const generate = async (generationPrompt: string): Promise<string> => {
+    let text = '';
+    let thinking = true;
+    const stopThinking = () => {
+      if (!thinking) return;
+      thinking = false;
+      ctx.callbacks.onThinking?.(agentId, false);
+    };
+    ctx.callbacks.onThinking?.(agentId, true);
+    try {
+      await ctx.manager.chatForAgent(agentId, generationPrompt, async (sentence) => {
+        stopThinking();
+        text += `${sentence} `;
+        await onSpeak(sentence);
+      }, chatOptions);
+    } finally {
+      stopThinking();
+    }
+    return text.trim();
+  };
+
+  let trimmed = await generate(enrichedPrompt);
 
   if (qualityGate && ctx.comedy && trimmed) {
     const assessment = ctx.comedy.rateAndMaybeRetry(trimmed);
     if (!assessment.passed && assessment.qualityPrompt) {
-      let retryText = '';
-      await ctx.manager.chatForAgent(agentId, `${enrichedPrompt} ${assessment.qualityPrompt}`, async (sentence) => {
-        retryText += `${sentence} `;
-        await onSpeak(sentence);
-      }, chatOptions);
-      const retryTrimmed = retryText.trim();
+      const retryTrimmed = await generate(`${enrichedPrompt} ${assessment.qualityPrompt}`);
       if (retryTrimmed) trimmed = retryTrimmed;
     }
   }
