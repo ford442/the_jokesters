@@ -43,9 +43,9 @@ describe('empty-turn retry / skip', () => {
     expect(emitted).toBe(true)
   })
 
-  it('isSpeakableText is true for short lines like Oh no!', async () => {
+  it('isSpeakableText is true for short lines like Wow!', async () => {
     const { isSpeakableText } = await import('../../src/chat/speakableText')
-    expect(isSpeakableText('Oh no!')).toBe(true)
+    expect(isSpeakableText('Wow!')).toBe(true)
   })
 
   it('retries once with English suffix and max_tokens >= 96, then speaks the retry', async () => {
