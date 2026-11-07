@@ -14,6 +14,7 @@ import { updateNextAgentUI } from './statusBar'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
 import { getSharedShowMusic } from '../audio/ShowMusic'
 import { getSharedClipRecorder } from './clipUi'
+import { setVoiceOverride } from '../audio/voiceMap'
 
 export interface DirectorBridgeDeps {
   groupChatManager: GroupChatManager
@@ -63,6 +64,15 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     getSeed: () => {
       const v = deps.seedInput.value.trim()
       return v ? parseInt(v, 10) : undefined
+    },
+    onGuestEnter: (guest) => {
+      // Supertonic style from the card (one of the four hosted files — no new voice model).
+      setVoiceOverride(guest.id, guest.voiceStyle)
+      deps.stage.addGuestActor(guest.id, guest.name, guest.color)
+    },
+    onGuestExit: (guestId) => {
+      deps.stage.removeGuestActor(guestId)
+      setVoiceOverride(guestId, null)
     },
     onThinking: (agentId, thinking) => deps.stage.setThinking(agentId, thinking),
     onReactToText: (agentId, text) => deps.stage.reactToText(agentId, text),

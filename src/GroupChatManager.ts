@@ -246,6 +246,8 @@ export class GroupChatManager {
         activeUserContent = historyContent
         const currentAgent = this.conversation.getCurrentAgent()
         lastAgentId = currentAgent.id
+        // Tagged on the message so export can attribute a guest line without rotation order.
+        const guestSpeakerId = this.conversation.isGuestSpeaking() ? currentAgent.id : undefined
 
         const effectiveMaxTokens = Math.min(
           options.maxTokens ?? ABSOLUTE_MAX_TOKENS,
@@ -333,9 +335,9 @@ export class GroupChatManager {
           if (this.isWritersRoom()) {
             // Raw output + the cued prompt as sent: the next request extends this one exactly.
             this.conversation.setLastUserEngineContent(turn.cue(historyContent))
-            this.conversation.appendAssistant(cleaned, raw)
+            this.conversation.appendAssistant(cleaned, raw, guestSpeakerId)
           } else {
-            this.conversation.appendAssistant(cleaned)
+            this.conversation.appendAssistant(cleaned, undefined, guestSpeakerId)
           }
           this.conversation.advanceAgent()
           success = true
@@ -698,6 +700,18 @@ export class GroupChatManager {
   }
 
   /**
+   * Seat (or clear, with null) a temporary guest who speaks through `chatForAgent(guest.id)`.
+   * The guest is never part of `getAgents()` or the rotation, so nothing persists after exit.
+   */
+  setGuestAgent(agent: Agent | null): void {
+    this.conversation.setGuest(agent)
+  }
+
+  getGuestAgent(): Agent | null {
+    return this.conversation.getGuest()
+  }
+
+  /**
    * Commit a turn generated elsewhere (prerender). Pass the prerendered `engineUser` /
    * `engineResponse` so the stored engine history matches what the model actually saw.
    */
@@ -870,6 +884,17 @@ export class GroupChatManager {
     onSentence?: (sentence: string) => void,
     options: { maxTokens?: number; seed?: number; hiddenInstruction?: string; sampling?: ChatSamplingOverrides } = {},
   ): Promise<{ agentId: string; response: string }> {
+    const guest = this.conversation.getGuest()
+    if (guest && guest.id === agentId) {
+      // The sixth speaker: take the floor without moving the five-agent rotation.
+      this.conversation.setGuestSpeaking(true)
+      try {
+        return await this.chat(prompt, onSentence, options)
+      } finally {
+        this.conversation.setGuestSpeaking(false)
+      }
+    }
+
     const originalIndex = this.conversation.getAgentIndex()
     const agentIndex = this.conversation.getAgents().findIndex((a) => a.id === agentId)
     if (agentIndex === -1) {

@@ -25,6 +25,12 @@ export interface Message {
    * the request extends the previous one and the KV cache is reused (#400 B).
    */
   engineContent?: string
+  /**
+   * Set only on assistant lines spoken by the temporary guest (a sixth speaker outside the
+   * five-agent rotation). Episode export reads it so a guest line is not attributed by rotation
+   * order; every other message is attributed exactly as before.
+   */
+  guestId?: string
 }
 
 export type ErrorCategory =

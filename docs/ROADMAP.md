@@ -402,14 +402,18 @@ Pre-built setups with structure:
 - [x] Episode export: additive `sceneState.production` snapshot (`PRODUCTION_SCHEMA_VERSION`)
 - [x] Users: improv, roast, talk show; optional relationship / secret-goal inputs on the improv panel
 - [x] Character memory system for callbacks (`ComedySession` / `CallbackEngine`)
-- [ ] Status games and power dynamics
+- [x] Status games and power dynamics — `AgentStatus` (`high | peer | low`, optional target, public or subtext);
+  the target reads the mirror image, all through the same compiler
 - [ ] Party-mode votes (#307) — should mutate the production card, not add a parallel prompt path
 
 **Phase 3 - Advanced Features (5-8 weeks):**
-- [ ] Guest NPC as a true sixth speaker (own persona/voice rather than borrowing an agent)
-- [ ] Genre shift mechanism
-- [ ] Emotional arc tracking
-- [ ] Audience voting system
+- [x] Guest NPC as a true sixth speaker — a card `persona` + one of the four Supertonic styles seats a
+  transient stage actor and speaker only while the guest is on stage; costume guests (`voiceAgentId`) still work
+- [x] Genre shift mechanism — one card field (`genre` + `atTurn`), one `act_break` cue when it flips,
+  scene-arc memory untouched; `ModeContext.production.setGenreShift` is the hook a `#307` vote should call
+- [x] Emotional arc tracking — per-agent start / mid / end labels keyed off the scene act (a lookup, no judge);
+  labels the actors understand also ride `onReactToText`
+- [ ] Audience voting system (`#307`: votes should write the card fields above)
 
 ---
 

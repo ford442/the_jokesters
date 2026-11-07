@@ -19,7 +19,9 @@ import {
   type JokestersEpisode,
 } from '../episode'
 import { getSharedSfxManager } from '../audio/SfxManager'
+import { setVoiceOverride } from '../audio/voiceMap'
 import type { Director } from '../Director/Director'
+import { GUEST_AGENT_ID, guestVoiceStyle, isGuestSpeaker, parseProductionSnapshot } from '../Director/productionCard'
 
 export interface EpisodeUiDeps {
   agents: Agent[]
@@ -193,12 +195,29 @@ export function wireEpisodeUi(deps: EpisodeUiDeps): void {
     setReplayUi(true)
     showEpisodeExportBar(episode)
 
-    activeReplay = replayEpisode(episode, {
+    // A persona guest was a sixth speaker: give them their recorded voice, and a seat on their
+    // first line. Both are undone when the replay ends, like the live scene.
+    const guestNpc = parseProductionSnapshot(episode.sceneState?.production)?.guestNpc
+    const guestMeta = episode.agents.find((a) => a.id === GUEST_AGENT_ID)
+    const replayGuest = guestNpc && isGuestSpeaker(guestNpc) && guestMeta ? { npc: guestNpc, meta: guestMeta } : null
+    if (replayGuest) setVoiceOverride(GUEST_AGENT_ID, guestVoiceStyle(replayGuest.npc))
+    let thisReplay: EpisodeReplayHandle | null = null
+    const releaseReplayGuest = () => {
+      // A replay that was restarted ends late; it must not strip the new replay's guest.
+      if (!replayGuest || thisReplay !== activeReplay) return
+      stage.removeGuestActor(GUEST_AGENT_ID)
+      setVoiceOverride(GUEST_AGENT_ID, null)
+    }
+
+    activeReplay = thisReplay = replayEpisode(episode, {
       onMessage: (sender, message, color) => chatLog.addMessage(sender, message, color),
       onSpeak: async (text, agentId, options) => {
         await speakAndVisualize(text, agentId, options)
       },
       onTurnStart: (agentId) => {
+        if (replayGuest && agentId === GUEST_AGENT_ID && !stage.hasActor(GUEST_AGENT_ID)) {
+          stage.addGuestActor(GUEST_AGENT_ID, replayGuest.meta.name, replayGuest.meta.color ?? '#d8a7ff')
+        }
         stage.setActiveActor(agentId === 'user' ? agents[0]?.id ?? agentId : agentId)
       },
       onThinking: (agentId, thinking) => {
@@ -216,10 +235,12 @@ export function wireEpisodeUi(deps: EpisodeUiDeps): void {
         return el ? parseInt(el.value || '10', 10) : 10
       },
       onComplete: () => {
+        releaseReplayGuest()
         activeReplay = null
         setReplayUi(false)
       },
       onStop: () => {
+        releaseReplayGuest()
         activeReplay = null
         setReplayUi(false)
       },

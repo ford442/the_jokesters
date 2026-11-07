@@ -328,8 +328,38 @@ export function getAppTemplate(): string {
                 <label title="Unchecked = subtext only, never stated on stage"><input type="checkbox" id="prod-rel-public" checked /> public</label>
               </div>
               <div class="production-card-row">
+                <select id="prod-status-agent" aria-label="Status: agent"></select>
+                <select id="prod-status-level" aria-label="Status level">
+                  <option value="">status…</option>
+                  <option value="high">high</option>
+                  <option value="peer">peer</option>
+                  <option value="low">low</option>
+                </select>
+                <span>to</span>
+                <select id="prod-status-target" aria-label="Status relative to (optional)"></select>
+                <label title="Unchecked = subtext only, never stated on stage"><input type="checkbox" id="prod-status-public" checked /> public</label>
+              </div>
+              <div class="production-card-row">
+                <select id="prod-arc-agent" aria-label="Emotional arc: agent"></select>
+                <input type="text" id="prod-arc-labels" placeholder="feels… (angry → confused → pleased)" autocomplete="off" aria-label="Emotional arc: start, middle and end feelings" title="Start → middle → end, keyed to the opening, middle and closing act" />
+              </div>
+              <div class="production-card-row">
                 <select id="prod-secret-agent" aria-label="Secret objective: agent"></select>
                 <input type="text" id="prod-secret-goal" placeholder="secret goal (e.g. steer to pickles)" autocomplete="off" aria-label="Secret goal" />
+              </div>
+              <div class="production-card-row">
+                <input type="text" id="prod-guest-name" placeholder="guest name (e.g. Grandma)" autocomplete="off" aria-label="Guest name" />
+                <input type="text" id="prod-guest-persona" placeholder="guest persona (e.g. a nosy grandmother)" autocomplete="off" aria-label="Guest persona" />
+                <select id="prod-guest-voice" aria-label="Guest voice style">
+                  <option value="F2" selected>voice F2</option>
+                  <option value="F1">voice F1</option>
+                  <option value="M1">voice M1</option>
+                  <option value="M2">voice M2</option>
+                </select>
+              </div>
+              <div class="production-card-row">
+                <label>guest enters after turn <input type="number" id="prod-guest-enter" min="0" max="99" value="2" aria-label="Guest enters after turn" /></label>
+                <label>exits after turn <input type="number" id="prod-guest-exit" min="1" max="99" placeholder="stays" aria-label="Guest exits after turn (optional)" /></label>
               </div>
             </details>
             <div class="improv-buttons">

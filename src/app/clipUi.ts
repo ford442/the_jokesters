@@ -45,7 +45,7 @@ export function wireClipUi(deps: ClipUiDeps): void {
       onUtteranceEnd: (cb) => speechQueue.onUtteranceEnd(cb),
     },
     resolveSpeaker: (id) => {
-      const a = agents.find((x) => x.id === id)
+      const a = agents.find((x) => x.id === id) ?? stage.getGuestInfo(id)
       return { name: a?.name ?? id, color: a?.color ?? '#ffffff' }
     },
   })

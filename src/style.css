@@ -1064,6 +1064,9 @@ input:focus, textarea:focus {
   flex: 1 1 140px;
   min-width: 0;
 }
+.production-card-row input[type="number"] {
+  width: 4.5em;
+}
 
 /* Cast editor modal */
 .cast-overlay {
