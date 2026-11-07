@@ -147,6 +147,22 @@ function selectModel(modelId: string, engine?: EngineType): void {
   }
   updateModelHint(modelId)
   updateDownloadEstimate(modelId)
+  updateVramControlsVisibility(modelId)
+}
+
+function updateVramControlsVisibility(modelId: string) {
+  const slidingRow = document.getElementById('sliding-window-select')?.closest('.vram-setting-row') as HTMLElement | null
+  if (slidingRow) {
+    // Hide sliding window for Llama architecture models
+    const isLlama = modelId.toLowerCase().includes('llama') || modelId.toLowerCase().includes('vicuna') || modelId.toLowerCase().includes('hermes');
+    if (isLlama) {
+      slidingRow.style.display = 'none';
+      const slidingSelect = document.getElementById('sliding-window-select') as HTMLSelectElement | null;
+      if (slidingSelect) slidingSelect.value = '0';
+    } else {
+      slidingRow.style.display = '';
+    }
+  }
 }
 
 function applyVramConfigToUi(cfg: VRAMOptimizationConfig, maxTokens: number, context: number | 'auto'): void {

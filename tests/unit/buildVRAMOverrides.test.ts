@@ -27,7 +27,7 @@ describe('buildVRAMOverrides', () => {
     expect(overrides.prefill_chunk_size).toBe(512);
   });
 
-  it('enables sliding window when size > 0 and not custom low-ctx wasm', () => {
+  it('enables sliding window when size > 0 and enforces mutual exclusion on context window', () => {
     const config: VRAMOptimizationConfig = {
       ...DEFAULT_VRAM_CONFIG,
       sliding_window_size: 1024,
@@ -38,9 +38,10 @@ describe('buildVRAMOverrides', () => {
 
     expect(overrides.sliding_window_size).toBe(1024);
     expect(overrides.attention_sink_size).toBe(6);
+    expect(overrides.context_window_size).toBe(-1); // Enforced exclusion
   });
 
-  it('auto sliding window uses half the effective context', () => {
+  it('auto sliding window uses half the effective context and enforces mutual exclusion on context window', () => {
     const config: VRAMOptimizationConfig = {
       ...DEFAULT_VRAM_CONFIG,
       sliding_window_size: -1,
@@ -49,6 +50,7 @@ describe('buildVRAMOverrides', () => {
     const overrides = buildVRAMOverrides({}, 2048, config, 'Llama-2-7b-chat-MLC', null);
 
     expect(overrides.sliding_window_size).toBe(1024);
+    expect(overrides.context_window_size).toBe(-1); // Enforced exclusion
   });
 
   it('skips sliding window for custom low-ctx compiled wasm', () => {
