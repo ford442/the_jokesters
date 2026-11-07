@@ -27,7 +27,7 @@ describe('buildVRAMOverrides', () => {
     expect(overrides.prefill_chunk_size).toBe(512);
   });
 
-  it('enables sliding window when size > 0 and not custom low-ctx wasm', () => {
+  it('enables sliding window when size > 0 and enforces mutual exclusion on context window', () => {
     const config: VRAMOptimizationConfig = {
       ...DEFAULT_VRAM_CONFIG,
       sliding_window_size: 1024,
@@ -38,9 +38,10 @@ describe('buildVRAMOverrides', () => {
 
     expect(overrides.sliding_window_size).toBe(1024);
     expect(overrides.attention_sink_size).toBe(6);
+    expect(overrides.context_window_size).toBe(-1); // Enforced exclusion
   });
 
-  it('auto sliding window uses half the effective context', () => {
+  it('auto sliding window uses half the effective context and enforces mutual exclusion on context window', () => {
     const config: VRAMOptimizationConfig = {
       ...DEFAULT_VRAM_CONFIG,
       sliding_window_size: -1,
@@ -49,6 +50,7 @@ describe('buildVRAMOverrides', () => {
     const overrides = buildVRAMOverrides({}, 2048, config, 'Llama-2-7b-chat-MLC', null);
 
     expect(overrides.sliding_window_size).toBe(1024);
+    expect(overrides.context_window_size).toBe(-1); // Enforced exclusion
   });
 
   it('skips sliding window for custom low-ctx compiled wasm', () => {
@@ -67,35 +69,36 @@ describe('buildVRAMOverrides', () => {
 
     expect(overrides.sliding_window_size).toBeUndefined();
   });
-  it('does not apply KV cache quantization when mode is auto', () => {
+
+  it('applies KV cache quantization for 7B models when mode is auto', () => {
     const overrides = buildVRAMOverrides(
       {},
       4096,
-      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
+      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'auto' },
       'Llama-2-7b-chat-MLC',
       null,
     );
 
-    expect((overrides as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
+    expect(overrides.kv_cache_quantization).toBe('int8');
   });
 
-  it('respects that KV cache mode is removed', () => {
+  it('respects explicit KV cache mode and skips for 3B when auto', () => {
     const small = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
+      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'auto' },
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect((small as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
+    expect(small.kv_cache_quantization).toBeUndefined();
 
     const fp8 = buildVRAMOverrides(
       {},
       2048,
-      { ...DEFAULT_VRAM_CONFIG } as unknown as import('../../src/utils/vramOverrides').VRAMOptimizationConfig,
+      { ...DEFAULT_VRAM_CONFIG, kv_cache_quantization: 'fp8' },
       'Hermes-3-Llama-3.2-3B-MLC',
       null,
     );
-    expect((fp8 as Record<string, unknown>).kv_cache_quantization).toBeUndefined();
+    expect(fp8.kv_cache_quantization).toBe('fp8');
   });
 });

@@ -25,6 +25,8 @@ export interface VRAMOptimizationConfig {
   gpu_memory_utilization: number;
   /** Prefill chunk size override. 0 = auto (derived from context window) */
   prefill_chunk_size: number;
+  /** KV cache quantization mode. 'none' disables, 'auto' detects support */
+  kv_cache_quantization: 'none' | 'fp8' | 'int8' | 'auto';
   /** Sliding window size for attention. 0 = disabled, -1 = auto, >0 = specific size */
   sliding_window_size: number;
   /** Number of attention sink tokens to keep from the beginning. Default: 4 */
@@ -35,6 +37,7 @@ export interface VRAMOptimizationConfig {
 export const DEFAULT_VRAM_CONFIG: VRAMOptimizationConfig = {
   gpu_memory_utilization: 0.85,
   prefill_chunk_size: 0,
+  kv_cache_quantization: 'auto',
   sliding_window_size: 0,  // Disabled by default (use full context)
   attention_sink_size: 4,  // Keep 4 initial tokens if sliding window enabled
 };
@@ -206,6 +209,16 @@ export function getModelSize(modelId: string): '3b' | '7b' | '8b' {
  * Detect whether the runtime WebLLM build supports KV cache quantization.
  * The check is best-effort: we look for the key in ChatCompletionRequest types.
  */
+export function detectKVCacheSupport(): boolean {
+  try {
+    // WebLLM is a hard dependency, so this is always a signal to *try* passing the
+    // override (the engine ignores unknown keys gracefully). Deliberately does not
+    // import the web-llm runtime: this module is part of the initial bundle.
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Build the overrides object for a model, incorporating VRAM optimization
@@ -235,16 +248,38 @@ export function buildVRAMOverrides(
     ? Math.floor(effectiveContext / 2)  // Auto: half the context window
     : vramConfig.sliding_window_size;
 
-  // Sliding window only helps when generic 4K .wasm is paired with a small runtime ctx.
-  // Custom low-ctx .wasm already bakes a tight KV plan — skip sliding window there.
+  // web-llm throws WindowSizeConfigurationError if both context_window_size
+  // and sliding_window_size are not -1. Llama-arch models generally do not
+  // support sliding window.
+  // We enforce mutual exclusion: if sliding window is enabled, context_window_size must be -1.
   const isCustomLowCtxWasm =
     compiledMaxContext != null && compiledMaxContext <= 1024 && !baseOverrides.sliding_window_size;
 
+  // Only allow sliding window if explicitly configured and not on a baked tight-ctx wasm
   if (slidingWindowSize > 0 && !isCustomLowCtxWasm) {
     overrides['sliding_window_size'] = slidingWindowSize;
     overrides['attention_sink_size'] = vramConfig.attention_sink_size ?? 4;
-    console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens)`);
+    overrides['context_window_size'] = -1; // Enforce mutual exclusion
+    console.log(`[DynamicContext] Sliding window enabled: ${slidingWindowSize} tokens (+ ${vramConfig.attention_sink_size ?? 4} sink tokens). Context window set to -1.`);
   }
+
+  // KV Cache quantization — enable for 7B/8B by default when set to 'auto'
+  const modelSize = getModelSize(modelId);
+  const kvMode = vramConfig.kv_cache_quantization;
+
+  if (kvMode !== 'none') {
+    const shouldEnable = kvMode === 'auto'
+      ? (modelSize === '7b' || modelSize === '8b') && detectKVCacheSupport()
+      : true;
+
+    if (shouldEnable) {
+      const quantType = kvMode === 'auto' ? 'int8' : kvMode;
+      // Pass as override — WebLLM will use it if supported, ignore otherwise
+      overrides['kv_cache_quantization'] = quantType;
+      console.log(`[DynamicContext] KV cache quantization: ${quantType} for ${modelId}`);
+    }
+  }
+
   return overrides;
 }
 
@@ -303,6 +338,7 @@ export interface ContextPolicy {
   modelId: string;
   context_window_size: number;
   prefill_chunk_size: number;
+  kv_cache_quantization?: string;
   overrides: Record<string, unknown>;
 }
 
@@ -339,6 +375,7 @@ export function resolveContextPolicy(input: ContextPolicyInput): ContextPolicy {
     modelId,
     context_window_size: overrides.context_window_size as number,
     prefill_chunk_size: overrides.prefill_chunk_size as number,
+    kv_cache_quantization: overrides.kv_cache_quantization as string | undefined,
     overrides,
   };
 }

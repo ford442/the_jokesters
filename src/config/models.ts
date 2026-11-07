@@ -83,11 +83,8 @@ export const VPS_FP32_MODELS = {
    * ford442's Custom Vicuna-7B — ULTRA-LOW VRAM preset
    * - Same weights as VPS_VICUNA_7B_Q4F32, but aggressive context reduction
    * - context_window_size: 512  (cuts KV cache to ~1/8 of 4K default)
-   * - sliding_window_size: 256  (Mistral-style rolling attention)
-   * - attention_sink_size: 4    (keep first 4 tokens as anchors)
    * - VRAM: ~3.5GB (down from ~4GB)
    * - Ideal for GPUs with 4GB or less VRAM
-   * - See docs/VRAM_OPTIMIZATION_IMPLEMENTATION.md §1.1
    */
   VPS_VICUNA_7B_ULTRA_LOW: {
     model_id: "vicuna-7b-q4f32-webllm-ultra-low",
@@ -96,8 +93,6 @@ export const VPS_FP32_MODELS = {
     overrides: {
       context_window_size: 512,
       prefill_chunk_size: 512,
-      sliding_window_size: 256,
-      attention_sink_size: 4,
       tokenizer_files: ["tokenizer.model", "tokenizer_config.json"],
     },
     vram_required_MB: 3500,

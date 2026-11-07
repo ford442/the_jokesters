@@ -87,6 +87,15 @@ export function getAppTemplate(): string {
                 </select>
               </div>
               <div class="vram-setting-row">
+                <label>KV Cache Quantization</label>
+                <select id="kv-cache-select">
+                  <option value="auto" selected>Auto (enable for 7B/8B)</option>
+                  <option value="int8">INT8</option>
+                  <option value="fp8">FP8</option>
+                  <option value="none">Disabled</option>
+                </select>
+              </div>
+              <div class="vram-setting-row">
                 <label>Sliding Window Attention</label>
                 <select id="sliding-window-select">
                   <option value="0" selected>Disabled (use full context)</option>
@@ -239,6 +248,7 @@ export function getAppTemplate(): string {
             <span id="memory-depth-text">Depth: —</span>
             <span id="ctx-info-text">Context: —</span>
             <span id="token-budget-text">Max tokens: 96</span>
+            <span id="vram-kv-text"></span>
             <span id="prerender-hud-text" title="Prerender queue · inter-turn gap · time-to-first-audio">Prerender: —</span>
           </div>
 

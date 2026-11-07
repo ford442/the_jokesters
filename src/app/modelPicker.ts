@@ -147,10 +147,27 @@ function selectModel(modelId: string, engine?: EngineType): void {
   }
   updateModelHint(modelId)
   updateDownloadEstimate(modelId)
+  updateVramControlsVisibility(modelId)
+}
+
+function updateVramControlsVisibility(modelId: string) {
+  const slidingRow = document.getElementById('sliding-window-select')?.closest('.vram-setting-row') as HTMLElement | null
+  if (slidingRow) {
+    // Hide sliding window for Llama architecture models
+    const isLlama = modelId.toLowerCase().includes('llama') || modelId.toLowerCase().includes('vicuna') || modelId.toLowerCase().includes('hermes');
+    if (isLlama) {
+      slidingRow.style.display = 'none';
+      const slidingSelect = document.getElementById('sliding-window-select') as HTMLSelectElement | null;
+      if (slidingSelect) slidingSelect.value = '0';
+    } else {
+      slidingRow.style.display = '';
+    }
+  }
 }
 
 function applyVramConfigToUi(cfg: VRAMOptimizationConfig, maxTokens: number, context: number | 'auto'): void {
   const prefill = document.getElementById('prefill-chunk-select') as HTMLSelectElement | null
+  const kv = document.getElementById('kv-cache-select') as HTMLSelectElement | null
   const sliding = document.getElementById('sliding-window-select') as HTMLSelectElement | null
   const sink = document.getElementById('attention-sink-slider') as HTMLInputElement | null
   const sinkVal = document.getElementById('attention-sink-val')
@@ -161,6 +178,7 @@ function applyVramConfigToUi(cfg: VRAMOptimizationConfig, maxTokens: number, con
   const ctx = document.getElementById('context-size-select') as HTMLSelectElement | null
 
   if (prefill) prefill.value = String(cfg.prefill_chunk_size)
+  if (kv) kv.value = cfg.kv_cache_quantization
   if (sliding) sliding.value = String(cfg.sliding_window_size)
   if (sink) {
     sink.value = String(cfg.attention_sink_size)
@@ -416,6 +434,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
         const enginePreference = (engineSelect?.value as EngineType) || 'auto'
 
         const prefillSelect = document.getElementById('prefill-chunk-select') as HTMLSelectElement
+        const kvCacheSelect = document.getElementById('kv-cache-select') as HTMLSelectElement
         const slidingWindowSelect = document.getElementById('sliding-window-select') as HTMLSelectElement
         const attentionSinkSliderEl = document.getElementById('attention-sink-slider') as HTMLInputElement
         const gpuMemSliderEl = document.getElementById('gpu-mem-slider') as HTMLInputElement
@@ -423,6 +442,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
 
         const vramConfig: VRAMOptimizationConfig = {
           prefill_chunk_size: parseInt(prefillSelect?.value ?? '0', 10),
+          kv_cache_quantization: (kvCacheSelect?.value ?? 'auto') as VRAMOptimizationConfig['kv_cache_quantization'],
           sliding_window_size: parseInt(slidingWindowSelect?.value ?? '0', 10),
           attention_sink_size: parseInt(attentionSinkSliderEl?.value ?? '4', 10),
           gpu_memory_utilization: parseInt(gpuMemSliderEl?.value ?? '85', 10) / 100,

@@ -14,6 +14,7 @@ Applied at `CreateMLCEngine` via `appConfig.model_list[].overrides` and `chatOpt
 | `prefill_chunk_size` | Prefill batch size (≤ context, power-of-two friendly) |
 | `sliding_window_size` | Rolling attention window (generic 4K .wasm only) |
 | `attention_sink_size` | Tokens pinned at sequence start when sliding |
+| `kv_cache_quantization` | int8/fp8 KV when runtime supports it |
 
 **OOM retry:** halves context down to 128 (3B) or 256 (7B/8B), then forces int8 KV cache.
 
