@@ -20,13 +20,17 @@ export interface CameraPose {
   fov: number
 }
 
-/** Home X of each capsule. Matches `Stage.initActors`. */
+/** Home X of the temporary sixth speaker: stage right, beyond the robot. */
+export const GUEST_STAGE_X = 4.8
+
+/** Home X of each capsule. Matches `Stage.initActors` (+ the guest's seat when one is on stage). */
 export const ACTOR_STAGE_X: Readonly<Record<string, number>> = {
   comedian: -3.2,
   philosopher: -1.6,
   scientist: 0,
   techBro: 1.6,
   robot: 3.2,
+  guest: GUEST_STAGE_X,
 }
 
 const WHIP_DURATION_SEC = 0.42

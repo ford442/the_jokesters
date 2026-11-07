@@ -33,7 +33,7 @@ src/
   config/blessedPresets.ts  Curated 5-model launch list
   app/modelGuide.ts         Guided onboarding recommendations
   Director/Director.ts      Scene orchestrator (100+ modes via registry)
-  Director/productionCard.ts  Episode beats / relationships / secrets → productionPrompt.ts hiddenInstruction
+  Director/productionCard.ts  Episode beats / relationships / status / emotional arc / genre shift / secrets / guest → productionPrompt.ts hiddenInstruction
   comedy/comedySamplingPlan.ts  Per-turn sampling tweaks from act + callback heat
   audio/voiceMap.ts         Canonical agent → voice style map
   prerender/                Adaptive LLM+TTS prerender coordinator

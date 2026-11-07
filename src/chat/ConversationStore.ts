@@ -45,6 +45,12 @@ export class ConversationStore {
   private lastContextInfo: ContextWindowInfo | null = null
   /** First history index in the engine window (writers' room layout, block-trimmed). */
   private windowStart = 0
+  /**
+   * Temporary sixth speaker (a persona guest). Never part of `agents`, so the rotation, the
+   * shared writers'-room cast prompt and `getAgents()` stay five-agent for the whole scene.
+   */
+  private guest: Agent | null = null
+  private guestSpeaking = false
 
   constructor(private readonly agents: Agent[]) {}
 
@@ -62,6 +68,8 @@ export class ConversationStore {
     this.history = []
     this.agentIndex = 0
     this.windowStart = 0
+    this.guest = null
+    this.guestSpeaking = false
   }
 
   appendUser(content: string, engineContent?: string): void {
@@ -72,12 +80,13 @@ export class ConversationStore {
     )
   }
 
-  appendAssistant(content: string, engineContent?: string): void {
-    this.history.push(
+  appendAssistant(content: string, engineContent?: string, guestId?: string): void {
+    const message: Message =
       engineContent && engineContent !== content
         ? { id: newMessageId(), role: 'assistant', content, engineContent }
-        : { id: newMessageId(), role: 'assistant', content },
-    )
+        : { id: newMessageId(), role: 'assistant', content }
+    if (guestId) message.guestId = guestId
+    this.history.push(message)
   }
 
   /** Record the exact (cued) prompt the engine saw for the newest user message. */
@@ -166,7 +175,7 @@ export class ConversationStore {
   // --- Agent rotation ---
 
   getCurrentAgent(): Agent {
-    return this.agents[this.agentIndex]
+    return this.guestSpeaking && this.guest ? this.guest : this.agents[this.agentIndex]
   }
 
   getNextAgent(): Agent {
@@ -184,7 +193,30 @@ export class ConversationStore {
   }
 
   advanceAgent(): void {
+    // The guest speaks "between" regulars: their turn must not consume a regular's slot.
+    if (this.guestSpeaking) return
     this.agentIndex = (this.agentIndex + 1) % this.agents.length
+  }
+
+  // --- Guest (sixth speaker) ---
+
+  /** Seat (or clear, with null) the temporary guest. Does not alter the rotation. */
+  setGuest(agent: Agent | null): void {
+    this.guest = agent
+    this.guestSpeaking = false
+  }
+
+  getGuest(): Agent | null {
+    return this.guest
+  }
+
+  /** While true, the guest is the current speaker and the rotation index is frozen. */
+  setGuestSpeaking(speaking: boolean): void {
+    this.guestSpeaking = speaking && !!this.guest
+  }
+
+  isGuestSpeaking(): boolean {
+    return this.guestSpeaking
   }
 
   getAgents(): Agent[] {

@@ -22,17 +22,43 @@ import {
 import type { SceneArcState } from './sceneArc';
 import { isVicunaModel } from '../chat/speakableText';
 import {
+    arcEmotionTag,
+    consumeGenreFlip,
     createProductionCard,
+    guestVoiceStyle,
+    isGuestSpeaker,
+    isGuestTurn,
     recordProductionTurn,
+    setGenreShift,
     setProductionTurnBudget,
     withDefaultRelationships,
     snapshotProductionCard,
 } from './productionCard';
 import type { AgentRelationship, ProductionCard, ProductionCardInput } from './productionCard';
-import { compileProductionInstruction, BEAT_LABELS } from './productionPrompt';
+import { compileProductionInstruction, buildGuestAgent, BEAT_LABELS } from './productionPrompt';
+import { extractDirectorTags } from '../visuals/actorAnimations';
+import type { SupertonicStyleId } from '../audio/voiceMap';
+import type { Agent } from '../types/chat';
 import { resolveScenarioStageKit, type StageKitId } from '../visuals/stageKitIds';
 import { takePropCues } from '../visuals/propTokens';
 import type { PropAction } from '../visuals/propCatalog';
+
+/** What the stage needs to seat the temporary sixth speaker. */
+export interface GuestStageInfo {
+    id: string;
+    name: string;
+    color: string;
+    voiceStyle: SupertonicStyleId;
+}
+
+/**
+ * A line's reaction text: the arc's `[clip]` tag first so it beats keyword guesses, unless the
+ * line carries its own explicit director tag (the more specific signal wins).
+ */
+function withArcEmotion(text: string, arcTag: string | null): string {
+    if (!arcTag || extractDirectorTags(text).clips.length > 0) return text;
+    return `${arcTag} ${text}`;
+}
 
 export interface DirectorCallbacks {
     onMessage: (sender: string, message: string, color: string) => void;
@@ -48,6 +74,10 @@ export interface DirectorCallbacks {
     onMusicControl?: (action: 'start' | 'stop', bpm?: number) => void;
     /** Show music stinger at a structural beat: cold open, act break, tag (see src/audio/showCues.ts). */
     onShowCue?: (cue: ShowCue) => void;
+    /** A persona guest (sixth speaker) walked on: add their actor and voice. Not called for costume guests. */
+    onGuestEnter?: (guest: GuestStageInfo) => void;
+    /** The persona guest left (or the scene ended): drop their actor and voice. */
+    onGuestExit?: (guestId: string) => void;
     /** Avatar thinking pose while LLM generates */
     onThinking?: (agentId: string, thinking: boolean) => void;
     /** Map utterance text to avatar reaction clips */
@@ -247,6 +277,13 @@ export class Director {
     private sceneArc: SceneArcState | null = null;
     /** Dramatic layer (episode beat, relationships, secrets, guest) — see src/Director/productionCard.ts. */
     private productionCard: ProductionCard | null = null;
+    /** Persona guest currently on stage (sixth speaker). Never part of the five-agent rotation. */
+    private guestAgent: Agent | null = null;
+    /** Persona guest that appeared this scene, kept after exit so the episode roster can name them. */
+    private guestRoster: Agent | null = null;
+    /** True while `processTurn` is generating / playing a line (the guest's exit waits for it). */
+    private turnInFlight = false;
+    private guestExitPending = false;
     /** Registered by whichever controller owns the prerender queue (see setPrerenderInvalidator). */
     private prerenderInvalidator: (() => void) | null = null;
     /** Registered by the episode export UI (see setEpisodeReadyHandler). */
@@ -344,8 +381,15 @@ export class Director {
                 this.onProductionBeatChanged();
                 cued = true;
             } else if (this.productionCard.beat === 'tag') this.forceArcClose();
-            if (result.guestEntered && this.productionCard.guestNpc) {
-                this.callbacks.onMessage('Director', `🚪 Guest enters: ${this.productionCard.guestNpc.name}`, '#888');
+            if (result.guestEntered) this.onGuestEntered();
+            if (result.guestExited) this.onGuestExited();
+            if (result.genreFlipped) {
+                this.announceGenreShift();
+                // One sting per flip: a cold open / tag cue already fired this turn owns the moment.
+                if (!cued) {
+                    this.callbacks.onShowCue?.('act_break');
+                    cued = true;
+                }
             }
             for (const id of result.secretsAchieved) {
                 // Deliberately never names the goal — the objective stays secret.
@@ -359,7 +403,62 @@ export class Director {
     }
 
     private agentName(agentId: string): string {
+        if (this.guestAgent?.id === agentId) return this.guestAgent.name;
         return this.manager.getAgents().find((a) => a.id === agentId)?.name ?? agentId;
+    }
+
+    private announceGenreShift(): void {
+        const genre = this.productionCard?.genreShift?.genre;
+        if (!genre) return;
+        this.callbacks.onMessage('Director', `🎞️ GENRE SHIFT: ${genre}`, '#888');
+        this.callbacks.onTicker?.(`🎞️ ${genre}`);
+    }
+
+    /** The guest walked on. Persona guests get a real seat (manager + stage actor); costumes just announce. */
+    private onGuestEntered(): void {
+        const guest = this.productionCard?.guestNpc;
+        if (!guest) return;
+        this.callbacks.onMessage('Director', `🚪 Guest enters: ${guest.name}`, '#888');
+        if (!isGuestSpeaker(guest)) return;
+        const agent = buildGuestAgent(guest);
+        this.guestAgent = agent;
+        this.guestRoster = agent;
+        this.manager.setGuestAgent(agent);
+        this.callbacks.onGuestEnter?.({ id: agent.id, name: agent.name, color: agent.color, voiceStyle: guestVoiceStyle(guest) });
+    }
+
+    /**
+     * The guest is due to leave. Inside `processTurn` the beat is recorded *before* the line has
+     * finished playing, so the walk-off waits for `flushGuestExit` — otherwise the actor would
+     * vanish (and the mouth stop) mid-sentence when the exit lands on the guest's own turn.
+     */
+    private onGuestExited(): void {
+        if (this.turnInFlight) {
+            this.guestExitPending = true;
+            return;
+        }
+        this.completeGuestExit();
+    }
+
+    private flushGuestExit(): void {
+        if (!this.guestExitPending) return;
+        this.guestExitPending = false;
+        this.completeGuestExit();
+    }
+
+    private completeGuestExit(): void {
+        const guest = this.productionCard?.guestNpc;
+        if (guest) this.callbacks.onMessage('Director', `🚪 Guest exits: ${guest.name}`, '#888');
+        this.dropGuest();
+    }
+
+    /** Remove the persona guest from the manager and the stage. Idempotent. */
+    private dropGuest(): void {
+        if (!this.guestAgent) return;
+        const id = this.guestAgent.id;
+        this.guestAgent = null;
+        this.manager.setGuestAgent(null);
+        this.callbacks.onGuestExit?.(id);
     }
 
     /** Tag beat rides the arc's close-act path so the button carries a callback. */
@@ -395,6 +494,20 @@ export class Director {
         }
     }
 
+    /**
+     * Set the scene's genre shift (mode hook; a later `#307` vote writes the same card field).
+     * Only the card changes — scene-arc memory (beats, running gags, act) is left exactly as is.
+     * If the shift is already due, it fires immediately; otherwise on the turn it begins.
+     */
+    private setSceneGenreShift(genre: string, atTurn: number): void {
+        if (!this.productionCard) return;
+        const { card, flipped } = consumeGenreFlip(setGenreShift(this.productionCard, genre, atTurn));
+        this.productionCard = card;
+        if (!flipped) return;
+        this.announceGenreShift();
+        if (card.beat !== 'tag') this.callbacks.onShowCue?.('act_break');
+    }
+
     /** Compiled per-agent production hiddenInstruction (single compiler: productionPrompt.ts). */
     private getProductionInstruction(agentId: string): string | undefined {
         if (!this.productionCard) return undefined;
@@ -402,6 +515,7 @@ export class Director {
         return compileProductionInstruction(this.productionCard, agentId, {
             nameOf: (id) => this.agentName(id),
             closeActInstruction: closeAct,
+            act: this.sceneArc?.act ?? null,
         });
     }
 
@@ -431,6 +545,8 @@ export class Director {
             getArcPromptInjection: () => (this.sceneArc ? buildArcPromptInjection(this.sceneArc) : null),
             getSceneAct: () => this.sceneArc?.act ?? null,
             getProductionInstruction: (agentId: string) => this.getProductionInstruction(agentId),
+            getArcEmotionTag: (agentId: string) =>
+                (this.productionCard ? arcEmotionTag(this.productionCard, agentId, this.sceneArc?.act) : null),
             production: {
                 getBeat: () => this.productionCard?.beat ?? null,
                 setTurnBudget: (turns: number | null) => this.setSceneTurnBudget(turns),
@@ -439,6 +555,7 @@ export class Director {
                         this.productionCard = withDefaultRelationships(this.productionCard, defaults);
                     }
                 },
+                setGenreShift: (genre: string, atTurn: number) => this.setSceneGenreShift(genre, atTurn),
             },
         };
     }
@@ -470,6 +587,9 @@ export class Director {
         this.isRunning = true;
         this.interruptQueue = [];
         this.manager.resetConversation();
+        this.guestAgent = null;
+        this.guestRoster = null;
+        this.guestExitPending = false;
 
         this.callbacks.onMessage('System', `🎬 Starting ${scenario.type} scene: "${scenario.title}"`, '#4ecdc4');
         this.callbacks.onMessage('System', scenario.description, '#4ecdc4');
@@ -490,6 +610,7 @@ export class Director {
         this.sceneArc = createSceneArc(scenario.title || scenario.description || scenario.type, turnBudget);
         this.productionCard = createProductionCard(turnBudget, scenario.config?.production);
         if (this.productionCard.beat === 'cold_open') this.onProductionBeatChanged();
+        if (this.productionCard.guestEntered) this.onGuestEntered();
 
         try {
             const modeLoop = await loadModeLoop(scenario.type);
@@ -556,7 +677,10 @@ export class Director {
                     });
 
                     // Portable transcript for export / Director's Cut replay
-                    const agents = this.manager.getAgents();
+                    // The guest is not in the manager's roster; name them if they spoke so replay can too.
+                    const agents = this.guestRoster && history.some((m) => m.guestId)
+                        ? [...this.manager.getAgents(), this.guestRoster]
+                        : this.manager.getAgents();
                     const episode = buildEpisodeFromHistory({
                         history,
                         agents,
@@ -591,6 +715,11 @@ export class Director {
                     console.error('Failed to auto-save episode:', e);
                 }
             }
+
+            // Persona guest and their stage actor do not outlive the scene.
+            this.guestExitPending = false;
+            this.dropGuest();
+            this.guestRoster = null;
 
             this.callbacks.onStageKit?.('void');
             this.callbacks.onSceneStop();
@@ -688,7 +817,12 @@ export class Director {
         if (!this.manager || !this.isRunning) return;
 
         try {
-            const currentAgent = this.manager.getCurrentAgent();
+            // A persona guest takes the floor on their entrance and every Nth turn after; the
+            // five-agent rotation does not advance for those turns.
+            this.turnInFlight = true;
+            const guestTurn = !!this.guestAgent && !!this.productionCard && isGuestTurn(this.productionCard);
+            const currentAgent = guestTurn && this.guestAgent ? this.guestAgent : this.manager.getCurrentAgent();
+            const arcTag = this.productionCard ? arcEmotionTag(this.productionCard, currentAgent.id, this.sceneArc?.act) : null;
 
             await this.callbacks.onTurnStart(currentAgent.id);
             this.callbacks.onThinking?.(currentAgent.id, true);
@@ -755,12 +889,12 @@ export class Director {
 
             let responseText = '';
             let reacted = false;
-            await this.manager.chat(effectivePrompt, async (sentence) => {
+            const onSentence = async (sentence: string) => {
                 if (responseText.length === 0) {
                     this.callbacks.onThinking?.(currentAgent.id, false);
                 }
                 if (!reacted) {
-                    this.callbacks.onReactToText?.(currentAgent.id, sentence);
+                    this.callbacks.onReactToText?.(currentAgent.id, withArcEmotion(sentence, arcTag));
                     reacted = true;
                 }
                 responseText += `${sentence} `;
@@ -769,15 +903,21 @@ export class Director {
                     speed: characterSpeeds[currentAgent.id] || 1.0,
                     seed: turnSeed
                 });
-            }, {
+            };
+            const chatOptions = {
                 maxTokens: pacing.maxTokens,
                 seed: turnSeed,
                 hiddenInstruction: this.getProductionInstruction(currentAgent.id),
-            });
+            };
+            if (guestTurn) {
+                await this.manager.chatForAgent(currentAgent.id, effectivePrompt, onSentence, chatOptions);
+            } else {
+                await this.manager.chat(effectivePrompt, onSentence, chatOptions);
+            }
 
             this.callbacks.onThinking?.(currentAgent.id, false);
             if (!reacted && responseText.trim()) {
-                this.callbacks.onReactToText?.(currentAgent.id, responseText);
+                this.callbacks.onReactToText?.(currentAgent.id, withArcEmotion(responseText, arcTag));
             }
 
             if (this.comedySession && responseText.trim()) {
@@ -786,9 +926,12 @@ export class Director {
             this.recordSceneBeat(currentAgent.id, responseText.trim());
 
             await this.callbacks.onTurnEnd();
+            this.turnInFlight = false;
+            this.flushGuestExit();
 
         } catch (error) {
             console.error('Turn Error:', error);
+            this.turnInFlight = false;
             this.callbacks.onError(error);
             this.stopScene();
         }

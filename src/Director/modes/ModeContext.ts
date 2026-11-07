@@ -35,6 +35,12 @@ export interface ModeContext {
      * guest) — see src/Director/productionPrompt.ts. Optional so lightweight test contexts can omit it.
      */
     getProductionInstruction?: (agentId: string) => string | undefined;
+    /**
+     * `[clip]` tag for this agent's emotional-arc label in the current act (e.g. `[angry]`), or null
+     * when the card has no arc for them or the label has no clip the actors play. Optional so
+     * lightweight test contexts can omit it.
+     */
+    getArcEmotionTag?: (agentId: string) => string | null;
     /** Scene production card controls (episode beats etc.). Optional for lightweight test contexts. */
     production?: ProductionControls;
 }
@@ -46,6 +52,12 @@ export interface ProductionControls {
     setTurnBudget: (turns: number | null) => void;
     /** Seed mode-default relationships; ignored when the user already supplied some. */
     ensureRelationships: (defaults: AgentRelationship[]) => void;
+    /**
+     * Turn the scene into `genre` once `atTurn` turns have completed (replaces any earlier shift).
+     * Fires the `act_break` show cue once when it begins; scene-arc memory is left untouched.
+     * This is also the hook a later audience vote writes through.
+     */
+    setGenreShift: (genre: string, atTurn: number) => void;
 }
 
 export type ModeLoop = (scenario: Scenario, ctx: ModeContext) => Promise<void>;

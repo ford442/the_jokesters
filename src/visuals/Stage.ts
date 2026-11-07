@@ -9,6 +9,7 @@ import type { LipSync } from './LipSync';
 import type { RendererMode } from './rendererMode';
 import type { ReactionClip } from './actorAnimations';
 import {
+    GUEST_STAGE_X,
     createCameraDirectorState,
     stepCameraDirector,
     triggerWhip,
@@ -82,6 +83,8 @@ export class Stage {
     private renderingAsync = false; // guards against overlapping WebGPU frames
     private actors: Map<string, StageActor> = new Map();
     private actorKinds: Map<string, 'primitive' | 'vrm'> = new Map();
+    /** Display info for the guest who most recently stood on stage (kept after exit for captions). */
+    private guestInfo = new Map<string, { name: string; color: string }>();
     /** One mixer ticked once per frame for every VRM actor (authored clips); procedural pose layers on top. */
     private sharedMixer: THREE.AnimationMixer | null = null;
     private readonly mouthDriver = new MouthDriver();
@@ -343,6 +346,39 @@ export class Stage {
         this.actors.set(id, actor);
         this.actorKinds.set(id, kind);
         this.scene.add(actor.group);
+    }
+
+    /**
+     * Seat the temporary sixth speaker (a capsule at stage right). The five regulars are never
+     * replaced, and VRM cast loading only walks ACTOR_LAYOUT, so the guest is always a capsule.
+     */
+    public addGuestActor(id: string, name: string, color: string): void {
+        if (this.actors.has(id) || ACTOR_LAYOUT.some((a) => a.id === id)) return;
+        this.guestInfo.set(id, { name, color });
+        this.addActor(id, new Actor(id, color, GUEST_STAGE_X));
+    }
+
+    /** Send the guest off: drop their actor and release anything still pointing at it. */
+    public removeGuestActor(id: string): void {
+        if (ACTOR_LAYOUT.some((a) => a.id === id)) return;
+        const actor = this.actors.get(id);
+        if (!actor) return;
+        if (this.speakingActorId === id) this.endUtterance();
+        if (this.activeActorId === id) this.activeActorId = null;
+        if (this.previousActorId === id) this.previousActorId = null;
+        this.scene.remove(actor.group);
+        actor.dispose();
+        this.actors.delete(id);
+        this.actorKinds.delete(id);
+    }
+
+    /** Name/color of a guest who has stood on this stage (for clip captions), if any. */
+    public getGuestInfo(id: string): { name: string; color: string } | null {
+        return this.guestInfo.get(id) ?? null;
+    }
+
+    public hasActor(id: string): boolean {
+        return this.actors.has(id);
     }
 
     public setLipSync(lipSync: LipSync) {

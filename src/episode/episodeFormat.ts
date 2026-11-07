@@ -72,6 +72,9 @@ export function buildEpisodeFromHistory(options: {
 export function historyToTurns(history: Message[], agentIds: string[]): EpisodeTurn[] {
   const turns: EpisodeTurn[] = []
   let assistantIndex = 0
+  // A guest is on the roster so they can be named, but is never part of the rotation.
+  const guestIds = new Set(history.flatMap((m) => (m.guestId ? [m.guestId] : [])))
+  if (guestIds.size > 0) agentIds = agentIds.filter((id) => !guestIds.has(id))
   const baseTs = Date.now() - history.length * 2000
 
   for (let i = 0; i < history.length; i++) {
@@ -79,6 +82,11 @@ export function historyToTurns(history: Message[], agentIds: string[]): EpisodeT
     if (msg.role === 'assistant') {
       const text = (msg.content ?? '').trim()
       if (!text) continue
+      if (msg.guestId) {
+        // The guest speaks outside the rotation: attribute explicitly and leave the count alone.
+        turns.push({ agentId: msg.guestId, text, ts: baseTs + i * 2000 })
+        continue
+      }
       const agentId =
         agentIds.length > 0
           ? agentIds[assistantIndex % agentIds.length]

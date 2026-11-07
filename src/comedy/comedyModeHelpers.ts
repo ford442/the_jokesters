@@ -151,6 +151,7 @@ export async function chatForAgentWithComedy(
   const generate = async (generationPrompt: string): Promise<string> => {
     let text = '';
     let thinking = true;
+    let reacted = false;
     const stopThinking = () => {
       if (!thinking) return;
       thinking = false;
@@ -160,6 +161,13 @@ export async function chatForAgentWithComedy(
     try {
       await ctx.manager.chatForAgent(agentId, generationPrompt, async (sentence) => {
         stopThinking();
+        // Speak time: the line starts playing now, so the arc's emotion for this act shows now
+        // (Director.processTurn does the same on its first sentence).
+        if (!reacted) {
+          reacted = true;
+          const tag = ctx.getArcEmotionTag?.(agentId);
+          if (tag) ctx.callbacks.onReactToText?.(agentId, tag);
+        }
         text += `${sentence} `;
         await onSpeak(sentence);
       }, chatOptions);

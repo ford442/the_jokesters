@@ -98,7 +98,42 @@ modes reach it via `ModeContext.production` (`setTurnBudget`, `ensureRelationshi
   sent as `hiddenInstruction` (system prompt only) — never appended to the visible prompt/history, so
   subtext relationships and secrets stay out of the transcript and episode turns.
 - Exported as `sceneState.production` (`PRODUCTION_SCHEMA_VERSION`, additive like `sceneArc`);
-  `parseProductionSnapshot` validates it on import.
+  `parseProductionSnapshot` validates it on import. v2 adds statuses, arcs, genre shift and the guest
+  persona/voice/exit fields; v1 snapshots still load with those fields empty.
+
+### Status, emotional arc, genre shift
+
+All three compile into `hiddenInstruction` lines in `compileProductionInstruction`; none has a second prompt path.
+
+- **Status** (`statuses`): `high` is told to grant permission and interrupt, `low` to hedge and appeal,
+  `peer` to trade evenly. An optional target names who it is relative to; that agent reads the mirror
+  image unless they have their own entry. Public vs subtext reuses the relationship flag.
+- **Emotional arc** (`arcs`): `start` / `mid` / `end` map to the scene act `open` / `middle` / `close`
+  from `sceneArc.ts` — a lookup, never an LLM judge. When the label is a clip the actors already play
+  (`angry`, or a synonym such as `confused` → `think`), a `[clip]` tag goes through `onReactToText` on the
+  first spoken sentence; a tag the line carries itself wins.
+- **Genre shift** (`genreShift`: `genre` + `atTurn`): one adaptation line from that turn on, and one
+  `act_break` show cue when it flips (a cold-open / tag cue on the same turn wins; arc memory is never
+  reset). Modes call `ctx.production.setGenreShift(genre, atTurn)`; a future audience vote writes the same field.
+
+### Guest as a sixth speaker
+
+A `guestNpc` with a `persona` is a real speaker; without one it is the original costume (`voiceAgentId`
+lends voice and turns, unchanged). A persona guest has an optional Supertonic `voiceStyle`
+(M1/M2/F1/F2 — no new voice model) and `exitsAfterTurn`.
+
+- While on stage the guest takes the floor on their entrance and every third turn after
+  (`GUEST_TURN_INTERVAL`) in `Director.processTurn`, via `GroupChatManager.chatForAgent('guest')`. The
+  guest lives in `ConversationStore` beside, never inside, the five-agent array: the rotation index does
+  not move for their turns and nothing is left behind on exit or scene stop.
+- The persona travels in the per-turn production note (the writers'-room shared prefix must not change
+  mid-scene), so it reaches the model under both prompt layouts.
+- The stage seats a capsule actor (`Stage.addGuestActor`) only while the guest is on stage, and the voice
+  override is set / cleared with it (`DirectorCallbacks.onGuestEnter` / `onGuestExit`).
+- Guest lines are tagged `Message.guestId` so episode export attributes them explicitly; every other
+  line is attributed by rotation exactly as before. Replay re-applies the recorded voice and seat.
+- Modes that pick speakers themselves (`chatForAgentWithComedy`) never give the guest a turn; the regulars
+  still react to them while on stage.
 
 ## Out of scope (for now)
 
