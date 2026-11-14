@@ -5,18 +5,17 @@ import type { DirectorCallbacks } from '../Director/Director'
 import type { MemoryManager } from '../Director/MemoryManager'
 import type { SpeechQueue } from '../audio/SpeechQueue'
 import type { Stage } from '../visuals/Stage'
-import { getSharedSfxManager } from '../audio/SfxManager'
 import { stripStageTokens, takePropCues } from '../visuals/propTokens'
 import type { ChatLogApi } from './chatLog'
 import { CHARACTER_SPEEDS } from './chatLog'
 import type { SpeakAndVisualizeFn } from './chatController'
 import { updateNextAgentUI } from './statusBar'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
-import { getSharedShowMusic } from '../audio/ShowMusic'
-import { getSharedClipRecorder } from './clipUi'
 import { setVoiceOverride } from '../audio/voiceMap'
+import type { AppServices } from './services'
 
 export interface DirectorBridgeDeps {
+  services: AppServices
   groupChatManager: GroupChatManager
   memoryManager: MemoryManager | null
   speechQueue: SpeechQueue
@@ -32,8 +31,8 @@ export interface DirectorBridgeDeps {
 export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => deps.stage.triggerAudienceReaction(reaction),
-    playSfx: (name) => { void getSharedSfxManager()?.play(name) },
-    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
+    playSfx: (name) => { void deps.services.sfx.play(name) },
+    onBitDied: () => deps.services.music.cue('bit_died'),
   })
 
   const callbacks: DirectorCallbacks = {
@@ -77,18 +76,18 @@ export function createDirectorBridge(deps: DirectorBridgeDeps): Director {
     onThinking: (agentId, thinking) => deps.stage.setThinking(agentId, thinking),
     onReactToText: (agentId, text) => deps.stage.reactToText(agentId, text),
     onSfx: (name, agentId) => {
-      void getSharedSfxManager()?.play(name, agentId)
+      void deps.services.sfx.play(name, agentId)
     },
     onStageKit: (kitId) => {
       // Music palette follows the kit (talk show band / courtroom organ / news desk).
-      getSharedShowMusic()?.setKit(kitId)
+      deps.services.music.setKit(kitId)
       void deps.stage.setStageKit(kitId)
     },
-    onShowCue: (cue) => getSharedShowMusic()?.cue(cue),
-    onSceneStart: ({ title }) => getSharedClipRecorder()?.setSceneTitle(title, true),
+    onShowCue: (cue) => deps.services.music.cue(cue),
+    onSceneStart: ({ title }) => deps.services.clipRecorder?.setSceneTitle(title, true),
     musicControls: {
-      startBeat: (bpm) => getSharedShowMusic()?.startBeat(bpm),
-      stopBeat: () => getSharedShowMusic()?.stopBeat(),
+      startBeat: (bpm) => deps.services.music.startBeat(bpm),
+      stopBeat: () => deps.services.music.stopBeat(),
     },
     onProp: (name, action) => {
       deps.stage.applyPropCue(name, action)

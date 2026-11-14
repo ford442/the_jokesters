@@ -2,7 +2,10 @@
 # Download TTS ONNX models from self-hosted VPS
 set -e
 
-BASE_URL="https://storage.noahcohn.com/models/tts/onnx"
+# Canonical host = VPS_STORAGE_ORIGIN in src/utils/vpsStorageUrl.ts; override like the app's
+# VITE_VPS_STORAGE_ORIGIN. Do not hardcode the mirror (storage.noahcohn.com) here.
+VPS_STORAGE_ORIGIN="${VITE_VPS_STORAGE_ORIGIN:-${VPS_STORAGE_ORIGIN:-https://storage.1ink.us}}"
+BASE_URL="${VPS_STORAGE_ORIGIN}/models/tts/onnx"
 
 wget "${BASE_URL}/duration_predictor.onnx"
 wget "${BASE_URL}/text_encoder.onnx"

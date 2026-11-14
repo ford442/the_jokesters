@@ -22,8 +22,7 @@ import {
   CAST_STORAGE_KEY,
 } from '../../src/cast/castStore'
 import { applyCastAvatars, applyCastToRoster, _resetCastApplyStateForTests, type AvatarStage } from '../../src/cast/castApply'
-import { agents as shippedAgents } from '../../src/app/agents'
-import { agents as fiveAgents } from '../../src/config/agents'
+import { createDefaultRoster, castAgents as fiveAgents } from '../../src/cast/defaultCast'
 import { buildSystemMessage } from '../../src/llm/helpers/PromptCompiler'
 import { buildWritersRoomSystemPrompt } from '../../src/chat/writersRoom'
 import { PersonalityStore } from '../../src/chat/PersonalityStore'
@@ -31,7 +30,7 @@ import { resolveVoiceStyle, setVoiceOverrides, voiceFor } from '../../src/audio/
 import type { Agent } from '../../src/types/chat'
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v))
-const rosterCopy = (): Agent[] => shippedAgents.map((a) => ({ ...a }))
+const rosterCopy = (): Agent[] => createDefaultRoster()
 
 describe('cast card schema', () => {
   it('the default cast is valid and round-trips through JSON', () => {
@@ -120,10 +119,10 @@ describe('persona guard rails', () => {
   })
 
   it('custom personas are masked at prompt-compile time (live profanity slider), shipped ones are untouched', () => {
-    const custom: Agent = { ...shippedAgents[0], systemPrompt: 'You are a bastard. End your response with "###"', custom: true }
+    const custom: Agent = { ...fiveAgents[0], systemPrompt: 'You are a bastard. End your response with "###"', custom: true }
     expect(buildSystemMessage(custom, undefined, 'PG')).not.toMatch(/bastard/)
     expect(buildSystemMessage(custom, undefined, 'GRITTY')).toMatch(/bastard/)
-    const shipped: Agent = { ...shippedAgents[0], systemPrompt: 'You are a bastard.' }
+    const shipped: Agent = { ...fiveAgents[0], systemPrompt: 'You are a bastard.' }
     expect(buildSystemMessage(shipped, undefined, 'PG')).toMatch(/bastard/)
 
     expect(personaFor(custom, 'CASUAL')).not.toMatch(/bastard/)

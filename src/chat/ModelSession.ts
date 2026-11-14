@@ -74,14 +74,37 @@ export class ModelSession {
     return { ...this.vramConfig }
   }
 
-  async initialize(
+  /** In-flight `initialize()`; concurrent callers (picker + auto-fallback) share it. */
+  private initializing: Promise<void> | null = null
+
+  /**
+   * Loads the engine once. A call made while another is in flight returns the
+   * same promise instead of creating a second engine; after a failure the next
+   * call starts fresh.
+   */
+  initialize(
     onProgress?: (progress: webllm.InitProgressReport) => void,
     preferredModelId?: string,
     preferredContext?: number | 'auto',
     enginePreference: EngineType = 'auto',
   ): Promise<void> {
-    if (this.isInitialized) return
+    if (this.isInitialized) return Promise.resolve()
+    if (this.initializing) return this.initializing
+    const run = this.initializeOnce(onProgress, preferredModelId, preferredContext, enginePreference)
+    this.initializing = run
+    const clear = () => {
+      if (this.initializing === run) this.initializing = null
+    }
+    run.then(clear, clear)
+    return run
+  }
 
+  private async initializeOnce(
+    onProgress?: (progress: webllm.InitProgressReport) => void,
+    preferredModelId?: string,
+    preferredContext?: number | 'auto',
+    enginePreference: EngineType = 'auto',
+  ): Promise<void> {
     this.engineType = enginePreference
     const unifiedModel = preferredModelId ? getUnifiedModelById(preferredModelId) : null
 
@@ -357,6 +380,8 @@ export class ModelSession {
   }
 
   async terminate(): Promise<void> {
+    // Let an in-flight load land first, otherwise its engine would be created after we "terminated".
+    if (this.initializing) await this.initializing.catch(() => undefined)
     if (this.engine) {
       await this.engine.terminate()
     }

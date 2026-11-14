@@ -6,5 +6,5 @@
     "types": ["node"]
   },
   "include": ["vite.config.ts", "vitest.config.ts", "scripts/**/*.ts"],
-  "exclude": ["scripts/archive/**"]
+  "exclude": ["scripts/archive/**", "scripts/export-comedy-prompts.ts"]
 }

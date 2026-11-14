@@ -78,11 +78,6 @@ export class DynamicContextManager {
     return this.tokenEstimator.estimateText(text);
   }
 
-  /** @deprecated Use instance estimateTokens() — kept for tests and legacy callers. */
-  static estimateTokens(text: string): number {
-    return new HeuristicTokenEstimator().estimateText(text);
-  }
-
   /**
    * Truncate a conversation to fit within the token budget.
    *

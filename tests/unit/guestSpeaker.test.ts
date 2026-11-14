@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GroupChatManager } from '../../src/GroupChatManager'
 import { MockLLMEngine } from '../../src/llm/MockLLMEngine'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 import { historyToTurns } from '../../src/episode'
 import type { Agent } from '../../src/types/chat'
 import { ACTOR_STAGE_X, GUEST_STAGE_X, actorFocus } from '../../src/visuals/kits/cameraDirector'

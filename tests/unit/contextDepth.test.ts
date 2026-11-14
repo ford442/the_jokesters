@@ -11,7 +11,7 @@ import {
   MAX_MEMORY_DEPTH,
 } from '../../src/config/contextDepth';
 import { ConversationStore } from '../../src/chat/ConversationStore';
-import { agents } from '../../src/config/agents';
+import { castAgents as agents } from '../../src/cast/defaultCast';
 
 describe('clampMemoryDepth', () => {
   it('clamps below minimum and above maximum', () => {

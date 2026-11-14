@@ -1,14 +1,9 @@
-import { getSharedSfxManager } from '../audio/SfxManager'
+import type { SfxManager } from '../audio/SfxManager'
 import type { SfxPlaybackMode } from '../audio/sfxCatalog'
 import { ALLOWED_SFX } from '../audio/sfxCatalog'
 
 /** Wire SFX toggle, volume, mode, and preview buttons in the settings panel. */
-export function wireSfxUi(): void {
-  const sfx = getSharedSfxManager()
-  if (!sfx) {
-    console.warn('[sfxUi] SfxManager not ready')
-    return
-  }
+export function wireSfxUi(sfx: SfxManager): void {
 
   const enabledEl = document.getElementById('sfx-enabled') as HTMLInputElement | null
   const volumeEl = document.getElementById('sfx-volume') as HTMLInputElement | null

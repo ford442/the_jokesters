@@ -17,6 +17,7 @@ import {
     type CameraPose,
 } from './kits/cameraDirector';
 import { disposeKitGraph } from './kits/disposeKit';
+import { Scope } from '../utils/lifecycle';
 import { KIT_LIGHT_PRESETS } from './kits/kitLighting';
 import { StageKitSession } from './kits/kitSession';
 import { PropRig } from './kits/propRig';
@@ -45,6 +46,12 @@ export interface StageOptions {
     context?: WebGLRenderingContext;
     /** Requested renderer for the 3D scene. Defaults to 'webgl'. */
     rendererMode?: RendererMode;
+    /**
+     * Owner scope. The stage registers its own `dispose()` with it, so tearing
+     * down the scope stops the render loop and frees GPU resources. Optional
+     * (tests, one-off stages) — without it the caller must call `dispose()`.
+     */
+    scope?: Scope;
 }
 
 /** Stage positions for the five performers, left to right. */
@@ -80,6 +87,8 @@ export class Stage {
     /** The renderer actually in use once initRenderer() resolves. */
     private activeMode: RendererMode = 'webgl';
     private renderer: SceneRenderer | null = null;
+    /** Owns the rAF loop and window listeners; disposed by `dispose()`. */
+    private readonly lifetime = new Scope();
     private renderingAsync = false; // guards against overlapping WebGPU frames
     private actors: Map<string, StageActor> = new Map();
     private actorKinds: Map<string, 'primitive' | 'vrm'> = new Map();
@@ -133,7 +142,8 @@ export class Stage {
         this.applyCameraPose(this.cameraState.pose);
         this.applyKitLook('void');
 
-        window.addEventListener('resize', () => this.onWindowResize());
+        this.lifetime.listen(window, 'resize', () => this.onWindowResize());
+        options.scope?.add(() => this.dispose());
     }
 
     /**
@@ -449,10 +459,10 @@ export class Stage {
 
         const [{ loadVrm }, { VrmActor }] = await Promise.all([import('./vrmLoader'), import('./VrmActor')]);
         const vrm = await loadVrm(url, { renderer: this.renderer });
-        if (this.avatarEpoch.get(id) !== epoch) {
+        if (this.avatarEpoch.get(id) !== epoch || this.lifetime.disposed) {
             const { VRMUtils } = await import('@pixiv/three-vrm');
             VRMUtils.deepDispose(vrm.scene);
-            return false; // superseded by a newer swap/reset
+            return false; // superseded by a newer swap/reset, or the stage was torn down
         }
         if (!this.sharedMixer) this.sharedMixer = new THREE.AnimationMixer(this.scene);
         const actor = new VrmActor(id, vrm, { baseX: layout.x, mixer: this.sharedMixer });
@@ -648,9 +658,46 @@ export class Stage {
         }
     }
 
+    /**
+     * Starts the render loop (idempotent). The loop runs until `dispose()`.
+     */
     public render() {
-        requestAnimationFrame(() => this.render());
+        if (this.loopStarted || this.lifetime.disposed) return;
+        this.loopStarted = true;
+        this.lifetime.raf(() => this.renderFrame());
+    }
 
+    private loopStarted = false;
+
+    /**
+     * Stops the render loop, removes window listeners, and frees GPU resources
+     * (actors incl. VRM `deepDispose`, kit, props, scene graph, renderer).
+     * Idempotent.
+     */
+    public async dispose(): Promise<void> {
+        if (this.lifetime.disposed) return;
+        await this.lifetime.dispose();
+        this.afterRenderHooks.clear();
+        this.lipSync = null;
+        this.audioClock = null;
+        this.sharedMixer?.stopAllAction();
+        this.sharedMixer = null;
+        for (const actor of this.actors.values()) {
+            this.scene.remove(actor.group);
+            actor.dispose();
+        }
+        this.actors.clear();
+        this.kitSession.unmount();
+        this.propRig.clear();
+        disposeKitGraph(this.scene);
+        const renderer = this.renderer as (SceneRenderer & { dispose?: () => void; forceContextLoss?: () => void }) | null;
+        this.renderer = null;
+        renderer?.dispose?.();
+        // Browsers cap live WebGL contexts (~16); release ours rather than waiting for GC.
+        renderer?.forceContextLoss?.();
+    }
+
+    private renderFrame() {
         const nowMs = performance.now();
         const rawDt = this.lastFrameMs === 0 ? 0.016 : (nowMs - this.lastFrameMs) / 1000;
         this.lastFrameMs = nowMs;

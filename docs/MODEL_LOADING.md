@@ -99,7 +99,6 @@ These are wins available regardless of which model is selected. Some are already
 - Storage quota check before loading large models, with proactive cache-clear UI
 - Corrupted-cache recovery in `LlamaCppEngineAdapter` (re-download with `useCache: false`)
 - Dynamic context sizing based on detected VRAM
-- Engine fast-path swap — same-API-endpoint model switches skip unload (`AgentModelManager.ts`)
 
 ### Worth adding 🟡
 

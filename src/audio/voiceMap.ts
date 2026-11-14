@@ -22,7 +22,7 @@ export const SUPERTONIC_STYLE_IDS: readonly SupertonicStyleId[] = ['M1', 'M2', '
 
 export const DEFAULT_VOICE_STYLE: SupertonicStyleId = 'F1'
 
-/** Covers all 5 `src/config/agents.ts` ids — every entry uses a real hosted style file. */
+/** Covers all 5 `src/cast/defaultCast.ts` ids — every entry uses a real hosted style file. */
 export const AGENT_VOICE_MAP: Record<AgentVoiceId, SupertonicStyleId> = {
   comedian: 'F1',
   philosopher: 'M2',

@@ -19,12 +19,11 @@ import type { Director } from '../Director/Director'
 import { wireModeBrowser } from './modeBrowser'
 import { wireProductionCardPanel } from './productionCardUi'
 import { AudienceFeedbackDriver } from '../comedy/audienceFeedback'
-import { getSharedShowMusic } from '../audio/ShowMusic'
-import { getSharedClipRecorder } from './clipUi'
-import { getSharedSfxManager } from '../audio/SfxManager'
 import { isSpeakableText, isVicunaModel } from '../chat/speakableText'
+import type { AppServices } from './services'
 
 export interface ImprovControllerDeps {
+  services: AppServices
   agents: Agent[]
   groupChatManager: GroupChatManager
   audioEngine: TtsEngine
@@ -90,8 +89,8 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
   // never at generation/prerender time.
   const audienceFeedback = new AudienceFeedbackDriver({
     triggerReaction: (reaction) => stage.triggerAudienceReaction(reaction),
-    playSfx: (name) => { void getSharedSfxManager()?.play(name) },
-    onBitDied: () => getSharedShowMusic()?.cue('bit_died'),
+    playSfx: (name) => { void deps.services.sfx.play(name) },
+    onBitDied: () => deps.services.music.cue('bit_died'),
   })
 
   const sceneTitleInput = document.getElementById('scene-title') as HTMLInputElement
@@ -364,7 +363,7 @@ export function wireImprovController(deps: ImprovControllerDeps): void {
       return
     }
 
-    getSharedClipRecorder()?.setSceneTitle(title, true)
+    deps.services.clipRecorder?.setSceneTitle(title, true)
     sceneTitleInput.disabled = true
     sceneDescriptionInput.disabled = true
     startImprovBtn.style.display = 'none'

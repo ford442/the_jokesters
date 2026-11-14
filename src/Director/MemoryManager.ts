@@ -79,9 +79,12 @@ export class MemoryManager {
         this.loadCloudCredentials();
         void this.syncQueue.processSyncQueue();
         void this.summaries.ensureCloudSummaryCache();
-        this.syncQueue.startDeltaConsolidationTask(() => this.episodes.listEpisodes());
-        this.syncQueue.startAutoSyncTask();
-        this.syncQueue.startPeriodicAutoSync();
+        this.syncQueue.startScheduler(() => this.episodes.listEpisodes());
+    }
+
+    /** Stops background sync timers and the sync worker. Idempotent. */
+    public dispose(): void {
+        this.syncQueue.dispose();
     }
 
     public setSyncStatusCallback(callback: (status: string) => void) {
@@ -194,20 +197,9 @@ export class MemoryManager {
         return this.episodes.loadEpisode(episodeId);
     }
 
-    public async consolidateEpisodeDeltas(episodeId: string): Promise<void> {
-        this.syncQueue.consolidateEpisodeDeltas(episodeId);
-    }
-
-    public startAutoSyncTask(): void {
-        this.syncQueue.startAutoSyncTask();
-    }
-
-    public startPeriodicAutoSync(): void {
-        this.syncQueue.startPeriodicAutoSync();
-    }
-
-    public startDeltaConsolidationTask(): void {
-        this.syncQueue.startDeltaConsolidationTask(() => this.episodes.listEpisodes());
+    /** Resolves once the worker has merged the deltas; rejects on failure. */
+    public consolidateEpisodeDeltas(episodeId: string): Promise<void> {
+        return this.syncQueue.consolidateEpisodeDeltas(episodeId);
     }
 
     public async loadEpisodeFromCloud(episodeId: string): Promise<StoredEpisode | null> {
@@ -325,21 +317,4 @@ export class MemoryManager {
     public async saveHighscoreToCloud(modeId: string, score: number): Promise<void> {
         return this.episodes.saveHighscoreToCloud(modeId, score);
     }
-}
-
-/**
- * Shared app instance (set during bootstrap). Used only by entry points that wire up
- * before the rest of the controller chain exists (dashboard.ts, statusBar.ts's sync
- * polling — both run from main.ts ahead of initApp() resolving) and so can't receive
- * MemoryManager via an ordinary constructor/parameter chain. Everything else should
- * take MemoryManager as an explicit parameter instead of reading this.
- */
-let sharedMemoryManager: MemoryManager | null = null;
-
-export function setSharedMemoryManager(mgr: MemoryManager | null): void {
-    sharedMemoryManager = mgr;
-}
-
-export function getSharedMemoryManager(): MemoryManager | null {
-    return sharedMemoryManager;
 }

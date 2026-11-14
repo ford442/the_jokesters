@@ -258,6 +258,26 @@ export interface ScriptBeat {
     line: string;
 }
 
+
+/** One `playScenario` invocation. */
+interface SceneRun {
+    id: number;
+    /** Aborted when the run is stopped or superseded. Exposed to modes as `ctx.signal`. */
+    controller: AbortController;
+    /** Resolves when the run's `playScenario` call has fully returned. */
+    settled: Promise<void>;
+}
+
+/** How long a restart waits for the previous mode loop to unwind before starting anyway. */
+const PREVIOUS_RUN_SETTLE_MS = 3000;
+
+function settleWithin(p: Promise<void>, ms: number): Promise<void> {
+    return new Promise((resolve) => {
+        const timer = setTimeout(resolve, ms);
+        void p.finally(() => { clearTimeout(timer); resolve(); });
+    });
+}
+
 /**
  * Maps scenario types to their mode loop functions.
  */
@@ -266,6 +286,15 @@ export class Director {
     private manager: GroupChatManager;
     private callbacks: DirectorCallbacks;
     private isRunning: boolean = false;
+    /**
+     * The scene run that owns the stage right now. Every `playScenario` gets a
+     * fresh run; a mode loop's `ModeContext` is bound to its run, so a loop
+     * that outlives a stop → restart sees `isRunning() === false`, its
+     * `stopScene()` is a no-op, and its turns are dropped instead of leaking
+     * into (or killing) the new scene.
+     */
+    private activeRun: SceneRun | null = null;
+    private runSeq = 0;
     private chaosLevel: number = 30;
     private currentScenario: Scenario | null = null;
     private interruptQueue: string[] = [];
@@ -313,6 +342,14 @@ export class Director {
         } catch (e) {
             console.warn('BroadcastChannel not supported or failed to initialize:', e);
         }
+    }
+
+    /** Stops any live scene and closes the cross-tab channel. Idempotent. */
+    public dispose(): void {
+        this.stopScene();
+        this.activeRun?.controller.abort();
+        this.broadcastChannel?.close();
+        this.broadcastChannel = null;
     }
 
     public setChaosLevel(level: number) {
@@ -522,17 +559,24 @@ export class Director {
     /**
      * Creates the shared ModeContext passed to all mode loop functions.
      */
-    private createModeContext(): ModeContext {
+    /** True while `run` is the live scene (not stopped, not superseded). */
+    private isRunActive(run: SceneRun | null): boolean {
+        return !!run && this.isRunning && this.activeRun === run && !run.controller.signal.aborted;
+    }
+
+    private createModeContext(run: SceneRun): ModeContext {
         return {
             manager: this.manager,
             callbacks: this.callbacks,
             chaosLevel: this.chaosLevel,
             interruptQueue: this.interruptQueue,
-            isRunning: () => this.isRunning,
-            processTurn: (inputText: string) => this.processTurn(inputText),
-            processScriptBeat: (beat: ScriptBeat) => this.processScriptBeat(beat),
-            stopScene: () => this.stopScene(),
-            waitForInput: () => this.waitForInput(),
+            isRunning: () => this.isRunActive(run),
+            signal: run.controller.signal,
+            processTurn: (inputText: string) => this.processTurn(inputText, run),
+            processScriptBeat: (beat: ScriptBeat) =>
+                (this.isRunActive(run) ? this.processScriptBeat(beat) : Promise.resolve()),
+            stopScene: () => this.stopScene(run.id),
+            waitForInput: () => (this.isRunActive(run) ? this.waitForInput() : Promise.resolve('')),
             searchAndRecall: (topic: string) => this.searchAndRecall(topic),
             memoryManager: this.memoryManager,
             comedy: this.comedySession,
@@ -582,8 +626,35 @@ export class Director {
             return;
         }
 
+        // Claim the stage first: any earlier run (or an earlier playScenario still
+        // in its async preamble) is now stale.
+        const previous = this.activeRun;
+        let settle!: () => void;
+        const run: SceneRun = {
+            id: ++this.runSeq,
+            controller: new AbortController(),
+            settled: new Promise<void>((resolve) => { settle = resolve; }),
+        };
+        this.activeRun = run;
+        try {
+            await this.playRun(scenario, run, previous);
+        } finally {
+            settle();
+        }
+    }
+
+    private async playRun(scenario: Scenario, run: SceneRun, previous: SceneRun | null): Promise<void> {
+        if (previous) {
+            // Stop the old scene (runs its save/teardown) and let its loop unwind
+            // before the new scene resets shared conversation state.
+            this.endScene(previous);
+            await settleWithin(previous.settled, PREVIOUS_RUN_SETTLE_MS);
+            if (this.activeRun !== run || run.controller.signal.aborted) return; // superseded/stopped while waiting
+        }
+
         this.currentScenario = scenario;
         if (this.memoryManager) { await this.memoryManager.fetchPreviousEpisodeSummaries(scenario.title).catch(e => console.error("Failed to fetch previous summaries:", e)); }
+        if (this.activeRun !== run || run.controller.signal.aborted) return; // superseded/stopped during the preamble
         this.isRunning = true;
         this.interruptQueue = [];
         this.manager.resetConversation();
@@ -614,18 +685,19 @@ export class Director {
 
         try {
             const modeLoop = await loadModeLoop(scenario.type);
+            if (this.activeRun !== run) return;
             if (modeLoop) {
-                await modeLoop(scenario, this.createModeContext());
-                if (this.isRunning) {
-                    this.stopScene();
-                }
+                await modeLoop(scenario, this.createModeContext(run));
+                this.stopScene(run.id);
             } else {
                 this.callbacks.onError(`Mode ${scenario.type} not implemented yet.`);
-                this.stopScene();
+                this.stopScene(run.id);
             }
         } catch (error) {
+            // A stale loop's failure belongs to a scene that is already over.
+            if (this.activeRun !== run) return;
             this.callbacks.onError(error);
-            this.stopScene();
+            this.stopScene(run.id);
         }
     }
 
@@ -643,7 +715,20 @@ export class Director {
         await this.playScenario(scenario);
     }
 
-    public stopScene() {
+    /**
+     * Stops the live scene. With a `runId`, only stops if that run is still the
+     * live one — a stale mode loop finishing late can no longer kill a newer
+     * scene. Without one (UI stop button), stops whatever is running.
+     */
+    public stopScene(runId?: number) {
+        const run = this.activeRun;
+        if (runId !== undefined && run?.id !== runId) return;
+        this.endScene(run);
+    }
+
+    /** Fences `run` off (aborts its signal) and, if a scene is live, tears it down (auto-save etc.). */
+    private endScene(run: SceneRun | null) {
+        run?.controller.abort();
         if (this.isRunning) {
             this.isRunning = false;
             this.manager.clearSceneMemoryDepth();
@@ -813,8 +898,8 @@ export class Director {
         }
     }
 
-    private async processTurn(inputText: string) {
-        if (!this.manager || !this.isRunning) return;
+    private async processTurn(inputText: string, run: SceneRun | null = this.activeRun) {
+        if (!this.manager || !this.isRunActive(run)) return;
 
         try {
             // A persona guest takes the floor on their entrance and every Nth turn after; the
@@ -825,6 +910,7 @@ export class Director {
             const arcTag = this.productionCard ? arcEmotionTag(this.productionCard, currentAgent.id, this.sceneArc?.act) : null;
 
             await this.callbacks.onTurnStart(currentAgent.id);
+            if (!this.isRunActive(run)) { this.turnInFlight = false; return; }
             this.callbacks.onThinking?.(currentAgent.id, true);
 
             let pacing = this.calculatePacing();
@@ -890,6 +976,7 @@ export class Director {
             let responseText = '';
             let reacted = false;
             const onSentence = async (sentence: string) => {
+                if (!this.isRunActive(run)) return; // never speak a stale scene's lines
                 if (responseText.length === 0) {
                     this.callbacks.onThinking?.(currentAgent.id, false);
                 }
@@ -914,6 +1001,8 @@ export class Director {
             } else {
                 await this.manager.chat(effectivePrompt, onSentence, chatOptions);
             }
+            // Stopped or superseded mid-generation: don't score/record into whatever runs now.
+            if (!this.isRunActive(run)) { this.turnInFlight = false; return; }
 
             this.callbacks.onThinking?.(currentAgent.id, false);
             if (!reacted && responseText.trim()) {
@@ -932,8 +1021,9 @@ export class Director {
         } catch (error) {
             console.error('Turn Error:', error);
             this.turnInFlight = false;
+            if (!this.isRunActive(run)) return; // stale turn: its scene is already over
             this.callbacks.onError(error);
-            this.stopScene();
+            this.stopScene(run?.id);
         }
     }
 
