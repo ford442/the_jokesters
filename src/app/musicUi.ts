@@ -1,4 +1,4 @@
-import { getSharedShowMusic } from '../audio/ShowMusic'
+import type { ShowMusic } from '../audio/ShowMusic'
 import { SHOW_CUES, type ShowCue } from '../audio/showCues'
 
 const CUE_LABELS: Record<ShowCue, string> = {
@@ -9,12 +9,7 @@ const CUE_LABELS: Record<ShowCue, string> = {
 }
 
 /** Wire the show-music toggle, volume and per-cue preview buttons in the settings panel. */
-export function wireMusicUi(): void {
-  const music = getSharedShowMusic()
-  if (!music) {
-    console.warn('[musicUi] ShowMusic not ready')
-    return
-  }
+export function wireMusicUi(music: ShowMusic): void {
 
   const enabledEl = document.getElementById('music-enabled') as HTMLInputElement | null
   const volumeEl = document.getElementById('music-volume') as HTMLInputElement | null

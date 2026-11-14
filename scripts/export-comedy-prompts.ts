@@ -1,13 +1,13 @@
 /**
  * Export the browser show's prompt layer to JSON for the GPU comedy-tester Space
- * (hf_spaces/comedy-tester). Keeps the Space's personas / rules / sampling in
+ * (sidecar/hf_spaces/comedy-tester). Keeps the Space's personas / rules / sampling in
  * lock-step with src/ instead of a hand-copied drift.
  *
  *   npx tsx scripts/export-comedy-prompts.ts
  */
 import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { agents } from '../src/config/agents'
+import { castAgents as agents } from '../src/cast/defaultCast'
 import { PROFANITY_INSTRUCTIONS, DEFAULT_MAX_TOKENS, ABSOLUTE_MAX_TOKENS } from '../src/config/chatConfig'
 import { buildWritersRoomSystemPrompt, buildSpeakerCue } from '../src/chat/writersRoom'
 import { EMPTY_TURN_RETRY_SUFFIX, EMPTY_TURN_RETRY_MIN_TOKENS } from '../src/chat/speakableText'
@@ -40,6 +40,6 @@ const out = {
   speakerCueExample: buildSpeakerCue(agents[0], 'example whisper'),
   improvSetups: (setups as { id: string; title: string; description: string }[]).slice(0, 40),
 }
-const dest = resolve('hf_spaces/comedy-tester/prompts.json')
+const dest = resolve('sidecar/hf_spaces/comedy-tester/prompts.json')
 writeFileSync(dest, JSON.stringify(out, null, 2) + '\n')
 console.log(`wrote ${dest}`)

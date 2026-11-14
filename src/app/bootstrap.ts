@@ -5,22 +5,25 @@ import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
 import { getRequestedRendererMode, isWebGPUAvailable } from '../visuals/rendererMode'
 import { LipSync } from '../visuals/LipSync'
-import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier, setSharedAvatarTier } from '../visuals/avatarTier'
+import { loadDeviceSnapshot, readAvatarTierEnv, readGlRendererString, selectAvatarTier } from '../visuals/avatarTier'
 import { bundledAvatarUrl } from '../visuals/avatarManifest'
 import { hasStoredCast } from '../cast/castKeys'
 import { AudioEngine } from '../audio/AudioEngine'
 import type { TtsEngine } from '../audio/AudioEngine'
 import { OptimizedAudioEngineAdapter } from '../audio/OptimizedAudioEngineAdapter'
 import { SpeechQueue } from '../audio/SpeechQueue'
-import { SfxManager, setSharedSfxManager } from '../audio/SfxManager'
-import { ShowAudioBus, setSharedShowAudioBus } from '../audio/showAudioBus'
+import { SfxManager } from '../audio/SfxManager'
+import { ShowAudioBus } from '../audio/showAudioBus'
 import { MusicEngine } from '../audio/MusicEngine'
-import { ShowMusic, setSharedShowMusic } from '../audio/ShowMusic'
-import { MemoryManager, setSharedMemoryManager } from '../Director/MemoryManager'
+import { ShowMusic } from '../audio/ShowMusic'
+import { MemoryManager } from '../Director/MemoryManager'
+import type { Scope } from '../utils/lifecycle'
+import type { AppServices } from './services'
 import { VPS_STORAGE_URL } from '../config/models'
 import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
 import { parseStripeKillSwitch, consumePreferMirror } from '../utils/dualDomainStripe'
-import { agents } from './agents'
+import { createDefaultRoster } from '../cast/defaultCast'
+import { MAIN_PANEL_AUTH_FORM, wireHfAuthForm } from '../ui/dashboard'
 import { getAppTemplate } from './appTemplate'
 import { wireModelPicker } from './modelPicker'
 import { setProgress, setInputsEnabled, showVoiceOfflineBanner, showWasmFallbackBanner } from './loadingUi'
@@ -65,9 +68,12 @@ async function initAudioEngineWithFailover(audioEngine: TtsEngine): Promise<bool
   return false
 }
 
-export async function initApp(): Promise<void> {
-  const app = document.querySelector<HTMLDivElement>('#app')!
-
+/**
+ * Service-worker registration, stale-root cleanup and dual-domain stripe config.
+ * Page-lifetime: call once per page load (from `main.ts`), not per `initApp()`
+ * attempt — retries must not register a second `controllerchange` listener.
+ */
+export function setupServiceWorker(scope: Scope): void {
   if ('serviceWorker' in navigator) {
     try {
       // Clean up any stale origin-wide (scope '/') service worker registration from
@@ -90,7 +96,7 @@ export async function initApp(): Promise<void> {
           console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
         })
 
-      reloadOnceForIsolation()
+      reloadOnceForIsolation({ scope })
       registerSW({
         onNeedRefresh() {
           console.log('[ServiceWorker] New content available, please refresh.')
@@ -129,7 +135,7 @@ export async function initApp(): Promise<void> {
         .catch(() => {
           /* registration still in flight */
         })
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
+      scope.listen(navigator.serviceWorker, 'controllerchange', () => {
         navigator.serviceWorker.controller?.postMessage(stripeMessage)
       })
       console.log('[ServiceWorker] Dual-domain stripe', stripeConfig)
@@ -137,6 +143,22 @@ export async function initApp(): Promise<void> {
       console.warn('[ServiceWorker] Registration failed (non-critical):', error)
     }
   }
+}
+
+export interface InitAppHooks {
+  /** Called with the run's services once they exist, and with `null` when the run is disposed. */
+  onServices?: (services: AppServices | null) => void
+}
+
+/**
+ * Boots one app run inside a child of `parent`. Every service, listener, timer
+ * and render loop the run creates is owned by that child scope; the error
+ * panel's retry disposes it before starting a fresh run, so retries never
+ * stack rAF loops, AudioContexts, engines or listeners.
+ */
+export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<void> {
+  const run = parent.child()
+  const app = document.querySelector<HTMLDivElement>('#app')!
 
   let currentInitState: AppInitState = 'BOOTING'
   console.log(currentInitState)
@@ -148,8 +170,6 @@ export async function initApp(): Promise<void> {
   const canvas = document.getElementById('scene') as HTMLCanvasElement
   const loadingDiv = document.getElementById('loading')!
   const chatContainer = document.getElementById('chat-container')!
-  const progressBar = document.getElementById('progress') as HTMLDivElement
-  console.log(progressBar)
   const userInput = document.getElementById('user-input') as HTMLInputElement
 
   const { selectedModelId, preferredContext, vramConfig, chosenMaxTokens, enginePreference } = launchConfig
@@ -167,11 +187,15 @@ export async function initApp(): Promise<void> {
       console.warn('[GPU] OOM cascade rejection suppressed:', event.reason)
     }
   }
-  window.addEventListener('unhandledrejection', suppressGpuCascadeRejections)
+  run.listen(window, 'unhandledrejection', suppressGpuCascadeRejections)
 
   try {
+    // Fresh roster per run: the cast applier and GroupChatManager mutate it in place.
+    const agents = createDefaultRoster()
     const memoryManager = new MemoryManager()
-    setSharedMemoryManager(memoryManager)
+    run.add(() => memoryManager.dispose())
+    // The settings panel's HF form is part of the per-run template.
+    wireHfAuthForm(run, MAIN_PANEL_AUTH_FORM, () => memoryManager)
     void memoryManager.fetchPreviousEpisodeSummaries();
 
     // Custom cast (names, personas, voices, optional agents) applies to the shared roster
@@ -184,6 +208,7 @@ export async function initApp(): Promise<void> {
       : null
 
     const groupChatManager = new GroupChatManager(agents)
+    run.add(() => groupChatManager.terminate())
     groupChatManager.setVRAMConfig(vramConfig)
     groupChatManager.setMaxTokensPerTurn(chosenMaxTokens)
 
@@ -195,14 +220,17 @@ export async function initApp(): Promise<void> {
     if (useLegacyAudio) {
       console.log('[Audio] ?legacyAudio present — using legacy main-thread AudioEngine')
     }
+    run.add(() => audioEngine.dispose?.())
     const speechQueue = new SpeechQueue(audioEngine)
+    // Closes the run's AudioContext (LIFO: after bus/SFX/music/stage disconnect).
+    run.add(() => speechQueue.dispose())
 
     const requestedRenderer = getRequestedRendererMode()
     let stage: Stage
     let glRenderer: string | null = null
     if (requestedRenderer === 'webgpu' && isWebGPUAvailable()) {
       console.log('[Renderer] WebGPU scene rendering requested (opt-in). WebLLM shares the GPU — prefer high-VRAM devices.')
-      stage = new Stage(canvas, { rendererMode: 'webgpu' })
+      stage = new Stage(canvas, { rendererMode: 'webgpu', scope: run })
     } else {
       if (requestedRenderer === 'webgpu') {
         console.warn('[Renderer] WebGPU rendering requested but navigator.gpu is unavailable — using WebGL2.')
@@ -212,7 +240,7 @@ export async function initApp(): Promise<void> {
         throw new Error('WebGL 2 is not supported or is disabled in this environment.')
       }
       glRenderer = readGlRendererString(gl as WebGL2RenderingContext)
-      stage = new Stage(canvas, { context: gl as WebGLRenderingContext, rendererMode: 'webgl' })
+      stage = new Stage(canvas, { context: gl as WebGLRenderingContext, rendererMode: 'webgl', scope: run })
     }
     const activeRenderer = await stage.initRenderer()
     console.log(`[Renderer] Active 3D renderer: ${activeRenderer.toUpperCase()} · LLM inference: WebGPU (independent)`)
@@ -222,7 +250,7 @@ export async function initApp(): Promise<void> {
     // the same master bus, so a recorded clip hears exactly what the audience hears.
     const audioCtx = speechQueue.getAudioContext()
     const audioBus = new ShowAudioBus(audioCtx)
-    setSharedShowAudioBus(audioBus)
+    run.add(() => audioBus.dispose())
     speechQueue.setDestination(lipSync.analyser)
     lipSync.analyser.connect(audioBus.master)
     stage.setLipSync(lipSync)
@@ -235,7 +263,6 @@ export async function initApp(): Promise<void> {
     // VRM avatars on capable GPUs; low tiers keep the primitive capsule actors. Loads in the
     // background — each agent swaps in as its model arrives, and a failure leaves the capsule.
     const avatarTier = selectAvatarTier(readAvatarTierEnv(loadDeviceSnapshot(), glRenderer))
-    setSharedAvatarTier(avatarTier.tier)
     console.log(`[Avatars] tier=${avatarTier.tier} (${avatarTier.reason})`)
     if (storedCast) {
       // The cast decides per slot: uploads/URLs load on any tier, defaults follow the tier.
@@ -252,14 +279,29 @@ export async function initApp(): Promise<void> {
     }
 
     const sfxManager = new SfxManager({ basePath: './sfx' })
+    run.add(() => sfxManager.dispose())
     await sfxManager.init(audioCtx, speechQueue.getTtsGainNode(), audioBus.master)
     sfxManager.setInterruptHandler(() => speechQueue.stop())
-    setSharedSfxManager(sfxManager)
 
     // Show music: stingers per beat/act/tag, ducked under TTS (settings toggle, default on).
     const showMusic = new ShowMusic(new MusicEngine({ ctx: audioCtx, output: audioBus.master }))
+    run.add(() => showMusic.dispose())
     showMusic.attachSpeech(speechQueue, () => lipSync.getVolume())
-    setSharedShowMusic(showMusic)
+
+    const services: AppServices = {
+      memoryManager,
+      groupChatManager,
+      audioEngine,
+      speechQueue,
+      audioBus,
+      sfx: sfxManager,
+      music: showMusic,
+      stage,
+      avatarTier: avatarTier.tier,
+      clipRecorder: null,
+    }
+    hooks.onServices?.(services)
+    run.add(() => hooks.onServices?.(null))
 
     currentInitState = 'BOOTING'
     setProgress('Setting up graphics...', 10)
@@ -313,20 +355,14 @@ export async function initApp(): Promise<void> {
 
     updateVRAMInfoBar(groupChatManager)
 
-    wireSceneController({
-      agents,
-      groupChatManager,
-      memoryManager,
-      audioEngine,
-      speechQueue,
-      stage,
-    })
+    wireSceneController({ agents, services, scope: run })
   } catch (error: unknown) {
     currentInitState = 'ERROR'
     console.error('Initialization error:', error)
-    // Full re-init so model picker + OOM fallback session keys are honored
+    // Full re-init so model picker + OOM fallback session keys are honored. Tear the
+    // failed run down first so nothing it created survives into the next attempt.
     renderInitErrorPanel(error, () => {
-      void initApp()
+      void run.dispose().then(() => initApp(parent, hooks))
     })
   }
 }

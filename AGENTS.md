@@ -21,14 +21,14 @@
 - **Voice input** support using the Web Speech API
 - **Comedy Engine** with callback tracking (bell curve decay), quality gating, and conversation branching
 - **Service Worker** for parallel model downloads via byte-range requests (42MB chunks, 4 connections)
-- **Backend proxy** (`backend/llama_proxy.py`) — FastAPI OpenAI-compatible proxy for local llama-server
+- **Out-of-app sidecar** (`sidecar/`) — HF Spaces, Colab notebooks, a FastAPI proxy sketch; not part of the build (see `sidecar/README.md`)
 
 ### Architecture Philosophy: "The Digital Director"
 The system follows a **Centralized Director / Stateless Actor** model:
 - **Agents** (`Comedian`, `Philosopher`, `Scientist`, `TechBro`, `Robot`) are stateless configurations (prompts + visual params)
 - **The Director** (`Director` class) orchestrates the scene, manages state, decides turn-taking, and injects environmental context
 - **GroupChatManager** handles LLM interactions with retry logic and VRAM management
-- **AgentModelManager** manages per-agent model assignments and hot-swapping
+- **Lifecycle** (`src/utils/lifecycle.ts`): every app run lives in a `Scope` that owns its listeners, timers, rAF loop and services (`AppServices`, `src/app/services.ts`); retry disposes it first
 - **LLM Engine Factory** (`src/llm/EngineFactory.ts`) selects the best engine (MLC / llama.cpp / Transformers.js / API) based on browser capabilities and model config
 
 ### Native C++ / WASM policy
@@ -90,13 +90,10 @@ the_jokesters/
 ├── src/
 │   ├── main.ts                    # Application entry point, UI setup, event handlers, service worker registration
 │   ├── GroupChatManager.ts        # LLM chat management, conversation history, agent rotation, retry logic
-│   ├── AgentModelManager.ts       # Per-agent model assignment and hot-swapping
 │   ├── Director/                  # Scene orchestration and mode implementations
 │   │   ├── Director.ts            # Main orchestration class (game loop), Scenario execution, 100+ mode dispatch
 │   │   ├── MemoryManager.ts       # Episode persistence (IndexedDB + localStorage + HuggingFace cloud)
 │   │   ├── HFStorageManager.ts    # HuggingFace Hub API integration
-│   │   ├── ScriptGenerator.ts     # AI-powered script generation
-│   │   ├── ScriptParser.ts        # Script parsing utilities
 │   │   ├── MediaReactionManager.ts # Video reaction trigger handling
 │   │   ├── sceneArc.ts            # Rolling scene summary (acts, beats, running gags)
 │   │   ├── productionCard.ts      # Episode beats, relationships, secret objectives, guest NPC
@@ -128,14 +125,11 @@ the_jokesters/
 │   │   ├── ttsNativeSampleRate.ts # Vocoder-grounded playback sample rate (44.1 kHz Supertonic)
 │   │   ├── MusicEngine.ts         # Beat generation for musical mode
 │   │   ├── SpeechQueue.ts         # Speech playback queue, prerender cache, SFX ducking (engine-agnostic)
-│   │   ├── OptimizedSpeechQueue.ts # Standalone text-in queue — not wired into bootstrap (see below)
-│   │   ├── Supertonic.ts          # Core TTS ONNX inference (legacy)
 │   │   ├── SupertonicPipeline.ts  # TTS pipeline stages (current): text encoder, duration predictor, vector estimator, vocoder
 │   │   ├── VoiceInputManager.ts   # Web Speech API voice input
 │   │   ├── VisemePredictor.ts     # Lip-sync viseme prediction
 │   │   ├── PhonemeCache.ts        # Phoneme caching for TTS
 │   │   ├── TTSLatencyProfiler.ts  # TTS performance profiling
-│   │   ├── TTSBenchmark.ts        # TTS benchmarking utilities
 │   │   └── worker/                # Web Workers
 │   │       └── tts.worker.ts      # Web Worker for TTS synthesis
 │   ├── comedy/                    # Comedy engine components
@@ -159,19 +153,15 @@ the_jokesters/
 │   ├── visuals/                   # 3D visualization
 │   │   ├── Actor.ts               # 3D agent representation (capsule with face, eyes, mouth)
 │   │   ├── TechBroActor.ts        # Custom Tech Bro actor with gesture animations
-│   │   ├── DeadpanRobotActor.ts   # Custom Robot actor with mechanical animations
 │   │   ├── Stage.ts               # Three.js scene management, lighting, rendering, audience InstancedMesh
 │   │   ├── kits/                  # Stage kits (GLB sets), camera director, prop rig, shadow policy
 │   │   ├── stageKitIds.ts         # Whitelisted stage kit ids (void/talkshow/court/news)
 │   │   ├── propCatalog.ts / propTokens.ts # Whitelisted props + [prop:x] dialogue cue parsing
 │   │   ├── LipSync.ts             # Lip synchronization with audio volume
-│   │   └── CallbackVisualizer.ts  # Visual feedback for callbacks
 │   ├── config/                    # Configuration
-│   │   ├── agents.ts              # Agent definitions (personalities, prompts, colors)
 │   │   ├── models.ts              # LLM model configurations (VPS, HF, unified, triple-engine)
 │   │   └── improvSetups.ts        # Pre-defined improv scene setups
 │   ├── ui/                        # UI utilities
-│   │   └── BeatGenerator.ts       # Simple beat animation for musical mode
 │   ├── utils/                     # Utilities
 │   │   ├── RNG.ts                 # Seeded random number generator
 │   │   ├── dynamicContext.ts      # Dynamic context window / VRAM optimization
@@ -181,9 +171,7 @@ the_jokesters/
 │   │   ├── robot.ts               # Robot persona prompt
 │   │   └── techBro.ts             # Tech Bro persona prompt
 │   ├── types/                     # App types (library types come from the packages themselves)
-│   │   └── style.d.ts
 │   ├── test/                      # Test utilities
-│   │   └── chaosTest.ts           # Chaos testing (library only; its runner was removed)
 │   ├── service-worker.ts          # Parallel Range downloads + dual-domain striping / failover
 │   ├── improv/                    # Conversation branching utilities
 │   │   └── branching.ts
@@ -203,8 +191,8 @@ the_jokesters/
 │   └── engine-comparison/         # Engine comparison tests
 │       ├── index.html
 │       └── test-runner.ts
-├── backend/                       # Optional backend proxy
-│   └── llama_proxy.py             # FastAPI OpenAI-compatible proxy for llama-server
+├── sidecar/                       # Out-of-app: hf_spaces/, utils/ (Colab), experiments/, backend/ — see README
+├── tools/verification/            # Manual Playwright checks (captures are git-ignored)
 ├── public/                        # Static assets served directly
 │   ├── jokes/                     # Joke databases
 │   ├── sets/                      # Stage kit GLBs (built by scripts/build-stage-kits.mjs)
@@ -238,7 +226,6 @@ the_jokesters/
 │   ├── tokenizer.json
 │   └── tokenizer_config.json
 ├── .vps-staging/                  # Staged model files for VPS upload (gitignored, local only)
-├── verification/                  # Screenshot verification assets
 ├── index.html                     # HTML entry point (WebGPU detection, runtime error surfacing)
 ├── package.json                   # Node.js dependencies and scripts
 ├── tsconfig.json                  # Solution file -> tsconfig.{app,sw,node,test}.json (shared: tsconfig.base.json)
@@ -422,15 +409,6 @@ Factory for creating and selecting LLM engines:
 - Supports manual engine preference override
 - Validates model compatibility per engine
 
-### AgentModelManager
-**File**: `src/AgentModelManager.ts`
-
-Handles per-agent LLM model assignment:
-- Maintains mapping of agent IDs to model IDs
-- Hot-swaps models between turns to stay within VRAM limits
-- Only one model loaded at a time
-- Reports progress during model swaps with scaled percentages
-
 ### AudioEngine / OptimizedAudioEngine
 **Files**: `src/audio/AudioEngine.ts`, `src/audio/OptimizedAudioEngine.ts`,
 `src/audio/OptimizedAudioEngineAdapter.ts`, `src/audio/SpeechQueue.ts`
@@ -464,13 +442,6 @@ keeps 44.1kHz rather than mis-snapping to 48kHz, which caused the #332 pitch/spe
 
 Append `?legacyAudio` to the app URL to force the old main-thread `AudioEngine` instead, kept as a
 fallback for one release if the optimized path regresses on some device.
-
-`OptimizedSpeechQueue.ts` (a separate, text-in `enqueue()` queue with its own internal synthesis
-call) is **not** wired into bootstrap and **not** re-exported from `src/audio/index.ts` — its API
-isn't compatible with the existing prerender cache (`SpeechQueue.prerenderOne`/`synthesizeOrTakeCached`)
-that `PrerenderCoordinator` and the improv/mode loops depend on. It carries an `@internal` doc
-comment pointing back at `SpeechQueue`. Swapping to it would mean rewriting the prerender pipeline,
-not just the engine.
 
 **Gotcha:** `new Worker(new URL('./x.ts', import.meta.url), opts)` must have the `new URL(...)`
 inlined directly in the `Worker` constructor call for Vite's worker plugin to detect and bundle it.
@@ -548,17 +519,19 @@ untyped, and impossible to unit-test without faking `window`. Two patterns repla
    `setPrerenderInvalidator(fn)` / `setEpisodeReadyHandler(fn)` hooks that `improvController` /
    `episodeUi` register into (via the `getDirector` param they already hold) once the coordinator /
    export UI exist, instead of Director reaching upward into app-layer globals.
-2. **A typed shared-instance module, only for the two entry points that run before the controller
-   chain exists.** `main.ts` calls `setupDashboard()` and `startSyncPolling()` synchronously, before
-   `initApp()`'s async body has constructed anything — parameter-threading isn't possible there. Both
-   take a `getMemoryManager: () => MemoryManager | null` argument backed by
-   `setSharedMemoryManager`/`getSharedMemoryManager` (`MemoryManager.ts`), populated once
-   `bootstrap.ts` constructs the real instance — mirroring the same pattern `SfxManager.ts` already
-   used (`setSharedSfxManager`/`getSharedSfxManager`). No DI framework; every accessor pair lives
-   next to the class it serves.
+2. **One typed `AppServices` container per app run** (`src/app/services.ts`), built in
+   `initApp()` and owned by that run's `Scope` (`src/utils/lifecycle.ts`), which disposes every
+   service (engine, AudioContext, Stage rAF/renderer, sync timers, clip recorder) before a retry.
+   `sceneController` receives it and threads it down; there are no `setShared*`/`getShared*`
+   module singletons. `main.ts` owns the page-lifetime root scope and reads the current run's
+   `MemoryManager` through `initApp`'s `onServices` hook for `setupDashboard()` / `startSyncPolling()`.
+   Use `scope.listen` / `scope.interval` / `scope.raf` instead of bare `window.addEventListener` /
+   `setInterval` in `src/app`, `src/visuals` and `src/Director` (ESLint enforces it).
 
-`(window as any).triggerAnalytics` in `dashboard.ts` is the one remaining `window` export, and it's
-deliberately a debug convenience (click a button from the console), not a service getter.
+Scene restarts are fenced by per-run tokens: each `Director.playScenario` call gets its own
+`{ id, AbortController }`, the `ModeContext` it hands the mode loop is bound to that run
+(`ctx.isRunning()`, `ctx.signal`, `ctx.stopScene()`), and a new scene waits (≤ 3 s) for the old
+loop to unwind. A stale loop can't speak, record turns into, or stop the new scene.
 
 ### CallbackEngine
 **File**: `src/comedy/callbackEngine.ts`
@@ -687,12 +660,12 @@ Default / blessed launch presets: Hermes-3 3B (f32/f16), Vicuna 7B, Qwen 0.5B, V
 Override with `VITE_VPS_STORAGE_ORIGIN`. Mirror `storage.noahcohn.com` is used for dual-domain Range striping and failover (`src/utils/dualDomainStripe.ts`); do not hardcode new app paths to the mirror.
 
 ### Agent Configuration
-Agents defined in `src/config/agents.ts`:
+Agents defined in `src/cast/defaultCast.ts` (the only roster). Five performers; the trio is on by default, Chad and Unit-734 join when a cast card enables them:
 ```typescript
 const agents = [
-  { id: 'comedian', name: 'The Comedian', temperature: 0.95, top_p: 0.95, color: '#ff6b6b' },
-  { id: 'philosopher', name: 'The Philosopher', temperature: 0.75, top_p: 0.9, color: '#4ecdc4' },
-  { id: 'scientist', name: 'The Scientist', temperature: 0.6, top_p: 0.85, color: '#45b7d1' },
+  { id: 'comedian', name: 'The Comedian', temperature: 0.85, top_p: 0.93, color: '#ff6b6b' },
+  { id: 'philosopher', name: 'The Philosopher', temperature: 0.7, top_p: 0.9, color: '#4ecdc4' },
+  { id: 'scientist', name: 'The Scientist', temperature: 0.5, top_p: 0.85, color: '#45b7d1' },
   { id: 'techBro', name: 'Chad Vanderblock', temperature: 0.9, top_p: 0.92, color: '#FF6B35' },
   { id: 'robot', name: 'Unit-734', temperature: 0.5, top_p: 0.8, color: '#C0C0C0' },
 ]
@@ -799,9 +772,6 @@ CI runner: `tests/perf/ci-runner.ts`
 4. CallbackEngine tracks references across turns
 5. QualityFilter rejects low-rated jokes
 6. TTS system is configured
-
-### Chaos Testing
-`src/test/chaosTest.ts` provides randomized stress testing for the conversation and mode systems. The old `chaosTestRunner.cjs` / `runChaosTests.ts` / `integrationChaosTest.ts` mocked the app and so only tested themselves; they were removed. `docs/chaos-report.md` is a historical report.
 
 ### Manual Testing Checklist
 1. **Model Loading**: Verify model loads successfully with progress indicator
@@ -984,7 +954,7 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   `Cache.add` before the worker controls the page. Reload only if both the page rewrite and the SW
   missed (`mlc-chat-config.json` 404 on a flat VPS path).
 - The **"Cloud Conflict Dashboard"** modal (`#cloud-dashboard-modal`) defaults to `display:none` and
-  `setupDashboard()` (`src/ui/dashboard.ts`) hides it again on init; it only opens via the dashboard
+  `setupDashboard()` (`src/ui/dashboard/index.ts`) hides it again on init; it only opens via the dashboard
   or "Review Sync" buttons, so it no longer blocks **Load Model & Start** on cold start.
 
 ---

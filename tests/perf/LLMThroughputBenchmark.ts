@@ -6,7 +6,7 @@
  */
 
 import { GroupChatManager } from '../../src/GroupChatManager';
-import { agents } from '../../src/config/agents';
+import { castAgents as agents } from '../../src/cast/defaultCast';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { prefillReduction, summarizeTurnMetrics, type TurnMetricsSummary } from '../../src/chat/turnMetrics';
 
@@ -77,7 +77,7 @@ export class LLMThroughputBenchmark {
     console.log('[LLMThroughputBenchmark] Initializing GroupChatManager...');
     console.log(`[LLMThroughputBenchmark] Model: ${this.options.modelId}`);
     
-    this.manager = new GroupChatManager(agents);
+    this.manager = new GroupChatManager(agents.map((a) => ({ ...a })));
     
     await this.manager.initialize((progress) => {
       console.log(`[LLMThroughputBenchmark] Loading: ${(progress.progress * 100).toFixed(1)}%`);

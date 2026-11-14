@@ -111,7 +111,7 @@ class SmokeTestRunner:
             'src/comedy/qualityFilter.ts',
             'src/audio/AudioEngine.ts',
             'src/visuals/Stage.ts',
-            'src/config/agents.ts',
+            'src/cast/defaultCast.ts',
             'src/config/models.ts',
         ]
         
@@ -133,7 +133,7 @@ class SmokeTestRunner:
         """Verify all 5 agents are configured"""
         print("\n--- Checking Agent Configuration ---")
         
-        with open(os.path.join(REPO_ROOT, 'src/config/agents.ts'), 'r') as f:
+        with open(os.path.join(REPO_ROOT, 'src/cast/defaultCast.ts'), 'r') as f:
             content = f.read()
         
         expected_agents = ['comedian', 'philosopher', 'scientist', 'techBro', 'robot']

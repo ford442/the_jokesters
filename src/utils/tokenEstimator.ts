@@ -19,6 +19,23 @@ export const MODEL_FAMILY_CHARS_PER_TOKEN: Record<string, number> = {
   default: 4.0,
 };
 
+/**
+ * The single fallback chars/token ratio. Every heuristic (budgets, UI readouts)
+ * derives from `MODEL_FAMILY_CHARS_PER_TOKEN` — don't add local constants.
+ */
+export const DEFAULT_CHARS_PER_TOKEN = MODEL_FAMILY_CHARS_PER_TOKEN.default;
+
+/** Chars/token ratio for a model family, falling back to the default. */
+export function charsPerTokenForFamily(family: string): number {
+  return MODEL_FAMILY_CHARS_PER_TOKEN[family] ?? DEFAULT_CHARS_PER_TOKEN;
+}
+
+/** Quick synchronous estimate when no engine/estimator instance is at hand. */
+export function estimateTokensHeuristic(text: string, charsPerToken = DEFAULT_CHARS_PER_TOKEN): number {
+  if (!text) return 0;
+  return Math.max(1, Math.ceil(text.length / charsPerToken));
+}
+
 const CALIBRATION_SAMPLE =
   'The Comedian delivers a punchline about startup culture while The Philosopher ' +
   'questions the meaning of venture capital. Multi-agent comedy needs accurate token budgets.';
@@ -26,13 +43,12 @@ const CALIBRATION_SAMPLE =
 export class HeuristicTokenEstimator implements TokenEstimator {
   private readonly charsPerToken: number;
 
-  constructor(charsPerToken = 4) {
+  constructor(charsPerToken = DEFAULT_CHARS_PER_TOKEN) {
     this.charsPerToken = charsPerToken;
   }
 
   estimateText(text: string): number {
-    if (!text) return 0;
-    return Math.max(1, Math.ceil(text.length / this.charsPerToken));
+    return estimateTokensHeuristic(text, this.charsPerToken);
   }
 
   getSource(): TokenEstimationSource {

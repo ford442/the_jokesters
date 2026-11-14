@@ -117,6 +117,11 @@ export class ShowMusic {
     }
   }
 
+  /** Stops the beat and ducking follower and disconnects the engine. */
+  dispose(): void {
+    this.engine.dispose()
+  }
+
   private loadVolume(): number {
     try {
       const raw = localStorage.getItem(SHOW_MUSIC_VOLUME_KEY)
@@ -128,12 +133,3 @@ export class ShowMusic {
   }
 }
 
-let shared: ShowMusic | null = null
-
-export function setSharedShowMusic(m: ShowMusic | null): void {
-  shared = m
-}
-
-export function getSharedShowMusic(): ShowMusic | null {
-  return shared
-}

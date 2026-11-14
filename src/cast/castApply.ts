@@ -1,5 +1,5 @@
 import type { Agent } from '../types/chat'
-import { agents as defaultAgents } from '../config/agents'
+import { shippedAgent } from './defaultCast'
 import { setVoiceOverrides } from '../audio/voiceMap'
 import { setPersonaBaseOverrides } from '../chat/PersonalityStore'
 import { bundledAvatarUrl } from '../visuals/avatarManifest'
@@ -18,7 +18,7 @@ export interface RosterApplyResult {
 }
 
 function newAgentFor(slot: CastSlot): Agent {
-  const base = defaultAgents.find((a) => a.id === slot.id)!
+  const base = shippedAgent(slot.id)!
   return { ...base }
 }
 

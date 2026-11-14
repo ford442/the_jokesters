@@ -5,5 +5,11 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"]
   },
-  "include": ["tests/**/*.ts", "src/vite-env.d.ts", "src/types/**/*.d.ts"]
+  "include": [
+    "tests/**/*.ts",
+    "src/vite-env.d.ts",
+    "src/types/**/*.d.ts",
+    // Imports src/ (DOM types), so it is checked here rather than in tsconfig.node.json.
+    "scripts/export-comedy-prompts.ts"
+  ]
 }

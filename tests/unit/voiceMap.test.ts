@@ -6,10 +6,10 @@ import {
   resolveVoiceStyle,
 } from '../../src/audio/voiceMap'
 import { CHARACTER_SPEEDS } from '../../src/app/chatLog'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 
 describe('AGENT_VOICE_MAP', () => {
-  it('covers every agent id from src/config/agents.ts', () => {
+  it('covers every agent id from src/cast/defaultCast.ts', () => {
     for (const agent of agents) {
       expect(AGENT_VOICE_MAP).toHaveProperty(agent.id)
     }
@@ -43,7 +43,7 @@ describe('AGENT_VOICE_MAP', () => {
 })
 
 describe('CHARACTER_SPEEDS', () => {
-  it('covers every agent id from src/config/agents.ts', () => {
+  it('covers every agent id from src/cast/defaultCast.ts', () => {
     for (const agent of agents) {
       expect(CHARACTER_SPEEDS).toHaveProperty(agent.id)
       expect(typeof CHARACTER_SPEEDS[agent.id]).toBe('number')

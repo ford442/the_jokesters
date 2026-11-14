@@ -1,4 +1,5 @@
 import { buildCueScore, type NoteEvent } from './cueScores';
+import { createAudioContext } from './audioContext';
 import { DuckEnvelope, type DuckOptions } from './ducking';
 import { MUSIC_PALETTES, type MusicPalette } from './musicPalettes';
 import type { ShowCue } from './showCues';
@@ -47,7 +48,7 @@ export class MusicEngine {
     private userVolume = 0.7;
 
     constructor(options: MusicEngineOptions = {}) {
-        this.audioContext = options.ctx ?? new (window.AudioContext || (window as any).webkitAudioContext)();
+        this.audioContext = options.ctx ?? createAudioContext();
         const ctx = this.audioContext;
 
         this.input = ctx.createGain();

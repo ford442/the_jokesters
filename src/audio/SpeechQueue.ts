@@ -1,4 +1,5 @@
 
+import { createAudioContext } from './audioContext';
 import type { SynthesisOptions, SynthesizedAudio, TtsEngine } from './AudioEngine';
 import { VisemePredictor, type Viseme } from './VisemePredictor';
 import { SUPERTONIC_NATIVE_SAMPLE_RATE } from './ttsNativeSampleRate';
@@ -59,7 +60,7 @@ export class SpeechQueue {
 
     constructor(audioEngine: TtsEngine) {
         this.audioEngine = audioEngine;
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        this.audioContext = createAudioContext();
         this.ttsGain = this.audioContext.createGain();
         this.ttsGain.gain.value = 1;
         this.destinationNode = this.audioContext.destination;
@@ -180,6 +181,17 @@ export class SpeechQueue {
             } catch (err) {
                 console.warn('[SpeechQueue] utterance listener threw:', err);
             }
+        }
+    }
+
+    /** Stops playback, drops listeners/cache and closes the AudioContext. Idempotent. */
+    public async dispose(): Promise<void> {
+        this.stop();
+        this.utteranceStartListeners.clear();
+        this.utteranceEndListeners.clear();
+        this.audioCache.clear();
+        if (this.audioContext.state !== 'closed') {
+            await this.audioContext.close().catch(() => undefined);
         }
     }
 

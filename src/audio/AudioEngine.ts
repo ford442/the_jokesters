@@ -28,6 +28,8 @@ export interface TtsEngine {
     synthesize(text: string, speakerId?: string, options?: SynthesisOptions): Promise<SynthesizedAudio>;
     /** Native sample rate of synthesized audio. Unset engines fall back to SpeechQueue's legacy default. */
     readonly sampleRate?: number;
+    /** Optional teardown (workers, sessions). */
+    dispose?(): void | Promise<void>;
 }
 
 export class AudioEngine implements TtsEngine {
