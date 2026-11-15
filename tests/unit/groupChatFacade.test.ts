@@ -4,7 +4,7 @@ import { GroupChatManager } from '../../src/GroupChatManager'
 import { ConversationStore } from '../../src/chat/ConversationStore'
 import { DynamicContextManager } from '../../src/utils/dynamicContext'
 import { MockLLMEngine } from '../../src/llm/MockLLMEngine'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 
 describe('categorizeChatError / GroupChatManager.getErrorCategory', () => {
   it('classifies webgpu errors', () => {

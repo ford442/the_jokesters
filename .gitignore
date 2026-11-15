@@ -55,3 +55,8 @@ patches/web-llm/.applied/
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Playwright verification captures (tools/verification/*.py write here) — keep out of git
+tools/verification/*.png
+tools/verification/video/
+coverage/

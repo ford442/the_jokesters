@@ -1,5 +1,5 @@
 import type { Agent } from '../types/chat'
-import { agents as defaultAgents } from '../config/agents'
+import { shippedAgent } from '../cast/defaultCast'
 
 const STORAGE_PREFIX = 'jokesters-evolved-adjustments-'
 const MAX_ADJUSTMENTS = 5
@@ -17,7 +17,7 @@ export function setPersonaBaseOverrides(overrides: Readonly<Record<string, strin
 }
 
 function basePromptFor(agentId: string, fallback: string): string {
-  return personaBaseOverrides[agentId] ?? defaultAgents.find((a) => a.id === agentId)?.systemPrompt ?? fallback
+  return personaBaseOverrides[agentId] ?? shippedAgent(agentId)?.systemPrompt ?? fallback
 }
 
 function loadAdjustments(agentId: string): string[] {

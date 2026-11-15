@@ -7,19 +7,13 @@ export default defineConfig({
     testTimeout: 15_000,
     coverage: {
       provider: 'v8',
-      include: [
-        'src/comedy/callbackEngine.ts',
-        'src/comedy/qualityFilter.ts',
-        'src/utils/dynamicContext.ts',
-        'src/utils/tokenEstimator.ts',
-        'src/config/contextDepth.ts',
-      ],
-      reporter: ['text', 'text-summary'],
+      // Whole app source; the soft floor is ratcheted by scripts/check-coverage-ratchet.mjs.
+      include: ['src/**/*.ts'],
+      exclude: ['src/**/*.d.ts', 'src/**/*.part*.ts', 'src/Director/modes/generated/**'],
+      reporter: ['text-summary', 'json-summary'],
     },
   },
-  build: {
   esbuild: {
     keepNames: true, // preserves constructor.name
   },
-}
 });

@@ -25,7 +25,7 @@ These methods are safe for `Director`, `ModeContext`, and UI controllers:
 | Method | Purpose |
 |--------|---------|
 | `initialize(onProgress?, modelId?, context?, engine?)` | Load model; reconciles history to new context budget |
-| `terminate()` | Unload engine (used by `AgentModelManager` hot-swap) |
+| `terminate()` | Unload engine (waits for an in-flight `initialize()` first; run scope disposal calls it) |
 | `chat(userMessage, onSentence?, opts?)` | Round-robin agent turn + streaming sentences |
 | `chatForAgent(agentId, prompt, onSentence?, opts?)` | Pin speaker without advancing rotation permanently |
 | `interrupt()` | Abort in-flight generation (all engines) |
@@ -40,7 +40,7 @@ These methods are safe for `Director`, `ModeContext`, and UI controllers:
 
 ---
 
-## Hot-swap (`AgentModelManager`)
+## Model swap
 
 1. `terminate()` clears the session.
 2. `initialize(...)` loads the new model.

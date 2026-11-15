@@ -7,6 +7,7 @@
  */
 import type { Agent, ProfanityLevel } from '../types/chat'
 import { personaFor } from '../cast/profanity'
+import { DEFAULT_CHARS_PER_TOKEN } from '../utils/tokenEstimator'
 
 /** Persona boilerplate that moves into the shared rules (said once instead of five times). */
 const BOILERPLATE = [
@@ -28,7 +29,7 @@ export function compactPersona(prompt: string, maxChars: number): string {
 }
 
 /** Persona character budget so the whole shared prefix stays ≈30% of the context window. */
-export function personaCharBudget(contextTokens: number, agentCount: number, charsPerToken = 4): number {
+export function personaCharBudget(contextTokens: number, agentCount: number, charsPerToken = DEFAULT_CHARS_PER_TOKEN): number {
   const personaChars = contextTokens * 0.3 * charsPerToken - RULES_CHARS
   return Math.min(1200, Math.max(100, Math.floor(personaChars / Math.max(1, agentCount))))
 }
@@ -42,7 +43,7 @@ const RULES =
 const RULES_CHARS = RULES.length + 120
 
 export function buildWritersRoomSystemPrompt(
-  agents: Agent[],
+  agents: readonly Agent[],
   styleInstruction: string,
   options: { contextTokens: number; charsPerToken?: number; summary?: string | null; profanity?: ProfanityLevel },
 ): string {

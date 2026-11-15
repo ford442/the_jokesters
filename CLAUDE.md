@@ -6,7 +6,9 @@ A browser-based multi-agent comedy show powered by in-browser LLMs (MLC WebLLM /
 Transformers.js / optional API), ONNX Supertonic TTS, and Three.js avatars with lip-sync and
 procedural acting.
 
-**5 agents:** The Comedian, The Philosopher, The Scientist, Chad Vanderblock (Tech Bro), Unit-734 (Robot).
+**5 performers, 3 on by default:** The Comedian, The Philosopher, The Scientist (always on — modes hard-code them);
+Chad Vanderblock (Tech Bro) and Unit-734 (Robot) join the rotation when a cast card enables them.
+The only roster is `src/cast/defaultCast.ts`.
 
 ## Tech Stack
 
@@ -21,7 +23,9 @@ procedural acting.
 
 ```
 src/
-  app/bootstrap.ts          App init, model load, SFX, scene wire-up
+  app/bootstrap.ts          App init (one child Scope per attempt; retry disposes it), model load, SFX, scene wire-up
+  app/services.ts           AppServices: the run's typed service container (no setShared*/getShared* singletons)
+  utils/lifecycle.ts        Scope: listen/interval/timeout/raf/add/child/dispose (LIFO) — use instead of bare listeners/timers
   GroupChatManager.ts       LLM chat, history, prerenderTurns
   utils/contextBudget.ts    DynamicContextManager (token-budget message window)
   utils/vramOverrides.ts    Compiled-ctx clamp, prefill align, KV quant, sliding window
@@ -32,7 +36,7 @@ src/
   config/models.ts          Model registry (uses VPS_STORAGE_URL)
   config/blessedPresets.ts  Curated 5-model launch list
   app/modelGuide.ts         Guided onboarding recommendations
-  Director/Director.ts      Scene orchestrator (100+ modes via registry)
+  Director/Director.ts      Scene orchestrator (100+ modes via registry); per-run tokens fence stop→restart
   Director/productionCard.ts  Episode beats / relationships / status / emotional arc / genre shift / secrets / guest → productionPrompt.ts hiddenInstruction
   comedy/comedySamplingPlan.ts  Per-turn sampling tweaks from act + callback heat
   audio/voiceMap.ts         Canonical agent → voice style map
@@ -50,6 +54,8 @@ src/
   audio/showAudioBus.ts     Master bus (TTS + SFX + music) + recording tap
   recording/ClipRecorder.ts Rolling "clip last 30 s" (WebM ring / WebCodecs+mp4-muxer MP4)
   cast/                     Cast editor: card schema (zod), apply, IndexedDB avatars
+  cast/defaultCast.ts       The one roster: 5 shipped agents, default-on trio, persona suffix
+  ui/dashboard/             Cloud dashboard modal: auth / history / deltas / sync / analytics (DOM via h(), no innerHTML)
 ```
 
 Avatars, show music, clips and cast cards: [docs/SHOW_PRODUCTION.md](./docs/SHOW_PRODUCTION.md).
@@ -76,6 +82,7 @@ npm run typecheck    # tsc -b: src, service worker, vite.config.ts, tests (requi
 npm run lint         # ESLint (typescript-eslint, type-aware); `npm run lint:ci` also ratchets explicit `any`
 npm run registry:check  # generated mode registry matches src/Director/modes (regenerate: node scripts/generate-mode-registry.mjs)
 npm test             # Vitest unit tests
+npm run test:coverage:ci  # coverage over src/** + soft ratchet (scripts/coverage-baseline.json; `coverage:update`)
 npm run build        # tsc -b + vite → dist/
 npm run budget:check  # bundle/dist byte budgets from perf-budget.json (after build)
 npm run perf:quick
@@ -90,6 +97,14 @@ npm run perf:quick
 - PWA types: `/// <reference types="vite-plugin-pwa/client" />` in `src/vite-env.d.ts` — requires
   `npm ci` so `vite-plugin-pwa` is installed. Do **not** put `"types": ["vite-plugin-pwa/client"]`
   alone in `tsconfig.json`.
+
+### Lifecycle rules
+
+- Long-lived listeners/timers/rAF go through a `Scope` (`src/utils/lifecycle.ts`). ESLint bans bare
+  `setInterval` and `window.addEventListener` in `src/app`, `src/visuals`, `src/Director`.
+- Services that hold workers, AudioContexts, GPU resources or timers need a `dispose()` registered with
+  the owning scope (`run.add(...)` in `initApp`).
+- Mode loops should check `ctx.isRunning()` / `ctx.signal` — both turn false once a newer scene starts.
 
 ## Common errors
 

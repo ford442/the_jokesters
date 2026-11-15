@@ -7,11 +7,13 @@ import type { ChatLogApi } from './chatLog'
 import { CHARACTER_SPEEDS, createFeedbackControls } from './chatLog'
 import { MAX_PRERENDER_SENTENCES } from './types'
 import { updateNextAgentUI, updateVRAMInfoBar } from './statusBar'
-import { getSharedSfxManager } from '../audio/SfxManager'
+import type { SfxManager } from '../audio/SfxManager'
 import { stripStageTokens, takePropCues } from '../visuals/propTokens'
 import { stripForSpeakability } from '../chat/speakableText'
+import type { AppServices } from './services'
 
 export interface ChatControllerDeps {
+  services: AppServices
   agents: Agent[]
   groupChatManager: GroupChatManager
   audioEngine: TtsEngine
@@ -41,7 +43,7 @@ export function wireChatController(deps: ChatControllerDeps): void {
     getDirector,
   } = deps
 
-  const { speakAndVisualize, prerenderAhead } = createAudioHelpers(audioEngine, speechQueue, stage)
+  const { speakAndVisualize, prerenderAhead } = createAudioHelpers(audioEngine, speechQueue, stage, deps.services.sfx)
 
   const sendMessage = async () => {
     const message = userInput.value.trim()
@@ -182,6 +184,7 @@ export function createAudioHelpers(
   _audioEngine: TtsEngine,
   speechQueue: SpeechQueue,
   stage: Stage,
+  sfx: SfxManager | null,
 ): { speakAndVisualize: SpeakAndVisualizeFn; prerenderAhead: PrerenderAheadFn } {
   let isPrerendering = false
 
@@ -191,7 +194,6 @@ export function createAudioHelpers(
       // Strip [prop:…] / [sfx:…] tokens. Props are whitelist-only; SFX plays, never TTS.
       const cued = takePropCues(text)
       stage.applyPropCues(cued.cues)
-      const sfx = getSharedSfxManager()
       const cleanText = stripForSpeakability(sfx ? await sfx.processDialogue(cued.cleanText, agentId) : stripStageTokens(cued.cleanText))
       if (!cleanText.trim()) return
       // Use keyed TTS cache so sentence prerender is actually consumed (no double synth)

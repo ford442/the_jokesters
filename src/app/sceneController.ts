@@ -1,8 +1,4 @@
 import type { Agent, ProfanityLevel } from '../GroupChatManager'
-import type { GroupChatManager } from '../GroupChatManager'
-import type { TtsEngine } from '../audio/AudioEngine'
-import type { SpeechQueue } from '../audio/SpeechQueue'
-import type { Stage } from '../visuals/Stage'
 import { createChatLog } from './chatLog'
 import { createAudioHelpers, wireChatController } from './chatController'
 import { wireImprovController } from './improvController'
@@ -13,36 +9,27 @@ import { wireEpisodeUi } from './episodeUi'
 import { wireSfxUi } from './sfxUi'
 import { wireMusicUi } from './musicUi'
 import { wireClipUi } from './clipUi'
-import { getSharedAvatarTier } from '../visuals/avatarTier'
 import { wireVoiceUi } from './voiceUi'
 import { createDirectorBridge } from './directorBridge'
 import type { Director } from '../Director/Director'
-import { getSharedShowMusic } from '../audio/ShowMusic'
-import type { MemoryManager } from '../Director/MemoryManager'
+import type { AppServices } from './services'
+import type { Scope } from '../utils/lifecycle'
 
 export interface SceneControllerDeps {
   agents: Agent[]
-  groupChatManager: GroupChatManager
-  memoryManager: MemoryManager | null
-  audioEngine: TtsEngine
-  speechQueue: SpeechQueue
-  stage: Stage
+  services: AppServices
+  /** Owner of this run's UI wiring; disposed before a re-init. */
+  scope: Scope
 }
 
 /** Wire chat/improv handlers and post-ready settings UI after model load succeeds. */
 export function wireSceneController(deps: SceneControllerDeps): void {
-  const {
-    agents,
-    groupChatManager,
-    memoryManager,
-    audioEngine,
-    speechQueue,
-    stage,
-  } = deps
+  const { agents, services, scope } = deps
+  const { groupChatManager, memoryManager, audioEngine, speechQueue, stage, sfx, music } = services
 
   const dom = getDOM()
   const chatLog = createChatLog(dom.chatLog, groupChatManager)
-  const { speakAndVisualize, prerenderAhead } = createAudioHelpers(audioEngine, speechQueue, stage)
+  const { speakAndVisualize, prerenderAhead } = createAudioHelpers(audioEngine, speechQueue, stage, sfx)
 
   dom.ttsStepsSlider.oninput = () => { dom.ttsStepsVal.textContent = dom.ttsStepsSlider.value }
   dom.chaosSlider.oninput = () => { dom.chaosVal.textContent = dom.chaosSlider.value + '%' }
@@ -91,6 +78,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   const getDirector = () => directorRef
 
   directorRef = createDirectorBridge({
+    services,
     groupChatManager,
     memoryManager,
     speechQueue,
@@ -100,13 +88,16 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     ttsStepsSlider: dom.ttsStepsSlider,
     speakAndVisualize,
     onSceneStop: () => {
-      getSharedShowMusic()?.stopBeat()
+      music.stopBeat()
       updateNextAgentUI(groupChatManager)
       updateVRAMInfoBar(groupChatManager)
     },
   })
+  const director = directorRef
+  scope.add(() => director.dispose())
 
   wireChatController({
+    services,
     agents,
     groupChatManager,
     audioEngine,
@@ -142,6 +133,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   })
 
   wireImprovController({
+    services,
     agents,
     groupChatManager,
     audioEngine,
@@ -156,6 +148,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
   })
 
   wireEpisodeUi({
+    services,
     agents,
     groupChatManager,
     audioEngine,
@@ -165,9 +158,9 @@ export function wireSceneController(deps: SceneControllerDeps): void {
     getDirector,
   })
 
-  wireSfxUi()
-  wireMusicUi()
-  wireClipUi({ agents, speechQueue, stage, chatLog })
+  wireSfxUi(sfx)
+  wireMusicUi(music)
+  wireClipUi({ agents, speechQueue, stage, chatLog, services, scope })
 
   // Cast editor is a lazy chunk (zod schema + editor UI) — nothing loads until it is opened.
   document.getElementById('cast-editor-btn')?.addEventListener('click', () => {
@@ -179,7 +172,7 @@ export function wireSceneController(deps: SceneControllerDeps): void {
         stage,
         chatLog,
         getDirector,
-        tier: getSharedAvatarTier(),
+        tier: services.avatarTier,
       }),
     )
   })

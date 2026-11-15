@@ -110,7 +110,7 @@ this.currentAgentIndex = (this.currentAgentIndex + 1) % this.agents.length
 ### VRAM Management
 
 - **History Truncation**: Max 8 messages to prevent context window exhaustion
-- **Model Hot-Swapping**: `AgentModelManager` can unload/reload different models per agent
+- **Model reload**: `GroupChatManager.terminate()` + `initialize()` (concurrent `initialize` calls share one in-flight load)
 - **4-bit Quantization**: Uses q4f16_1 models (~4-5GB VRAM instead of 8GB+)
 - **Cache Clearing**: Automatic cache purge on network errors during model load
 
@@ -501,9 +501,9 @@ class QualityGate {
 
 ### Adding a New Agent
 
-1. Add agent config to `src/config/agents.ts`
-2. Add model mapping to `defaultAgentModelMappings`
-3. Add voice mapping in `AudioEngine.ts`
+1. Add the agent to `castAgents` in `src/cast/defaultCast.ts` (and `CAST_SLOT_IDS`)
+2. Add voice mapping in `src/audio/voiceMap.ts`
+3. Add a slot to the cast card schema if it should be editable (`src/cast/castCard.ts`)
 4. Create custom actor class if needed (extends `Actor`)
 5. Add to `Stage.ts` initActors()
 
@@ -524,12 +524,11 @@ and `SfxManager` once and threads them into the controllers (`chatController`, `
 `episodeUi` register into once their services exist, rather than Director reaching into app-layer
 globals to invalidate the prerender queue or show the episode export bar.
 
-Two entry points (`main.ts`'s `setupDashboard()` / `startSyncPolling()`) run synchronously before
-`initApp()`'s async body has constructed anything, so they can't receive services as ordinary
-parameters. They instead take a `getMemoryManager: () => MemoryManager | null` argument backed by a
-typed shared-instance module (`setSharedMemoryManager`/`getSharedMemoryManager` in
-`MemoryManager.ts`, mirroring the existing `SfxManager.ts` pattern) — populated once `bootstrap.ts`
-constructs the real instance. See AGENTS.md's "App service wiring" section for the full rationale.
+Each `initApp()` attempt builds one typed `AppServices` container (`src/app/services.ts`) inside a
+child `Scope` (`src/utils/lifecycle.ts`) that disposes it — engine, AudioContext, Stage render loop,
+sync timers — before a retry. `main.ts` owns the page-lifetime root scope and reads the current
+run's `MemoryManager` through `initApp`'s `onServices` hook for `setupDashboard()` /
+`startSyncPolling()`. See AGENTS.md's "App service wiring" section for the full rationale.
 
 ## Related Documentation
 

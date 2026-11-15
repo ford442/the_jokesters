@@ -1,9 +1,9 @@
 import { z } from 'zod'
 import { SUPERTONIC_STYLE_IDS, AGENT_VOICE_MAP, type AgentVoiceId, type SupertonicStyleId } from '../audio/voiceMap'
-import { agents as rosterAgents } from '../app/agents'
-import { agents as defaultAgents } from '../config/agents'
+import { CAST_SLOT_IDS, REQUIRED_SLOT_IDS, PERSONA_SUFFIX, shippedAgent, type CastSlotId } from './defaultCast'
 import type { ProfanityLevel } from '../types/chat'
 import { maskProfanity } from './profanity'
+import { charsPerTokenForFamily, estimateTokensHeuristic } from '../utils/tokenEstimator'
 
 /**
  * Cast card: a shareable JSON description of the five performers — name, persona, voice,
@@ -14,12 +14,8 @@ import { maskProfanity } from './profanity'
 export const CAST_CARD_FORMAT = 'jokesters-cast'
 export const CAST_CARD_VERSION = 1
 
-/** The five stage slots (also the ids of Stage's actors and of config/agents.ts). */
-export const CAST_SLOT_IDS = ['comedian', 'philosopher', 'scientist', 'techBro', 'robot'] as const
-export type CastSlotId = (typeof CAST_SLOT_IDS)[number]
-
-/** Slots the Director's modes hard-code (rap battle, musical improv…): always on stage. */
-export const REQUIRED_SLOT_IDS: readonly CastSlotId[] = ['comedian', 'philosopher', 'scientist']
+// Slot ids, required slots and the persona suffix live with the roster in ./defaultCast.
+export { CAST_SLOT_IDS, REQUIRED_SLOT_IDS, PERSONA_SUFFIX, type CastSlotId }
 
 export const MAX_NAME_CHARS = 32
 /**
@@ -31,8 +27,6 @@ export const MAX_PERSONA_CHARS = 600
 export const MAX_TITLE_CHARS = 60
 /** Upper bound on an embedded .vrm (decoded). Hosted avatars are far smaller; this stops a card from carrying a gigabyte. */
 export const MAX_EMBEDDED_AVATAR_BYTES = 24 * 1024 * 1024
-/** Rough chars-per-token for the live budget readout in the editor. */
-export const CHARS_PER_TOKEN = 3.6
 
 const slotIdSchema = z.enum(CAST_SLOT_IDS)
 const voiceSchema = z.enum(SUPERTONIC_STYLE_IDS as unknown as [SupertonicStyleId, ...SupertonicStyleId[]])
@@ -118,14 +112,6 @@ export function validateCastCard(raw: unknown): CastValidationResult {
   return { ok: false, errors }
 }
 
-/**
- * The agent as shipped: the live trio comes from app/agents.ts (what the show actually runs),
- * Chad and Unit-734 from config/agents.ts.
- */
-function shippedAgent(id: CastSlotId) {
-  return rosterAgents.find((x) => x.id === id) ?? defaultAgents.find((x) => x.id === id)
-}
-
 /** Default name/colour/sampling for each slot, as the show ships them. */
 export function defaultSlot(id: CastSlotId): CastSlot {
   const a = shippedAgent(id)
@@ -157,10 +143,6 @@ export function builtInPersona(id: CastSlotId): string {
   return shippedAgent(id)?.systemPrompt ?? ''
 }
 
-/** Required protocol suffix: the turn parser relies on "###" and the model must speak in sentences. */
-export const PERSONA_SUFFIX =
-  'DO NOT start sentences with your name. You MUST reply with actual English sentences. Do NOT reply with only emojis or emoticons. End your response with "###"'
-
 /**
  * System prompt for a custom persona: the user's text (trimmed, whitespace-normalised) plus the
  * protocol suffix, so a persona can never drop the "###" terminator the turn loop depends on.
@@ -187,7 +169,8 @@ export function checkPersona(text: string, level: ProfanityLevel): PersonaCheck 
     text: capped,
     truncated,
     flagged: maskProfanity(capped, level).masked,
-    approxTokens: Math.ceil(capped.length / CHARS_PER_TOKEN),
+    // Shipped models are llama3-family; the readout is a rough guide, not a budget.
+    approxTokens: estimateTokensHeuristic(capped, charsPerTokenForFamily('llama3')),
   }
 }
 

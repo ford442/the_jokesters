@@ -20,7 +20,7 @@ import { Director } from '../../src/Director/Director'
 import type { DirectorCallbacks, Scenario } from '../../src/Director/Director'
 import { GroupChatManager } from '../../src/GroupChatManager'
 import { MockLLMEngine } from '../../src/llm/MockLLMEngine'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 
 async function makeManager() {
   const manager = new GroupChatManager(agents.map((a) => ({ ...a })))

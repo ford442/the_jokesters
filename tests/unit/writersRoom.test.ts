@@ -3,7 +3,7 @@ import { GroupChatManager, type PromptLayout } from '../../src/GroupChatManager'
 import { MockLLMEngine } from '../../src/llm/MockLLMEngine'
 import type { ChatMessage, GenerationOptions } from '../../src/llm/LLMEngine'
 import type { ChatStreamEvent } from '../../src/llm/streamEvents'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 import { buildWritersRoomSystemPrompt, compactPersona, buildSpeakerCue } from '../../src/chat/writersRoom'
 import { prefillReduction, summarizeTurnMetrics } from '../../src/chat/turnMetrics'
 

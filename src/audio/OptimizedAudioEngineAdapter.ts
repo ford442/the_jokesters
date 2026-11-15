@@ -32,6 +32,11 @@ export class OptimizedAudioEngineAdapter implements TtsEngine {
         return { audioData: result.audioData, sampleRate: result.sampleRate, visemes: result.visemes };
     }
 
+    /** Terminates the synthesis worker. */
+    public dispose(): void {
+        this.engine.terminate();
+    }
+
     /** Escape hatch for callers that want the richer engine (viseme lookahead, stats, etc). */
     public getEngine(): OptimizedAudioEngine {
         return this.engine;

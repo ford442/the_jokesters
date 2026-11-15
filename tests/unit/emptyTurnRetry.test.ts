@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GroupChatManager } from '../../src/GroupChatManager'
 import { MockLLMEngine } from '../../src/llm/MockLLMEngine'
-import { agents } from '../../src/config/agents'
+import { castAgents as agents } from '../../src/cast/defaultCast'
 import { EMPTY_TURN_RETRY_SUFFIX } from '../../src/chat/speakableText'
 
 async function makeManager(engineId = 'mock') {

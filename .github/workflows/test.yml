@@ -45,5 +45,5 @@ jobs:
       - name: Run unit tests
         run: npm test
 
-      - name: Coverage report
-        run: npm run test:coverage
+      - name: Coverage report (soft ratchet)
+        run: npm run test:coverage:ci

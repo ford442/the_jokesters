@@ -18,12 +18,13 @@ import {
   type EpisodeSceneState,
   type JokestersEpisode,
 } from '../episode'
-import { getSharedSfxManager } from '../audio/SfxManager'
 import { setVoiceOverride } from '../audio/voiceMap'
 import type { Director } from '../Director/Director'
 import { GUEST_AGENT_ID, guestVoiceStyle, isGuestSpeaker, parseProductionSnapshot } from '../Director/productionCard'
+import type { AppServices } from './services'
 
 export interface EpisodeUiDeps {
+  services: AppServices
   agents: Agent[]
   groupChatManager: GroupChatManager
   audioEngine: TtsEngine
@@ -86,7 +87,7 @@ export function hideEpisodeExportBar(): void {
 
 export function wireEpisodeUi(deps: EpisodeUiDeps): void {
   const { agents, groupChatManager, audioEngine, speechQueue, stage, chatLog, getDirector } = deps
-  const { speakAndVisualize } = createAudioHelpers(audioEngine, speechQueue, stage)
+  const { speakAndVisualize } = createAudioHelpers(audioEngine, speechQueue, stage, deps.services.sfx)
 
   const bar = document.getElementById('episode-export-bar')
   const exportJsonBtn = document.getElementById('export-episode-json-btn') as HTMLButtonElement | null
@@ -227,7 +228,7 @@ export function wireEpisodeUi(deps: EpisodeUiDeps): void {
         stage.reactToText(agentId, text)
       },
       onSfx: (name, agentId) => {
-        void getSharedSfxManager()?.play(name, agentId)
+        void deps.services.sfx.play(name, agentId)
       },
       waitUntilFinished: () => speechQueue.waitUntilFinished(),
       getTtsSteps: () => {

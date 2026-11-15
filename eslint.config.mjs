@@ -14,15 +14,10 @@ export default tseslint.config(
       'models/**',
       'scripts/archive/**',
       // Non-app trees that are not part of any tsconfig project
-      'experiments/**',
-      'hf_spaces/**',
-      'backend/**',
-      'material/**',
-      'verification/**',
+      'sidecar/**',
+      'tools/**',
       'patches/**',
-      'utils/**',
       'docs/**',
-      'screenshot.js',
     ],
   },
 
@@ -64,6 +59,29 @@ export default tseslint.config(
       ],
       // Ratcheted by scripts/check-any-ratchet.mjs: the count may only go down.
       '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+
+  // Lifecycle discipline: long-lived listeners/timers in app, stage and director code go through a
+  // Scope (src/utils/lifecycle.ts) so a re-init or scene restart can release them.
+  {
+    files: ['src/app/**/*.ts', 'src/visuals/**/*.ts', 'src/Director/**/*.ts'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='setInterval']",
+          message: 'Use scope.interval() from src/utils/lifecycle.ts (or keep the handle and clear it in dispose()).',
+        },
+        {
+          selector: "CallExpression[callee.object.name='window'][callee.property.name='setInterval']",
+          message: 'Use scope.interval() from src/utils/lifecycle.ts (or keep the handle and clear it in dispose()).',
+        },
+        {
+          selector: "CallExpression[callee.object.name='window'][callee.property.name='addEventListener']",
+          message: 'Use scope.listen(window, …) from src/utils/lifecycle.ts so the listener is removed on dispose.',
+        },
+      ],
     },
   },
 

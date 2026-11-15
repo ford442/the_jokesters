@@ -1,3 +1,4 @@
+import type { Scope } from '../utils/lifecycle'
 import type { GroupChatManager } from '../GroupChatManager'
 import { getModelDisplayName } from '../config/models'
 import { setProgress } from './loadingUi'
@@ -133,17 +134,17 @@ export async function updateSyncUI(getMemoryManager: () => MemoryManager | null)
   }
 }
 
-export function startSyncPolling(getMemoryManager: () => MemoryManager | null): void {
+export function startSyncPolling(scope: Scope, getMemoryManager: () => MemoryManager | null): void {
   const poll = () => { void updateSyncUI(getMemoryManager) }
 
-  setInterval(poll, 2000)
-  window.addEventListener('syncStatusUpdated', poll)
+  scope.interval(poll, 2000)
+  scope.listen(window, 'syncStatusUpdated', poll)
 
-  window.addEventListener('offline', () => {
+  scope.listen(window, 'offline', () => {
     console.log('App is offline, sync will resume when online.')
   })
 
-  window.addEventListener('online', () => {
+  scope.listen(window, 'online', () => {
     console.log('App is back online, triggering MemoryManager sync retry...')
     void getMemoryManager()?.processSyncQueue()
   })

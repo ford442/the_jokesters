@@ -24,14 +24,11 @@ export class ShowAudioBus {
     }
     return this.tap.stream
   }
-}
 
-let sharedBus: ShowAudioBus | null = null
-
-export function setSharedShowAudioBus(bus: ShowAudioBus | null): void {
-  sharedBus = bus
-}
-
-export function getSharedShowAudioBus(): ShowAudioBus | null {
-  return sharedBus
+  /** Disconnects the bus. The AudioContext belongs to SpeechQueue, which closes it. */
+  dispose(): void {
+    this.master.disconnect()
+    this.tap?.disconnect()
+    this.tap = null
+  }
 }

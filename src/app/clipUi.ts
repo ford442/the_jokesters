@@ -1,22 +1,19 @@
 import type { Agent } from '../GroupChatManager'
 import type { SpeechQueue } from '../audio/SpeechQueue'
-import { getSharedShowAudioBus } from '../audio/showAudioBus'
 import type { Stage } from '../visuals/Stage'
 import { ClipRecorder, downloadClip, CLIP_WINDOW_SEC, type ClipFormat } from '../recording/ClipRecorder'
 import { getLastEpisode } from '../episode'
 import type { ChatLogApi } from './chatLog'
-
-let shared: ClipRecorder | null = null
-
-export function getSharedClipRecorder(): ClipRecorder | null {
-  return shared
-}
+import type { Scope } from '../utils/lifecycle'
+import type { AppServices } from './services'
 
 export interface ClipUiDeps {
   agents: Agent[]
   speechQueue: SpeechQueue
   stage: Stage
   chatLog: ChatLogApi
+  services: AppServices
+  scope: Scope
 }
 
 /**
@@ -24,12 +21,8 @@ export interface ClipUiDeps {
  * picker (MP4 only when WebCodecs can encode it) and the buffer status readout.
  */
 export function wireClipUi(deps: ClipUiDeps): void {
-  const { agents, speechQueue, stage, chatLog } = deps
-  const bus = getSharedShowAudioBus()
-  if (!bus) {
-    console.warn('[clipUi] ShowAudioBus not ready — clip recording unavailable')
-    return
-  }
+  const { agents, speechQueue, stage, chatLog, services, scope } = deps
+  const bus = services.audioBus
   if (typeof MediaStream === 'undefined' || typeof HTMLCanvasElement.prototype.captureStream !== 'function') {
     console.warn('[clipUi] canvas.captureStream unavailable — clip recording disabled')
     document.querySelectorAll<HTMLElement>('.clip-last-btn').forEach((b) => { b.style.display = 'none' })
@@ -49,7 +42,11 @@ export function wireClipUi(deps: ClipUiDeps): void {
       return { name: a?.name ?? id, color: a?.color ?? '#ffffff' }
     },
   })
-  shared = recorder
+  services.clipRecorder = recorder
+  scope.add(() => {
+    recorder.dispose()
+    services.clipRecorder = null
+  })
 
   const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('.clip-last-btn'))
   const formatEl = document.getElementById('clip-format') as HTMLSelectElement | null
@@ -71,7 +68,7 @@ export function wireClipUi(deps: ClipUiDeps): void {
     const buffered = Math.round(recorder.bufferedSeconds())
     statusEl.textContent = recorder.isRecording() ? `● REC · ${Math.min(buffered, 99)}s buffered` : ''
   }
-  window.setInterval(refreshStatus, 1000)
+  scope.interval(refreshStatus, 1000)
 
   let busy = false
   const onClip = async () => {

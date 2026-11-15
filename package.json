@@ -25,6 +25,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:coverage:ci": "vitest run --coverage && node scripts/check-coverage-ratchet.mjs",
+    "coverage:update": "vitest run --coverage && node scripts/check-coverage-ratchet.mjs --update",
     "test:unit": "vitest run",
     "verify:wllama": "bash scripts/verify_wllama_wasm.sh",
     "deploy": "npm run build && python3 scripts/deploy_dist.py",

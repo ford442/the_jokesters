@@ -13,7 +13,13 @@ export interface ModeContext {
     callbacks: DirectorCallbacks;
     chaosLevel: number;
     interruptQueue: string[];
+    /** False once this scene stops *or* a newer scene supersedes it. */
     isRunning: () => boolean;
+    /**
+     * Aborted when this scene run stops or is superseded. Pass to `fetch`/timers or
+     * check `signal.aborted`. Optional so lightweight test contexts can omit it.
+     */
+    signal?: AbortSignal;
     processTurn: (inputText: string) => Promise<void>;
     processScriptBeat: (beat: ScriptBeat) => Promise<void>;
     stopScene: () => void;

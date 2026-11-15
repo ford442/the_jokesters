@@ -205,6 +205,16 @@ export class SfxManager {
     this.activeSources.clear()
   }
 
+  /** Stops every SFX, drops buffers and detaches from the graph. Idempotent. */
+  dispose(): void {
+    this.stopAll()
+    this.sfxGain?.disconnect()
+    this.sfxGain = null
+    this.buffers.clear()
+    this.onInterruptTts = null
+    this.ready = false
+  }
+
   private loadPrefs(): void {
     try {
       const en = localStorage.getItem(SFX_STORAGE_KEYS.enabled)
@@ -344,13 +354,3 @@ export class SfxManager {
   }
 }
 
-/** Shared app instance (set during bootstrap). */
-let sharedSfx: SfxManager | null = null
-
-export function setSharedSfxManager(mgr: SfxManager | null): void {
-  sharedSfx = mgr
-}
-
-export function getSharedSfxManager(): SfxManager | null {
-  return sharedSfx
-}

@@ -1,12 +1,19 @@
 import type { SyncQueueItem, SyncState } from './memoryTypes';
 import type { MemoryIdbStore } from './memoryIdbStore';
 import type { CloudCredentialsSource } from './memoryCredentials';
+import { Scope } from '../utils/lifecycle';
 
 type SyncWorkerMessage =
     | { type: 'sync_success'; queueKey: string; itemId: string }
     | { type: 'sync_complete'; queueKey: string }
     | { type: 'sync_error'; error: string; item?: unknown }
     | { type: 'consolidation_complete'; episodeId: string };
+
+interface PendingConsolidation {
+    promise: Promise<void>;
+    resolve: () => void;
+    reject: (err: Error) => void;
+}
 
 /**
  * Background HF sync: the persisted queue (in `MemoryIdbStore`), the dedicated
@@ -18,6 +25,12 @@ export class MemorySyncQueue {
     private syncWorker: Worker | null = null;
     private isSyncing = false;
     private syncStatusCallback: ((status: string) => void) | null = null;
+    /** Owns the scheduler intervals; replaced on dispose so a disposed queue stays inert. */
+    private scheduler: Scope | null = null;
+    private disposed = false;
+    private statusClearTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Consolidations awaiting a `consolidation_complete` / `sync_error` reply, by episode. */
+    private pendingConsolidations = new Map<string, PendingConsolidation>();
 
     constructor(
         private idb: MemoryIdbStore,
@@ -45,8 +58,12 @@ export class MemorySyncQueue {
 
                     // Invalidate local cache if we just fully synced
                     this.onSyncComplete();
+                } else if (data.type === 'consolidation_complete') {
+                    this.settleConsolidation(data.episodeId, null);
                 } else if (data.type === 'sync_error') {
                     console.error('Sync error from worker:', data.error);
+                    // Consolidation errors carry no item; fail whichever consolidation is in flight.
+                    if (!data.item) this.settleConsolidation(null, new Error(data.error));
                     localStorage.setItem(`${this.prefix}${this.getProfile()}-sync-error`, data.error);
                     window.dispatchEvent(new CustomEvent('syncStatusUpdated'));
 
@@ -64,7 +81,9 @@ export class MemorySyncQueue {
     notifySyncIssue(message: string): void {
         if (!this.syncStatusCallback) return;
         this.syncStatusCallback(message);
-        setTimeout(() => {
+        if (this.statusClearTimer) clearTimeout(this.statusClearTimer);
+        this.statusClearTimer = setTimeout(() => {
+            this.statusClearTimer = null;
             if (this.syncStatusCallback && !this.isSyncing) {
                 this.syncStatusCallback('');
             }
@@ -133,13 +152,32 @@ export class MemorySyncQueue {
         });
     }
 
-    consolidateEpisodeDeltas(episodeId: string): void {
+    /**
+     * Asks the worker to merge an episode's deltas. Resolves when the worker
+     * reports `consolidation_complete`, rejects on a worker error or missing
+     * credentials (callers' try/catch now sees failures). One consolidation per
+     * episode is in flight at a time; repeated calls share it.
+     */
+    consolidateEpisodeDeltas(episodeId: string, timeoutMs = 5 * 60 * 1000): Promise<void> {
         const token = this.creds.getToken();
         const repoId = this.creds.getRepoId();
         if (!token || !repoId || !this.syncWorker) {
-            console.error("Cloud credentials or sync worker not configured.");
-            return;
+            return Promise.reject(new Error('Cloud credentials or sync worker not configured.'));
         }
+        const existing = this.pendingConsolidations.get(episodeId);
+        if (existing) return existing.promise;
+
+        let settle!: Pick<PendingConsolidation, 'resolve' | 'reject'>;
+        const promise = new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(() => {
+                this.settleConsolidation(episodeId, new Error(`Consolidation of ${episodeId} timed out`));
+            }, timeoutMs);
+            settle = {
+                resolve: () => { clearTimeout(timer); resolve(); },
+                reject: (err) => { clearTimeout(timer); reject(err); },
+            };
+        });
+        this.pendingConsolidations.set(episodeId, { ...settle, promise });
 
         this.syncWorker.postMessage({
             type: 'consolidate_deltas',
@@ -147,35 +185,68 @@ export class MemorySyncQueue {
             token,
             repoId
         });
+        return promise;
     }
 
-    startAutoSyncTask(): void {
-        setInterval(() => {
+    /** `episodeId: null` settles the oldest pending consolidation (worker errors carry no id). */
+    private settleConsolidation(episodeId: string | null, error: Error | null): void {
+        const key = episodeId ?? this.pendingConsolidations.keys().next().value;
+        if (key === undefined) return;
+        const entry = this.pendingConsolidations.get(key);
+        if (!entry) return;
+        this.pendingConsolidations.delete(key);
+        if (error) {
+            this.notifySyncIssue(`Consolidation failed: ${error.message}`);
+            entry.reject(error);
+        } else {
+            entry.resolve();
+        }
+    }
+
+    /**
+     * Single background scheduler (idempotent): flushes the queue every minute
+     * and consolidates deltas every hour. A private Scope owns the timers so `dispose()` can
+     * stop them. Previously three un-stoppable intervals, two of them duplicates.
+     */
+    startScheduler(listEpisodes: () => Promise<string[]>): void {
+        if (this.scheduler || this.disposed) return;
+        const scheduler = (this.scheduler = new Scope());
+        scheduler.interval(() => {
             if (navigator.onLine && !this.isSyncing) {
-                this.processSyncQueue().catch(e => console.error("Error in auto-sync task:", e));
+                this.processSyncQueue().catch(e => {
+                    console.error("Auto-sync failed:", e);
+                    this.notifySyncIssue(`Auto-sync failed: ${(e as Error)?.message ?? e}`);
+                });
             }
-        }, 5 * 60 * 1000); // 5 minutes
-    }
-
-    startPeriodicAutoSync(): void {
-        setInterval(() => {
-            if (navigator.onLine && !this.isSyncing) {
-                this.processSyncQueue().catch(e => console.error("Auto-sync failed:", e));
-            }
-        }, 60 * 1000); // Auto-sync every minute
-    }
-
-    startDeltaConsolidationTask(listEpisodes: () => Promise<string[]>): void {
-        // Periodically run consolidation
-        setInterval(async () => {
-            try {
-                const episodes = await listEpisodes();
-                for (const episode of episodes) {
-                    this.consolidateEpisodeDeltas(episode);
+        }, 60 * 1000);
+        scheduler.interval(() => {
+            void (async () => {
+                try {
+                    const episodes = await listEpisodes();
+                    for (const episode of episodes) {
+                        await this.consolidateEpisodeDeltas(episode);
+                    }
+                } catch (e) {
+                    console.error("Error running consolidation task:", e);
                 }
-            } catch (e) {
-                console.error("Error running consolidation task:", e);
-            }
-        }, 60 * 60 * 1000); // Run every hour
+            })();
+        }, 60 * 60 * 1000);
+    }
+
+    /** Stops the scheduler, rejects pending consolidations and terminates the worker. Idempotent. */
+    dispose(): void {
+        this.disposed = true;
+        void this.scheduler?.dispose();
+        this.scheduler = null;
+        if (this.statusClearTimer) clearTimeout(this.statusClearTimer);
+        this.statusClearTimer = null;
+        for (const entry of this.pendingConsolidations.values()) {
+            entry.promise.catch(() => { /* caller may be gone; avoid unhandled rejection */ });
+            entry.reject(new Error("Sync queue disposed"));
+        }
+        this.pendingConsolidations.clear();
+        this.syncWorker?.terminate();
+        this.syncWorker = null;
+        this.syncStatusCallback = null;
     }
 }
