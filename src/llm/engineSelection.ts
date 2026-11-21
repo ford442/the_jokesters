@@ -74,6 +74,66 @@ export function resolveTransformersDevice(
   return requested
 }
 
+export type TransformersDtype = 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
+
+/**
+ * `q4f16` / `fp16` need shader-f16 on WebGPU and are not runnable on the WASM/CPU
+ * execution provider. Downgrade those to `q4` (smallest WASM-friendly weights);
+ * explicit `q4` / `q8` / `fp32` choices are kept as configured.
+ */
+export function resolveTransformersDtype(
+  configured: TransformersDtype | undefined,
+  device: TransformersDevice,
+): TransformersDtype {
+  const requested = configured ?? 'q4f16'
+  if (device === 'webgpu') return requested
+  return requested === 'q4f16' || requested === 'fp16' ? 'q4' : requested
+}
+
+/** True when a Transformers.js device runs on the CPU (WASM) rather than WebGPU. */
+export function isTransformersCpuDevice(device: TransformersDevice | undefined): boolean {
+  return device === 'wasm' || device === 'cpu'
+}
+
+/** Shown wherever a non-WebGPU engine is active (status bar, model picker). */
+export const CPU_MODE_BADGE_TEXT = '🐢 CPU/WASM mode — slower'
+
+/**
+ * Whether an engine will run on the CPU. llama.cpp is WASM/CPU unless layers are
+ * offloaded (`gpuLayers`); Transformers.js is CPU when its resolved device is wasm/cpu.
+ */
+export function isCpuWasmRuntime(
+  engine: ConcreteEngine,
+  transformersDevice?: TransformersDevice,
+  opts: { gpuLayers?: number } = {},
+): boolean {
+  switch (engine) {
+    case 'llamacpp':
+      return !(opts.gpuLayers && opts.gpuLayers > 0)
+    case 'transformers':
+      return isTransformersCpuDevice(transformersDevice)
+    case 'mlc':
+    case 'api':
+      return false
+  }
+}
+
+/**
+ * Pre-launch prediction for the model picker: will this preset run on the CPU given
+ * the current adapter status? `auto` and Transformers.js only fall to CPU without an
+ * adapter; an MLC preset never does (it errors instead — see `planEngineSelection`).
+ */
+export function willRunOnCpu(
+  presetEngine: EngineType,
+  webgpuAvailable: boolean,
+  engineOverride?: EngineType,
+): boolean {
+  const engine = engineOverride && engineOverride !== 'auto' ? engineOverride : presetEngine
+  if (engine === 'llamacpp') return true
+  if (engine === 'mlc' || engine === 'api') return false
+  return !webgpuAvailable
+}
+
 /**
  * Check which engines a model config declares.
  * `recommended` prefers API, then MLC when an adapter exists, then
@@ -150,6 +210,8 @@ export interface EnginePlan {
   /** Short progress-UI status. */
   statusText: string
   transformersDevice?: TransformersDevice
+  /** True when this plan runs on the CPU (WASM) — drives the explicit slower-mode badge. */
+  cpuMode: boolean
 }
 
 function describePlan(
@@ -166,6 +228,7 @@ function describePlan(
     case 'mlc':
       return {
         engine,
+        cpuMode: false,
         announcement: `[EngineFactory] ${prefix} MLC (WebGPU)`,
         statusText: `${prefix} MLC (WebGPU)`,
       }
@@ -175,6 +238,7 @@ function describePlan(
       return {
         engine,
         transformersDevice,
+        cpuMode: isCpuWasmRuntime('transformers', transformersDevice),
         announcement: `[EngineFactory] ${because}${prefix} Transformers.js (device: ${transformersDevice})`,
         statusText: `${because}${prefix} Transformers.js (${runtime})`,
       }
@@ -182,12 +246,14 @@ function describePlan(
     case 'llamacpp':
       return {
         engine,
+        cpuMode: true,
         announcement: `[EngineFactory] ${because}${prefix} llama.cpp (WASM/CPU)`,
         statusText: `${because}${prefix} llama.cpp (WASM/CPU)`,
       }
     case 'api':
       return {
         engine,
+        cpuMode: false,
         announcement: `[EngineFactory] ${because}${prefix} API`,
         statusText: `${because}${prefix} API`,
       }

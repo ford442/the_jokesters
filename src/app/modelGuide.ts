@@ -87,9 +87,9 @@ export async function probeDeviceCapabilities(): Promise<DeviceCapabilitySnapsho
 
   const parts: string[] = []
   if (caps.webgpuStatus === 'no-adapter') {
-    parts.push('WebGPU API present, no adapter — CPU fallback recommended')
+    parts.push('WebGPU API present, no adapter — CPU/WASM mode (slower)')
   } else if (!caps.webgpu) {
-    parts.push('No WebGPU — CPU fallback recommended')
+    parts.push('No WebGPU — CPU/WASM mode (slower)')
   } else {
     parts.push(`~${Math.round(availableVramMB)} MB VRAM free (est.)`)
     parts.push(supportsF16 ? 'shader-f16 yes' : 'no shader-f16')
@@ -134,15 +134,15 @@ export function recommendModels(
   if (!device.webgpu) {
     const noAdapter = device.webgpuStatus === 'no-adapter'
     return {
-      primary: cpuGguf,
-      safeFallback: qwenUltra,
+      primary: qwenUltra,
+      safeFallback: cpuGguf,
       primaryReason: noAdapter
-        ? 'WebGPU is in this browser, but no GPU adapter is available. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.'
-        : 'This browser has no WebGPU. Vicuna via llama.cpp (CPU) will still run the show — slower, but works.',
+        ? 'WebGPU is in this browser, but no GPU adapter is available. Qwen 0.5B runs on the CPU (WASM) — a small download and slower than GPU, but it works.'
+        : 'This browser has no WebGPU. Qwen 0.5B runs on the CPU (WASM) — a small download and slower than GPU, but it works.',
       fallbackReason:
-        'If you enable WebGPU later, Qwen 0.5B is a tiny GPU option for tight memory.',
+        'Vicuna 7B via llama.cpp (CPU) is a much bigger download (~3.8 GB) and very slow — only if you want richer replies and can wait.',
       device,
-      enginePreference: 'llamacpp',
+      enginePreference: 'transformers',
     }
   }
 

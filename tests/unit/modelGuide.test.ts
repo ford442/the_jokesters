@@ -24,17 +24,19 @@ function device(partial: Partial<DeviceCapabilitySnapshot>): DeviceCapabilitySna
 }
 
 describe('recommendModels', () => {
-  it('recommends CPU GGUF when WebGPU is missing', () => {
+  it('recommends the tiny Qwen model on CPU/WASM when WebGPU is missing', () => {
     const r = recommendModels(device({ webgpu: false, availableVramMB: 0 }))
-    expect(r.primary.tier).toBe('cpu')
-    expect(r.enginePreference).toBe('llamacpp')
+    expect(r.primary.id).toBe('Qwen2.5-0.5B-Instruct-ONNX')
+    expect(r.primary.needsWebGPU).toBe(false)
+    expect(r.safeFallback.tier).toBe('cpu')
+    expect(r.enginePreference).toBe('transformers')
     expect(r.primaryReason.toLowerCase()).toMatch(/no webgpu/)
   })
 
-  it('recommends CPU GGUF when the API exists but no adapter does', () => {
+  it('recommends the tiny Qwen model when the API exists but no adapter does', () => {
     const r = recommendModels(device({ webgpu: false, webgpuStatus: 'no-adapter', availableVramMB: 0 }))
-    expect(r.primary.tier).toBe('cpu')
-    expect(r.enginePreference).toBe('llamacpp')
+    expect(r.primary.id).toBe('Qwen2.5-0.5B-Instruct-ONNX')
+    expect(r.enginePreference).toBe('transformers')
     expect(r.primaryReason.toLowerCase()).toMatch(/no gpu adapter/)
   })
 

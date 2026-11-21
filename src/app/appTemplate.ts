@@ -46,6 +46,7 @@ export function getAppTemplate(): string {
 
           <!-- Engine capability indicator -->
           <div id="engine-capabilities" style="color:#888;font-size:0.78em;margin-bottom:12px;"></div>
+          <div id="launch-cpu-badge" class="cpu-mode-badge" role="status" style="display:none;margin-bottom:10px;"></div>
 
           <!-- Blessed presets only (3–5 curated) -->
           <select id="model-select-launch" style="width:100%;padding:9px 10px;border-radius:6px;border:1px solid #444;background:#0f3460;color:white;font-size:0.9em;margin-bottom:8px;">
@@ -245,6 +246,7 @@ export function getAppTemplate(): string {
 
           <!-- VRAM / Context Info Bar -->
           <div id="vram-info-bar" class="vram-info-bar">
+            <span id="cpu-mode-badge" class="cpu-mode-badge" role="status" style="display:none"></span>
             <span id="memory-depth-text">Depth: —</span>
             <span id="ctx-info-text">Context: —</span>
             <span id="token-budget-text">Max tokens: 96</span>

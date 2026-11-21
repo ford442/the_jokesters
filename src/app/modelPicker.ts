@@ -9,8 +9,10 @@ import {
   CPU_WASM_SWITCH,
   EngineStartError,
   NO_WEBGPU_ADAPTER_MESSAGE,
+  CPU_MODE_BADGE_TEXT,
   isEngineStartError,
   planEngineSelection,
+  willRunOnCpu,
   type EnginePlan,
 } from '../llm/engineSelection'
 import { getUnifiedModelById } from '../config/models'
@@ -31,6 +33,26 @@ import {
   loadLastOomModelId,
   type ModelRecommendation,
 } from './modelGuide'
+
+/** Adapter result from the capability probe; `null` until it finishes (badge stays hidden). */
+let launchWebgpuAvailable: boolean | null = null
+
+/**
+ * Show the explicit CPU/WASM badge in the picker whenever the selected model + engine
+ * would run without WebGPU. Re-evaluated on every selection and after the probe.
+ */
+function refreshLaunchCpuBadge(): void {
+  const badge = document.getElementById('launch-cpu-badge')
+  if (!badge) return
+  const modelId = (document.getElementById('model-select-launch') as HTMLSelectElement | null)?.value
+  const engine = ((document.getElementById('engine-select') as HTMLSelectElement | null)?.value ?? 'auto') as EngineType
+  const preset = modelId ? getBlessedPreset(modelId) : undefined
+  const cpu = launchWebgpuAvailable !== null && preset !== undefined &&
+    willRunOnCpu(preset.engine, launchWebgpuAvailable, engine)
+  badge.style.display = cpu ? '' : 'none'
+  badge.textContent = cpu ? CPU_MODE_BADGE_TEXT : ''
+  badge.title = cpu ? 'This setup runs on the CPU via WebAssembly — expect slower replies than WebGPU.' : ''
+}
 
 function updateEngineInfo(engineType: string): void {
   const infoMap: Record<string, { speed: string; models: string; vram: string }> = {
@@ -148,6 +170,7 @@ function selectModel(modelId: string, engine?: EngineType): void {
   updateModelHint(modelId)
   updateDownloadEstimate(modelId)
   updateVramControlsVisibility(modelId)
+  refreshLaunchCpuBadge()
 }
 
 function updateVramControlsVisibility(modelId: string) {
@@ -256,6 +279,7 @@ async function checkStorage(
 
 /** Wire model picker UI and wait for the user to click Launch. */
 export function wireModelPicker(): Promise<LaunchConfig> {
+  launchWebgpuAvailable = null
   const modelSelectLaunch = document.getElementById('model-select-launch') as HTMLSelectElement
 
   // Ensure select only lists blessed presets (rebuild if template drifts)
@@ -281,6 +305,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
         updateEngineInfo(preset.engine)
       }
     }
+    refreshLaunchCpuBadge()
   })
 
   const maxTokensSlider = document.getElementById('max-tokens-slider') as HTMLInputElement
@@ -324,6 +349,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
   const engineSelectEl = document.getElementById('engine-select') as HTMLSelectElement
   engineSelectEl?.addEventListener('change', () => {
     updateEngineInfo(engineSelectEl.value)
+    refreshLaunchCpuBadge()
   })
   updateEngineInfo(engineSelectEl?.value || 'auto')
 
@@ -358,6 +384,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       const oom = consumeOomFallback()
       const last = loadLastSuccessfulLaunch()
       const device = await probeDeviceCapabilities()
+      launchWebgpuAvailable = device.webgpu
       const rec = recommendModels(device, {
         avoidVicuna: avoidVicunaFromLastOom(),
         lastOomModelId: loadLastOomModelId(),
@@ -376,6 +403,7 @@ export function wireModelPicker(): Promise<LaunchConfig> {
         `${device.supportsF16 ? '✅' : '❌'} f16 · ~${Math.round(device.availableVramMB)} MB free`,
       )
 
+      refreshLaunchCpuBadge()
       let rememberedLabel: string | undefined
       if (oom) {
         selectModel(oom.modelId, oom.engine)
@@ -398,16 +426,23 @@ export function wireModelPicker(): Promise<LaunchConfig> {
       }
     } catch (e) {
       console.warn('[modelPicker] Guide probe failed:', e)
+      let noAdapter = false
       try {
-        updateCapabilityDisplay(await EngineFactory.detectCapabilitiesWithAdapter())
+        const caps = await EngineFactory.detectCapabilitiesWithAdapter()
+        launchWebgpuAvailable = caps.webgpu
+        noAdapter = !caps.webgpu
+        updateCapabilityDisplay(caps)
       } catch {
         /* keep the pre-probe line */
       }
       const probe = document.getElementById('model-guide-probe')
       if (probe) {
-        probe.textContent = 'Could not probe GPU — pick a Safe (3B q4f32) or CPU model below.'
+        probe.textContent = noAdapter
+          ? 'No WebGPU adapter — the tiny Qwen 0.5B model is preselected and runs on CPU/WASM (slower).'
+          : 'Could not probe GPU — pick a Safe (3B q4f32) or CPU model below.'
       }
-      selectModel('Hermes-3-Llama-3.2-3B-q4f32_1-MLC', 'mlc')
+      if (noAdapter) selectModel('Qwen2.5-0.5B-Instruct-ONNX', 'transformers')
+      else selectModel('Hermes-3-Llama-3.2-3B-q4f32_1-MLC', 'mlc')
     }
   })()
 

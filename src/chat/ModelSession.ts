@@ -34,6 +34,7 @@ export class ModelSession {
   private engine: LLMEngine | null = null
   private engineType: EngineType = 'mlc'
   private loadedModelId: string | null = null
+  private cpuMode = false
   private isInitialized = false
   private readonly contextManager = new DynamicContextManager(4096)
   private vramConfig: VRAMOptimizationConfig = { ...DEFAULT_VRAM_CONFIG }
@@ -45,6 +46,11 @@ export class ModelSession {
 
   getEngineType(): EngineType {
     return this.engineType
+  }
+
+  /** True when the loaded engine runs on CPU/WASM (llama.cpp, or Transformers.js without WebGPU). */
+  isCpuMode(): boolean {
+    return this.isInitialized && this.cpuMode
   }
 
   getLoadedModelId(): string | null {
@@ -194,6 +200,7 @@ export class ModelSession {
           this.engine.setVRAMConfig(this.vramConfig)
         }
         this.engineType = plan.engine
+        this.cpuMode = plan.cpuMode
 
         await this.engine.initialize(modelConfig, (report) => {
           onProgress?.({

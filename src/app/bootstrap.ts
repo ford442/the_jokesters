@@ -29,7 +29,7 @@ import { wireModelPicker } from './modelPicker'
 import { setProgress, setInputsEnabled, showVoiceOfflineBanner, showWasmFallbackBanner } from './loadingUi'
 import { classifyInitProgress, formatLoadStatus } from './loadProgress'
 import { renderInitErrorPanel } from './errorPanel'
-import { setReadyStatus, updateVRAMInfoBar } from './statusBar'
+import { setReadyStatus, updateCpuModeBadge, updateVRAMInfoBar } from './statusBar'
 import { wireSceneController } from './sceneController'
 import { saveSuccessfulLaunch } from './modelGuide'
 import { consumeWasmFallbackWarning } from '../config/loadFailover'
@@ -354,6 +354,7 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
     userInput.focus()
 
     updateVRAMInfoBar(groupChatManager)
+    updateCpuModeBadge(groupChatManager)
 
     wireSceneController({ agents, services, scope: run })
   } catch (error: unknown) {
