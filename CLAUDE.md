@@ -54,6 +54,7 @@ src/
   audio/showAudioBus.ts     Master bus (TTS + SFX + music) + recording tap
   recording/ClipRecorder.ts Rolling "clip last 30 s" (WebM ring / WebCodecs+mp4-muxer MP4)
   cast/                     Cast editor: card schema (zod), apply, IndexedDB avatars
+  script/                   Script Player boot path (`?mode=script`, `?script=<url>`): zod packet → episode → replayEpisode, no LLM
   cast/defaultCast.ts       The one roster: 5 shipped agents, default-on trio, persona suffix
   ui/dashboard/             Cloud dashboard modal: auth / history / deltas / sync / analytics (DOM via h(), no innerHTML)
 ```
