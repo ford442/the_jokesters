@@ -7,6 +7,9 @@ import {
   listViableEngines,
   planEngineSelection,
   resolveTransformersDevice,
+  resolveTransformersDtype,
+  isCpuWasmRuntime,
+  willRunOnCpu,
   type EngineCapabilities,
 } from '../../src/llm/engineSelection'
 import type { UnifiedModelConfig } from '../../src/llm/LLMEngine'
@@ -133,5 +136,48 @@ describe('resolveTransformersDevice', () => {
     expect(resolveTransformersDevice('webgpu', 'wasm', false)).toBe('wasm')
     expect(resolveTransformersDevice('webgpu', undefined, true)).toBe('webgpu')
     expect(resolveTransformersDevice('cpu', undefined, false)).toBe('cpu')
+  })
+})
+
+describe('resolveTransformersDtype', () => {
+  it('downgrades WebGPU-only dtypes on WASM/CPU', () => {
+    expect(resolveTransformersDtype('q4f16', 'wasm')).toBe('q4')
+    expect(resolveTransformersDtype(undefined, 'wasm')).toBe('q4')
+    expect(resolveTransformersDtype('fp16', 'cpu')).toBe('q4')
+  })
+
+  it('keeps explicit WASM-friendly dtypes and WebGPU choices', () => {
+    expect(resolveTransformersDtype('q8', 'wasm')).toBe('q8')
+    expect(resolveTransformersDtype('q4', 'wasm')).toBe('q4')
+    expect(resolveTransformersDtype('q4f16', 'webgpu')).toBe('q4f16')
+  })
+})
+
+describe('CPU/WASM badge decisions', () => {
+  it('flags llama.cpp and Transformers.js on wasm/cpu, not MLC/API/WebGPU', () => {
+    expect(isCpuWasmRuntime('llamacpp')).toBe(true)
+    expect(isCpuWasmRuntime('llamacpp', undefined, { gpuLayers: 8 })).toBe(false)
+    expect(isCpuWasmRuntime('transformers', 'wasm')).toBe(true)
+    expect(isCpuWasmRuntime('transformers', 'webgpu')).toBe(false)
+    expect(isCpuWasmRuntime('mlc')).toBe(false)
+    expect(isCpuWasmRuntime('api')).toBe(false)
+  })
+
+  it('plans mark Transformers.js without an adapter as cpuMode', () => {
+    const tf: UnifiedModelConfig = {
+      id: 'q', name: 'q', vram_required_MB: 1, context_window_size: 4096,
+      transformers: { model_id: 'x', device: 'webgpu', dtype: 'q4f16' },
+    }
+    expect(planEngineSelection(tf, 'auto', caps(false)).cpuMode).toBe(true)
+    expect(planEngineSelection(tf, 'auto', caps(true)).cpuMode).toBe(false)
+  })
+
+  it('predicts CPU for the picker without an adapter', () => {
+    expect(willRunOnCpu('transformers', false)).toBe(true)
+    expect(willRunOnCpu('transformers', true)).toBe(false)
+    expect(willRunOnCpu('llamacpp', true)).toBe(true)
+    expect(willRunOnCpu('mlc', false)).toBe(false)
+    expect(willRunOnCpu('transformers', true, 'llamacpp')).toBe(true)
+    expect(willRunOnCpu('llamacpp', false, 'auto')).toBe(true)
   })
 })

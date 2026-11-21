@@ -1,6 +1,7 @@
 import type { Scope } from '../utils/lifecycle'
 import type { GroupChatManager } from '../GroupChatManager'
 import { getModelDisplayName } from '../config/models'
+import { CPU_MODE_BADGE_TEXT } from '../llm/engineSelection'
 import { setProgress } from './loadingUi'
 import type { PrerenderMetricsSnapshot } from '../prerender/PrerenderCoordinator'
 import type { MemoryManager } from '../Director/MemoryManager'
@@ -87,7 +88,23 @@ export function updatePrerenderHud(metrics: PrerenderMetricsSnapshot): void {
 }
 
 export function setReadyStatus(groupChatManager: GroupChatManager): void {
-  setProgress(`Ready — ${getModelDisplayName(groupChatManager.getLoadedModelId())}`, 100)
+  const cpu = groupChatManager.isCpuMode() ? ` · ${CPU_MODE_BADGE_TEXT}` : ''
+  setProgress(`Ready — ${getModelDisplayName(groupChatManager.getLoadedModelId())}${cpu}`, 100)
+}
+
+/**
+ * Explicit, never-silent indicator for non-WebGPU inference. Shown in the status bar
+ * whenever the active engine runs on CPU/WASM; hidden for WebGPU and API engines.
+ */
+export function updateCpuModeBadge(groupChatManager: GroupChatManager): void {
+  const badge = document.getElementById('cpu-mode-badge')
+  if (!badge) return
+  const cpu = groupChatManager.isCpuMode()
+  badge.style.display = cpu ? '' : 'none'
+  badge.textContent = cpu ? CPU_MODE_BADGE_TEXT : ''
+  badge.title = cpu
+    ? 'No WebGPU adapter in use: the model runs on the CPU via WebAssembly, so replies are slower.'
+    : ''
 }
 
 export async function updateSyncUI(getMemoryManager: () => MemoryManager | null): Promise<void> {

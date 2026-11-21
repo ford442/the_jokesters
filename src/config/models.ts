@@ -575,13 +575,15 @@ export function getModelFallbackChain(preferredModelId?: string): string[] {
 import type { UnifiedModelConfig } from '../llm/LLMEngine'
 
 /**
- * Transformers.js Models (ONNX/WebGPU)
- * These models use Hugging Face's Transformers.js with ONNX Runtime Web
+ * Transformers.js Models (ONNX; WebGPU, or WASM/CPU when no adapter exists)
+ * These models use Hugging Face's Transformers.js with ONNX Runtime Web.
+ * `device: "webgpu"` is a preference: the adapter downgrades it to WASM (and `q4f16` to `q4`)
+ * when `requestAdapter()` is null — see `resolveTransformersDevice` / `resolveTransformersDtype`.
  */
 export const TRANSFORMERS_MODELS: UnifiedModelConfig[] = [
   {
     id: "Qwen2.5-0.5B-Instruct-ONNX",
-    name: "Qwen 2.5 0.5B (Transformers.js/WebGPU)",
+    name: "Qwen 2.5 0.5B (Transformers.js · WebGPU, CPU/WASM without an adapter)",
     vram_required_MB: 1500,
     context_window_size: 32768,
     transformers: {
@@ -592,7 +594,7 @@ export const TRANSFORMERS_MODELS: UnifiedModelConfig[] = [
   },
   {
     id: "Qwen2.5-1.5B-Instruct-ONNX",
-    name: "Qwen 2.5 1.5B (Transformers.js/WebGPU)",
+    name: "Qwen 2.5 1.5B (Transformers.js · WebGPU, CPU/WASM without an adapter)",
     vram_required_MB: 2500,
     context_window_size: 32768,
     transformers: {

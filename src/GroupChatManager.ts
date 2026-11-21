@@ -939,6 +939,11 @@ export class GroupChatManager {
     return this.session.getEngineType()
   }
 
+  /** True when inference runs on CPU/WASM rather than WebGPU (drives the slower-mode badge). */
+  isCpuMode(): boolean {
+    return this.session.isCpuMode()
+  }
+
   /** Test hook: attach mock engine without full model load. */
   attachSessionForTests(engine: LLMEngine, modelId: string): void {
     this.session.attachEngine(engine, modelId)

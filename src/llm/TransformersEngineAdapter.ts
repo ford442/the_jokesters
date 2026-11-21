@@ -1,11 +1,12 @@
 /**
  * Transformers.js Engine Adapter
  * 
- * Provides WebGPU-accelerated inference with Hugging Face's extensive model ecosystem.
- * Uses ONNX Runtime Web for efficient execution with WebGPU backend.
+ * Hugging Face ONNX inference via ONNX Runtime Web. Uses the WebGPU backend when an
+ * adapter exists and falls back — explicitly, never silently — to WASM (CPU) with a
+ * WASM-friendly dtype when it does not.
  */
 
-import { pipeline, TextStreamer, env } from '@huggingface/transformers'
+import { pipeline, TextStreamer, InterruptableStoppingCriteria, env } from '@huggingface/transformers'
 import type {
 
   LLMEngine, 
@@ -20,13 +21,21 @@ import {
 } from './LLMEngine'
 import type { ChatStreamEvent } from './streamEvents'
 import { VPS_STORAGE_ORIGIN } from '../config/models'
-import { resolveTransformersDevice, type TransformersDevice } from './engineSelection'
+import {
+  isTransformersCpuDevice,
+  resolveTransformersDevice,
+  resolveTransformersDtype,
+  type TransformersDevice,
+} from './engineSelection'
 
 export interface TransformersEngineConfig {
   model_id: string  // HuggingFace model ID
   device?: 'webgpu' | 'wasm' | 'cpu'
   dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
 }
+
+/** `remotePathTemplate` is supported by transformers.js but missing from its public `env` type. */
+type MirrorEnv = { remotePathTemplate: string }
 
 async function hasWebGpuAdapter(): Promise<boolean> {
   try {
@@ -49,6 +58,8 @@ export class TransformersEngineAdapter implements LLMEngine {
   private config: UnifiedModelConfig | null = null
   private abortController: AbortController | null = null
   private readonly deviceOverride: TransformersDevice | undefined
+  private resolvedDevice: TransformersDevice | null = null
+  private stopping: InstanceType<typeof InterruptableStoppingCriteria> | null = null
 
   constructor(options: { device?: TransformersDevice } = {}) {
     this.deviceOverride = options.device
@@ -73,48 +84,63 @@ export class TransformersEngineAdapter implements LLMEngine {
     
     // Self-hosted model mirror on VPS
     env.remoteHost = VPS_STORAGE_ORIGIN
-    ;(env as any).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
+    ;(env as unknown as MirrorEnv).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
     
     onProgress?.({ progress: 0, text: `Loading ${modelConfig.name}...`, timeElapsed: 0 })
 
     const requested = this.deviceOverride ?? tfConfig.device ?? 'webgpu'
     const adapterAvailable = requested === 'webgpu' ? await hasWebGpuAdapter() : true
     const device = resolveTransformersDevice(tfConfig.device, this.deviceOverride, adapterAvailable)
+    const dtype = resolveTransformersDtype(tfConfig.dtype, device)
+    this.resolvedDevice = device
     if (requested === 'webgpu' && device !== 'webgpu') {
-      const message = 'No WebGPU adapter — Transformers.js using WASM'
+      const message = `No WebGPU adapter — Transformers.js using WASM (${dtype}), slower`
       console.warn(`[Transformers] ${message}`)
       onProgress?.({ progress: 0, text: message, timeElapsed: 0 })
     } else {
-      console.log(`[Transformers] Using device: ${device}`)
+      console.log(`[Transformers] Using device: ${device}, dtype: ${dtype}`)
     }
     
-    try {
-      this.generator = await pipeline(
-        'text-generation',
-        tfConfig.model_id,
-        {
-          device,
-          dtype: tfConfig.dtype || 'q4f16',
-          progress_callback: (progress: any) => {
-            if (progress.status === 'progress') {
-              onProgress?.({
-                progress: progress.progress,
-                text: `Downloading ${progress.file}...`,
-                timeElapsed: 0
-              })
-            }
+    const load = () => pipeline(
+      'text-generation',
+      tfConfig.model_id,
+      {
+        device,
+        dtype,
+        progress_callback: (progress: any) => {
+          if (progress.status === 'progress') {
+            onProgress?.({
+              progress: progress.progress,
+              text: `Downloading ${progress.file}...`,
+              timeElapsed: 0
+            })
           }
         }
-      )
-      
+      }
+    )
+
+    try {
+      try {
+        this.generator = await load()
+      } catch (mirrorError) {
+        // The VPS mirror may not carry every dtype variant (e.g. `q4` for WASM). Retry once
+        // from the Hugging Face Hub, and say so — never switch sources silently.
+        if (env.remoteHost !== VPS_STORAGE_ORIGIN) throw mirrorError
+        console.warn('[Transformers] Mirror load failed, retrying from Hugging Face Hub:', mirrorError)
+        onProgress?.({ progress: 0, text: 'Mirror load failed — retrying from Hugging Face Hub...', timeElapsed: 0 })
+        env.remoteHost = 'https://huggingface.co'
+        ;(env as unknown as MirrorEnv).remotePathTemplate = '{model}/resolve/{revision}/'
+        this.generator = await load()
+      }
+
       onProgress?.({ progress: 1, text: 'Model loaded', timeElapsed: 0 })
-      
+
     } catch (error) {
       console.error('Failed to load Transformers.js model:', error)
       throw error
     }
   }
-  
+
   async *chat(
     messages: ChatMessage[],
     options: GenerationOptions
@@ -132,17 +158,24 @@ export class TransformersEngineAdapter implements LLMEngine {
       callback_function: (text: string) => { chunks.push(text) }
     })
     
-    // Start generation
-    const generationPromise = this.generator(formattedMessages, {
+    // Start generation. Completion is tracked explicitly: a Promise has no `isResolved`.
+    this.stopping = new InterruptableStoppingCriteria()
+    let finished = false
+    let failure: unknown = null
+    const generationPromise: Promise<unknown> = this.generator(formattedMessages, {
       max_new_tokens: options.max_tokens || 256,
       temperature: options.temperature ?? 0.7,
       top_p: options.top_p ?? 0.9,
       do_sample: true,
       repetition_penalty: options.repetition_penalty ?? 1.0,
       streamer,
+      stopping_criteria: this.stopping,
       return_full_text: false
-    })
-    
+    }).then(
+      () => { finished = true },
+      (error: unknown) => { failure = error; finished = true },
+    )
+
     // Yield chunks as they arrive
     let lastChunkIndex = 0
     while (!abortSignal?.aborted) {
@@ -151,21 +184,28 @@ export class TransformersEngineAdapter implements LLMEngine {
         lastChunkIndex = chunks.length
         for (const chunk of newChunks) yield chunk
       }
-      
-      // Check if generation complete (poll promise)
-      if (generationPromise.isResolved) {
+
+      if (finished) {
         if (chunks.length > lastChunkIndex) {
           const newChunks = chunks.slice(lastChunkIndex)
           for (const chunk of newChunks) yield chunk
         }
         break
       }
-      
+
       await new Promise(r => setTimeout(r, 10))
     }
+
+    if (abortSignal?.aborted) {
+      this.stopping.interrupt()
+      await generationPromise
+      return
+    }
+    if (failure) throw failure
   }
-  
+
   async interrupt(): Promise<void> {
+    this.stopping?.interrupt()
     this.abortController?.abort()
     this.abortController = new AbortController()
   }
@@ -174,6 +214,18 @@ export class TransformersEngineAdapter implements LLMEngine {
     this.generator = null
     this.config = null
     this.abortController = null
+    this.stopping = null
+    this.resolvedDevice = null
+  }
+
+  /** Device the loaded pipeline actually runs on (`null` before initialize). */
+  getResolvedDevice(): TransformersDevice | null {
+    return this.resolvedDevice
+  }
+
+  /** True when running on WASM/CPU — callers show the explicit slower-mode badge. */
+  isCpuMode(): boolean {
+    return isTransformersCpuDevice(this.resolvedDevice ?? undefined)
   }
   
   getEngineType(): import('./LLMEngine').EngineType {

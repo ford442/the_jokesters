@@ -815,6 +815,18 @@ input:focus, textarea:focus {
     white-space: nowrap;
 }
 
+/* Explicit non-WebGPU indicator (status bar + model picker). */
+.cpu-mode-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #3a2f0b;
+    border: 1px solid #ffd700;
+    color: #ffd700;
+    font-size: 0.78em;
+    font-weight: 600;
+}
+
 /* ============================================================================
    Episode export / import / replay bar
    ============================================================================ */

@@ -73,6 +73,11 @@ Avatars, show music, clips and cast cards: [docs/SHOW_PRODUCTION.md](./docs/SHOW
 Cold start probes WebGPU / f16 / VRAM, recommends primary + safe fallback from blessed presets,
 shows download size estimate, persists last successful launch, and OOM panel can step down models.
 
+**No WebGPU adapter (`requestAdapter() === null`):** never a blocking overlay. Qwen 2.5 0.5B (Transformers.js, `device: 'wasm'`,
+`q4` — `resolveTransformersDtype` downgrades `q4f16`/`fp16`) is preselected; llama.cpp GGUF stays selectable. Every CPU/WASM run
+shows the explicit `🐢 CPU/WASM mode — slower` badge (`CPU_MODE_BADGE_TEXT`; picker `#launch-cpu-badge`, status bar `#cpu-mode-badge`,
+ready line) — fallback is explicit, never silent. Decision helpers: `isCpuWasmRuntime` / `willRunOnCpu` in `src/llm/engineSelection.ts`.
+
 ## Development
 
 ```bash
