@@ -173,6 +173,10 @@
         
         browserInfo.textContent = `Browser: ${browserName} | User Agent: ${ua.substring(0, 100)}...`;
         
+        // Script Player (?mode=script / ?script=) never loads an LLM, so it never needs the gate.
+        const qs = new URLSearchParams(location.search);
+        if (qs.get('mode') === 'script' || qs.has('script')) return;
+
         function showWebgpuGate() {
           if (window.__jokestersWebgpuGateDismissed) return;
           webgpuError.classList.add('visible');

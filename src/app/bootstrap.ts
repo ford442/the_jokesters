@@ -1,5 +1,4 @@
-import { registerSW } from 'virtual:pwa-register'
-import { reloadOnceForIsolation } from './isolationReload'
+import { initAudioEngineWithFailover } from '../audio/ttsFailover'
 import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
@@ -19,9 +18,6 @@ import { ShowMusic } from '../audio/ShowMusic'
 import { MemoryManager } from '../Director/MemoryManager'
 import type { Scope } from '../utils/lifecycle'
 import type { AppServices } from './services'
-import { VPS_STORAGE_URL } from '../config/models'
-import { VPS_STORAGE_ORIGIN, VPS_STORAGE_MIRROR_ORIGIN } from '../utils/vpsStorageUrl'
-import { parseStripeKillSwitch, consumePreferMirror } from '../utils/dualDomainStripe'
 import { createDefaultRoster } from '../cast/defaultCast'
 import { MAIN_PANEL_AUTH_FORM, wireHfAuthForm } from '../ui/dashboard'
 import { getAppTemplate } from './appTemplate'
@@ -36,114 +32,7 @@ import { consumeWasmFallbackWarning } from '../config/loadFailover'
 
 type AppInitState = 'BOOTING' | 'AUDIO' | 'MODEL' | 'FINALIZING' | 'READY' | 'ERROR'
 
-/**
- * TTS init hits the VPS storage host directly (not proxied through app-server
- * CORS), so a misconfigured or down origin (e.g. duplicate ACAO headers) fails
- * the whole `fetch`. Try primary, then fall back to the mirror host — never
- * both at once, since the engines hold mutable init state (worker, caches)
- * that a concurrent second `init()` call would clobber. A TTS failure on both
- * hosts must never block the LLM/stage from booting — voice degrades gracefully.
- */
-async function initAudioEngineWithFailover(audioEngine: TtsEngine): Promise<boolean> {
-  const primaryPath = `${VPS_STORAGE_URL}/tts/onnx`
-  try {
-    await audioEngine.init(primaryPath)
-    return true
-  } catch (primaryError) {
-    console.warn('[Audio] TTS init failed on primary storage host:', primaryError)
-  }
-
-  if (VPS_STORAGE_MIRROR_ORIGIN !== VPS_STORAGE_ORIGIN) {
-    const mirrorPath = `${VPS_STORAGE_MIRROR_ORIGIN}/models/tts/onnx`
-    try {
-      await audioEngine.init(mirrorPath)
-      console.log('[Audio] TTS init succeeded on mirror storage host')
-      return true
-    } catch (mirrorError) {
-      console.warn('[Audio] TTS init failed on mirror storage host:', mirrorError)
-    }
-  }
-
-  console.warn('[Audio] TTS unavailable on all storage hosts — continuing without voice.')
-  return false
-}
-
-/**
- * Service-worker registration, stale-root cleanup and dual-domain stripe config.
- * Page-lifetime: call once per page load (from `main.ts`), not per `initApp()`
- * attempt — retries must not register a second `controllerchange` listener.
- */
-export function setupServiceWorker(scope: Scope): void {
-  if ('serviceWorker' in navigator) {
-    try {
-      // Clean up any stale origin-wide (scope '/') service worker registration from
-      // earlier builds — it intercepts fetches for every app on this shared origin
-      // (test.1ink.us, go.1ink.us), not just this one. Our own registration below is
-      // scoped to /the-jokesters/, so this only ever removes the poisoned root worker.
-      const ownScope = new URL('./', location.href).href
-      navigator.serviceWorker
-        .getRegistrations()
-        .then((registrations) => {
-          for (const registration of registrations) {
-            if (registration.scope === location.origin + '/' && registration.scope !== ownScope) {
-              void registration.unregister().then(() => {
-                console.log('[ServiceWorker] Unregistered stale origin-wide service worker')
-              })
-            }
-          }
-        })
-        .catch((error) => {
-          console.warn('[ServiceWorker] Failed to enumerate registrations for cleanup:', error)
-        })
-
-      reloadOnceForIsolation({ scope })
-      registerSW({
-        onNeedRefresh() {
-          console.log('[ServiceWorker] New content available, please refresh.')
-        },
-        onOfflineReady() {
-          console.log('[ServiceWorker] App is ready for offline use.')
-        },
-      })
-      console.log('[ServiceWorker] Registered via virtual:pwa-register')
-
-      const invertOrigins = consumePreferMirror()
-      const stripeConfig = {
-        ...parseStripeKillSwitch({
-          search: window.location.search,
-          storageGet: (key) => {
-            try {
-              return localStorage.getItem(key)
-            } catch {
-              return null
-            }
-          },
-        }),
-        invertOrigins,
-      }
-      const stripeMessage = {
-        type: 'SET_STRIPE_CONFIG',
-        enabled: stripeConfig.enabled,
-        raceFirstByte: stripeConfig.raceFirstByte,
-        invertOrigins: stripeConfig.invertOrigins,
-      }
-      navigator.serviceWorker.controller?.postMessage(stripeMessage)
-      void navigator.serviceWorker.ready
-        .then((reg) => {
-          reg.active?.postMessage(stripeMessage)
-        })
-        .catch(() => {
-          /* registration still in flight */
-        })
-      scope.listen(navigator.serviceWorker, 'controllerchange', () => {
-        navigator.serviceWorker.controller?.postMessage(stripeMessage)
-      })
-      console.log('[ServiceWorker] Dual-domain stripe', stripeConfig)
-    } catch (error) {
-      console.warn('[ServiceWorker] Registration failed (non-critical):', error)
-    }
-  }
-}
+export { setupServiceWorker } from './serviceWorkerSetup'
 
 export interface InitAppHooks {
   /** Called with the run's services once they exist, and with `null` when the run is disposed. */

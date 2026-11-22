@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "id": "sample-table-read",
+  "title": "Sample Table Read",
+  "description": "Three-line smoke test for the Script Player.",
+  "stageKit": "talkshow",
+  "speakers": [
+    { "id": "rubella", "name": "Rubella", "slot": "comedian", "voice": "F1", "color": "#ff6b6b" },
+    { "id": "lillith", "name": "Lillith", "slot": "philosopher", "voice": "F2", "color": "#a29bfe" },
+    { "id": "riley", "name": "Riley", "slot": "scientist", "voice": "F1", "color": "#4ecdc4" }
+  ],
+  "turns": [
+    { "speaker": "rubella", "text": "Okay, cold open. Nobody panic. The script is the script.", "sfx": "rimshot" },
+    { "speaker": "lillith", "text": "But is a script read aloud still a script, or merely a rumor with timing?", "holdMs": 600 },
+    { "speaker": "riley", "text": "I measured it. Eighty percent rumor, twenty percent timing.", "sfx": "laugh" },
+    { "speaker": "rubella", "text": "That's the show, folks." }
+  ]
+}

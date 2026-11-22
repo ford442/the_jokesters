@@ -20,6 +20,8 @@ export interface EpisodeReplayCallbacks {
   /** Wait until TTS queue is idle between turns. */
   waitUntilFinished?: () => Promise<void>
   getTtsSteps?: () => number
+  /** Optional: pause (ms) after turn `index`; default 350. Used by the script player's holdMs. */
+  getHoldMs?: (index: number) => number | undefined
 }
 
 export interface EpisodeReplayHandle {
@@ -66,7 +68,7 @@ export function replayEpisode(
       }
       // Brief beat between speakers
       if (running && i < episode.turns.length - 1) {
-        await sleep(350)
+        await sleep(Math.max(0, callbacks.getHoldMs?.(i) ?? 350))
       }
     }
 
