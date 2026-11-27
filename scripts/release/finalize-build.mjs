@@ -27,6 +27,9 @@ export function finalizeBuild({
   sha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: rootDir, encoding: 'utf8' }).trim(),
   dirty = execFileSync('git', ['status', '--porcelain'], { cwd: rootDir, encoding: 'utf8' }).trim().length > 0,
 } = {}) {
+  if (!/^[a-f0-9]{40}$/i.test(sha)) {
+    throw new Error(`Build metadata requires a full git commit SHA; received ${sha || '(empty)'}.`)
+  }
   const serviceWorkerPath = path.join(distDir, 'service-worker.js')
   if (!existsSync(serviceWorkerPath)) {
     throw new Error('Production build must contain the single injected service-worker.js.')
@@ -43,7 +46,7 @@ export function finalizeBuild({
   const leaked = remaining.filter(
     (relativePath) => isDevelopmentArtifact(relativePath) || /\.(?:br|gz)$/.test(relativePath),
   )
-  const serviceWorkers = remaining.filter((relativePath) => /^service-worker\.(?:js|mjs)$/.test(relativePath))
+  const serviceWorkers = remaining.filter((relativePath) => /(^|\/)service-worker(?:-[^.]+)?\.(?:js|mjs)$/.test(relativePath))
   if (serviceWorkers.length !== 1 || serviceWorkers[0] !== 'service-worker.js') {
     throw new Error(`Expected one stable service-worker.js; found: ${serviceWorkers.join(', ') || 'none'}`)
   }

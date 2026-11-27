@@ -65,7 +65,6 @@ export DEPLOY_HOST=1ink.us                 # or JOKESTERS_SFTP_HOST
 export DEPLOY_USER=deploy                  # required
 export DEPLOY_KEY=~/.ssh/id_ed25519        # preferred over password
 export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
-export VITE_APP_BASE_PATH=/the-jokesters-staging/
 
 # Optional password fallback (or passphrase for encrypted keys)
 # export DEPLOY_PASS=...
@@ -87,12 +86,16 @@ Legacy aliases: `JOKESTERS_SFTP_*` still work.
 - Key auth preferred; password optional fallback
 - GitHub Actions: `.github/workflows/deploy.yml` (`workflow_dispatch`, staging-only, secrets `DEPLOY_USER` + `DEPLOY_KEY`)
 
+`npm run deploy` builds for `/the-jokesters-staging/` by default. Override
+`VITE_APP_BASE_PATH` explicitly only when deploying to another path.
+
 For browser capture after deployment:
 
 ```bash
 npm run release:capture -- https://test.1ink.us/the-jokesters-staging/
 ```
 
+Set `RELEASE_EXPECTED_SHA` to require the captured `version.json` SHA to match a specific commit.
 The capture writes `release-evidence/report.json` and desktop, laptop, tablet, and mobile PNGs.
 
 **Never commit credentials** or paste keys into git history. Rotate any key that was ever committed. Use GitHub Actions secrets or a local env file that is gitignored (`*.local`).

@@ -10,13 +10,17 @@
 
 ## Current audit and build warning disposition
 
-`npm audit --omit=dev` reports five production-graph advisories: high findings through
-`@huggingface/transformers@4.2.0`'s `onnxruntime-node@1.24.3` → `adm-zip@0.5.17` and `sharp@0.34.5`,
-plus moderate `protobufjs@7.6.4` through `onnxruntime-web@1.26.0`. These Node-side package names
-were checked against emitted `dist/assets/*.js`; none of their package code is included (the lone
-`sharp` text match is in a comedy prompt). No dependency override is applied because the affected
-Node packages are not used by the browser runtime. Recheck the audit and bundle on dependency
-updates.
+`npm audit --omit=dev` reports five production-graph advisories. The four high findings are through
+`@huggingface/transformers@4.2.0`'s `onnxruntime-node@1.24.3` → `adm-zip@0.5.17` and
+`sharp@0.34.5`. Transformers.js selects its browser export in this build; the package code for
+those Node-only backends is absent from emitted assets (the lone `sharp` text match is a comedy
+prompt).
+
+The moderate `protobufjs@7.6.4` finding is different: `onnxruntime-web@1.26.0` depends on it for
+its ONNX schema module, so it is not classified as Node-only. This finding remains open and should
+be resolved with a compatible ONNX Runtime Web upgrade that includes the patched schema code. The
+current 1.26.x runtime/WASM pairing is left unchanged in this build release. Recheck the audit and
+bundle on dependency updates.
 
 Vite's remaining build notices are upstream Zod v4 `@__PURE__` comment-position annotations; Rollup
 strips the comments and continues. The remaining `>600 kB` chunk notice covers the lazily loaded

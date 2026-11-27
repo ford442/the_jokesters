@@ -64,27 +64,20 @@ The following environment variables should be configured on the deployment serve
 deprecated compatibility wrapper; the separate Contabo zip upload path is unsupported.
 
 ```bash
-export DEPLOY_TOKEN="..."    # when VPS has_token=true
-# export DEPLOY_TARGET=go    # default: test
-npm run build && python scripts/deploy_dist.py
-```
-
-**Direct SFTP:** `scripts/deploy_dist.py` / `npm run deploy` — **no secrets in the repo**:
-
-```bash
 export DEPLOY_HOST=1ink.us
 export DEPLOY_USER=deploy
 export DEPLOY_KEY=~/.ssh/id_ed25519           # preferred over password
 # export DEPLOY_PASS=...                     # fallback only
 export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
-export VITE_APP_BASE_PATH=/the-jokesters-staging/
 
 npm run deploy:dry        # build + dry-run (no remote writes)
 npm run deploy            # build + SFTP upload
 npm run deploy:verify     # build + upload + verify every remote file hash
 ```
+The npm deploy commands build with `/the-jokesters-staging/` by default; override
+`VITE_APP_BASE_PATH` when targeting another staging path.
 
-Guards (SFTP): refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, optional `--verify`.  
+Guards (SFTP): refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, and verifies all file hashes.
 CI: GitHub Actions **Deploy dist** workflow (`workflow_dispatch`) is staging-only and uses secrets `DEPLOY_USER` + `DEPLOY_KEY`.  
 See `scripts/README.md`. **Never commit keys or passwords; rotate anything that was ever committed.**
 

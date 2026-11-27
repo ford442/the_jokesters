@@ -317,13 +317,14 @@ export DEPLOY_HOST=1ink.us
 export DEPLOY_USER=...
 export DEPLOY_KEY=~/.ssh/id_ed25519          # preferred (password optional fallback)
 # export DEPLOY_PASS=...                     # only if no key
-export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
 
 npm run deploy:dry      # build + list remote actions (no writes)
 npm run deploy          # build + upload
-npm run deploy:verify   # build + upload + SHA-256 sample check
+npm run deploy:verify   # build + upload + verify every file hash
 ```
 - Script: `scripts/deploy_dist.py` (Paramiko SFTP)
+- npm deploy commands target staging by default and remove stale remote files after verifying uploads.
 - **Key auth preferred** (`DEPLOY_KEY`); password fallback `DEPLOY_PASS`
 - **Refuses `CHANGEME` placeholders**; no secrets in the repo
 - **`--dry-run`** / `npm run deploy:dry`; optional `--clean` / `DEPLOY_CLEAN=1` (destructive)

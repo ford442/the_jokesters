@@ -10,6 +10,7 @@ on:
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - '.nvmrc'
       - '.github/workflows/test.yml'
   pull_request:
     branches: [main, master]
@@ -20,6 +21,7 @@ on:
       - 'vitest.config.ts'
       - 'package.json'
       - 'package-lock.json'
+      - '.nvmrc'
       - '.github/workflows/test.yml'
   workflow_dispatch:
 

@@ -25,7 +25,7 @@ function normalizedBaseUrl(value) {
 }
 
 async function fetchPage(url) {
-  const response = await fetch(url, { redirect: 'follow' })
+  const response = await fetch(url, { redirect: 'follow', cache: 'no-store' })
   return {
     response,
     body: Buffer.from(await response.arrayBuffer()),
@@ -49,16 +49,26 @@ async function capture() {
   const [bare, index, versionResponse] = await Promise.all([
     fetchPage(bareUrl),
     fetchPage(indexUrl),
-    fetch(new URL('version.json', baseUrl), { redirect: 'follow' }),
+    fetch(new URL('version.json', baseUrl), { redirect: 'follow', cache: 'no-store' }),
   ])
   const bareHash = sha256(bare.body)
   const indexHash = sha256(index.body)
-  const headers = {
-    'cross-origin-opener-policy': bare.response.headers.get('cross-origin-opener-policy'),
-    'cross-origin-embedder-policy': bare.response.headers.get('cross-origin-embedder-policy'),
-  }
+  const headers = Object.fromEntries(
+    [...bare.response.headers].filter(([name]) => !['set-cookie', 'set-cookie2'].includes(name.toLowerCase())),
+  )
+  const policyValues = (name) =>
+    (headers[name]?.split(',').map((value) => value.trim()).filter(Boolean) || [])
+  const isolationHeadersValid =
+    policyValues('cross-origin-opener-policy').length === 1 &&
+    policyValues('cross-origin-opener-policy')[0] === 'same-origin' &&
+    policyValues('cross-origin-embedder-policy').length === 1 &&
+    policyValues('cross-origin-embedder-policy')[0] === 'credentialless'
   let version = null
   if (versionResponse.ok) version = await versionResponse.json()
+  const expectedSha = process.env.RELEASE_EXPECTED_SHA
+  const versionMetadataValid =
+    /^[a-f0-9]{40}$/i.test(version?.sha || '') && version?.dirty === false
+  const versionShaMatches = expectedSha ? version?.sha === expectedSha : null
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -98,10 +108,13 @@ async function capture() {
       capturedAt: new Date().toISOString(),
       url: bareUrl,
       version,
+      versionMetadataValid,
+      versionShaMatches,
       bareUrl: { status: bare.response.status, sha256: bareHash },
       indexUrl: { url: indexUrl, status: index.response.status, sha256: indexHash },
       identicalEntryBytes: bareHash === indexHash,
       headers,
+      isolationHeadersValid,
       crossOriginIsolated,
       consoleErrors,
       pageErrors,
@@ -115,7 +128,11 @@ async function capture() {
       !bare.response.ok ||
       !index.response.ok ||
       bareHash !== indexHash ||
+      !isolationHeadersValid ||
       !crossOriginIsolated ||
+      !versionMetadataValid ||
+      versionShaMatches === false ||
+      pageErrors.length > 0 ||
       badResponses.length > 0 ||
       failedRequests.length > 0
     ) {

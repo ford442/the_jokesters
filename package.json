@@ -32,9 +32,9 @@
     "coverage:update": "vitest run --coverage && node scripts/check-coverage-ratchet.mjs --update",
     "test:unit": "vitest run",
     "verify:wllama": "bash scripts/verify_wllama_wasm.sh",
-    "deploy": "npm run build && python3 scripts/deploy_dist.py",
-    "deploy:dry": "npm run build && python3 scripts/deploy_dist.py --dry-run",
-    "deploy:verify": "npm run build && python3 scripts/deploy_dist.py --verify",
+    "deploy": "node scripts/release/deploy.mjs",
+    "deploy:dry": "node scripts/release/deploy.mjs --dry-run",
+    "deploy:verify": "node scripts/release/deploy.mjs --verify",
     "release:capture": "node scripts/release/capture.mjs"
   },
   "devDependencies": {

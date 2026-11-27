@@ -68,7 +68,6 @@ Mirror hostname `storage.noahcohn.com` may appear in ops scripts / SW failover â
 ```bash
 export DEPLOY_USER=...
 export DEPLOY_KEY=~/.ssh/id_ed25519
-export VITE_APP_BASE_PATH=/the-jokesters-staging/
 npm run deploy:dry    # preview remote actions
 npm run deploy        # build + SFTP upload
 ```
@@ -76,7 +75,8 @@ npm run deploy        # build + SFTP upload
 - **Never commit SFTP passwords or keys** (script rejects `CHANGEME` placeholders).
 - Key auth preferred; password fallback optional. Deploy defaults to the staging document root; Actions **Deploy dist** is staging-only.
 - Static hosting: the build base defaults to `/the-jokesters/`; override with `VITE_APP_BASE_PATH` for a different app subpath. Ship `dist/` plus runtime model CDN access.
-- `npm run build` writes `dist/version.json`, filters development files, and rejects stale `.br`/`.gz` twins. Set the same `VITE_APP_BASE_PATH` for staging builds.
+- `npm run deploy` builds for `/the-jokesters-staging/`; set `VITE_APP_BASE_PATH` to a matching path if overriding the staging document root.
+- `npm run build` writes `dist/version.json`, filters development files, and rejects stale `.br`/`.gz` twins.
 - Checklist: [docs/DEPLOY_CHECKLIST.md](./docs/DEPLOY_CHECKLIST.md)
 - Scripts inventory: [scripts/README.md](./scripts/README.md)
 

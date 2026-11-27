@@ -35,13 +35,13 @@ describe('finalizeBuild', () => {
     const version = finalizeBuild({
       rootDir: root,
       distDir: dist,
-      sha: '1234567890abcdef',
+      sha: '1234567890abcdef1234567890abcdef12345678',
       builtAt: new Date('2026-11-27T12:00:00.000Z'),
       dirty: false,
     })
 
     expect(version).toEqual({
-      sha: '1234567890abcdef',
+      sha: '1234567890abcdef1234567890abcdef12345678',
       builtAt: '2026-11-27T12:00:00.000Z',
       dirty: false,
     })
