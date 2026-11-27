@@ -60,3 +60,4 @@ __pycache__/
 tools/verification/*.png
 tools/verification/video/
 coverage/
+release-evidence/

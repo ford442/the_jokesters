@@ -37,7 +37,13 @@ const html = readFileSync(path.join(dist, 'index.html'), 'utf8')
 const entryRefs = [
   ...html.matchAll(/<script[^>]+type="module"[^>]+src="([^"]+)"/g),
   ...html.matchAll(/<link[^>]+rel="modulepreload"[^>]+href="([^"]+)"/g),
-].map((m) => path.resolve(dist, m[1]))
+].map((m) => {
+  const pathname = new URL(m[1], 'http://localhost').pathname
+  const assetsIndex = pathname.lastIndexOf('/assets/')
+  return assetsIndex >= 0
+    ? path.resolve(dist, pathname.slice(assetsIndex + 1))
+    : path.resolve(dist, pathname.replace(/^\/+/, ''))
+})
 
 const staticImportRe = /(?:\bfrom|\bimport)\s*["'](\.{1,2}\/[^"']+\.js)["']/g
 const initial = new Set()

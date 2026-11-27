@@ -8,6 +8,22 @@ import { isScriptPlayerRequested } from './script/scriptPacket'
 /** Page-lifetime root. Each `initApp()` attempt runs in a child scope of it. */
 const pageScope = new Scope()
 
+if (import.meta.env.PROD) {
+  void fetch(`${import.meta.env.BASE_URL}version.json`, { cache: 'no-store' })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const version = (await response.json()) as {
+        sha: string
+        builtAt: string
+        dirty: boolean
+      }
+      console.info(
+        `[release] ${version.sha.slice(0, 7)} built ${version.builtAt}; dirty=${version.dirty}`,
+      )
+    })
+    .catch((error: unknown) => console.warn('[release] Build metadata unavailable:', error))
+}
+
 setupServiceWorker(pageScope)
 
 function showStartupError(error: unknown): void {

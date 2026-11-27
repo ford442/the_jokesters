@@ -14,7 +14,7 @@ export function setupServiceWorker(scope: Scope): void {
       // Clean up any stale origin-wide (scope '/') service worker registration from
       // earlier builds — it intercepts fetches for every app on this shared origin
       // (test.1ink.us, go.1ink.us), not just this one. Our own registration below is
-      // scoped to /the-jokesters/, so this only ever removes the poisoned root worker.
+      // scoped to this app path, so this only ever removes the poisoned root worker.
       const ownScope = new URL('./', location.href).href
       navigator.serviceWorker
         .getRegistrations()
@@ -79,4 +79,3 @@ export function setupServiceWorker(scope: Scope): void {
     }
   }
 }
-

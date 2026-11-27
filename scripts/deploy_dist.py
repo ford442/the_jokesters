@@ -12,14 +12,14 @@ Environment (preferred names; legacy aliases accepted):
   DEPLOY_PASS / JOKESTERS_SFTP_PASS     (password — fallback only)
   DEPLOY_PORT / JOKESTERS_SFTP_PORT     (default: 22)
   DEPLOY_REMOTE_DIR / JOKESTERS_SFTP_REMOTE_DIR
-                                        (default: /var/www/the-jokesters)
+                                        (default: /var/www/the-jokesters-staging)
   DEPLOY_DIST / JOKESTERS_DIST_DIR      (default: ./dist)
   DEPLOY_CLEAN / CLEAN_BEFORE_UPLOAD    (1/true = delete remote files first)
 
 CLI:
   python scripts/deploy_dist.py              # upload
   python scripts/deploy_dist.py --dry-run    # list actions only
-  python scripts/deploy_dist.py --verify     # after upload, checksum sample files
+  python scripts/deploy_dist.py --verify     # accepted; all uploads are always verified
   python scripts/deploy_dist.py --help
 
 Refuse to run if user/pass/key path still contain placeholder "CHANGEME".
@@ -76,7 +76,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--verify",
         action="store_true",
-        help="After upload, verify SHA-256 of a sample of remote files",
+        help="Compatibility flag; every uploaded file is always SHA-256 verified",
     )
     p.add_argument(
         "--clean",
@@ -103,10 +103,6 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
-
-
-def sha256_bytes(data: bytes) -> str:
-    return hashlib.sha256(data).hexdigest()
 
 
 def load_pkey(key_path: str, password: str | None):
@@ -213,37 +209,67 @@ def upload_tree(
     return actions
 
 
-def verify_sample(
+def remote_sha256(sftp: paramiko.SFTPClient, remote_path: str) -> str:
+    digest = hashlib.sha256()
+    with sftp.open(remote_path, "rb") as remote_file:
+        for chunk in iter(lambda: remote_file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_tree(
     sftp: paramiko.SFTPClient,
     local: Path,
     remote: str,
-    max_files: int = 12,
 ) -> None:
     files = sorted(iter_local_files(local))
     if not files:
         die("No local files to verify")
-    # Prefer index + a few assets
-    priority = [p for p in files if p.name in ("index.html", "service-worker.js")]
-    rest = [p for p in files if p not in priority]
-    sample = (priority + rest)[:max_files]
-    print(f"Verifying {len(sample)} file(s) via SHA-256…")
+    print(f"Verifying all {len(files)} file(s) via SHA-256…")
     failed = 0
-    for file_path in sample:
+    for file_path in files:
         rel = file_path.relative_to(local).as_posix()
         rpath = f"{remote.rstrip('/')}/{rel}"
         local_hash = sha256_file(file_path)
-        with sftp.open(rpath, "rb") as rf:
-            remote_data = rf.read()
-        remote_hash = sha256_bytes(remote_data)
+        remote_hash = remote_sha256(sftp, rpath)
         ok = local_hash == remote_hash
-        status = "OK" if ok else "MISMATCH"
-        print(f"  [{status}] {rel}")
         if not ok:
             failed += 1
-            print(f"    local={local_hash} remote={remote_hash}")
+            print(f"  [MISMATCH] {rel}\n    local={local_hash} remote={remote_hash}")
     if failed:
         die(f"Verify failed: {failed} mismatch(es)", code=3)
-    print("Verify passed.")
+    print(f"Verified all {len(files)} files.")
+
+
+def stale_remote_files(sftp: paramiko.SFTPClient, local: Path, remote: str) -> list[str]:
+    local_paths = {
+        f"{remote.rstrip('/')}/{file_path.relative_to(local).as_posix()}"
+        for file_path in iter_local_files(local)
+    }
+    return sorted(set(list_remote_files(sftp, remote)) - local_paths)
+
+
+def prune_stale_files(sftp: paramiko.SFTPClient, local: Path, remote: str) -> list[str]:
+    stale = stale_remote_files(sftp, local, remote)
+    for remote_path in stale:
+        sftp.remove(remote_path)
+
+    def remove_empty_dirs(directory: str) -> None:
+        try:
+            entries = sftp.listdir_attr(directory)
+        except OSError:
+            return
+        for entry in entries:
+            if stat.S_ISDIR(entry.st_mode or 0):
+                remove_empty_dirs(f"{directory.rstrip('/')}/{entry.filename}")
+        try:
+            if not sftp.listdir_attr(directory):
+                sftp.rmdir(directory)
+        except OSError:
+            pass
+
+    remove_empty_dirs(remote)
+    return stale
 
 
 def main() -> None:
@@ -258,8 +284,8 @@ def main() -> None:
     remote_dir = env(
         "DEPLOY_REMOTE_DIR",
         "JOKESTERS_SFTP_REMOTE_DIR",
-        default="/var/www/the-jokesters",
-    ) or "/var/www/the-jokesters"
+        default="/var/www/the-jokesters-staging",
+    ) or "/var/www/the-jokesters-staging"
     dist = Path(
         env("DEPLOY_DIST", "JOKESTERS_DIST_DIR", default="dist") or "dist"
     ).resolve()
@@ -338,14 +364,18 @@ def main() -> None:
         all_actions.extend(upload_tree(sftp, dist, remote_dir, dry_run=dry_run))
 
         if dry_run:
+            if not clean:
+                all_actions.extend(f"delete stale {path}" for path in stale_remote_files(sftp, dist, remote_dir))
             print(f"[dry-run] {len(all_actions)} action(s):")
             for a in all_actions:
                 print(f"  {a}")
             print("Dry-run complete (no remote writes).")
         else:
-            print(f"Uploaded ({len(all_actions)} logged step(s)).")
-            if args.verify:
-                verify_sample(sftp, dist, remote_dir)
+            print(f"Uploaded ({len(all_actions)} logged step(s)); verifying before pruning.")
+            verify_tree(sftp, dist, remote_dir)
+            if not clean:
+                stale = prune_stale_files(sftp, dist, remote_dir)
+                print(f"Removed {len(stale)} stale remote file(s).")
             print("Deploy complete.")
     finally:
         sftp.close()

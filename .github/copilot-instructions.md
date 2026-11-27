@@ -74,7 +74,7 @@ main.ts → GroupChatManager (LLM) → Director (orchestration) → mode loop fu
 - Evolved personalities are persisted to `localStorage` under `jokesters-evolved-prompt-{agentId}` and are loaded on construction
 
 ### Service Worker
-- `service-worker.js` must have a **stable filename** (no hash) — enforced via `entryFileNames` in `vite.config.ts`
+- `service-worker.js` must have a **stable filename** (no hash) — emitted once by VitePWA `injectManifest` and checked by `scripts/release/finalize-build.mjs`
 - It intercepts large model file fetches (`.safetensors`, `.bin`, `.gguf`, `.wasm`) and parallelizes them as 42 MB byte-range chunks
 
 ### TTS Models and Assets
@@ -83,8 +83,8 @@ main.ts → GroupChatManager (LLM) → Director (orchestration) → mode loop fu
 - LLM weights are downloaded at runtime and cached in the browser's IndexedDB via WebLLM
 
 ### Deployment
-- `base: './'` in `vite.config.ts` means all asset paths are relative — suitable for static hosting without a fixed root
-- COOP/COEP headers are **commented out** in `vite.config.ts`; do not enable them without verifying cross-origin isolation requirements for all model hosting URLs
+- `VITE_APP_BASE_PATH` in `vite.config.ts` sets the app-specific asset URL and PWA scope (default `/the-jokesters/`; staging uses `/the-jokesters-staging/`)
+- COOP/COEP headers are set in Vite dev/preview and `public/.htaccess`; keep the Apache response to one copy of each policy
 
 ### Common Errors
 | Error | Cause | Fix |

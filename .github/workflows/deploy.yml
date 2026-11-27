@@ -20,14 +20,10 @@ on:
         description: 'Dry-run (list actions, no remote writes)'
         type: boolean
         default: true
-      clean:
-        description: 'Clean remote dir before upload (destructive)'
-        type: boolean
-        default: false
-      verify:
-        description: 'SHA-256 verify sample after upload'
-        type: boolean
-        default: true
+      remote_dir:
+        description: 'Staging document root on the deployment host'
+        type: string
+        default: '/var/www/the-jokesters-staging'
 
 jobs:
   deploy:
@@ -37,13 +33,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build
+        env:
+          VITE_APP_BASE_PATH: /the-jokesters-staging/
         run: npm run build
 
       - name: Install paramiko
@@ -67,7 +65,7 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+          DEPLOY_REMOTE_DIR: ${{ inputs.remote_dir }}
           DEPLOY_KEY_PASSPHRASE: ${{ secrets.DEPLOY_KEY_PASSPHRASE }}
         run: |
           set -euo pipefail
@@ -78,7 +76,10 @@ jobs:
           # Defaults when secrets omitted (host is public; credentials are not)
           export DEPLOY_HOST="${DEPLOY_HOST:-1ink.us}"
           export DEPLOY_PORT="${DEPLOY_PORT:-22}"
-          export DEPLOY_REMOTE_DIR="${DEPLOY_REMOTE_DIR:-/var/www/the-jokesters}"
+          case "$DEPLOY_REMOTE_DIR" in
+            *staging*) ;;
+            *) echo "Refusing deployment: remote_dir must identify the staging tree" >&2; exit 2 ;;
+          esac
           # Passphrase unlocks encrypted private keys when using key auth
           if [ -n "${DEPLOY_KEY_PASSPHRASE:-}" ] && [ -n "${DEPLOY_KEY:-}" ]; then
             export DEPLOY_PASS="$DEPLOY_KEY_PASSPHRASE"
@@ -86,11 +87,5 @@ jobs:
           ARGS=()
           if [ "${{ inputs.dry_run }}" = "true" ]; then
             ARGS+=(--dry-run)
-          fi
-          if [ "${{ inputs.clean }}" = "true" ]; then
-            ARGS+=(--clean)
-          fi
-          if [ "${{ inputs.verify }}" = "true" ] && [ "${{ inputs.dry_run }}" != "true" ]; then
-            ARGS+=(--verify)
           fi
           python3 scripts/deploy_dist.py "${ARGS[@]}"

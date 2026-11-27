@@ -244,7 +244,7 @@ the_jokesters/
 ## Build and Development Commands
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24.14.1 (minimum supported: 22.12.0; see `.nvmrc`)
 - A modern browser with WebGPU support (Chrome 113+, Edge 113+)
 - Sufficient GPU memory (recommended: 4GB+ VRAM)
 - Python 3.x (for deployment and smoke tests)
@@ -824,7 +824,7 @@ The application requires these external resources at runtime (canonical host `st
 - See `docs/MODEL_HOSTING.md` and `src/utils/vpsStorageUrl.ts`.
 
 ### Server Configuration
-The application uses a base-relative path (`base: './'` in `vite.config.ts`) for flexible deployment. COOP/COEP headers are commented out but can be enabled in `vite.config.ts` if needed for specific WebGPU scenarios.
+The application build uses the app-specific `VITE_APP_BASE_PATH` (`/the-jokesters/` by default) for asset URLs and PWA scope. COOP/COEP headers are configured for dev/preview in `vite.config.ts` and static Apache hosting in `public/.htaccess`.
 
 ---
 

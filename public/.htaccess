@@ -3,6 +3,8 @@
 # `credentialless` keeps cross-origin no-cors loads working; model hosts are fetched with CORS.
 # Keep in sync with src/utils/crossOriginIsolation.ts and vite.config.ts.
 <IfModule mod_headers.c>
+  Header onsuccess unset Cross-Origin-Opener-Policy
+  Header onsuccess unset Cross-Origin-Embedder-Policy
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Cross-Origin-Embedder-Policy "credentialless"
 </IfModule>

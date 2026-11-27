@@ -42,9 +42,9 @@ log "Starting custom web-llm build"
 [[ -d "$SUBMODULE_DIR" ]] || error "Missing $SUBMODULE_DIR — run: git submodule update --init"
 [[ -f "$SUBMODULE_DIR/package.json" ]] || error "$SUBMODULE_DIR/package.json missing"
 
-command -v node >/dev/null 2>&1 || error "Node.js 18+ required"
-NODE_MAJOR=$(node --version | sed 's/v//' | cut -d. -f1)
-(( NODE_MAJOR >= 18 )) || error "Node.js 18+ required (found $(node --version))"
+command -v node >/dev/null 2>&1 || error "Node.js 22.12+ required"
+node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 12) ? 0 : 1)' ||
+  error "Node.js 22.12+ required (found $(node --version))"
 log "Node $(node --version), npm $(npm --version)"
 
 pushd "$SUBMODULE_DIR" >/dev/null
