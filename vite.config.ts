@@ -160,7 +160,7 @@ export default defineConfig(({ command }) => {
         manifest: {
           name: 'The Jokesters',
           short_name: 'Jokesters',
-          description: 'AI-powered comedy improv with 3D avatars and real-time WebGPU inference',
+          description: 'Five AI comedians improvise a live show with 3D avatars and voices, running entirely in your browser',
           theme_color: '#6b46c1',
           background_color: '#0f0f23',
           display: 'standalone',
@@ -168,7 +168,13 @@ export default defineConfig(({ command }) => {
           // Relative — resolved against the manifest's own URL, so this works whether the
           // app is deployed at the site root or under a subpath (e.g. /the-jokesters/).
           start_url: '.',
-          icons: [{ src: 'vite.svg', sizes: 'any', type: 'image/svg+xml' }],
+          icons: [
+            { src: 'icons/jokesters.svg', sizes: 'any', type: 'image/svg+xml' },
+            { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'icons/maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          ],
         },
         devOptions: { enabled: true },
       }),

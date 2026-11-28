@@ -2,7 +2,7 @@ export function getAppTemplate(): string {
   return `
     <div class="container">
       <h1>The Jokesters</h1>
-      <p class="subtitle">Multi-Agent Chat powered by Llama-3 & WebGPU</p>
+      <p class="subtitle">An AI comedy troupe, live in your browser</p>
       <div id="loading" class="loading">
         <!-- Model picker (shown before loading starts) -->
         <div id="model-picker" style="width:100%;max-width:480px;margin:0 auto;">
@@ -73,12 +73,12 @@ export function getAppTemplate(): string {
             <summary>⚙️ Advanced VRAM Settings (optional)</summary>
             <div class="vram-settings-content">
               <div class="vram-setting-row">
-                <label>Max Tokens Per Turn</label>
+                <label for="max-tokens-slider">Max Tokens Per Turn</label>
                 <input type="range" id="max-tokens-slider" min="16" max="512" value="96" step="8">
-                <span id="max-tokens-val" class="vram-setting-value">96</span>
+                <span id="max-tokens-val" aria-hidden="true" class="vram-setting-value">96</span>
               </div>
               <div class="vram-setting-row">
-                <label>Prefill Chunk Size</label>
+                <label for="prefill-chunk-select">Prefill Chunk Size</label>
                 <select id="prefill-chunk-select">
                   <option value="0">Auto</option>
                   <option value="128">128</option>
@@ -88,7 +88,7 @@ export function getAppTemplate(): string {
                 </select>
               </div>
               <div class="vram-setting-row">
-                <label>KV Cache Quantization</label>
+                <label for="kv-cache-select">KV Cache Quantization</label>
                 <select id="kv-cache-select">
                   <option value="auto" selected>Auto (enable for 7B/8B)</option>
                   <option value="int8">INT8</option>
@@ -97,7 +97,7 @@ export function getAppTemplate(): string {
                 </select>
               </div>
               <div class="vram-setting-row">
-                <label>Sliding Window Attention</label>
+                <label for="sliding-window-select">Sliding Window Attention</label>
                 <select id="sliding-window-select">
                   <option value="0" selected>Disabled (use full context)</option>
                   <option value="-1">Auto (half of context)</option>
@@ -107,14 +107,14 @@ export function getAppTemplate(): string {
                 </select>
               </div>
               <div class="vram-setting-row">
-                <label>Attention Sink Tokens</label>
+                <label for="attention-sink-slider">Attention Sink Tokens</label>
                 <input type="range" id="attention-sink-slider" min="0" max="16" value="4" step="1">
-                <span id="attention-sink-val" class="vram-setting-value">4</span>
+                <span id="attention-sink-val" aria-hidden="true" class="vram-setting-value">4</span>
               </div>
               <div class="vram-setting-row">
-                <label>GPU Memory Utilization</label>
+                <label for="gpu-mem-slider">GPU Memory Utilization</label>
                 <input type="range" id="gpu-mem-slider" min="50" max="95" value="85" step="5">
-                <span id="gpu-mem-val" class="vram-setting-value">85%</span>
+                <span id="gpu-mem-val" aria-hidden="true" class="vram-setting-value">85%</span>
               </div>
               <div class="vram-setting-row">
                 <label>3D Renderer</label>
