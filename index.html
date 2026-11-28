@@ -186,7 +186,7 @@
         // shield, so Load Model & Start stays clickable underneath.
         if (!navigator.gpu) {
           showWebgpuGate();
-          console.error('WebGPU is not supported in this browser');
+          console.info('WebGPU is not available in this browser — CPU/WASM mode is available.');
           return;
         }
         
@@ -195,7 +195,7 @@
           if (!adapter) {
             showWebgpuGate();
             browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
-            console.error('WebGPU adapter not available');
+            console.info('No WebGPU adapter — CPU/WASM mode is available.');
           } else {
             console.log('WebGPU is supported:', adapter);
           }

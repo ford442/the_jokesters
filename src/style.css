@@ -235,8 +235,13 @@ input:focus, textarea:focus {
   background: rgba(26, 26, 46, 0.9);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  /* `safe` keeps the top reachable when the picker is taller than the viewport. */
+  justify-content: safe center;
   align-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 0;
+  box-sizing: border-box;
   z-index: 1000;
 }
 

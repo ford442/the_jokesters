@@ -10,6 +10,7 @@
     "src/vite-env.d.ts",
     "src/types/**/*.d.ts",
     // Imports src/ (DOM types), so it is checked here rather than in tsconfig.node.json.
-    "scripts/export-comedy-prompts.ts"
+    "scripts/export-comedy-prompts.ts",
+    "scripts/smoke/presetUrls.ts"
   ]
 }
