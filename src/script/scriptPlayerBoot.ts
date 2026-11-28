@@ -126,7 +126,12 @@ export async function initScriptPlayer(parent: Scope): Promise<void> {
   lipSync.analyser.connect(audioBus.master)
   stage.setLipSync(lipSync)
   stage.setAudioClock(() => audioCtx.currentTime)
-  run.add(speechQueue.onUtteranceStart((e) => stage.beginUtterance(e)))
+  // `data-utterances` counts audible lines — read by the production smoke (scripts/smoke.mjs).
+  let utterances = 0
+  run.add(speechQueue.onUtteranceStart((e) => {
+    ui.root.dataset.utterances = String(++utterances)
+    stage.beginUtterance(e)
+  }))
   run.add(speechQueue.onUtteranceEnd(() => stage.endUtterance()))
   stage.render()
 
@@ -147,6 +152,7 @@ export async function initScriptPlayer(parent: Scope): Promise<void> {
   const setPlaying = (playing: boolean) => {
     ui.play.disabled = playing || !packet || !voiceSettled
     ui.stop.disabled = !playing
+    ui.root.dataset.playing = String(playing)
   }
 
   const stopPlayback = () => {

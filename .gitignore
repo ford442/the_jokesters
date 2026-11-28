@@ -61,3 +61,5 @@ tools/verification/*.png
 tools/verification/video/
 coverage/
 release-evidence/
+smoke-report/
+smoke-report-*/

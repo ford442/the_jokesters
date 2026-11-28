@@ -2,9 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/icons/jokesters.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Jokesters - Multi-Agent Chat</title>
+    <meta name="theme-color" content="#6b46c1" />
+    <title>The Jokesters — AI Comedy Troupe</title>
+    <meta name="description" content="Five AI comedians improvise a live show with 3D avatars and voices, running entirely in your browser." />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="The Jokesters — AI Comedy Troupe" />
+    <meta property="og:description" content="Five AI comedians improvise a live show with 3D avatars and voices, running entirely in your browser." />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
     <!-- Warm DNS + TLS to primary model CDN (storage.1ink.us — fastest host) -->
     <link rel="dns-prefetch" href="https://storage.1ink.us" />
     <link rel="preconnect" href="https://storage.1ink.us" crossorigin />
@@ -186,7 +195,7 @@
         // shield, so Load Model & Start stays clickable underneath.
         if (!navigator.gpu) {
           showWebgpuGate();
-          console.error('WebGPU is not supported in this browser');
+          console.info('WebGPU is not available in this browser — CPU/WASM mode is available.');
           return;
         }
         
@@ -195,7 +204,7 @@
           if (!adapter) {
             showWebgpuGate();
             browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
-            console.error('WebGPU adapter not available');
+            console.info('No WebGPU adapter — CPU/WASM mode is available.');
           } else {
             console.log('WebGPU is supported:', adapter);
           }
@@ -208,38 +217,50 @@
     </script>
     
     <script>
-      // Surface runtime errors directly in the page to help diagnose missing UI
-      window.addEventListener('error', e => {
-        try {
-          const container = document.getElementById('app') || document.body;
-          const msg = (e && e.message) ? e.message : String(e.error || e);
-          const pre = document.createElement('pre');
-          pre.style.color = 'white';
-          pre.style.background = '#ff6b6b';
-          pre.style.padding = '12px';
-          pre.style.borderRadius = '6px';
-          pre.textContent = `Runtime error: ${msg}`;
-          container.prepend(pre);
+      // Uncaught errors: one styled, dismissible recovery panel (details logged to console).
+      (function () {
+        var panel = null, list = null;
+        function show(kind, msg) {
+          try {
+            if (!panel) {
+              panel = document.createElement('div');
+              panel.id = 'runtime-error-panel';
+              panel.setAttribute('role', 'alert');
+              panel.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:20000;' +
+                'width:min(560px,calc(100vw - 32px));box-sizing:border-box;padding:16px;border-radius:12px;' +
+                'background:#1b1b35;color:#f1f1f7;border:1px solid #ef476f;box-shadow:0 8px 32px rgba(0,0,0,.5);font:14px/1.4 system-ui,sans-serif;';
+              var h = document.createElement('strong'); h.textContent = 'Something went wrong backstage.';
+              var p = document.createElement('p'); p.style.margin = '6px 0 10px';
+              p.textContent = 'The show may not work correctly. Reloading usually fixes it.';
+              var d = document.createElement('details'); var sm = document.createElement('summary');
+              sm.textContent = 'Technical details'; list = document.createElement('pre');
+              list.style.cssText = 'white-space:pre-wrap;max-height:120px;overflow:auto;font-size:12px;opacity:.8;margin:6px 0 0;';
+              d.append(sm, list);
+              var row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;margin-top:12px;justify-content:flex-end;';
+              var btnStyle = 'min-height:44px;padding:0 16px;border-radius:8px;border:0;cursor:pointer;font:inherit;';
+              var dismiss = document.createElement('button'); dismiss.type = 'button'; dismiss.textContent = 'Dismiss';
+              dismiss.style.cssText = btnStyle + 'background:#2d2d55;color:#f1f1f7;';
+              dismiss.onclick = function () { panel.remove(); panel = null; };
+              var reload = document.createElement('button'); reload.type = 'button'; reload.textContent = 'Reload';
+              reload.style.cssText = btnStyle + 'background:#6b46c1;color:#fff;';
+              reload.onclick = function () { location.reload(); };
+              row.append(dismiss, reload);
+              panel.append(h, p, d, row);
+              document.body.appendChild(panel);
+            }
+            list.textContent += kind + ': ' + msg + '\n';
+          } catch (err) { console.error('Failed to render error panel:', err); }
+        }
+        window.addEventListener('error', function (e) {
+          if (e && e.target && e.target !== window) return; // resource load errors
           console.error('Captured runtime error:', e);
-        } catch (err) {
-          console.error('Failed to render runtime error to page:', err);
-        }
-      });
-      window.addEventListener('unhandledrejection', e => {
-        try {
-          const container = document.getElementById('app') || document.body;
-          const pre = document.createElement('pre');
-          pre.style.color = 'white';
-          pre.style.background = '#ff6b6b';
-          pre.style.padding = '12px';
-          pre.style.borderRadius = '6px';
-          pre.textContent = `Unhandled Rejection: ${String(e.reason)}`;
-          container.prepend(pre);
+          show('Error', (e && e.message) ? e.message : String(e && e.error));
+        });
+        window.addEventListener('unhandledrejection', function (e) {
           console.error('Unhandled rejection:', e);
-        } catch (err) {
-          console.error('Failed to render unhandled rejection to page:', err);
-        }
-      });
+          show('Unhandled rejection', String(e.reason));
+        });
+      })();
     </script>
     <script type="module" src="/src/main.ts"></script>
     <div id="news-ticker-container" style="display:none;">

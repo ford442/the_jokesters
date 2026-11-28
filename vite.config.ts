@@ -5,6 +5,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,6 +18,29 @@ const isolationHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'credentialless',
 };
+
+/** Emits dist/version.json `{ sha, builtAt }` so smoke / release checks can match the deployed commit. */
+function versionJsonPlugin(): Plugin {
+  return {
+    name: 'jokesters-version-json',
+    apply: 'build',
+    generateBundle() {
+      let sha = process.env.GITHUB_SHA ?? '';
+      if (!sha) {
+        try {
+          sha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
+        } catch {
+          sha = 'unknown';
+        }
+      }
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ sha, builtAt: new Date().toISOString() }) + '\n',
+      });
+    },
+  };
+}
 
 function useCustomWebLLM(): boolean {
   return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
@@ -127,6 +151,7 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 600,
     },
     plugins: [
+      versionJsonPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
         strategies: 'injectManifest',
@@ -142,13 +167,21 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'The Jokesters',
           short_name: 'Jokesters',
-          description: 'AI-powered comedy improv with 3D avatars and real-time WebGPU inference',
+          description: 'Five AI comedians improvise a live show with 3D avatars and voices, running entirely in your browser',
           theme_color: '#6b46c1',
           background_color: '#0f0f23',
           display: 'standalone',
           orientation: 'any',
-          start_url: appBasePath,
-          icons: [{ src: 'vite.svg', sizes: 'any', type: 'image/svg+xml' }],
+          // Relative — resolved against the manifest's own URL, so this works whether the
+          // app is deployed at the site root or under a subpath (e.g. /the-jokesters/).
+          start_url: '.',
+          icons: [
+            { src: 'icons/jokesters.svg', sizes: 'any', type: 'image/svg+xml' },
+            { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+            { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'icons/maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: 'icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          ],
         },
         devOptions: { enabled: true },
       }),

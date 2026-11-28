@@ -294,14 +294,13 @@ export function buildVRAMOverrides(
  */
 export const OOM_MODEL_LADDER = [
   'vicuna-7b-q4f32-webllm-vps',
-  'vicuna-7b-q4f32-webllm-ctx1024',
-  'vicuna-7b-q4f32-webllm-ctx512',
+  // ctx1024 / ctx512 rungs removed until their model_lib files are published (#216).
   'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
   'Qwen2.5-0.5B-Instruct-ONNX',
 ] as const;
 
 /** Ladder rungs `CreateMLCEngine` can load itself (Qwen ONNX needs the Transformers.js engine). */
-const MLC_LADDER_IDS: ReadonlySet<string> = new Set(OOM_MODEL_LADDER.slice(0, 4));
+const MLC_LADDER_IDS: ReadonlySet<string> = new Set(OOM_MODEL_LADDER.slice(0, 2));
 
 /** Generic-ctx4k Vicuna presets that share the top rung's peak VRAM. */
 const LADDER_ALIASES: Record<string, string> = {

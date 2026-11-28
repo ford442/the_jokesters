@@ -19,7 +19,7 @@
     "registry:check": "node scripts/generate-mode-registry.mjs --check",
     "typecheck:webllm": "npm run build:webllm && tsc --noEmit -p tsconfig.webllm.json",
     "build:custom-webllm": "npm run build:webllm && USE_CUSTOM_WEBLLM=1 npm run build",
-    "preview": "vite preview",
+    "preview": "vite preview --base /the-jokesters/",
     "perf": "tsx tests/perf/ci-runner.ts",
     "perf:quick": "tsx tests/perf/ci-runner.ts --duration=quick",
     "perf:full": "tsx tests/perf/ci-runner.ts --duration=full",
@@ -32,10 +32,11 @@
     "coverage:update": "vitest run --coverage && node scripts/check-coverage-ratchet.mjs --update",
     "test:unit": "vitest run",
     "verify:wllama": "bash scripts/verify_wllama_wasm.sh",
-    "deploy": "node scripts/release/deploy.mjs",
-    "deploy:dry": "node scripts/release/deploy.mjs --dry-run",
-    "deploy:verify": "node scripts/release/deploy.mjs --verify",
-    "release:capture": "node scripts/release/capture.mjs"
+    "deploy": "npm run build && python3 scripts/deploy_dist.py",
+    "deploy:dry": "npm run build && python3 scripts/deploy_dist.py --dry-run",
+    "deploy:verify": "npm run build && python3 scripts/deploy_dist.py --verify",
+    "smoke": "node scripts/smoke.mjs",
+    "release:report": "node scripts/release-report.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
@@ -43,6 +44,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.39.5",
     "globals": "^17.13.0",
+    "playwright": "^1.63.0",
     "puppeteer": "^25.1.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",

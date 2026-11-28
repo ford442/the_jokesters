@@ -589,7 +589,9 @@ export const TRANSFORMERS_MODELS: UnifiedModelConfig[] = [
     transformers: {
       model_id: "onnx-community/Qwen2.5-0.5B-Instruct",
       device: "webgpu",
-      dtype: "q4f16"
+      dtype: "q4f16",
+      // storage.1ink.us has no ONNX weights for this model (404 → HF fallback on every load).
+      skipMirror: true
     }
   },
   {

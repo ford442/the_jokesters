@@ -118,6 +118,21 @@ export class Stage {
     private cameraState: CameraDirectorState = createCameraDirectorState('void');
     private previousActorId: string | null = null;
     private lastFrameMs = 0;
+    /** 0 = uncapped. A cap keeps software rasterizers from starving the main thread. */
+    private maxFps = 0;
+
+    /**
+     * Caps the render loop (0 = uncapped). On software WebGL an uncapped loop can block
+     * the page for minutes during model load; bootstrap lowers this while loading and
+     * keeps a low cap on software renderers.
+     */
+    public setMaxFps(fps: number): void {
+        this.maxFps = Number.isFinite(fps) && fps > 0 ? fps : 0;
+    }
+
+    public getMaxFps(): number {
+        return this.maxFps;
+    }
     private fpsWindow: number[] = [];
     private shadowsDropped = false;
 
@@ -699,6 +714,7 @@ export class Stage {
 
     private renderFrame() {
         const nowMs = performance.now();
+        if (this.maxFps > 0 && this.lastFrameMs !== 0 && nowMs - this.lastFrameMs < 1000 / this.maxFps - 1) return;
         const rawDt = this.lastFrameMs === 0 ? 0.016 : (nowMs - this.lastFrameMs) / 1000;
         this.lastFrameMs = nowMs;
         const dt = Math.min(0.05, Math.max(0.001, rawDt));
