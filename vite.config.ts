@@ -1,8 +1,7 @@
 import { VitePWA } from 'vite-plugin-pwa';
 import type { Plugin } from 'vite';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import compression from 'vite-plugin-compression2';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
@@ -47,6 +46,21 @@ function useCustomWebLLM(): boolean {
   return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
 }
 
+function normalizeAppBasePath(value: string): string {
+  const trimmed = value.trim();
+  const segments = trimmed.split('/').filter(Boolean);
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    /[?#\\\s]/.test(trimmed) ||
+    segments.length === 0 ||
+    segments.some((segment) => !/^[A-Za-z0-9._~-]+$/.test(segment) || segment === '.' || segment === '..')
+  ) {
+    throw new Error('VITE_APP_BASE_PATH must be an app-specific absolute path, e.g. /the-jokesters/.');
+  }
+  return `/${segments.join('/')}/`;
+}
+
 function webllmResolveAlias(): Record<string, string> {
   if (!useCustomWebLLM()) return {};
   const distEntry = path.resolve(repoRoot, '3rd_party/web-llm-dist/lib/index.js');
@@ -84,17 +98,16 @@ const webllmChunkId = useCustomWebLLM()
   ? path.resolve(repoRoot, '3rd_party/web-llm-dist/lib/index.js')
   : '@mlc-ai/web-llm';
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, repoRoot, 'VITE_');
+  const appBasePath = normalizeAppBasePath(env.VITE_APP_BASE_PATH || '/the-jokesters/');
   // Deployed under a shared origin (test.1ink.us/the-jokesters/, go.1ink.us/the-jokesters/)
-  // alongside unrelated sibling apps (dog_dash, weather_clock, marbles, hyphon, ...).
-  // The PWA service worker MUST be scoped to this app's own subpath — a relative
-  // `base: './'` leaves vite-plugin-pwa unable to resolve an absolute scope, which
-  // previously fell back to '/' and let this app's service worker intercept fetches
-  // (including model downloads) on every other app sharing the origin.
-  const pwaScope = command === 'build' ? '/the-jokesters/' : undefined;
+  // alongside unrelated sibling apps. Keep all generated URLs and the PWA scope under
+  // this app-specific path; staging can override it with VITE_APP_BASE_PATH.
+  const pwaScope = appBasePath;
 
   return {
-    base: './',
+    base: appBasePath,
     resolve: {
       alias: webllmAlias,
     },
@@ -113,10 +126,7 @@ export default defineConfig(({ command }) => {
       minify: 'esbuild',
       sourcemap: false,
       rollupOptions: {
-        input: {
-          main: './index.html',
-          sw: './src/service-worker.ts',
-        },
+        input: './index.html',
         output: {
           manualChunks: (id) => {
             // The `?url` wasm modules are tiny stubs referenced from the initial bundle (wllamaRuntime);
@@ -129,10 +139,7 @@ export default defineConfig(({ command }) => {
             if (id.includes('@mlc-ai/web-llm') || id.includes('3rd_party/web-llm-dist/lib/index.js')) return 'webllm-engine';
           },
           chunkFileNames: (chunkInfo) => `assets/${chunkInfo.name}-[hash].js`,
-          entryFileNames: (chunkInfo) => {
-            if (chunkInfo.name === 'sw') return 'service-worker.js';
-            return 'assets/[name]-[hash].js';
-          },
+          entryFileNames: 'assets/[name]-[hash].js',
           assetFileNames: (assetInfo) => {
             const info = assetInfo.name || '';
             if (info.endsWith('.css')) return 'assets/[name]-[hash][extname]';
@@ -189,16 +196,6 @@ export default defineConfig(({ command }) => {
             dest: 'assets/ort',
           },
         ],
-      }),
-      compression({
-        algorithm: 'brotliCompress',
-        threshold: 512,
-        deleteOriginalAssets: false,
-      }),
-      compression({
-        algorithm: 'gzip',
-        threshold: 512,
-        deleteOriginalAssets: false,
       }),
     ],
     optimizeDeps: {

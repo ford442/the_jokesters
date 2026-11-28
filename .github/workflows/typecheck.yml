@@ -11,6 +11,9 @@ on:
       - 'tsconfig*.json'
       - 'package.json'
       - 'package-lock.json'
+      - '.nvmrc'
+      - 'scripts/release/**'
+      - 'scripts/check-bundle-budget.mjs'
       - '.github/workflows/typecheck.yml'
       - 'eslint.config.mjs'
       - 'scripts/check-any-ratchet.mjs'
@@ -29,6 +32,9 @@ on:
       - 'tsconfig*.json'
       - 'package.json'
       - 'package-lock.json'
+      - '.nvmrc'
+      - 'scripts/release/**'
+      - 'scripts/check-bundle-budget.mjs'
       - '.github/workflows/typecheck.yml'
       - 'eslint.config.mjs'
       - 'scripts/check-any-ratchet.mjs'
@@ -52,7 +58,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies
@@ -69,6 +75,9 @@ jobs:
       - name: Mode registry is up to date
         run: npm run registry:check
 
+      - name: Build production dist
+        run: npm run build && npm run budget:check
+
   lint:
     name: ESLint
     runs-on: ubuntu-latest
@@ -81,7 +90,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install dependencies

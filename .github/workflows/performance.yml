@@ -12,6 +12,8 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/check-bundle-budget.mjs'
+      - 'scripts/release/**'
+      - '.nvmrc'
       - '.github/workflows/performance.yml'
   pull_request:
     branches: [main, master]
@@ -24,6 +26,8 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'scripts/check-bundle-budget.mjs'
+      - 'scripts/release/**'
+      - '.nvmrc'
       - '.github/workflows/performance.yml'
   workflow_dispatch:
     inputs:
@@ -53,7 +57,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           
       - name: Install dependencies
@@ -199,7 +203,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version-file: '.nvmrc'
           cache: 'npm'
           
       - name: Install dependencies

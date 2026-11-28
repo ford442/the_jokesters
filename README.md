@@ -18,7 +18,7 @@ A **browser-based multi-agent comedy show**: five AI personas improvise in real 
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 24.14.1 (see `.nvmrc`; minimum supported version is 22.12.0)
 - Browser with WebGPU preferred (Chrome/Edge 113+); llama.cpp preset works without it
 - ~2 GB+ free GPU memory for 3B models; ~4 GB for Vicuna 7B
 
@@ -29,7 +29,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173/`. The launch screen probes your GPU and recommends a model **before** download.
+Open `http://localhost:5173/the-jokesters/`. The launch screen probes your GPU and recommends a model **before** download.
 
 ```bash
 npm run typecheck   # required before commit
@@ -73,8 +73,10 @@ npm run deploy        # build + SFTP upload
 ```
 
 - **Never commit SFTP passwords or keys** (script rejects `CHANGEME` placeholders).
-- Key auth preferred; password fallback optional. Optional CI: Actions **Deploy dist**.
-- Static hosting: `base: './'` in Vite; ship `dist/` plus runtime model CDN access.
+- Key auth preferred; password fallback optional. Deploy defaults to the staging document root; Actions **Deploy dist** is staging-only.
+- Static hosting: the build base defaults to `/the-jokesters/`; override with `VITE_APP_BASE_PATH` for a different app subpath. Ship `dist/` plus runtime model CDN access.
+- `npm run deploy` builds for `/the-jokesters-staging/`; set `VITE_APP_BASE_PATH` to a matching path if overriding the staging document root.
+- `npm run build` writes `dist/version.json`, filters development files, and rejects stale `.br`/`.gz` twins.
 - Checklist: [docs/DEPLOY_CHECKLIST.md](./docs/DEPLOY_CHECKLIST.md)
 - Scripts inventory: [scripts/README.md](./scripts/README.md)
 

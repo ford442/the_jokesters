@@ -243,7 +243,7 @@ the_jokesters/
 ## Build and Development Commands
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24.14.1 (minimum supported: 22.12.0; see `.nvmrc`)
 - A modern browser with WebGPU support (Chrome 113+, Edge 113+)
 - Sufficient GPU memory (recommended: 4GB+ VRAM)
 - Python 3.x (for deployment and smoke tests)
@@ -319,13 +319,14 @@ export DEPLOY_HOST=1ink.us
 export DEPLOY_USER=...
 export DEPLOY_KEY=~/.ssh/id_ed25519          # preferred (password optional fallback)
 # export DEPLOY_PASS=...                     # only if no key
-export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
 
 npm run deploy:dry      # build + list remote actions (no writes)
 npm run deploy          # build + upload
-npm run deploy:verify   # build + upload + SHA-256 sample check
+npm run deploy:verify   # build + upload + verify every file hash
 ```
 - Script: `scripts/deploy_dist.py` (Paramiko SFTP)
+- npm deploy commands target staging by default and remove stale remote files after verifying uploads.
 - **Key auth preferred** (`DEPLOY_KEY`); password fallback `DEPLOY_PASS`
 - **Refuses `CHANGEME` placeholders**; no secrets in the repo
 - **`--dry-run`** / `npm run deploy:dry`; optional `--clean` / `DEPLOY_CLEAN=1` (destructive)
@@ -825,7 +826,7 @@ The application requires these external resources at runtime (canonical host `st
 - See `docs/MODEL_HOSTING.md` and `src/utils/vpsStorageUrl.ts`.
 
 ### Server Configuration
-The application uses a base-relative path (`base: './'` in `vite.config.ts`) for flexible deployment. COOP/COEP headers are commented out but can be enabled in `vite.config.ts` if needed for specific WebGPU scenarios.
+The application build uses the app-specific `VITE_APP_BASE_PATH` (`/the-jokesters/` by default) for asset URLs and PWA scope. COOP/COEP headers are configured for dev/preview in `vite.config.ts` and static Apache hosting in `public/.htaccess`.
 
 ---
 

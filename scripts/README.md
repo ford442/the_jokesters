@@ -20,9 +20,9 @@ Utility scripts for model hosting, WebLLM builds, and deployment.
 | `stage_vicuna_wasm_from_ci.sh` / `build-vicuna-wasm.sh` | Vicuna WASM pipeline (`mlc_llm compile`; see ADR) |
 | `build-llama-wasm-webgpu.sh` | **Experimental** ggml-org llama.cpp Emscripten + WebGPU (`test-backend-ops`). Artifacts are **not** the product llama.cpp path — `npm run verify:wllama` still owns `@wllama/wllama`. |
 | `deploy_dist.py` | **Deploy `dist/` over SFTP — credentials via env only** |
-| `../deploy.py` (repo root) | **Contabo zip deploy** → `storage.noahcohn.com` (env `DEPLOY_TOKEN`) |
-| `smoke.mjs` | Production-mode browser smoke (`npm run smoke -- --url <url>`); allowlist in `smoke-allowlist.json` |
-| `release-report.mjs` | "State of the App" markdown from `smoke-report/report.json` (`npm run release:report`) |
+| `../deploy.py` (repo root) | Deprecated compatibility wrapper for `deploy_dist.py`; no separate upload path |
+| `release/capture.mjs` | Capture staging response checks, browser diagnostics, and four viewport screenshots |
+| `smoke_test.py` | Playwright-oriented smoke test |
 
 ### Native / C++ policy
 
@@ -54,22 +54,8 @@ Canonical constant: `src/utils/vpsStorageUrl.ts` → `VPS_STORAGE_ORIGIN` / `VPS
 
 ## Environment — deploy
 
-Two supported paths (both keep secrets out of git):
-
-### A. Contabo zip deploy (repo root `deploy.py`)
-
-Uploads `dist/` as one zip to `https://storage.noahcohn.com`; the VPS unpacks and SFTPs to the site. Prefer this for day-to-day deploys.
-
-```bash
-export DEPLOY_TOKEN="..."           # from VPS DEPLOY_AUTH_TOKEN when required
-# export DEPLOY_TARGET=go           # default: test → test.1ink.us
-# export TARGET_FOLDER=the-jokesters  # optional override
-
-npm run build
-python deploy.py
-```
-
-### B. Direct SFTP (`scripts/deploy_dist.py`)
+Use the direct SFTP path (`scripts/deploy_dist.py`) for staging. The root `deploy.py` is only a
+deprecated wrapper to this command; the old Contabo zip uploader is unsupported.
 
 `scripts/deploy_dist.py` uploads `dist/` via Paramiko SFTP. **No secrets in the repo.**
 
@@ -78,29 +64,39 @@ python deploy.py
 export DEPLOY_HOST=1ink.us                 # or JOKESTERS_SFTP_HOST
 export DEPLOY_USER=deploy                  # required
 export DEPLOY_KEY=~/.ssh/id_ed25519        # preferred over password
-export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
 
 # Optional password fallback (or passphrase for encrypted keys)
 # export DEPLOY_PASS=...
 
-# Destructive: wipe remote contents before upload (default off)
-# export DEPLOY_CLEAN=1
-
 npm run deploy              # build + SFTP upload
 npm run deploy:dry          # build + dry-run (no remote writes)
-npm run deploy:verify       # build + upload + SHA-256 sample verify
+npm run deploy:verify       # build + upload + verify every file by SHA-256
 
 python scripts/deploy_dist.py --dry-run
-python scripts/deploy_dist.py --clean --verify
+python scripts/deploy_dist.py --verify
 ```
 
 Legacy aliases: `JOKESTERS_SFTP_*` still work.
 
 **Guards (SFTP path):**
 - Refuses to run if credentials contain `CHANGEME` / similar placeholders
+- Uploads every file, verifies every remote SHA-256, then removes stale remote files
 - `--dry-run` lists mkdir/put/delete without writing
 - Key auth preferred; password optional fallback
-- GitHub Actions: `.github/workflows/deploy.yml` (`workflow_dispatch`, secrets `DEPLOY_USER` + `DEPLOY_KEY`)
+- GitHub Actions: `.github/workflows/deploy.yml` (`workflow_dispatch`, staging-only, secrets `DEPLOY_USER` + `DEPLOY_KEY`)
+
+`npm run deploy` builds for `/the-jokesters-staging/` by default. Override
+`VITE_APP_BASE_PATH` explicitly only when deploying to another path.
+
+For browser capture after deployment:
+
+```bash
+npm run release:capture -- https://test.1ink.us/the-jokesters-staging/
+```
+
+Set `RELEASE_EXPECTED_SHA` to require the captured `version.json` SHA to match a specific commit.
+The capture writes `release-evidence/report.json` and desktop, laptop, tablet, and mobile PNGs.
 
 **Never commit credentials** or paste keys into git history. Rotate any key that was ever committed. Use GitHub Actions secrets or a local env file that is gitignored (`*.local`).
 

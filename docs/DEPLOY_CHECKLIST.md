@@ -60,32 +60,25 @@ The following environment variables should be configured on the deployment serve
 
 ### Deploy scripts (env-only credentials)
 
-**Preferred (Contabo zip):** root `deploy.py` — no SFTP secrets in the client:
-
-```bash
-export DEPLOY_TOKEN="..."    # when VPS has_token=true
-# export DEPLOY_TARGET=go    # default: test
-npm run build && python deploy.py
-```
-
-**Direct SFTP:** `scripts/deploy_dist.py` / `npm run deploy` — **no secrets in the repo**:
+**Canonical SFTP deploy:** `scripts/deploy_dist.py` / `npm run deploy`. The root `deploy.py` is a
+deprecated compatibility wrapper; the separate Contabo zip upload path is unsupported.
 
 ```bash
 export DEPLOY_HOST=1ink.us
 export DEPLOY_USER=deploy
 export DEPLOY_KEY=~/.ssh/id_ed25519           # preferred over password
 # export DEPLOY_PASS=...                     # fallback only
-export DEPLOY_REMOTE_DIR=/var/www/the-jokesters
+export DEPLOY_REMOTE_DIR=/var/www/the-jokesters-staging
 
 npm run deploy:dry        # build + dry-run (no remote writes)
 npm run deploy            # build + SFTP upload
-npm run deploy:verify     # build + upload + checksum sample
-# Destructive clean (default off):
-# DEPLOY_CLEAN=1 npm run deploy
+npm run deploy:verify     # build + upload + verify every remote file hash
 ```
+The npm deploy commands build with `/the-jokesters-staging/` by default; override
+`VITE_APP_BASE_PATH` when targeting another staging path.
 
-Guards (SFTP): refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, optional `--verify`.  
-CI: GitHub Actions **Deploy dist** workflow (`workflow_dispatch`) with secrets `DEPLOY_USER` + `DEPLOY_KEY`.  
+Guards (SFTP): refuses `CHANGEME` placeholders; supports `--dry-run`, key auth, and verifies all file hashes.
+CI: GitHub Actions **Deploy dist** workflow (`workflow_dispatch`) is staging-only and uses secrets `DEPLOY_USER` + `DEPLOY_KEY`.  
 See `scripts/README.md`. **Never commit keys or passwords; rotate anything that was ever committed.**
 
 ---
@@ -174,6 +167,8 @@ if (navigator.gpu) {
    ls -la dist/
    # Check all required files present
    ```
+   `dist/version.json` must identify the source commit with `dirty: false`; `dist/` must not include
+   development notebooks/test fixtures or `.br`/`.gz` twins.
 
 3. **Upload TTS Assets** (if using TTS)
    - Upload `./tts/onnx/` to server
@@ -187,6 +182,8 @@ if (navigator.gpu) {
 
 5. **Verify Deployment**
    - [ ] Site loads without 404 errors
+   - [ ] `version.json` SHA matches the deployed commit
+   - [ ] Bare URL and `/index.html` have identical bytes; COOP/COEP appear once and `crossOriginIsolated` is true
    - [ ] WebGPU detection works (test in unsupported browser)
    - [ ] Model loads successfully
    - [ ] TTS works (if assets uploaded)
