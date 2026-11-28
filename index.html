@@ -186,7 +186,7 @@
         // shield, so Load Model & Start stays clickable underneath.
         if (!navigator.gpu) {
           showWebgpuGate();
-          console.error('WebGPU is not supported in this browser');
+          console.info('WebGPU is not available in this browser — CPU/WASM mode is available.');
           return;
         }
         

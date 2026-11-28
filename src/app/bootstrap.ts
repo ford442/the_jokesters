@@ -253,6 +253,9 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
     // .chat-container is half-opacity + pointer-events:none until `.enabled` (style.css).
     chatContainer.classList.add('enabled')
     stage.setMaxFps(steadyFps)
+    // The no-WebGPU notice belongs to the picker; once a CPU/GPU show is running it would
+    // sit over the settings panel (the CPU badge already states the mode).
+    document.getElementById('webgpu-error')?.classList.remove('visible')
     run.add(() => chatContainer.classList.remove('enabled'))
     userInput.focus()
 

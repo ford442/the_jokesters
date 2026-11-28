@@ -25,6 +25,10 @@ describe('show screen (.chat-container)', () => {
     expect(enabled).toMatch(/opacity:\s*1/)
   })
 
+  it('hides the no-WebGPU notice once the show is ready (it covered settings controls)', () => {
+    expect(bootstrap).toMatch(/getElementById\('webgpu-error'\)\?\.classList\.remove\('visible'\)/)
+  })
+
   it('bootstrap adds .enabled when ready and removes it on teardown', () => {
     expect(bootstrap).toMatch(/chatContainer\.classList\.add\('enabled'\)/)
     expect(bootstrap).toMatch(/run\.add\(\(\) => chatContainer\.classList\.remove\('enabled'\)\)/)
