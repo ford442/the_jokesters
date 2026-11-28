@@ -32,6 +32,8 @@ export interface TransformersEngineConfig {
   model_id: string  // HuggingFace model ID
   device?: 'webgpu' | 'wasm' | 'cpu'
   dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
+  /** Weights are not on the VPS mirror: load from the HF Hub directly (no 404 round-trip). */
+  skipMirror?: boolean
 }
 
 /** `remotePathTemplate` is supported by transformers.js but missing from its public `env` type. */
@@ -82,9 +84,14 @@ export class TransformersEngineAdapter implements LLMEngine {
     ;(env.backends as any).onnx.wasm.proxy = false
     env.allowLocalModels = false
     
-    // Self-hosted model mirror on VPS
-    env.remoteHost = VPS_STORAGE_ORIGIN
-    ;(env as unknown as MirrorEnv).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
+    // Self-hosted model mirror on VPS, unless this model is known not to be mirrored.
+    if (tfConfig.skipMirror) {
+      env.remoteHost = 'https://huggingface.co'
+      ;(env as unknown as MirrorEnv).remotePathTemplate = '{model}/resolve/{revision}/'
+    } else {
+      env.remoteHost = VPS_STORAGE_ORIGIN
+      ;(env as unknown as MirrorEnv).remotePathTemplate = 'models/transformers/{model}/resolve/{revision}/'
+    }
     
     onProgress?.({ progress: 0, text: `Loading ${modelConfig.name}...`, timeElapsed: 0 })
 

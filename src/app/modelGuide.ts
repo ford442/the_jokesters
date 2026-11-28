@@ -187,10 +187,12 @@ export function recommendModels(
   }
 
   // Comfortable VRAM for 7B — skip Vicuna if a prior session OOMed on it
-  if (vram >= 3800 && !opts?.avoidVicuna) {
-    // A prior OOM on a larger Vicuna plan → start on the next compiled lib instead.
-    const nextId = opts?.lastOomModelId ? nextOomLadderModelId(opts.lastOomModelId) : null
-    const smallerVicuna = nextId?.startsWith('vicuna-') ? byId(nextId) : undefined
+  // A prior OOM on a larger Vicuna plan → start on the next compiled lib instead
+  // (none while the ctx1024/ctx512 libs are unpublished — then fall through to 3B).
+  const nextId = opts?.lastOomModelId ? nextOomLadderModelId(opts.lastOomModelId) : null
+  const smallerVicuna = nextId?.startsWith('vicuna-') ? byId(nextId) : undefined
+  const oomedOnVicuna = !!opts?.lastOomModelId?.startsWith('vicuna-')
+  if (vram >= 3800 && !opts?.avoidVicuna && (!oomedOnVicuna || smallerVicuna)) {
     return {
       primary: smallerVicuna ?? vicuna7,
       safeFallback: device.supportsF16 ? hermesF16 : hermesF32,

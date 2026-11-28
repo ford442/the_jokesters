@@ -1,0 +1,54 @@
+name: Production smoke
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: '17 3 * * *'   # nightly: adds the heavy CPU/WASM flow
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Deployed URL to smoke (blank = local production build)'
+        required: false
+      flows:
+        description: 'Comma-separated flows'
+        required: false
+        default: 'launch,script,presets,error'
+
+jobs:
+  smoke:
+    name: Smoke (production build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Smoke
+        run: |
+          FLOWS="${{ github.event.inputs.flows }}"
+          if [ -z "$FLOWS" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then FLOWS=launch,script,presets,error,cpu; else FLOWS=launch,script,presets,error; fi
+          fi
+          ARGS="--flows $FLOWS"
+          if [ -n "${{ github.event.inputs.url }}" ]; then ARGS="$ARGS --url ${{ github.event.inputs.url }}"; else ARGS="$ARGS --expect-sha $GITHUB_SHA"; fi
+          npm run smoke -- $ARGS
+      - name: State of the App
+        if: always()
+        run: |
+          if [ -f smoke-report/report.json ]; then
+            npm run --silent release:report -- --out smoke-report/state-of-the-app.md
+            cat smoke-report/state-of-the-app.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-report
+          path: smoke-report/

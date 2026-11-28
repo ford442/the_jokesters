@@ -41,6 +41,9 @@ export type SynthesisCallback = (result: SynthesisResult) => void;
 export type VisemeCallback = (current: Viseme, lookahead: Viseme[]) => void;
 export type ErrorCallback = (error: Error) => void;
 
+/** Max silence (no init-progress) before TTS init is abandoned. */
+export const TTS_INIT_IDLE_TIMEOUT_MS = 30_000;
+
 export class OptimizedAudioEngine {
     private worker: Worker | null = null;
     private isReady = false;
@@ -81,6 +84,10 @@ export class OptimizedAudioEngine {
     public async init(modelPath: string = './tts/onnx'): Promise<void> {
         if (this.isReady) return;
 
+        // A previous attempt (e.g. primary host timed out) must not keep downloading.
+        this.worker?.terminate();
+        this.worker = null;
+
         try {
             console.log('[OptimizedAudioEngine] Initializing...');
             const initStart = performance.now();
@@ -110,7 +117,10 @@ export class OptimizedAudioEngine {
             console.log(`[OptimizedAudioEngine] Initialized in ${(performance.now() - initStart).toFixed(1)}ms`);
 
         } catch (e) {
-            console.error('[OptimizedAudioEngine] Init failed:', e);
+            console.warn('[OptimizedAudioEngine] Init failed:', e);
+            // Only one TTS worker may be alive: drop this one before any mirror retry.
+            this.worker?.terminate();
+            this.worker = null;
             throw e;
         }
     }
@@ -276,14 +286,27 @@ export class OptimizedAudioEngine {
 
     // --- Private Methods ---
 
+    /**
+     * Sends `init` and waits for success. The timeout is an **idle** timeout: it is
+     * re-armed on every `init-progress` message (byte progress while the ~263 MB of
+     * ONNX downloads, then per-session creation), so slow links finish while a stalled
+     * worker still fails.
+     */
     private async sendToWorker(msg: WorkerRequest): Promise<void> {
         return new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                reject(new Error('Worker timeout'));
-            }, 30000);
+            let timeout: ReturnType<typeof setTimeout> | undefined;
+            const arm = () => {
+                if (timeout !== undefined) clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    this.worker?.removeEventListener('message', handler);
+                    reject(new Error(`Worker timeout (no progress for ${TTS_INIT_IDLE_TIMEOUT_MS / 1000}s)`));
+                }, TTS_INIT_IDLE_TIMEOUT_MS);
+            };
 
             const handler = (e: MessageEvent<WorkerResponse>) => {
-                if (e.data.type === 'init-success') {
+                if (e.data.type === 'init-progress') {
+                    arm();
+                } else if (e.data.type === 'init-success') {
                     clearTimeout(timeout);
                     this.worker?.removeEventListener('message', handler);
                     if (typeof e.data.sampleRate === 'number' && e.data.sampleRate > 0) {
@@ -297,6 +320,7 @@ export class OptimizedAudioEngine {
                 }
             };
 
+            arm();
             this.worker?.addEventListener('message', handler);
             this.worker?.postMessage(msg);
         });

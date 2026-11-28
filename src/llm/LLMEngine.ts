@@ -150,6 +150,8 @@ export interface TransformersEngineConfig {
   model_id: string
   device?: 'webgpu' | 'wasm' | 'cpu'
   dtype?: 'fp32' | 'fp16' | 'q8' | 'q4' | 'q4f16'
+  /** Weights are not on the VPS mirror: load from the HF Hub directly (no 404 round-trip). */
+  skipMirror?: boolean
 }
 
 export interface ApiEngineConfig {

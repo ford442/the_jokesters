@@ -209,7 +209,6 @@ the_jokesters/
 │   ├── bundle-analysis.md         # Bundle analysis
 │   ├── chaos-report.md            # Chaos testing report
 │   ├── integration-log.md         # Integration log
-│   └── smoke-test-passed.md       # Smoke test results
 ├── .github/workflows/
 │   └── performance.yml            # GitHub Actions CI for perf tests + bundle size check
 ├── scripts/                       # Utility scripts
@@ -233,7 +232,7 @@ the_jokesters/
 ├── perf-budget.json               # Performance budget thresholds
 ├── scripts/
 │   ├── deploy_dist.py             # SFTP deploy of dist/ (credentials via env only)
-│   ├── smoke_test.py              # Playwright-oriented smoke test
+│   ├── smoke.mjs                  # Production browser smoke (npm run smoke)
 │   └── README.md                  # Script inventory + env vars
 ├── .env.example                   # VITE_VPS_STORAGE_ORIGIN sample
 └── docs/ROADMAP.md                # Strategic product roadmap
@@ -304,12 +303,15 @@ npm run perf:browser
 
 ### Smoke Testing
 ```bash
-python scripts/smoke_test.py
+npm run build && npm run smoke                        # local production build (vite preview)
+npm run smoke -- --url https://<deployed>/ --flows launch,script,presets,error,cpu
+npm run release:report -- --release 2/5              # State of the App markdown
 ```
-- Validates build, agent configuration, CallbackEngine, QualityFilter, TTS setup
-- Uses Playwright for browser automation testing
-- Writes results to `docs/smoke-test-passed.md`
-- Note: some paths assume Docker/`cwd` layouts — see script header
+- Fails on console errors, uncaught exceptions, failed / >= 400 requests, `crossOriginIsolated !== true`,
+  `version.json` mismatch (`--expect-sha`), an unresponsive main thread, or a flow assertion
+- Expected noise: `scripts/smoke-allowlist.json` (each entry has a reason)
+- Writes `smoke-report/report.json` + screenshots; CI: `.github/workflows/smoke.yml`
+- Real-GPU checklist: `docs/REAL_GPU_CHECKLIST.md`
 
 ### Deployment
 ```bash
@@ -739,7 +741,7 @@ and the prompt-injection builders. No GPU/LLM involved.
 
 **Chaos tests** (mock-based stress suite, ~2s): `npm run test:chaos` — writes `docs/chaos-report.md`. Not a CI gate; use for local regression before refactors.
 
-Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, Playwright smoke tests (`python smoke_test.py` from repo root).
+Browser/GPU benchmarks stay separate: `npm run perf` (Node mocks), `npm run perf:browser`, production smoke (`npm run smoke`).
 
 ### Performance Testing
 The application includes comprehensive performance benchmarks defined in `perf-budget.json`:
@@ -765,13 +767,12 @@ CI runner: `tests/perf/ci-runner.ts`
 `tests/engine-comparison/` contains browser-based tests for comparing LLM engine performance.
 
 ### Smoke Testing
-`scripts/smoke_test.py` validates:
-1. Project builds successfully
-2. Page loads without console errors
-3. All 5 personas initialize correctly
-4. CallbackEngine tracks references across turns
-5. QualityFilter rejects low-rated jokes
-6. TTS system is configured
+`scripts/smoke.mjs` (`npm run smoke`) flows:
+1. `launch` — picker at 1920×1080 / 1366×768 / 1280×720 / 390×844 / 844×390, Load reachable + clicked by pointer
+2. `script` — `?mode=script`: voice ready, Play, Stop
+3. `presets` — every selectable preset's `model_lib` / config URL resolves
+4. `error` — forced download failure shows the error panel, Retry recovers
+5. `cpu` (nightly) — CPU/WASM load, hit-test of every show-screen control, first reply, start/stop a scene
 
 ### Manual Testing Checklist
 1. **Model Loading**: Verify model loads successfully with progress indicator
@@ -919,7 +920,6 @@ The notes below capture non-obvious gotchas discovered when running this app in 
   Node and passes; the FPS / TTS / LLM benchmarks need a real browser/GPU and are reported as
   `Violations` (`gl.getExtension is not a function`, `Worker timeout`, `Invalid URL`). This is
   expected — the run still exits `0` ("All performance benchmarks passed").
-- `python scripts/smoke_test.py` hardcodes `cwd='/app'` (Docker-oriented) and is not suited to this VM.
 
 ### Running the app in a browser (WebGPU is mandatory)
 - `index.html` probes `navigator.gpu.requestAdapter()`; with no adapter it shows a **"No WebGPU

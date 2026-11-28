@@ -195,7 +195,7 @@
           if (!adapter) {
             showWebgpuGate();
             browserInfo.innerHTML += '<br><br>WebGPU API exists but no adapter found. This may be due to:<br>- Disabled hardware acceleration<br>- Unsupported GPU<br>- WebGPU disabled in flags';
-            console.error('WebGPU adapter not available');
+            console.info('No WebGPU adapter — CPU/WASM mode is available.');
           } else {
             console.log('WebGPU is supported:', adapter);
           }

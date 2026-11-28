@@ -1,0 +1,45 @@
+{
+  "$comment": "Expected console/network noise for scripts/smoke.mjs. Every entry needs match (substring) + reason; optional kind (console|exception|request) and flows. No blanket patterns.",
+  "entries": [
+    {
+      "kind": "request",
+      "match": "failed: net::ERR_FAILED",
+      "flows": [
+        "error"
+      ],
+      "reason": "The error flow aborts model downloads on purpose to reach the error panel."
+    },
+    {
+      "kind": "console",
+      "match": "Failed to load resource: net::ERR_FAILED",
+      "flows": [
+        "error"
+      ],
+      "reason": "Browser log for the deliberately aborted model request."
+    },
+    {
+      "kind": "console",
+      "match": "Failed to load Transformers.js model: TypeError: Failed to fetch",
+      "flows": [
+        "error"
+      ],
+      "reason": "Transformers adapter reports the forced download failure."
+    },
+    {
+      "kind": "console",
+      "match": "[ModelSession] transformers failed to start: TypeError: Failed to fetch",
+      "flows": [
+        "error"
+      ],
+      "reason": "Model session reports the forced download failure."
+    },
+    {
+      "kind": "console",
+      "match": "Initialization error: TypeError: Failed to fetch",
+      "flows": [
+        "error"
+      ],
+      "reason": "Bootstrap reports the forced failure right before showing the error panel."
+    }
+  ]
+}

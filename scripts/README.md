@@ -21,7 +21,8 @@ Utility scripts for model hosting, WebLLM builds, and deployment.
 | `build-llama-wasm-webgpu.sh` | **Experimental** ggml-org llama.cpp Emscripten + WebGPU (`test-backend-ops`). Artifacts are **not** the product llama.cpp path — `npm run verify:wllama` still owns `@wllama/wllama`. |
 | `deploy_dist.py` | **Deploy `dist/` over SFTP — credentials via env only** |
 | `../deploy.py` (repo root) | **Contabo zip deploy** → `storage.noahcohn.com` (env `DEPLOY_TOKEN`) |
-| `smoke_test.py` | Playwright-oriented smoke test |
+| `smoke.mjs` | Production-mode browser smoke (`npm run smoke -- --url <url>`); allowlist in `smoke-allowlist.json` |
+| `release-report.mjs` | "State of the App" markdown from `smoke-report/report.json` (`npm run release:report`) |
 
 ### Native / C++ policy
 

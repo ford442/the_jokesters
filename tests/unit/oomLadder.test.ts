@@ -36,28 +36,24 @@ import { parseCompiledMaxContextFromModelLib } from '../../src/utils/vramOverrid
 const cfg = (id: string) => appConfig.model_list.find((m) => m.model_id === id) as unknown as DynamicModelConfig
 
 describe('OOM ladder', () => {
-  it('orders ctx4k → ctx1024 → ctx512 → Hermes q4f32 → Qwen', () => {
+  it('orders ctx4k → Hermes q4f32 → Qwen (ctx1024/ctx512 libs unpublished, #216)', () => {
     expect([...OOM_MODEL_LADDER]).toEqual([
       'vicuna-7b-q4f32-webllm-vps',
-      'vicuna-7b-q4f32-webllm-ctx1024',
-      'vicuna-7b-q4f32-webllm-ctx512',
       'Hermes-3-Llama-3.2-3B-q4f32_1-MLC',
       'Qwen2.5-0.5B-Instruct-ONNX',
     ])
-    expect(nextOomLadderModelId('vicuna-7b-q4f32-webllm-ultra-low')).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    expect(nextOomLadderModelId('vicuna-7b-q4f32-webllm-ultra-low')).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
     expect(nextOomLadderModelId('Qwen2.5-0.5B-Instruct-ONNX')).toBeNull()
     // Qwen needs Transformers.js — the MLC engine stops at Hermes and hands off to the panel.
     expect(nextMlcOomStep('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')).toBeNull()
   })
 
   it('every MLC rung exists in appConfig', () => {
-    for (const id of OOM_MODEL_LADDER.slice(0, 4)) expect(cfg(id)).toBeDefined()
+    for (const id of OOM_MODEL_LADDER.slice(0, 2)) expect(cfg(id)).toBeDefined()
   })
 
-  it('guided fallback names ctx1024 then ctx512 before Hermes', () => {
-    expect(getSmallerFallbackFor('vicuna-7b-q4f32-webllm-vps').id).toBe('vicuna-7b-q4f32-webllm-ctx1024')
-    expect(getSmallerFallbackFor('vicuna-7b-q4f32-webllm-ctx1024').id).toBe('vicuna-7b-q4f32-webllm-ctx512')
-    expect(getSmallerFallbackFor('vicuna-7b-q4f32-webllm-ctx512').id).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
+  it('guided fallback steps Vicuna straight to Hermes', () => {
+    expect(getSmallerFallbackFor('vicuna-7b-q4f32-webllm-vps').id).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
   })
 })
 
@@ -67,16 +63,14 @@ describe('loadModelWithDynamicContext OOM', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ status: 200 })))
   })
 
-  it('steps a ctx4k OOM (context == compiled floor) to the ctx1024 lib instead of throwing', async () => {
+  it('steps a ctx4k OOM (context == compiled floor) to Hermes 3B instead of throwing', async () => {
     await loadModelWithDynamicContext(
       { ...cfg('vicuna-7b-q4f32-webllm-vps'), skipSourceFailover: true },
       'auto',
     )
     expect(createCalls).toHaveLength(2)
     expect(createCalls[0].ctx).toBe(2048)
-    expect(createCalls[1].modelId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
-    expect(parseCompiledMaxContextFromModelLib(createCalls[1].lib)).toBe(1024)
-    expect(createCalls[1].ctx).toBe(1024)
+    expect(createCalls[1].modelId).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
   })
 
   it('steps an OOM to the next preset and does not apply kv_cache_quantization override', async () => {
@@ -86,7 +80,7 @@ describe('loadModelWithDynamicContext OOM', () => {
     )
     expect(createCalls).toHaveLength(2)
     expect(createCalls[0].modelId).toBe('vicuna-7b-q4f32-webllm-vps')
-    expect(createCalls[1].modelId).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    expect(createCalls[1].modelId).toBe('Hermes-3-Llama-3.2-3B-q4f32_1-MLC')
     // A retry on the same model with a quantization override would have resulted in createCalls[1].modelId === 'vicuna-7b-q4f32-webllm-vps'.
     // By stepping down directly, we prove the dead kv_cache_quantization branch is gone.
   })

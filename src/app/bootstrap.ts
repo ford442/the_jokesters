@@ -1,4 +1,5 @@
 import { initAudioEngineWithFailover } from '../audio/ttsFailover'
+import { isSoftwareGlRenderer, LOADING_RENDER_FPS, SOFTWARE_RENDER_FPS } from '../visuals/renderBudget'
 import type * as webllm from '@mlc-ai/web-llm'
 import { GroupChatManager } from '../GroupChatManager'
 import { Stage } from '../visuals/Stage'
@@ -147,6 +148,11 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
     stage.setAudioClock(() => speechQueue.getAudioContext().currentTime)
     speechQueue.onUtteranceStart((e) => stage.beginUtterance(e))
     speechQueue.onUtteranceEnd(() => stage.endUtterance())
+    // Software rasterizers (SwiftShader/llvmpipe, CI runners) get a hard frame cap, and
+    // every renderer drops to a trickle while the model loads.
+    const softwareGl = isSoftwareGlRenderer(glRenderer)
+    const steadyFps = softwareGl ? SOFTWARE_RENDER_FPS : 0
+    stage.setMaxFps(LOADING_RENDER_FPS)
     stage.render()
 
     // VRM avatars on capable GPUs; low tiers keep the primitive capsule actors. Loads in the
@@ -197,7 +203,8 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
 
     currentInitState = 'AUDIO'
     setProgress('Initializing Audio Engine...', 25)
-    const voiceAvailable = await initAudioEngineWithFailover(audioEngine)
+    // TTS loads in parallel with the LLM: a slow or failed voice download never blocks it.
+    const voicePromise = initAudioEngineWithFailover(audioEngine).catch(() => false)
 
     currentInitState = 'MODEL'
     setProgress(formatLoadStatus('Initializing LLM Engine...', 'rewrite'), 35)
@@ -218,6 +225,9 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
       }
       setProgress(status, percentage)
     }, selectedModelId, preferredContext, enginePreference)
+
+    setProgress('Waiting for voice...', 88)
+    const voiceAvailable = await voicePromise
 
     currentInitState = 'FINALIZING'
     setProgress(formatLoadStatus('Finalizing setup...', 'ready'), 90)
@@ -240,6 +250,10 @@ export async function initApp(parent: Scope, hooks: InitAppHooks = {}): Promise<
     }
 
     setInputsEnabled(true)
+    // .chat-container is half-opacity + pointer-events:none until `.enabled` (style.css).
+    chatContainer.classList.add('enabled')
+    stage.setMaxFps(steadyFps)
+    run.add(() => chatContainer.classList.remove('enabled'))
     userInput.focus()
 
     updateVRAMInfoBar(groupChatManager)

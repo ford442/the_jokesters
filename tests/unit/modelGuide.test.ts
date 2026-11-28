@@ -98,12 +98,12 @@ describe('getSmallerFallbackFor', () => {
 })
 
 describe('recommendModels after a ctx4k Vicuna OOM', () => {
-  it('starts on the ctx1024 lib instead of skipping Vicuna', () => {
+  it('does not re-recommend the Vicuna plan that just OOMed (ctx1024/ctx512 libs unpublished, #216)', () => {
     const r = recommendModels(device({ availableVramMB: 4096 }), {
       avoidVicuna: false,
       lastOomModelId: 'vicuna-7b-q4f32-webllm-vps',
     })
-    expect(r.primary.id).toBe('vicuna-7b-q4f32-webllm-ctx1024')
+    expect(r.primary.id.startsWith('vicuna-')).toBe(false)
   })
 })
 

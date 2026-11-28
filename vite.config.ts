@@ -6,6 +6,7 @@ import compression from 'vite-plugin-compression2';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,29 @@ const isolationHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'credentialless',
 };
+
+/** Emits dist/version.json `{ sha, builtAt }` so smoke / release checks can match the deployed commit. */
+function versionJsonPlugin(): Plugin {
+  return {
+    name: 'jokesters-version-json',
+    apply: 'build',
+    generateBundle() {
+      let sha = process.env.GITHUB_SHA ?? '';
+      if (!sha) {
+        try {
+          sha = execSync('git rev-parse HEAD', { cwd: repoRoot }).toString().trim();
+        } catch {
+          sha = 'unknown';
+        }
+      }
+      this.emitFile({
+        type: 'asset',
+        fileName: 'version.json',
+        source: JSON.stringify({ sha, builtAt: new Date().toISOString() }) + '\n',
+      });
+    },
+  };
+}
 
 function useCustomWebLLM(): boolean {
   return process.env.USE_CUSTOM_WEBLLM === '1' || process.env.USE_CUSTOM_WEBLLM === 'true';
@@ -120,6 +144,7 @@ export default defineConfig(({ command }) => {
       chunkSizeWarningLimit: 600,
     },
     plugins: [
+      versionJsonPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
         strategies: 'injectManifest',

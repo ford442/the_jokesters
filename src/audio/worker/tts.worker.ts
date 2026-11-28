@@ -65,6 +65,14 @@ export interface WorkerInitSuccess {
     numThreads?: number;
 }
 
+/** Heartbeat during init: keeps the main thread's idle timeout alive. */
+export interface WorkerInitProgress {
+    type: 'init-progress';
+    stage: 'download' | 'session';
+    loadedBytes?: number;
+    file?: string;
+}
+
 export interface WorkerInitError {
     type: 'init-error';
     error: string;
@@ -115,9 +123,35 @@ export interface WorkerStatsResponse {
 export type WorkerResponse = 
     | WorkerInitSuccess 
     | WorkerInitError 
+    | WorkerInitProgress
     | WorkerSynthesisSuccess 
     | WorkerSynthesisError
     | WorkerStatsResponse;
+
+async function fetchWithProgress(url: string, file: string): Promise<Uint8Array> {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`TTS model ${file} HTTP ${resp.status}`);
+    if (!resp.body) return new Uint8Array(await resp.arrayBuffer());
+    const reader = resp.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let loaded = 0;
+    let lastPost = 0;
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        loaded += value.byteLength;
+        const now = Date.now();
+        if (now - lastPost > 500) {
+            lastPost = now;
+            self.postMessage({ type: 'init-progress', stage: 'download', loadedBytes: loaded, file } as WorkerInitProgress);
+        }
+    }
+    const out = new Uint8Array(loaded);
+    let off = 0;
+    for (const c of chunks) { out.set(c, off); off += c.byteLength; }
+    return out;
+}
 
 // --- Unicode Processor ---
 class UnicodeProcessor {
@@ -294,18 +328,21 @@ async function handleInit(msg: WorkerInitMessage) {
         const indexer = await indexerResp.json();
         textProcessor = new UnicodeProcessor(indexer);
 
-        // Load ONNX models
-        const createSessions = (providers: InferenceSession.SessionOptions['executionProviders']) => {
+        // Download ONNX bytes ourselves so the main thread sees byte progress
+        // (its init timeout is idle-based, not total-time).
+        const modelFiles = ['duration_predictor', 'text_encoder', 'vector_estimator', 'vocoder'];
+        const modelBytes = await Promise.all(modelFiles.map((name) => fetchWithProgress(`${modelPath}/${name}.onnx`, name)));
+        const createSessions = async (providers: InferenceSession.SessionOptions['executionProviders']) => {
             const sessionOpts: InferenceSession.SessionOptions = {
                 executionProviders: providers,
                 graphOptimizationLevel: 'all'
             };
-            return Promise.all([
-                ort.InferenceSession.create(`${modelPath}/duration_predictor.onnx`, sessionOpts),
-                ort.InferenceSession.create(`${modelPath}/text_encoder.onnx`, sessionOpts),
-                ort.InferenceSession.create(`${modelPath}/vector_estimator.onnx`, sessionOpts),
-                ort.InferenceSession.create(`${modelPath}/vocoder.onnx`, sessionOpts)
-            ]);
+            const out: InferenceSession[] = [];
+            for (let i = 0; i < modelFiles.length; i++) {
+                out.push(await ort.InferenceSession.create(modelBytes[i], sessionOpts));
+                self.postMessage({ type: 'init-progress', stage: 'session', file: modelFiles[i] } as WorkerInitProgress);
+            }
+            return out;
         };
 
         let executionProvider: 'wasm' | 'webgpu' = 'wasm';
